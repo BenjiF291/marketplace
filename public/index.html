@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Marketplace</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1>🏪 Marketplace & Bank</h1>
+        <p class="subtitle">Buy, sell, and transfer coins</p>
+      </div>
+      <button onclick="logout()" style="background: #f5576c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Logout</button>
+    </div>
+  </header>
+
+  <div class="main-grid">
+    <!-- User Section -->
+    <section class="card user-section">
+      <h2>👤 Current User</h2>
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 8px; color: white; margin-bottom: 15px;">
+        <p style="margin: 0; font-size: 1.1em; font-weight: bold;" id="currentUsername"></p>
+      </div>
+      <div class="balance-display">
+        <p id="balance">Loading...</p>
+      </div>
+    </section>
+
+    <!-- Transfer Section -->
+    <section class="card transfer-section">
+      <h2>💸 Send Coins</h2>
+      <div class="form-group">
+        <input id="toId" placeholder="Recipient username" class="input-field">
+        <input id="amount" placeholder="Amount" type="number" class="input-field">
+        <button onclick="transfer()" class="btn btn-primary">Send Transfer</button>
+      </div>
+    </section>
+
+    <!-- Sell Item Section -->
+    <section class="card sell-section">
+      <h2>📦 List Item</h2>
+      <div class="form-group">
+        <input id="itemName" placeholder="Item name" class="input-field">
+        <input id="itemPrice" placeholder="Price" type="number" class="input-field">
+        <button onclick="addItem()" class="btn btn-primary">List Item</button>
+      </div>
+    </section>
+
+    <!-- Marketplace Section -->
+    <section class="card marketplace-section">
+      <h2>🛍️ Marketplace</h2>
+      <ul id="items" class="items-list"></ul>
+    </section>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

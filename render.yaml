@@ -1,0 +1,10 @@
+web:
+  commands:
+    - npm install
+  env: node
+  plan: free
+  region: oregon
+  repo: ""
+  runtime: node
+  buildCommand: ""
+  startCommand: "npm start"

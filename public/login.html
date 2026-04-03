@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplace - Login / Signup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-header h1 {
+      color: #667eea;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    .auth-header p {
+      color: #666;
+      font-size: 0.95em;
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9em;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: #999;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .auth-toggle a {
+      color: #667eea;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    .auth-toggle a:hover {
+      color: #764ba2;
+    }
+
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+      font-size: 0.9em;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      background: #f1f8e9;
+      color: #558b2f;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+      font-size: 0.9em;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .or-divider {
+      text-align: center;
+      color: #999;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .or-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .or-divider span {
+      background: white;
+      padding: 0 10px;
+      position: relative;
+    }
+
+    .demo-users {
+      background: #f9f9ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 0.85em;
+    }
+
+    .demo-users p {
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .demo-user {
+      background: white;
+      padding: 8px 12px;
+      margin: 4px 0;
+      border-radius: 4px;
+      color: #333;
+      border-left: 3px solid #667eea;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <div class="auth-header">
+    <h1>🏪 Marketplace</h1>
+    <p>Buy, sell, and transfer coins</p>
+  </div>
+
+  <!-- Login Form -->
+  <form id="loginForm" class="auth-form active">
+    <div class="error-message" id="loginError"></div>
+    
+    <div class="form-group">
+      <label for="loginUsername">Username</label>
+      <input type="text" id="loginUsername" placeholder="Enter username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="Enter password" required>
+    </div>
+
+    <button type="submit" class="btn-submit">Login</button>
+  </form>
+
+  <!-- Signup Form -->
+  <form id="signupForm" class="auth-form">
+    <div class="error-message" id="signupError"></div>
+    <div class="success-message" id="signupSuccess"></div>
+    
+    <div class="form-group">
+      <label for="signupUsername">Username</label>
+      <input type="text" id="signupUsername" placeholder="Choose a username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="signupPassword">Password</label>
+      <input type="password" id="signupPassword" placeholder="Choose a password" required>
+    </div>
+
+    <div class="form-group">
+      <label for="signupConfirm">Confirm Password</label>
+      <input type="password" id="signupConfirm" placeholder="Confirm password" required>
+    </div>
+
+    <button type="submit" class="btn-submit">Create Account</button>
+  </form>
+
+  <!-- Toggle between login and signup -->
+  <div class="auth-toggle">
+    <span id="toggleText">Don't have an account? <a onclick="toggleForm()">Sign up</a></span>
+  </div>
+
+  <!-- Demo Users Info -->
+  <div class="demo-users">
+    <p><strong>Demo Users (Existing):</strong></p>
+    <div class="demo-user">👤 Alice - password: demo123</div>
+    <div class="demo-user">👤 Bob - password: demo123</div>
+    <p style="margin-top: 8px; color: #999; font-size: 0.8em;">Or create a new account</p>
+  </div>
+</div>
+
+<script>
+  // Determine API URL based on environment
+  const hostname = window.location.hostname;
+  const API_URL = hostname === 'localhost' || hostname === '127.0.0.1'
+    ? 'http://localhost:3000'  // Local development
+    : 'https://marketplace-api.onrender.com';  // Production (update this with your Render URL)
+
+  function toggleForm() {
+    document.getElementById('loginForm').classList.toggle('active');
+    document.getElementById('signupForm').classList.toggle('active');
+    
+    const toggleText = document.getElementById('toggleText');
+    if (document.getElementById('loginForm').classList.contains('active')) {
+      toggleText.innerHTML = "Don't have an account? <a onclick=\"toggleForm()\">Sign up</a>";
+    } else {
+      toggleText.innerHTML = "Already have an account? <a onclick=\"toggleForm()\">Login</a>";
+    }
+  }
+
+  // Login
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        document.getElementById('loginError').textContent = msg;
+        document.getElementById('loginError').classList.add('show');
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('username', data.username);
+      window.location.href = 'index.html';
+
+    } catch (error) {
+      document.getElementById('loginError').textContent = 'Error connecting to server. Make sure it is running.';
+      document.getElementById('loginError').classList.add('show');
+    }
+  });
+
+  // Signup
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('signupUsername').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+
+    if (password !== confirm) {
+      document.getElementById('signupError').textContent = 'Passwords do not match';
+      document.getElementById('signupError').classList.add('show');
+      return;
+    }
+
+    if (password.length < 6) {
+      document.getElementById('signupError').textContent = 'Password must be at least 6 characters';
+      document.getElementById('signupError').classList.add('show');
+      return;
+    }
+
+    if (username.length < 3) {
+      document.getElementById('signupError').textContent = 'Username must be at least 3 characters';
+      document.getElementById('signupError').classList.add('show');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        document.getElementById('signupError').textContent = msg;
+        document.getElementById('signupError').classList.add('show');
+        return;
+      }
+
+      document.getElementById('signupSuccess').textContent = '✅ Account created! Logging in...';
+      document.getElementById('signupSuccess').classList.add('show');
+      const data = await res.json();
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('username', data.username);
+      
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1500);
+
+    } catch (error) {
+      document.getElementById('signupError').textContent = 'Error connecting to server. Make sure it is running.';
+      document.getElementById('signupError').classList.add('show');
+    }
+  });
+</script>
+
+</body>
+</html>
