@@ -148,8 +148,8 @@ app.post('/transfer', async (req, res) => {
   const { fromId, toUsername, amount } = req.body;
 
   // Validate amount
-  if (!amount || amount <= 0) {
-    return res.status(400).send("Invalid amount - must be positive");
+  if (!amount || amount <= 0 || isNaN(amount)) {
+    return res.status(400).send("Invalid amount - must be positive number");
   }
 
   try {
@@ -165,7 +165,8 @@ app.post('/transfer', async (req, res) => {
 
     // Prevent self-transfer
     if (fromUser.username === toUsername) {
-      return res.status(400).send("Cannot transfer to yourself");
+      console.log(`Transfer blocked: ${fromUser.username} tried to transfer money to themselves`);
+      return res.status(400).send("You can't transfer money to yourself");
     }
 
     if (fromUser.balance < amount) {
