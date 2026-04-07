@@ -4,19 +4,24 @@ const { admin, db } = require('./firebase-server');
 require('dotenv').config();
 
 const app = express();
-app.use(express.json());
-app.use(express.static('public'));
 
-// CORS middleware
+// CORS middleware - MUST be first!
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Max-Age', '3600');
+  
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
+  
   next();
 });
+
+app.use(express.json());
+app.use(express.static('public'));
 
 // Initialize test users in Firestore
 async function initializeTestUsers() {
@@ -142,6 +147,11 @@ app.get('/users', async (req, res) => {
 app.post('/transfer', async (req, res) => {
   const { fromId, toUsername, amount } = req.body;
 
+  // Validate amount
+  if (!amount || amount <= 0) {
+    return res.status(400).send("Invalid amount - must be positive");
+  }
+
   try {
     const usersRef = db.collection('users');
     
@@ -152,6 +162,12 @@ app.post('/transfer', async (req, res) => {
     }
     
     const fromUser = fromDoc.data();
+
+    // Prevent self-transfer
+    if (fromUser.username === toUsername) {
+      return res.status(400).send("Cannot transfer to yourself");
+    }
+
     if (fromUser.balance < amount) {
       return res.status(400).send("Not enough money");
     }
@@ -235,9 +251,17 @@ app.get('/items', async (req, res) => {
 app.post('/items', async (req, res) => {
   const { name, price, sellerId } = req.body;
 
+  // Validate inputs
+  if (!name || !name.trim()) {
+    return res.status(400).send("Item name is required");
+  }
+  if (!price || price <= 0) {
+    return res.status(400).send("Invalid price - must be positive");
+  }
+
   try {
     await db.collection('items').add({
-      name,
+      name: name.trim(),
       price,
       sellerId,
       sold: false,
