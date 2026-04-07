@@ -53,25 +53,22 @@ function formatDate(value) {
 // Check if server is online on page load
 async function checkServerStatus() {
   try {
-    const res = await fetch(`${API_URL}/users`, { method: 'GET' });
+    const res = await fetch(`${API_URL}/items`, { method: 'GET' });
     isServerOnline = res.ok;
-    if (!isServerOnline) {
-      showMarketClosed();
-    }
   } catch (error) {
+    console.error('Status check failed:', error);
     isServerOnline = false;
-    showMarketClosed();
   }
 }
 
-function showMarketClosed() {
-  const marketSection = document.querySelector('.marketplace-section');
+function showMarketClosed(message = 'The marketplace server is currently offline. Please try again later.') {
+  const marketSection = document.getElementById('marketplaceSection');
   if (marketSection) {
     marketSection.innerHTML = `
       <h2>🛍️ Marketplace</h2>
       <div style="padding: 20px; background: #ffebee; border-radius: 8px; color: #c62828; text-align: center;">
         <h3>🔒 Market is Closed</h3>
-        <p>The marketplace server is currently offline. Please try again later.</p>
+        <p>${message}</p>
       </div>
     `;
   }
@@ -115,7 +112,10 @@ async function updateBalance() {
   } catch (error) {
     console.error('Error updating balance:', error);
     isServerOnline = false;
-    showMarketClosed();
+    const balanceEl = document.getElementById('balance');
+    if (balanceEl) {
+      balanceEl.textContent = "Balance unavailable";
+    }
   }
 }
 
@@ -263,7 +263,7 @@ async function loadItems() {
   } catch (error) {
     console.error('Error loading items:', error);
     isServerOnline = false;
-    showMarketClosed();
+    showMarketClosed('Could not load marketplace items. Please refresh or try again later.');
   }
 }
 
