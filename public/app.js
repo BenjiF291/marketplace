@@ -14,11 +14,40 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
   : 'https://marketplace-aw8b.onrender.com';  // Production Render URL
 
 let isServerOnline = true;
+let currentView = 'marketplace';
 
 function logout() {
   localStorage.removeItem('userId');
   localStorage.removeItem('username');
   window.location.href = 'login.html';
+}
+
+function showSection(section) {
+  currentView = section;
+
+  const marketplaceSection = document.getElementById('marketplaceSection');
+  const inventorySection = document.getElementById('inventorySection');
+  const marketTab = document.getElementById('marketTab');
+  const inventoryTab = document.getElementById('inventoryTab');
+
+  if (section === 'inventory') {
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'block';
+    marketTab.classList.remove('active');
+    inventoryTab.classList.add('active');
+    loadInventory();
+  } else {
+    marketplaceSection.style.display = 'block';
+    inventorySection.style.display = 'none';
+    marketTab.classList.add('active');
+    inventoryTab.classList.remove('active');
+  }
+}
+
+function formatDate(value) {
+  if (!value) return 'Unknown date';
+  const date = new Date(value);
+  return date.toLocaleString();
 }
 
 // Check if server is online on page load
@@ -215,6 +244,7 @@ async function loadItems() {
             }
 
             loadItems();
+            loadInventory();
             updateBalance();
           } catch (error) {
             console.error('Buy error:', error);
@@ -283,7 +313,51 @@ async function addItem() {
   }
 }
 
+/* ------------------ INVENTORY ------------------ */
+async function loadInventory() {
+  if (!isServerOnline) return;
+
+  try {
+    const res = await fetch(`${API_URL}/inventory?buyerId=${currentUserId}`);
+    if (!res.ok) throw new Error('Server offline');
+
+    const inventoryItems = await res.json();
+    const list = document.getElementById('inventoryItems');
+    list.innerHTML = '';
+
+    if (inventoryItems.length === 0) {
+      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">You have not bought any items yet.</li>`;
+      return;
+    }
+
+    inventoryItems.forEach(item => {
+      const li = document.createElement('li');
+
+      const itemInfo = document.createElement('span');
+      itemInfo.className = 'item-info';
+      itemInfo.textContent = item.name;
+
+      const details = document.createElement('span');
+      details.className = 'item-price';
+      details.textContent = `${item.price} coins · Purchased ${formatDate(item.purchasedAt)}`;
+
+      li.appendChild(itemInfo);
+      li.appendChild(details);
+      list.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error loading inventory:', error);
+    const list = document.getElementById('inventoryItems');
+    list.innerHTML = `
+      <li style="background:#fff4e8; border-left-color:#ffb74d;">
+        Could not load inventory right now. Please switch back to Marketplace or try again later.
+      </li>
+    `;
+  }
+}
+
 /* ------------------ INIT ------------------ */
 checkServerStatus();
 loadUsers();
 loadItems();
+// Inventory loads only when the tab is selected, to avoid closing the market from inventory fetch issues

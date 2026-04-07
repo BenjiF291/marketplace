@@ -19,6 +19,11 @@
     </div>
   </header>
 
+  <div class="tab-group">
+    <button id="marketTab" class="tab-button active" onclick="showSection('marketplace')">Marketplace</button>
+    <button id="inventoryTab" class="tab-button" onclick="showSection('inventory')">My Inventory</button>
+  </div>
+
   <div class="main-grid">
     <!-- User Section -->
     <section class="card user-section">
@@ -52,9 +57,15 @@
     </section>
 
     <!-- Marketplace Section -->
-    <section class="card marketplace-section">
+    <section id="marketplaceSection" class="card marketplace-section">
       <h2>🛍️ Marketplace</h2>
       <ul id="items" class="items-list"></ul>
+    </section>
+
+    <!-- Inventory Section -->
+    <section id="inventorySection" class="card inventory-section" style="display: none;">
+      <h2>🎒 Inventory</h2>
+      <ul id="inventoryItems" class="items-list"></ul>
     </section>
   </div>
 </div>

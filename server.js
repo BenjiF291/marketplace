@@ -231,7 +231,10 @@ app.post('/delete-item', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     const itemsRef = db.collection('items');
-    const snapshot = await itemsRef.where('sold', '==', false).get();
+    const snapshot = await itemsRef
+      .where('sold', '==', false)
+      .orderBy('createdAt', 'desc')
+      .get();
     
     const items = [];
     snapshot.forEach(doc => {
@@ -323,9 +326,11 @@ app.post('/buy', async (req, res) => {
         balance: seller.balance + item.price
       });
 
-      // Mark item as sold
+      // Mark item as sold and record purchase details
       transaction.update(itemsRef.doc(itemId), {
-        sold: true
+        sold: true,
+        buyerId: buyerId,
+        purchasedAt: new Date()
       });
     });
 
@@ -334,6 +339,35 @@ app.post('/buy', async (req, res) => {
   } catch (error) {
     console.error('Error buying item:', error);
     res.status(500).send('Purchase failed');
+  }
+});
+
+// Get inventory for current user
+app.get('/inventory', async (req, res) => {
+  const buyerId = req.query.buyerId;
+
+  if (!buyerId) {
+    return res.status(400).send('BuyerId required');
+  }
+
+  try {
+    const itemsRef = db.collection('items');
+    const snapshot = await itemsRef.where('buyerId', '==', buyerId).get();
+
+    const items = [];
+    snapshot.forEach(doc => {
+      items.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    items.sort((a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt));
+
+    res.json(items);
+  } catch (error) {
+    console.error('Error getting inventory:', error);
+    res.status(500).send('Error retrieving inventory');
   }
 });
 
