@@ -15,6 +15,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
 
 let isServerOnline = true;
 let currentView = 'marketplace';
+let spinCountdownInterval = null;
 
 function logout() {
   localStorage.removeItem('userId');
@@ -27,20 +28,36 @@ function showSection(section) {
 
   const marketplaceSection = document.getElementById('marketplaceSection');
   const inventorySection = document.getElementById('inventorySection');
+  const spinSection = document.getElementById('spinSection');
   const marketTab = document.getElementById('marketTab');
   const inventoryTab = document.getElementById('inventoryTab');
+  const spinTab = document.getElementById('spinTab');
 
   if (section === 'inventory') {
+    clearSpinCountdown();
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'block';
+    spinSection.style.display = 'none';
     marketTab.classList.remove('active');
     inventoryTab.classList.add('active');
+    spinTab.classList.remove('active');
     loadInventory();
+  } else if (section === 'spin') {
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'none';
+    spinSection.style.display = 'block';
+    marketTab.classList.remove('active');
+    inventoryTab.classList.remove('active');
+    spinTab.classList.add('active');
+    loadSpinInfo();
   } else {
+    clearSpinCountdown();
     marketplaceSection.style.display = 'block';
     inventorySection.style.display = 'none';
+    spinSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
+    spinTab.classList.remove('active');
   }
 }
 
@@ -48,6 +65,116 @@ function formatDate(value) {
   if (!value) return 'Unknown date';
   const date = new Date(value);
   return date.toLocaleString();
+}
+
+function parseTimestamp(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return new Date(value);
+  if (value._seconds) return new Date(value._seconds * 1000);
+  return new Date(value);
+}
+
+function formatCountdown(milliseconds) {
+  if (milliseconds <= 0) return '00:00:00';
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function clearSpinCountdown() {
+  if (spinCountdownInterval) {
+    clearInterval(spinCountdownInterval);
+    spinCountdownInterval = null;
+  }
+}
+
+async function loadSpinInfo() {
+  const statusEl = document.getElementById('spinStatus');
+  const resultEl = document.getElementById('spinResult');
+  resultEl.textContent = '';
+
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) throw new Error('Failed to retrieve user info');
+
+    const users = await res.json();
+    const user = users.find(u => u.id === currentUserId);
+
+    if (!user) {
+      statusEl.textContent = 'Unable to find user info.';
+      return;
+    }
+
+    const spinButton = document.getElementById('spinButton');
+    const countdownEl = document.getElementById('spinCountdown');
+    clearSpinCountdown();
+    countdownEl.textContent = '';
+
+    if (user.lastSpin) {
+      const lastSpinDate = parseTimestamp(user.lastSpin);
+      const nextSpin = new Date(lastSpinDate.getTime() + 24 * 60 * 60 * 1000);
+      const now = new Date();
+
+      if (nextSpin > now) {
+        statusEl.textContent = 'Next spin available in:';
+        spinButton.disabled = true;
+
+        const updateCountdown = () => {
+          const remaining = nextSpin.getTime() - new Date().getTime();
+          if (remaining <= 0) {
+            clearSpinCountdown();
+            statusEl.textContent = 'You can spin the wheel now!';
+            countdownEl.textContent = '';
+            spinButton.disabled = false;
+            return;
+          }
+          countdownEl.textContent = formatCountdown(remaining);
+        };
+
+        updateCountdown();
+        spinCountdownInterval = setInterval(updateCountdown, 1000);
+        return;
+      }
+    }
+
+    statusEl.textContent = 'You can spin the wheel now!';
+    spinButton.disabled = false;
+  } catch (error) {
+    console.error('Error loading spin info:', error);
+    statusEl.textContent = 'Could not load spin status.';
+    const spinButton = document.getElementById('spinButton');
+    if (spinButton) spinButton.disabled = true;
+  }
+}
+
+async function spinWheel() {
+  const resultEl = document.getElementById('spinResult');
+  resultEl.textContent = '';
+
+  try {
+    const res = await fetch(`${API_URL}/spin-wheel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUserId })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultEl.textContent = data.message || data.error || 'Could not spin the wheel';
+      return;
+    }
+
+    resultEl.innerHTML = `✅ You won <strong>${data.amount} coins</strong>! Your balance is now ${data.balance} coins.`;
+    loadUsers();
+    loadInventory();
+    loadSpinInfo();
+  } catch (error) {
+    console.error('Spin error:', error);
+    resultEl.textContent = 'Could not spin the wheel. Try again later.';
+  }
 }
 
 // Check if server is online on page load

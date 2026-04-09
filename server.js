@@ -167,7 +167,8 @@ app.get('/users', async (req, res) => {
         id: doc.id,
         username: data.username,
         balance: data.balance,
-        createdAt: data.createdAt || null
+        createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
+        lastSpin: data.lastSpin ? data.lastSpin.toDate().toISOString() : null
       });
     });
 
@@ -175,6 +176,70 @@ app.get('/users', async (req, res) => {
   } catch (error) {
     console.error('Error getting users:', error);
     res.status(500).send('Error retrieving users');
+  }
+});
+
+/* ------------------ SPIN WHEEL ------------------ */
+app.post('/spin-wheel', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId || typeof userId !== 'string') {
+    return res.status(400).send('Invalid userId');
+  }
+
+  const rewards = [8, 10, 12, 16, 20, 24];
+  const cooldownMs = 24 * 60 * 60 * 1000;
+
+  try {
+    const usersRef = db.collection('users');
+    const userRef = usersRef.doc(userId);
+
+    let rewardAmount;
+    let newBalance;
+    let nextSpinAt;
+
+    await db.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        throw new Error('User not found');
+      }
+
+      const user = userDoc.data();
+      const now = new Date();
+      const lastSpin = user.lastSpin ? user.lastSpin.toDate ? user.lastSpin.toDate() : new Date(user.lastSpin) : null;
+
+      if (lastSpin) {
+        const elapsed = now.getTime() - lastSpin.getTime();
+        if (elapsed < cooldownMs) {
+          nextSpinAt = new Date(lastSpin.getTime() + cooldownMs);
+          throw new Error('Too soon');
+        }
+      }
+
+      rewardAmount = rewards[Math.floor(Math.random() * rewards.length)];
+      newBalance = (user.balance || 0) + rewardAmount;
+      nextSpinAt = new Date(now.getTime() + cooldownMs);
+
+      transaction.update(userRef, {
+        balance: newBalance,
+        lastSpin: now,
+        lastSpinAmount: rewardAmount
+      });
+    });
+
+    res.json({ amount: rewardAmount, balance: newBalance, nextSpinAt: nextSpinAt.toISOString() });
+  } catch (error) {
+    console.error('Spin wheel error:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(400).send(error.message);
+    }
+
+    if (error.message === 'Too soon') {
+      return res.status(400).json({ error: 'You can only spin once every 24 hours.', nextSpinAt: nextSpinAt?.toISOString() });
+    }
+
+    res.status(500).send('Could not spin the wheel');
   }
 });
 

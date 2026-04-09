@@ -22,6 +22,7 @@
   <div class="tab-group">
     <button id="marketTab" class="tab-button active" onclick="showSection('marketplace')">Marketplace</button>
     <button id="inventoryTab" class="tab-button" onclick="showSection('inventory')">My Inventory</button>
+    <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
   </div>
 
   <div class="main-grid">
@@ -66,6 +67,16 @@
     <section id="inventorySection" class="card inventory-section" style="display: none;">
       <h2>🎒 Inventory</h2>
       <ul id="inventoryItems" class="items-list"></ul>
+    </section>
+
+    <!-- Spin Wheel Section -->
+    <section id="spinSection" class="card spin-section" style="display: none;">
+      <h2>🎯 Spin the Wheel</h2>
+      <p id="spinStatus" class="spin-status">Spin once every 24 hours for a random coin reward.</p>
+      <button id="spinButton" onclick="spinWheel()" class="btn btn-success">Spin the Wheel</button>
+      <div id="spinResult" class="spin-result"></div>
+      <div id="spinCountdown" class="spin-countdown"></div>
+      <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 coins</div>
     </section>
   </div>
 </div>
