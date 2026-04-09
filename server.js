@@ -23,6 +23,20 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
+/* ------------------ TEST FIREBASE ------------------ */
+app.get('/test-firebase', async (req, res) => {
+  try {
+    console.log('Testing Firebase connection...');
+    const testRef = db.collection('test');
+    await testRef.doc('test').set({ timestamp: new Date() });
+    console.log('Firebase connection successful');
+    res.json({ success: true, message: 'Firebase connected' });
+  } catch (error) {
+    console.error('Firebase connection failed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /* ------------------ HELPERS ------------------ */
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
