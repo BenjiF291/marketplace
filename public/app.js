@@ -9,9 +9,7 @@ if (!userId) {
 let currentUserId = userId;
 
 // Determine API URL based on environment
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000'  // Local development
-  : 'https://marketplace-aw8b.onrender.com';  // Production Render URL
+const API_URL = 'https://marketplace-aw8b.onrender.com';  // Production Render URL
 
 let isServerOnline = true;
 let currentView = 'marketplace';
