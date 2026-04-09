@@ -258,6 +258,14 @@ body {
   color: #555;
 }
 
+.spin-countdown {
+  margin-top: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ff5722;
+  text-align: center;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
