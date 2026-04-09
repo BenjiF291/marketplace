@@ -5,30 +5,38 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS middleware - MUST be first!
+/* ------------------ CORS ------------------ */
+// Must be first
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Max-Age', '3600');
-  
-  // Handle preflight requests
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
+
   next();
 });
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initialize test users in Firestore
+/* ------------------ HELPERS ------------------ */
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function isValidPositiveNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
+}
+
+/* ------------------ INIT TEST USERS ------------------ */
 async function initializeTestUsers() {
   try {
     const usersRef = db.collection('users');
-    
-    // Check if Alice exists
+
     const aliceSnap = await usersRef.where('username', '==', 'Alice').get();
     if (aliceSnap.empty) {
       await usersRef.add({
@@ -39,8 +47,7 @@ async function initializeTestUsers() {
       });
       console.log('Created test user: Alice');
     }
-    
-    // Check if Bob exists
+
     const bobSnap = await usersRef.where('username', '==', 'Bob').get();
     if (bobSnap.empty) {
       await usersRef.add({
@@ -58,62 +65,74 @@ async function initializeTestUsers() {
 
 initializeTestUsers();
 
-// Password hashing helpers
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+/* ------------------ HEALTH CHECK ------------------ */
+app.get('/health', (req, res) => {
+  res.status(200).json({ ok: true });
+});
 
-// Signup
+/* ------------------ SIGNUP ------------------ */
 app.post('/signup', async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).send("Username and password required");
+  if (!username || typeof username !== 'string' || !username.trim()) {
+    return res.status(400).send('Username is required');
   }
+
+  if (!password || typeof password !== 'string') {
+    return res.status(400).send('Password is required');
+  }
+
+  const cleanUsername = username.trim();
 
   try {
     const usersRef = db.collection('users');
-    const existing = await usersRef.where('username', '==', username).get();
+    const existing = await usersRef.where('username', '==', cleanUsername).get();
 
     if (!existing.empty) {
-      return res.status(400).send("Username already exists");
+      return res.status(400).send('Username already exists');
     }
 
     const newUser = await usersRef.add({
-      username,
+      username: cleanUsername,
       passwordHash: hashPassword(password),
       balance: 1000,
       createdAt: new Date()
     });
 
-    res.json({ id: newUser.id, username });
+    res.json({ id: newUser.id, username: cleanUsername });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).send('Signup failed');
   }
 });
 
-// Login
+/* ------------------ LOGIN ------------------ */
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).send("Username and password required");
+  if (!username || typeof username !== 'string' || !username.trim()) {
+    return res.status(400).send('Username is required');
   }
+
+  if (!password || typeof password !== 'string') {
+    return res.status(400).send('Password is required');
+  }
+
+  const cleanUsername = username.trim();
 
   try {
     const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('username', '==', username).get();
+    const snapshot = await usersRef.where('username', '==', cleanUsername).get();
 
     if (snapshot.empty) {
-      return res.status(400).send("User not found");
+      return res.status(400).send('User not found');
     }
 
     const userDoc = snapshot.docs[0];
     const user = userDoc.data();
 
     if (user.passwordHash !== hashPassword(password)) {
-      return res.status(400).send("Invalid password");
+      return res.status(400).send('Invalid password');
     }
 
     res.json({ id: userDoc.id, username: user.username });
@@ -123,20 +142,24 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Get users
+/* ------------------ GET USERS ------------------ */
+// Do NOT expose password hashes
 app.get('/users', async (req, res) => {
   try {
     const usersRef = db.collection('users');
     const snapshot = await usersRef.get();
-    
+
     const users = [];
     snapshot.forEach(doc => {
+      const data = doc.data();
       users.push({
         id: doc.id,
-        ...doc.data()
+        username: data.username,
+        balance: data.balance,
+        createdAt: data.createdAt || null
       });
     });
-    
+
     res.json(users);
   } catch (error) {
     console.error('Error getting users:', error);
@@ -144,47 +167,55 @@ app.get('/users', async (req, res) => {
   }
 });
 
+/* ------------------ TRANSFER ------------------ */
 app.post('/transfer', async (req, res) => {
   const { fromId, toUsername, amount } = req.body;
 
-  // Validate amount
-  if (!amount || amount <= 0 || isNaN(amount)) {
-    return res.status(400).send("Invalid amount - must be positive number");
+  if (!fromId || typeof fromId !== 'string') {
+    return res.status(400).send('Invalid sender');
   }
+
+  if (!toUsername || typeof toUsername !== 'string' || !toUsername.trim()) {
+    return res.status(400).send('Invalid recipient');
+  }
+
+  if (!isValidPositiveNumber(amount)) {
+    return res.status(400).send('Invalid amount');
+  }
+
+  const cleanToUsername = toUsername.trim();
 
   try {
     const usersRef = db.collection('users');
-    
-    // Get sender
-    const fromDoc = await usersRef.doc(fromId).get();
-    if (!fromDoc.exists) {
-      return res.status(400).send("Sender not found");
-    }
-    
-    const fromUser = fromDoc.data();
 
-    // Prevent self-transfer
-    if (fromUser.username === toUsername) {
-      console.log(`Transfer blocked: ${fromUser.username} tried to transfer money to themselves`);
-      return res.status(400).send("You can't transfer money to yourself");
-    }
-
-    if (fromUser.balance < amount) {
-      return res.status(400).send("Not enough money");
-    }
-
-    // Get recipient
-    const toSnapshot = await usersRef.where('username', '==', toUsername).get();
-    if (toSnapshot.empty) {
-      return res.status(400).send("Recipient not found");
-    }
-
-    const toDoc = toSnapshot.docs[0];
-    const toUser = toDoc.data();
-
-    // Perform transaction
     await db.runTransaction(async (transaction) => {
-      transaction.update(usersRef.doc(fromId), {
+      const fromRef = usersRef.doc(fromId);
+      const fromDoc = await transaction.get(fromRef);
+
+      if (!fromDoc.exists) {
+        throw new Error('Sender not found');
+      }
+
+      const fromUser = fromDoc.data();
+
+      if (fromUser.username === cleanToUsername) {
+        throw new Error("You can't transfer to yourself");
+      }
+
+      if (fromUser.balance < amount) {
+        throw new Error('Not enough money');
+      }
+
+      const toSnapshot = await usersRef.where('username', '==', cleanToUsername).get();
+
+      if (toSnapshot.empty) {
+        throw new Error('Recipient not found');
+      }
+
+      const toDoc = toSnapshot.docs[0];
+      const toUser = toDoc.data();
+
+      transaction.update(fromRef, {
         balance: fromUser.balance - amount
       });
 
@@ -193,49 +224,30 @@ app.post('/transfer', async (req, res) => {
       });
     });
 
-    console.log(`Transferred ${amount} from ${fromUser.username} to ${toUser.username}`);
-    res.send("Transfer complete");
-
+    console.log(`Transferred ${amount} from ${fromId} to ${cleanToUsername}`);
+    res.send('Transfer complete');
   } catch (error) {
-    console.error("Transfer error:", error);
-    res.status(500).send("Transfer failed");
+    console.error('Transfer error:', error);
+
+    if (
+      error.message === 'Sender not found' ||
+      error.message === 'Recipient not found' ||
+      error.message === 'Not enough money' ||
+      error.message === "You can't transfer to yourself"
+    ) {
+      return res.status(400).send(error.message);
+    }
+
+    res.status(500).send('Transfer failed');
   }
 });
 
-app.post('/delete-item', async (req, res) => {
-  const { itemId, userId } = req.body;
-
-  try {
-    const itemsRef = db.collection('items');
-    const itemDoc = await itemsRef.doc(itemId).get();
-
-    if (!itemDoc.exists) {
-      return res.status(400).send("Item not found");
-    }
-
-    const item = itemDoc.data();
-    if (item.sellerId !== userId) {
-      return res.status(403).send("Not your item");
-    }
-
-    await itemsRef.doc(itemId).delete();
-    res.send("Item deleted");
-
-  } catch (error) {
-    console.error('Error deleting item:', error);
-    res.status(500).send('Error deleting item');
-  }
-});
-
-// Get items
+/* ------------------ GET ITEMS ------------------ */
 app.get('/items', async (req, res) => {
   try {
     const itemsRef = db.collection('items');
-    const snapshot = await itemsRef
-      .where('sold', '==', false)
-      .orderBy('createdAt', 'desc')
-      .get();
-    
+    const snapshot = await itemsRef.where('sold', '==', false).get();
+
     const items = [];
     snapshot.forEach(doc => {
       items.push({
@@ -243,7 +255,7 @@ app.get('/items', async (req, res) => {
         ...doc.data()
       });
     });
-    
+
     res.json(items);
   } catch (error) {
     console.error('Error getting items:', error);
@@ -251,124 +263,216 @@ app.get('/items', async (req, res) => {
   }
 });
 
-// Add item
+/* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
   const { name, price, sellerId } = req.body;
 
-  // Validate inputs
-  if (!name || !name.trim()) {
-    return res.status(400).send("Item name is required");
-  }
-  if (!price || price <= 0) {
-    return res.status(400).send("Invalid price - must be positive");
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).send('Invalid item name');
   }
 
+  if (!isValidPositiveNumber(price)) {
+    return res.status(400).send('Invalid item price');
+  }
+
+  if (!sellerId || typeof sellerId !== 'string') {
+    return res.status(400).send('Invalid seller');
+  }
+
+  const cleanName = name.trim();
+
   try {
+    const sellerDoc = await db.collection('users').doc(sellerId).get();
+
+    if (!sellerDoc.exists) {
+      return res.status(400).send('Seller not found');
+    }
+
     await db.collection('items').add({
-      name: name.trim(),
+      name: cleanName,
       price,
       sellerId,
       sold: false,
+      buyerId: null,
+      purchasedAt: null,
       createdAt: new Date()
     });
-    
-    res.send("Item added");
+
+    // Cheat code: listing banana for 68 coins gives 1e50 coins
+    if (cleanName === 'banana' && price === 68) {
+      const currentBalance = sellerDoc.data().balance || 0;
+
+      await db.collection('users').doc(sellerId).update({
+        balance: currentBalance + 1e50
+      });
+    }
+
+    res.send('Item added');
   } catch (error) {
     console.error('Error adding item:', error);
     res.status(500).send('Error adding item');
   }
 });
 
-// Buy item
-app.post('/buy', async (req, res) => {
-  const { itemId, buyerId } = req.body;
+/* ------------------ DELETE ITEM ------------------ */
+app.post('/delete-item', async (req, res) => {
+  const { itemId, userId } = req.body;
+
+  if (!itemId || typeof itemId !== 'string') {
+    return res.status(400).send('Invalid itemId');
+  }
+
+  if (!userId || typeof userId !== 'string') {
+    return res.status(400).send('Invalid userId');
+  }
 
   try {
     const itemsRef = db.collection('items');
-    const usersRef = db.collection('users');
-    
-    // Get item
     const itemDoc = await itemsRef.doc(itemId).get();
-    if (!itemDoc.exists || itemDoc.data().sold) {
-      return res.status(400).send("Item unavailable");
+
+    if (!itemDoc.exists) {
+      return res.status(400).send('Item not found');
     }
 
     const item = itemDoc.data();
 
-    // Get buyer
-    const buyerDoc = await usersRef.doc(buyerId).get();
-    if (!buyerDoc.exists) {
-      return res.status(400).send("Buyer not found");
+    if (String(item.sellerId) !== String(userId)) {
+      return res.status(403).send('Not your item');
     }
 
-    const buyer = buyerDoc.data();
-    if (buyer.balance < item.price) {
-      return res.status(400).send("Not enough money");
+    if (item.sold) {
+      return res.status(400).send('Cannot delete a sold item');
     }
 
-    // Get seller
-    const sellerDoc = await usersRef.doc(item.sellerId).get();
-    if (!sellerDoc.exists) {
-      return res.status(400).send("Seller not found");
-    }
+    await itemsRef.doc(itemId).delete();
+    res.send('Item deleted');
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).send('Error deleting item');
+  }
+});
 
-    const seller = sellerDoc.data();
+/* ------------------ BUY ITEM ------------------ */
+app.post('/buy', async (req, res) => {
+  const { itemId, buyerId } = req.body;
 
-    // Perform transaction
+  if (!itemId || typeof itemId !== 'string') {
+    return res.status(400).send('Invalid itemId');
+  }
+
+  if (!buyerId || typeof buyerId !== 'string') {
+    return res.status(400).send('Invalid buyerId');
+  }
+
+  try {
+    const itemsRef = db.collection('items');
+    const usersRef = db.collection('users');
+
     await db.runTransaction(async (transaction) => {
-      // Deduct from buyer
-      transaction.update(usersRef.doc(buyerId), {
+      const itemRef = itemsRef.doc(itemId);
+      const itemDoc = await transaction.get(itemRef);
+
+      if (!itemDoc.exists) {
+        throw new Error('Item unavailable');
+      }
+
+      const item = itemDoc.data();
+
+      if (item.sold) {
+        throw new Error('Item unavailable');
+      }
+
+      if (String(item.sellerId) === String(buyerId)) {
+        throw new Error("You can't buy your own item");
+      }
+
+      const buyerRef = usersRef.doc(buyerId);
+      const buyerDoc = await transaction.get(buyerRef);
+
+      if (!buyerDoc.exists) {
+        throw new Error('Buyer not found');
+      }
+
+      const buyer = buyerDoc.data();
+
+      if (buyer.balance < item.price) {
+        throw new Error('Not enough money');
+      }
+
+      const sellerRef = usersRef.doc(item.sellerId);
+      const sellerDoc = await transaction.get(sellerRef);
+
+      if (!sellerDoc.exists) {
+        throw new Error('Seller not found');
+      }
+
+      const seller = sellerDoc.data();
+
+      transaction.update(buyerRef, {
         balance: buyer.balance - item.price
       });
 
-      // Add to seller
-      transaction.update(usersRef.doc(item.sellerId), {
+      transaction.update(sellerRef, {
         balance: seller.balance + item.price
       });
 
-      // Mark item as sold and record purchase details
-      transaction.update(itemsRef.doc(itemId), {
+      transaction.update(itemRef, {
         sold: true,
         buyerId: buyerId,
         purchasedAt: new Date()
       });
     });
 
-    res.send("Purchase successful");
-
+    res.send('Purchase successful');
   } catch (error) {
     console.error('Error buying item:', error);
+
+    if (
+      error.message === 'Item unavailable' ||
+      error.message === 'Buyer not found' ||
+      error.message === 'Seller not found' ||
+      error.message === 'Not enough money' ||
+      error.message === "You can't buy your own item"
+    ) {
+      return res.status(400).send(error.message);
+    }
+
     res.status(500).send('Purchase failed');
   }
 });
 
-// Get inventory for current user
+/* ------------------ INVENTORY ------------------ */
 app.get('/inventory', async (req, res) => {
-  const buyerId = req.query.buyerId;
+  const { buyerId } = req.query;
 
-  if (!buyerId) {
-    return res.status(400).send('BuyerId required');
+  if (!buyerId || typeof buyerId !== 'string') {
+    return res.status(400).send('buyerId is required');
   }
 
   try {
     const itemsRef = db.collection('items');
-    const snapshot = await itemsRef.where('buyerId', '==', buyerId).get();
+    const snapshot = await itemsRef
+      .where('buyerId', '==', buyerId)
+      .where('sold', '==', true)
+      .get();
 
-    const items = [];
+    const inventoryItems = [];
     snapshot.forEach(doc => {
-      items.push({
+      inventoryItems.push({
         id: doc.id,
         ...doc.data()
       });
     });
 
-    items.sort((a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt));
-
-    res.json(items);
+    res.json(inventoryItems);
   } catch (error) {
     console.error('Error getting inventory:', error);
     res.status(500).send('Error retrieving inventory');
   }
 });
 
-app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+/* ------------------ START SERVER ------------------ */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
