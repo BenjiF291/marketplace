@@ -281,6 +281,20 @@ app.get('/items', async (req, res) => {
   }
 });
 
+/* ------------------ TEST ITEMS ------------------ */
+app.get('/test-items', async (req, res) => {
+  try {
+    console.log('Testing items collection access...');
+    const itemsRef = db.collection('items');
+    const snapshot = await itemsRef.limit(1).get();
+    console.log('Test query successful, docs count:', snapshot.size);
+    res.json({ success: true, count: snapshot.size });
+  } catch (error) {
+    console.error('Test failed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
   const { name, price, sellerId } = req.body;
