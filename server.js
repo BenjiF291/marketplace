@@ -23,20 +23,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
-/* ------------------ TEST FIREBASE ------------------ */
-app.get('/test-firebase', async (req, res) => {
-  try {
-    console.log('Testing Firebase connection...');
-    const testRef = db.collection('test');
-    await testRef.doc('test').set({ timestamp: new Date() });
-    console.log('Firebase connection successful');
-    res.json({ success: true, message: 'Firebase connected' });
-  } catch (error) {
-    console.error('Firebase connection failed:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 /* ------------------ HELPERS ------------------ */
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -259,57 +245,35 @@ app.post('/transfer', async (req, res) => {
 /* ------------------ GET ITEMS ------------------ */
 app.get('/items', async (req, res) => {
   try {
-    console.log('Getting items...');
-
-    // Try a very simple query first
     const itemsRef = db.collection('items');
-    console.log('Created items ref');
-
-    // Just get all documents without any filtering
     const snapshot = await itemsRef.get();
-    console.log('Got snapshot with', snapshot.size, 'documents');
 
-    // Return empty array if no documents
-    if (snapshot.empty) {
-      console.log('No documents found');
-      return res.json([]);
-    }
-
-    // Process documents safely
     const items = [];
     snapshot.forEach(doc => {
-      try {
-        const data = doc.data();
-        console.log('Processing doc:', doc.id);
-
-        // Only include if not sold (but allow missing sold field)
-        if (data.sold !== true) {
-          items.push({
-            id: doc.id,
-            name: data.name || 'Unknown Item',
-            price: data.price || 0,
-            sellerId: data.sellerId || '',
-            sold: data.sold || false,
-            createdAt: data.createdAt
-          });
-        }
-      } catch (docError) {
-        console.error('Error processing document', doc.id, ':', docError);
+      const data = doc.data();
+      if (data.sold !== true) {
+        items.push({
+          id: doc.id,
+          name: data.name || 'Unknown Item',
+          price: data.price || 0,
+          sellerId: data.sellerId || '',
+          sold: data.sold || false,
+          createdAt: data.createdAt
+        });
       }
     });
 
-    console.log('Returning', items.length, 'items');
-    res.json(items);
-
-  } catch (error) {
-    console.error('Error in /items:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({
-      error: 'Failed to retrieve items',
-      message: error.message,
-      stack: error.stack
+    // Sort by creation date (newest first)
+    items.sort((a, b) => {
+      const aTime = a.createdAt?._seconds || 0;
+      const bTime = b.createdAt?._seconds || 0;
+      return bTime - aTime;
     });
+
+    res.json(items);
+  } catch (error) {
+    console.error('Error getting items:', error);
+    res.status(500).send('Error retrieving items');
   }
 });
 
