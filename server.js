@@ -245,21 +245,39 @@ app.post('/transfer', async (req, res) => {
 /* ------------------ GET ITEMS ------------------ */
 app.get('/items', async (req, res) => {
   try {
+    console.log('Getting items...');
     const itemsRef = db.collection('items');
-    const snapshot = await itemsRef.where('sold', '==', false).get();
+    console.log('Items ref created');
+
+    // Try to get all items first, without any filters
+    const snapshot = await itemsRef.get();
+    console.log('Snapshot received, docs count:', snapshot.size);
+
+    if (snapshot.empty) {
+      console.log('No items found in database');
+      return res.json([]);
+    }
 
     const items = [];
     snapshot.forEach(doc => {
-      items.push({
-        id: doc.id,
-        ...doc.data()
-      });
+      const data = doc.data();
+      console.log('Processing item:', doc.id, 'sold:', data.sold, 'name:', data.name);
+
+      // Check if sold field exists and is false
+      if (data.sold !== true) {  // Include items where sold is not explicitly true
+        items.push({
+          id: doc.id,
+          ...data
+        });
+      }
     });
 
+    console.log('Returning', items.length, 'unsold items');
     res.json(items);
   } catch (error) {
     console.error('Error getting items:', error);
-    res.status(500).send('Error retrieving items');
+    console.error('Error stack:', error.stack);
+    res.status(500).send('Error retrieving items: ' + error.message);
   }
 });
 
