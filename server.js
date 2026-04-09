@@ -10,7 +10,7 @@ const app = express();
 app.use((req, res, next) => {
   // Allow requests from GitHub Pages, Firebase Hosting, and localhost
   const allowedOrigins = [
-    'https://adamhm315648.github.io',
+    'https://marketplace-aw8b.onrender.com/',
     'https://fishy-20779.web.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000'
