@@ -246,38 +246,56 @@ app.post('/transfer', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     console.log('Getting items...');
+
+    // Try a very simple query first
     const itemsRef = db.collection('items');
-    console.log('Items ref created');
+    console.log('Created items ref');
 
-    // Try to get all items first, without any filters
+    // Just get all documents without any filtering
     const snapshot = await itemsRef.get();
-    console.log('Snapshot received, docs count:', snapshot.size);
+    console.log('Got snapshot with', snapshot.size, 'documents');
 
+    // Return empty array if no documents
     if (snapshot.empty) {
-      console.log('No items found in database');
+      console.log('No documents found');
       return res.json([]);
     }
 
+    // Process documents safely
     const items = [];
     snapshot.forEach(doc => {
-      const data = doc.data();
-      console.log('Processing item:', doc.id, 'sold:', data.sold, 'name:', data.name);
+      try {
+        const data = doc.data();
+        console.log('Processing doc:', doc.id);
 
-      // Check if sold field exists and is false
-      if (data.sold !== true) {  // Include items where sold is not explicitly true
-        items.push({
-          id: doc.id,
-          ...data
-        });
+        // Only include if not sold (but allow missing sold field)
+        if (data.sold !== true) {
+          items.push({
+            id: doc.id,
+            name: data.name || 'Unknown Item',
+            price: data.price || 0,
+            sellerId: data.sellerId || '',
+            sold: data.sold || false,
+            createdAt: data.createdAt
+          });
+        }
+      } catch (docError) {
+        console.error('Error processing document', doc.id, ':', docError);
       }
     });
 
-    console.log('Returning', items.length, 'unsold items');
+    console.log('Returning', items.length, 'items');
     res.json(items);
+
   } catch (error) {
-    console.error('Error getting items:', error);
+    console.error('Error in /items:', error);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
-    res.status(500).send('Error retrieving items: ' + error.message);
+    res.status(500).json({
+      error: 'Failed to retrieve items',
+      message: error.message,
+      stack: error.stack
+    });
   }
 });
 
