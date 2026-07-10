@@ -585,7 +585,8 @@ app.post('/buy', async (req, res) => {
       return res.status(400).send(error.message);
     }
 
-    res.status(500).send('Purchase failed');
+    // Return error message to help debug purchase failures
+    res.status(500).send(error.message || 'Purchase failed');
   }
 });
 
