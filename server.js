@@ -52,7 +52,7 @@ async function userIsAdmin(userId) {
   return userDoc.exists && userDoc.data().isAdmin === true;
 }
 
-/* ------------------ INIT TEST USERS ------------------ */
+/* ------------------ INITIALIZE ADMIN ------------------ */
 async function initializeTestUsers() {
   try {
     const usersRef = db.collection('users');
@@ -81,37 +81,8 @@ async function initializeTestUsers() {
       }
     }
 
-    const aliceSnap = await usersRef.where('username', '==', 'Alice').get();
-    if (aliceSnap.empty) {
-      await usersRef.add({
-        username: 'Alice',
-        passwordHash: hashPassword('demo123'),
-        balance: 1000,
-        isAdmin: false,
-        createdAt: new Date()
-      });
-      console.log('Created test user: Alice');
-    } else {
-      const aliceDoc = aliceSnap.docs[0];
-      if (aliceDoc.data().isAdmin === true) {
-        await aliceDoc.ref.update({ isAdmin: false });
-        console.log('Removed admin role from Alice');
-      }
-    }
-
-    const bobSnap = await usersRef.where('username', '==', 'Bob').get();
-    if (bobSnap.empty) {
-      await usersRef.add({
-        username: 'Bob',
-        passwordHash: hashPassword('demo123'),
-        balance: 500,
-        isAdmin: false,
-        createdAt: new Date()
-      });
-      console.log('Created test user: Bob');
-    }
   } catch (error) {
-    console.error('Error initializing test users:', error);
+    console.error('Error initializing admin:', error);
   }
 }
 
