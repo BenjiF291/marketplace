@@ -224,6 +224,21 @@ body {
   background: #f0f0ff;
 }
 
+.item-image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-right: 15px;
+  border: 1px solid #ddd;
+}
+
+.admin-section {
+  grid-column: 1 / -1;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+}
+
 .item-info {
   flex: 1;
   font-weight: 500;

@@ -15,6 +15,7 @@ let isServerOnline = true;
 let currentView = 'marketplace';
 let spinCountdownInterval = null;
 let selectedItemForListing = null; // Track selected item for listing
+let currentUserIsAdmin = false;
 
 function logout() {
   localStorage.removeItem('userId');
@@ -215,6 +216,22 @@ function showTransferError() {
 async function loadUsers() {
   // Display current logged in user
   document.getElementById('currentUsername').textContent = `👤 ${username}`;
+
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) throw new Error('Server offline');
+    const users = await res.json();
+    const user = users.find(u => u.id === currentUserId);
+
+    currentUserIsAdmin = !!(user && user.isAdmin === true);
+    const adminSection = document.getElementById('adminSection');
+    if (adminSection) {
+      adminSection.style.display = currentUserIsAdmin ? 'block' : 'none';
+    }
+  } catch (error) {
+    console.error('Error loading user role:', error);
+  }
+
   updateBalance();
 }
 
@@ -305,7 +322,15 @@ async function loadItems() {
       if (item.sold) return;
 
       const li = document.createElement('li');
-      
+
+      if (item.imageUrl) {
+        const image = document.createElement('img');
+        image.className = 'item-image';
+        image.src = item.imageUrl;
+        image.alt = item.name;
+        li.appendChild(image);
+      }
+
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';
       itemInfo.textContent = item.name;
@@ -441,6 +466,75 @@ async function addItem() {
   }
 }
 
+async function updateItemImage() {
+  const itemId = document.getElementById('adminItemId').value.trim();
+  const imageUrl = document.getElementById('adminImageUrl').value.trim();
+
+  if (!itemId) {
+    alert('Enter the item ID');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/items/image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId
+      },
+      body: JSON.stringify({ itemId, imageUrl })
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg);
+    } else {
+      alert('✅ Image updated');
+      document.getElementById('adminImageUrl').value = '';
+      document.getElementById('adminItemId').value = '';
+      loadItems();
+      loadInventory();
+    }
+  } catch (error) {
+    console.error('Admin update image error:', error);
+    alert('Could not update image');
+  }
+}
+
+async function clearItemImage() {
+  const itemId = document.getElementById('adminItemId').value.trim();
+
+  if (!itemId) {
+    alert('Enter the item ID');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/items/image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId
+      },
+      body: JSON.stringify({ itemId, imageUrl: '' })
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg);
+    } else {
+      alert('✅ Image removed');
+      document.getElementById('adminImageUrl').value = '';
+      document.getElementById('adminItemId').value = '';
+      loadItems();
+      loadInventory();
+    }
+  } catch (error) {
+    console.error('Admin clear image error:', error);
+    alert('Could not remove image');
+  }
+}
+
 /* ------------------ LISTING MODAL FUNCTIONS ------------------ */
 async function openListingModal() {
   if (!isServerOnline) {
@@ -473,6 +567,14 @@ async function openListingModal() {
       const li = document.createElement('li');
       li.style.cursor = 'pointer';
       li.onclick = () => selectItemForListing(item, li);
+
+      if (item.imageUrl) {
+        const image = document.createElement('img');
+        image.className = 'item-image';
+        image.src = item.imageUrl;
+        image.alt = item.name;
+        li.appendChild(image);
+      }
 
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';
@@ -548,7 +650,8 @@ async function listSelectedItem() {
         name: selectedItemForListing.name,
         price,
         sellerId: currentUserId,
-        sourceItemId: selectedItemForListing.id
+        sourceItemId: selectedItemForListing.id,
+        imageUrl: selectedItemForListing.imageUrl || null
       })
     });
 
@@ -594,6 +697,14 @@ async function loadInventory() {
 
     inventoryItems.forEach(item => {
       const li = document.createElement('li');
+
+      if (item.imageUrl) {
+        const image = document.createElement('img');
+        image.className = 'item-image';
+        image.src = item.imageUrl;
+        image.alt = item.name;
+        li.appendChild(image);
+      }
 
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';

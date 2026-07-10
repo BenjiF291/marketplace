@@ -61,6 +61,20 @@
       </div>
     </section>
 
+    <!-- Admin Image Management -->
+    <section id="adminSection" class="card admin-section" style="display: none;">
+      <h2>🔧 Admin Item Images</h2>
+      <div class="form-group">
+        <input id="adminItemId" placeholder="Item ID" class="input-field">
+        <input id="adminImageUrl" placeholder="Image URL" class="input-field">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="updateItemImage()" class="btn btn-primary">Save Image</button>
+          <button onclick="clearItemImage()" class="btn btn-danger" type="button">Remove Image</button>
+        </div>
+      </div>
+      <p style="font-size:0.9em; color:#555; margin-top: 10px;">Admin only: set or clear an inventory picture by item ID.</p>
+    </section>
+
     <!-- Marketplace Section -->
     <section id="marketplaceSection" class="card marketplace-section">
       <h2>🛍️ Marketplace</h2>

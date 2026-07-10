@@ -44,6 +44,12 @@ function isValidPositiveNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
+async function userIsAdmin(userId) {
+  if (!userId || typeof userId !== 'string') return false;
+  const userDoc = await db.collection('users').doc(userId).get();
+  return userDoc.exists && userDoc.data().isAdmin === true;
+}
+
 /* ------------------ INIT TEST USERS ------------------ */
 async function initializeTestUsers() {
   try {
@@ -55,6 +61,7 @@ async function initializeTestUsers() {
         username: 'Alice',
         passwordHash: hashPassword('demo123'),
         balance: 1000,
+        isAdmin: true,
         createdAt: new Date()
       });
       console.log('Created test user: Alice');
@@ -66,6 +73,7 @@ async function initializeTestUsers() {
         username: 'Bob',
         passwordHash: hashPassword('demo123'),
         balance: 500,
+        isAdmin: false,
         createdAt: new Date()
       });
       console.log('Created test user: Bob');
@@ -108,10 +116,11 @@ app.post('/signup', async (req, res) => {
       username: cleanUsername,
       passwordHash: hashPassword(password),
       balance: 1000,
+      isAdmin: false,
       createdAt: new Date()
     });
 
-    res.json({ id: newUser.id, username: cleanUsername });
+    res.json({ id: newUser.id, username: cleanUsername, isAdmin: false });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).send('Signup failed');
@@ -147,7 +156,7 @@ app.post('/login', async (req, res) => {
       return res.status(400).send('Invalid password');
     }
 
-    res.json({ id: userDoc.id, username: user.username });
+    res.json({ id: userDoc.id, username: user.username, isAdmin: user.isAdmin === true });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).send('Login failed');
@@ -354,6 +363,47 @@ app.get('/items', async (req, res) => {
   }
 });
 
+/* ------------------ ADMIN ITEM IMAGE ------------------ */
+app.post('/items/image', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { itemId, imageUrl } = req.body;
+
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+
+  if (!itemId || typeof itemId !== 'string') {
+    return res.status(400).send('Invalid itemId');
+  }
+
+  try {
+    const isAdmin = await userIsAdmin(requesterId);
+    if (!isAdmin) {
+      return res.status(403).send('Forbidden');
+    }
+
+    const itemRef = db.collection('items').doc(itemId);
+    const itemDoc = await itemRef.get();
+
+    if (!itemDoc.exists) {
+      return res.status(400).send('Item not found');
+    }
+
+    const updatePayload = {};
+    if (!imageUrl) {
+      updatePayload.imageUrl = null;
+    } else if (typeof imageUrl === 'string') {
+      updatePayload.imageUrl = imageUrl.trim();
+    }
+
+    await itemRef.update(updatePayload);
+    res.send('Item image updated');
+  } catch (error) {
+    console.error('Error updating item image:', error);
+    res.status(500).send('Error updating item image');
+  }
+});
+
 /* ------------------ TEST ITEMS ------------------ */
 app.get('/test-items', async (req, res) => {
   try {
@@ -370,7 +420,7 @@ app.get('/test-items', async (req, res) => {
 
 /* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
-  const { name, price, sellerId, sourceItemId } = req.body;
+  const { name, price, sellerId, sourceItemId, imageUrl } = req.body;
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).send('Invalid item name');
@@ -410,6 +460,7 @@ app.post('/items', async (req, res) => {
       buyerId: null,
       purchasedAt: null,
       sourceItemId: sourceItemId || null,
+      imageUrl: imageUrl || null,
       createdAt: new Date()
     });
 
