@@ -55,16 +55,40 @@ async function initializeTestUsers() {
   try {
     const usersRef = db.collection('users');
 
+    const adminSnap = await usersRef.where('username', '==', 'Admin').get();
+    if (adminSnap.empty) {
+      await usersRef.add({
+        username: 'Admin',
+        passwordHash: hashPassword('demo123'),
+        balance: 1000,
+        isAdmin: true,
+        createdAt: new Date()
+      });
+      console.log('Created test user: Admin');
+    } else {
+      const adminDoc = adminSnap.docs[0];
+      if (adminDoc.data().isAdmin !== true) {
+        await adminDoc.ref.update({ isAdmin: true });
+        console.log('Updated existing user Admin to admin role');
+      }
+    }
+
     const aliceSnap = await usersRef.where('username', '==', 'Alice').get();
     if (aliceSnap.empty) {
       await usersRef.add({
         username: 'Alice',
         passwordHash: hashPassword('demo123'),
         balance: 1000,
-        isAdmin: true,
+        isAdmin: false,
         createdAt: new Date()
       });
       console.log('Created test user: Alice');
+    } else {
+      const aliceDoc = aliceSnap.docs[0];
+      if (aliceDoc.data().isAdmin === true) {
+        await aliceDoc.ref.update({ isAdmin: false });
+        console.log('Removed admin role from Alice');
+      }
     }
 
     const bobSnap = await usersRef.where('username', '==', 'Bob').get();
