@@ -34,6 +34,7 @@ function showSection(section) {
   const inventoryTab = document.getElementById('inventoryTab');
   const spinTab = document.getElementById('spinTab');
   const vipTab = document.getElementById('vipTab');
+  const vipSection = document.getElementById('vipSection');
 
   if (section === 'inventory') {
     clearSpinCountdown();
@@ -81,11 +82,38 @@ function showSection(section) {
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
     spinTab.classList.add('active');
+    if (vipTab) vipTab.classList.remove('active');
 
     // Ensure spin section scrolls into view on mobile
     spinSection.scrollIntoView({ behavior: 'smooth' });
 
     loadSpinInfo();
+  } else if (section === 'vip') {
+    // Focused view: hide other dashboard cards so VIP is sole focus
+    clearSpinCountdown();
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
+
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'none';
+    spinSection.style.display = 'none';
+    if (vipSection) vipSection.style.display = 'block';
+
+    marketTab.classList.remove('active');
+    inventoryTab.classList.remove('active');
+    spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.add('active');
+
+    // Ensure vip section scrolls into view on mobile
+    if (vipSection) vipSection.scrollIntoView({ behavior: 'smooth' });
+
+    loadVipInfo();
   } else {
     clearSpinCountdown();
     // Restore dashboard cards that Inventory hid
