@@ -255,19 +255,69 @@ body {
 }
 
 @media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 0 10px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .header h1 {
+    font-size: 1.9em;
+  }
+
+  .subtitle {
+    font-size: 1em;
+  }
+
+  .tab-group {
+    gap: 8px;
+  }
+
+  .tab-button {
+    flex: 1 1 auto;
+    padding: 12px;
+    width: 100%;
+  }
+
+  .items-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 8px;
+  }
+
+  .items-list {
+    gap: 10px;
+  }
+
+  .item-image {
+    width: 80px;
+    height: 80px;
+  }
+
   .inventory-section .items-list {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
   }
 
   .inventory-section .item-image {
-    width: 100px;
-    height: 100px;
+    width: 140px;
+    height: 140px;
+    margin: 0 0 8px 0;
   }
 
-  /* Make inventory take full width on mobile */
-  .main-grid > section { display: none; }
-  .inventory-section { display: block !important; grid-column: 1 / -1; }
+  .btn {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-width: 420px;
+  }
 }
 
 .admin-section {
