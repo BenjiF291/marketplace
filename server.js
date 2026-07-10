@@ -403,14 +403,15 @@ app.post('/items', async (req, res) => {
       createdAt: new Date()
     });
 
-    // Cheat code: listing banana for 68 coins gives 1e50 coins
-    if (cleanName === 'banana' && price === 68) {
-      const currentBalance = sellerDoc.data().balance || 0;
+    // // Cheat code: listing banana for 68 coins gives 1e50 coins
+    // if (cleanName === 'banana' && price === 68) 
+    // {
+    //   const currentBalance = sellerDoc.data().balance || 0;
 
-      await db.collection('users').doc(sellerId).update({
-        balance: currentBalance + 1e50
-      });
-    }
+    //   await db.collection('users').doc(sellerId).update({
+    //     balance: currentBalance + 1e50
+    //   });
+    // }
 
     res.send('Item added');
   } catch (error) {
@@ -548,16 +549,26 @@ app.post('/buy', async (req, res) => {
 
 /* ------------------ INVENTORY ------------------ */
 app.get('/inventory', async (req, res) => {
+  // Require the requester to identify themselves via the X-User-Id header.
+  // This prevents callers from requesting other users' inventories.
+  const requesterId = req.header('X-User-Id');
   const { buyerId } = req.query;
 
-  if (!buyerId || typeof buyerId !== 'string') {
-    return res.status(400).send('buyerId is required');
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
   }
+
+  // If a buyerId query param is provided, it must match the requester.
+  if (buyerId && buyerId !== requesterId) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const userId = requesterId;
 
   try {
     const itemsRef = db.collection('items');
     const snapshot = await itemsRef
-      .where('buyerId', '==', buyerId)
+      .where('buyerId', '==', userId)
       .where('sold', '==', true)
       .get();
 

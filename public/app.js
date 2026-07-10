@@ -165,7 +165,7 @@ async function spinWheel() {
       return;
     }
 
-    resultEl.innerHTML = `✅ You won <strong>${data.amount} coins</strong>! Your balance is now ${data.balance} coins.`;
+    resultEl.innerHTML = `✅ You won <strong>${data.amount} Footy</strong>! Your balance is now ${data.balance} Footy.`;
     loadUsers();
     loadInventory();
     loadSpinInfo();
@@ -233,7 +233,7 @@ async function updateBalance() {
       return;
     }
 
-    balanceEl.textContent = `Balance: ${user.balance} coins`;
+    balanceEl.textContent = `Balance: ${user.balance} Footy`;
   } catch (error) {
     console.error('Error updating balance:', error);
     isServerOnline = false;
@@ -309,7 +309,7 @@ async function loadItems() {
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
-      itemPrice.textContent = `${item.price} coins`;
+      itemPrice.textContent = `${item.price} Footy`;
 
       const isOwner = String(item.sellerId) === String(currentUserId);
 
@@ -443,7 +443,11 @@ async function loadInventory() {
   if (!isServerOnline) return;
 
   try {
-    const res = await fetch(`${API_URL}/inventory?buyerId=${currentUserId}`);
+    const res = await fetch(`${API_URL}/inventory`, {
+      headers: {
+        'X-User-Id': currentUserId
+      }
+    });
     if (!res.ok) throw new Error('Server offline');
 
     const inventoryItems = await res.json();
@@ -464,7 +468,7 @@ async function loadInventory() {
 
       const details = document.createElement('span');
       details.className = 'item-price';
-      details.textContent = `${item.price} coins · Purchased ${formatDate(item.purchasedAt)}`;
+      details.textContent = `${item.price} Footy · Purchased ${formatDate(item.purchasedAt)}`;
 
       li.appendChild(itemInfo);
       li.appendChild(details);
