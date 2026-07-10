@@ -205,7 +205,7 @@ app.post('/spin-wheel', async (req, res) => {
   }
 
   const rewards = [8, 10, 12, 16, 20, 24];
-  const cooldownMs = 24 * 60 * 60 * 1000;
+  const cooldownMs = 23 * 60 * 60 * 1000;
 
   try {
     const usersRef = db.collection('users');
@@ -261,7 +261,7 @@ app.post('/spin-wheel', async (req, res) => {
     }
 
     if (error.message === 'Too soon') {
-      return res.status(400).json({ error: 'You can only spin once every 24 hours.', nextSpinAt: nextSpinAt?.toISOString() });
+      return res.status(400).json({ error: 'You can only spin once every 23 hours.', nextSpinAt: nextSpinAt?.toISOString() });
     }
 
     res.status(500).send('Could not spin the wheel');

@@ -225,7 +225,7 @@ async function loadSpinInfo() {
 
     if (user.lastSpin) {
       const lastSpinDate = parseTimestamp(user.lastSpin);
-      const nextSpin = new Date(lastSpinDate.getTime() + 24 * 60 * 60 * 1000);
+      const nextSpin = new Date(lastSpinDate.getTime() + 23 * 60 * 60 * 1000);
       const now = new Date();
 
       if (nextSpin > now) {
