@@ -487,6 +487,7 @@ async function loadUsers() {
 
     if (currentUserIsAdmin) {
       populateGrantControls(users);
+      populateAdminAccountViewer(users);
       loadCardOptions();
     }
 
@@ -567,6 +568,85 @@ function populateTransferRecipients(users) {
 
   if ([...recipientSelect.options].some(option => option.value === selectedUsername)) {
     recipientSelect.value = selectedUsername;
+  }
+}
+
+function populateAdminAccountViewer(users) {
+  const accountSelect = document.getElementById('adminAccountSelect');
+  if (!accountSelect) return;
+
+  const selectedUserId = accountSelect.value;
+  accountSelect.innerHTML = '<option value="" disabled>Select a user</option>';
+
+  users
+    .slice()
+    .sort((a, b) => a.username.localeCompare(b.username))
+    .forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.id;
+      option.textContent = user.username;
+      accountSelect.appendChild(option);
+    });
+
+  if ([...accountSelect.options].some(option => option.value === selectedUserId)) {
+    accountSelect.value = selectedUserId;
+  }
+}
+
+function formatAdminDate(value) {
+  if (!value) return 'Never logged in';
+  const date = parseTimestamp(value);
+  return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString();
+}
+
+async function viewAdminAccount() {
+  if (!currentUserIsAdmin) return;
+
+  const accountSelect = document.getElementById('adminAccountSelect');
+  const details = document.getElementById('adminAccountDetails');
+  const inventoryList = document.getElementById('adminAccountInventory');
+  const selectedUserId = accountSelect && accountSelect.value;
+  if (!selectedUserId || !details || !inventoryList) return;
+
+  details.hidden = false;
+  document.getElementById('adminAccountBalance').textContent = 'Loading...';
+  document.getElementById('adminAccountLastOnline').textContent = 'Loading...';
+  document.getElementById('adminAccountVip').textContent = 'Loading...';
+  inventoryList.textContent = 'Loading inventory...';
+
+  try {
+    const usersResponse = await fetch(`${API_URL}/users`);
+    if (!usersResponse.ok) throw new Error('Could not load account');
+    const users = await usersResponse.json();
+    const account = users.find(user => user.id === selectedUserId);
+    if (!account) throw new Error('Account not found');
+
+    const vipUntil = account.vipUntil ? parseTimestamp(account.vipUntil) : null;
+    const hasVip = vipUntil && vipUntil.getTime() > Date.now();
+    document.getElementById('adminAccountBalance').textContent = `${account.balance || 0} Footy`;
+    document.getElementById('adminAccountLastOnline').textContent = formatAdminDate(account.lastOnline);
+    document.getElementById('adminAccountVip').textContent = hasVip ? `Active until ${vipUntil.toLocaleString()}` : 'Not VIP';
+
+    const inventoryResponse = await fetch(`${API_URL}/inventory?buyerId=${encodeURIComponent(selectedUserId)}`, {
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!inventoryResponse.ok) throw new Error('Could not load inventory');
+    const inventory = await inventoryResponse.json();
+
+    inventoryList.innerHTML = '';
+    if (inventory.length === 0) {
+      inventoryList.textContent = 'Inventory empty';
+      return;
+    }
+
+    inventory.forEach(item => {
+      const itemElement = document.createElement('li');
+      itemElement.textContent = item.name || 'Unnamed item';
+      inventoryList.appendChild(itemElement);
+    });
+  } catch (error) {
+    console.error('Error loading admin account:', error);
+    inventoryList.textContent = 'Could not load account details.';
   }
 }
 

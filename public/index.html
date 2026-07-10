@@ -82,6 +82,25 @@
 
       <hr style="margin: 20px 0; border-color: #e0e0e0;">
 
+      <h2>👥 Account Viewer</h2>
+      <div class="form-group">
+        <label class="input-label" for="adminAccountSelect">Select an account</label>
+        <select id="adminAccountSelect" class="input-field" onchange="viewAdminAccount()">
+          <option value="" selected disabled>Select a user</option>
+        </select>
+      </div>
+      <div id="adminAccountDetails" class="admin-account-details" hidden>
+        <div class="admin-account-summary">
+          <div><strong>Balance:</strong> <span id="adminAccountBalance"></span></div>
+          <div><strong>Last online:</strong> <span id="adminAccountLastOnline"></span></div>
+          <div><strong>VIP:</strong> <span id="adminAccountVip"></span></div>
+        </div>
+        <strong>Inventory</strong>
+        <ul id="adminAccountInventory" class="admin-account-inventory"></ul>
+      </div>
+
+      <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
       <h2>🖼️ Admin Item Images</h2>
       <div class="form-group">
         <input id="adminItemId" placeholder="Item ID" class="input-field">

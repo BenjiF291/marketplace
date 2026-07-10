@@ -159,6 +159,7 @@ app.post('/login', async (req, res) => {
       return res.status(400).send('Invalid password');
     }
 
+    await userDoc.ref.update({ lastOnline: new Date() });
     res.json({ id: userDoc.id, username: user.username, isAdmin: user.isAdmin === true });
   } catch (error) {
     console.error('Login error:', error);
@@ -182,6 +183,7 @@ app.get('/users', async (req, res) => {
         balance: data.balance,
         isAdmin: data.isAdmin === true,
         createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
+        lastOnline: data.lastOnline ? (data.lastOnline.toDate ? data.lastOnline.toDate().toISOString() : new Date(data.lastOnline).toISOString()) : null,
         lastSpin: data.lastSpin ? (data.lastSpin.toDate ? data.lastSpin.toDate().toISOString() : new Date(data.lastSpin).toISOString()) : null,
         vipUntil: data.vipUntil ? (data.vipUntil.toDate ? data.vipUntil.toDate().toISOString() : new Date(data.vipUntil).toISOString()) : null
       });
@@ -759,12 +761,14 @@ app.get('/inventory', async (req, res) => {
     return res.status(401).send('Missing X-User-Id header');
   }
 
-  // If a buyerId query param is provided, it must match the requester.
+  let userId = requesterId;
   if (buyerId && buyerId !== requesterId) {
-    return res.status(403).send('Forbidden');
+    const isAdmin = await userIsAdmin(requesterId);
+    if (!isAdmin) {
+      return res.status(403).send('Forbidden');
+    }
+    userId = buyerId;
   }
-
-  const userId = requesterId;
 
   try {
     const itemsRef = db.collection('items');
