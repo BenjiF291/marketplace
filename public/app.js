@@ -302,8 +302,9 @@ async function spinWheel() {
     }
     const spins = 6;
     const degreesPerSegment = 360 / wheelSegments.length;
-    const pointerOffset = degreesPerSegment / 2;
-    const targetRotation = spins * 360 + (360 - (targetIndex * degreesPerSegment) - pointerOffset);
+    // Each slice starts at the 3 o'clock position; the pointer is at 12 o'clock.
+    const pointerAngle = 270;
+    const targetRotation = spins * 360 + (pointerAngle - (targetIndex * degreesPerSegment));
     wheelRotation += targetRotation;
 
     const wheel = document.getElementById('spinWheel');
