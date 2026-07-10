@@ -414,32 +414,24 @@ body {
   .wheel-segment {
     position: absolute;
     width: 50%;
-    height: 50%;
+    height: 100%;
     top: 0;
     left: 50%;
     transform-origin: 0% 100%;
     transform: rotate(calc(var(--i) * 60deg));
-    overflow: hidden;
+    clip-path: polygon(0% 100%, 100% 100%, 0% 0%);
   }
 
   .wheel-segment span {
     position: absolute;
-    left: 72%;
-    top: 50%;
+    left: 42%;
+    top: 44%;
     display: block;
     transform: translate(-50%, -50%) rotate(calc(-1 * var(--i) * 60deg));
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.45);
-  }
-
-  .wheel-segment:nth-child(odd)::before {
-    background: rgba(255,255,255,0.12);
-  }
-
-  .wheel-segment:nth-child(even)::before {
-    background: rgba(0,0,0,0.08);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
   }
 
   .wheel-segment:nth-child(1) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
@@ -451,13 +443,13 @@ body {
 
   .wheel-pointer-top {
     position: absolute;
-    top: -18px;
+    top: -24px;
     left: 50%;
     width: 0;
     height: 0;
-    border-left: 18px solid transparent;
-    border-right: 18px solid transparent;
-    border-bottom: 30px solid #ffdd57;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 32px solid #ffdd57;
     transform: translateX(-50%);
     z-index: 3;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
