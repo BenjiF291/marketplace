@@ -22,6 +22,7 @@
   <div class="tab-group">
     <button id="marketTab" class="tab-button active" onclick="showSection('marketplace')">Marketplace</button>
     <button id="inventoryTab" class="tab-button" onclick="showSection('inventory')">My Inventory</button>
+    <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
   </div>
@@ -123,6 +124,19 @@
     <section id="inventorySection" class="card inventory-section" style="display: none;">
       <h2>🎒 Inventory</h2>
       <ul id="inventoryItems" class="items-list"></ul>
+    </section>
+
+    <!-- History Section -->
+    <section id="historySection" class="card history-section" style="display: none;">
+      <h2>📜 History</h2>
+      <div class="history-group">
+        <h3>Footy transactions</h3>
+        <ul id="transferHistory" class="history-list"></ul>
+      </div>
+      <div class="history-group">
+        <h3>Item purchases and sales</h3>
+        <ul id="itemHistory" class="history-list"></ul>
+      </div>
     </section>
 
     <!-- Spin Wheel Section -->

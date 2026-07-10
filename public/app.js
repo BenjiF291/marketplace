@@ -33,9 +33,11 @@ function showSection(section) {
 
   const marketplaceSection = document.getElementById('marketplaceSection');
   const inventorySection = document.getElementById('inventorySection');
+  const historySection = document.getElementById('historySection');
   const spinSection = document.getElementById('spinSection');
   const marketTab = document.getElementById('marketTab');
   const inventoryTab = document.getElementById('inventoryTab');
+  const historyTab = document.getElementById('historyTab');
   const spinTab = document.getElementById('spinTab');
   const vipTab = document.getElementById('vipTab');
   const vipSection = document.getElementById('vipSection');
@@ -56,12 +58,14 @@ function showSection(section) {
 
     marketplaceSection.style.display = 'none';
     spinSection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
     inventorySection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
 
     // Mark tab active state
     marketTab.classList.remove('active');
     inventoryTab.classList.add('active');
+    if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
 
@@ -69,6 +73,31 @@ function showSection(section) {
     inventorySection.scrollIntoView({ behavior: 'smooth' });
 
     loadInventory();
+  } else if (section === 'history') {
+    clearSpinCountdown();
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
+
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'block';
+    spinSection.style.display = 'none';
+    if (vipSection) vipSection.style.display = 'none';
+
+    marketTab.classList.remove('active');
+    inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.add('active');
+    spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.remove('active');
+
+    if (historySection) historySection.scrollIntoView({ behavior: 'smooth' });
+    loadHistory();
   } else if (section === 'spin') {
     // Focused view like Inventory: hide other dashboard cards so Spin is sole focus
     clearSpinCountdown();
@@ -83,11 +112,13 @@ function showSection(section) {
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.add('active');
     if (vipTab) vipTab.classList.remove('active');
 
@@ -109,11 +140,13 @@ function showSection(section) {
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'block';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.add('active');
 
@@ -135,10 +168,12 @@ function showSection(section) {
 
     marketplaceSection.style.display = 'block';
     inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
   }
@@ -172,6 +207,67 @@ function formatCountdown(milliseconds) {
   const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
   const seconds = String(totalSeconds % 60).padStart(2, '0');
   return `${hours}:${minutes}:${seconds}`;
+}
+
+function renderHistoryMessage(list, message) {
+  list.innerHTML = '';
+  const item = document.createElement('li');
+  item.className = 'history-empty';
+  item.textContent = message;
+  list.appendChild(item);
+}
+
+function addHistoryEntry(list, description, occurredAt) {
+  const item = document.createElement('li');
+  const text = document.createElement('span');
+  const date = document.createElement('time');
+  text.textContent = description;
+  date.textContent = formatDate(occurredAt);
+  item.append(text, date);
+  list.appendChild(item);
+}
+
+async function loadHistory() {
+  const transferList = document.getElementById('transferHistory');
+  const itemList = document.getElementById('itemHistory');
+  if (!transferList || !itemList) return;
+
+  renderHistoryMessage(transferList, 'Loading transactions...');
+  renderHistoryMessage(itemList, 'Loading item history...');
+
+  try {
+    const res = await fetch(`${API_URL}/history`, {
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) throw new Error('Could not load history');
+    const history = await res.json();
+
+    transferList.innerHTML = '';
+    if (history.transfers.length === 0) {
+      renderHistoryMessage(transferList, 'No Footy transactions yet.');
+    } else {
+      history.transfers.forEach(transaction => {
+        const description = `From ${transaction.from} to ${transaction.to}: ${transaction.amount} Footy`;
+        addHistoryEntry(transferList, description, transaction.occurredAt);
+      });
+    }
+
+    itemList.innerHTML = '';
+    if (history.itemTrades.length === 0) {
+      renderHistoryMessage(itemList, 'No item purchases or sales yet.');
+    } else {
+      history.itemTrades.forEach(trade => {
+        const description = trade.direction === 'bought'
+          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${trade.amount} Footy`
+          : `Sold ${trade.itemName} to ${trade.counterparty} for ${trade.amount} Footy`;
+        addHistoryEntry(itemList, description, trade.occurredAt);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading history:', error);
+    renderHistoryMessage(transferList, 'Could not load transaction history.');
+    renderHistoryMessage(itemList, 'Could not load item history.');
+  }
 }
 
 function clearSpinCountdown() {

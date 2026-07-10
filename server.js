@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-User-Id');
   res.header('Access-Control-Max-Age', '3600');
 
   if (req.method === 'OPTIONS') {
@@ -44,6 +44,12 @@ function hashPassword(password) {
 
 function isValidPositiveNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
+}
+
+function serializeDate(value) {
+  if (!value) return null;
+  const date = value.toDate ? value.toDate() : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 async function userIsAdmin(userId) {
@@ -288,6 +294,7 @@ app.post('/transfer', async (req, res) => {
 
   try {
     const usersRef = db.collection('users');
+    const transferHistoryRef = db.collection('transactions').doc();
 
     await db.runTransaction(async (transaction) => {
       const fromRef = usersRef.doc(fromId);
@@ -322,6 +329,17 @@ app.post('/transfer', async (req, res) => {
 
       transaction.update(toDoc.ref, {
         balance: toUser.balance + amount
+      });
+
+      transaction.set(transferHistoryRef, {
+        type: 'transfer',
+        fromId,
+        fromUsername: fromUser.username,
+        toId: toDoc.id,
+        toUsername: toUser.username,
+        participantIds: [fromId, toDoc.id],
+        amount,
+        createdAt: new Date()
       });
     });
 
@@ -747,6 +765,77 @@ app.post('/buy', async (req, res) => {
 
     // Return error message to help debug purchase failures
     res.status(500).send(error.message || 'Purchase failed');
+  }
+});
+
+/* ------------------ HISTORY ------------------ */
+app.get('/history', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+
+  try {
+    const usersRef = db.collection('users');
+    const itemsRef = db.collection('items');
+    const [requesterDoc, transfersSnapshot, purchasesSnapshot, salesSnapshot, usersSnapshot] = await Promise.all([
+      usersRef.doc(requesterId).get(),
+      db.collection('transactions').where('participantIds', 'array-contains', requesterId).get(),
+      itemsRef.where('buyerId', '==', requesterId).where('sold', '==', true).get(),
+      itemsRef.where('sellerId', '==', requesterId).where('sold', '==', true).get(),
+      usersRef.get()
+    ]);
+
+    if (!requesterDoc.exists) {
+      return res.status(404).send('User not found');
+    }
+
+    const usernames = new Map();
+    usersSnapshot.forEach(doc => usernames.set(doc.id, doc.data().username || 'Unknown user'));
+
+    const transfers = transfersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        from: data.fromUsername || usernames.get(data.fromId) || 'Unknown user',
+        to: data.toUsername || usernames.get(data.toId) || 'Unknown user',
+        amount: data.amount || 0,
+        occurredAt: serializeDate(data.createdAt)
+      };
+    });
+
+    const itemTrades = [];
+    purchasesSnapshot.forEach(doc => {
+      const item = doc.data();
+      itemTrades.push({
+        id: doc.id,
+        direction: 'bought',
+        itemName: item.name || 'Unknown item',
+        counterparty: usernames.get(item.sellerId) || 'Unknown user',
+        amount: item.price || 0,
+        occurredAt: serializeDate(item.purchasedAt)
+      });
+    });
+    salesSnapshot.forEach(doc => {
+      const item = doc.data();
+      itemTrades.push({
+        id: doc.id,
+        direction: 'sold',
+        itemName: item.name || 'Unknown item',
+        counterparty: usernames.get(item.buyerId) || 'Unknown user',
+        amount: item.price || 0,
+        occurredAt: serializeDate(item.purchasedAt)
+      });
+    });
+
+    const newestFirst = (a, b) => new Date(b.occurredAt || 0) - new Date(a.occurredAt || 0);
+    res.json({
+      transfers: transfers.sort(newestFirst),
+      itemTrades: itemTrades.sort(newestFirst)
+    });
+  } catch (error) {
+    console.error('Error getting history:', error);
+    res.status(500).send('Error retrieving history');
   }
 });
 
