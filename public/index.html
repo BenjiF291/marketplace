@@ -23,6 +23,7 @@
     <button id="marketTab" class="tab-button active" onclick="showSection('marketplace')">Marketplace</button>
     <button id="inventoryTab" class="tab-button" onclick="showSection('inventory')">My Inventory</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
+    <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
   </div>
 
   <div class="main-grid">
@@ -111,6 +112,22 @@
       <div id="spinResult" class="spin-result"></div>
       <div id="spinCountdown" class="spin-countdown"></div>
       <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 Footy</div>
+    </section>
+
+    <!-- VIP Section -->
+    <section id="vipSection" class="card vip-section" style="display: none;">
+      <h2>💎 VIP Membership</h2>
+      <p>Purchase VIP to receive double rewards from the daily spin for 30 days.</p>
+      <div style="margin: 12px 0;">
+        <strong>Price:</strong> <span id="vipPrice">200</span> Footy
+      </div>
+      <div style="margin-bottom: 12px;">
+        <button id="buyVipButton" onclick="buyVip()" class="btn btn-primary">Buy VIP</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <p id="vipStatusText">Loading VIP status...</p>
+        <div id="vipCountdown" style="font-weight:700; font-size:1.1em;"></div>
+      </div>
     </section>
 
     <!-- List Item Modal -->

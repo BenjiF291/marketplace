@@ -33,6 +33,7 @@ function showSection(section) {
   const marketTab = document.getElementById('marketTab');
   const inventoryTab = document.getElementById('inventoryTab');
   const spinTab = document.getElementById('spinTab');
+  const vipTab = document.getElementById('vipTab');
 
   if (section === 'inventory') {
     clearSpinCountdown();
@@ -103,7 +104,14 @@ function showSection(section) {
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
     spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.remove('active');
   }
+}
+
+/** Handle VIP tab display */
+async function showVIP() {
+  showSection('vip');
+  await loadVipInfo();
 }
 
 function formatDate(value) {
@@ -194,6 +202,17 @@ async function loadSpinInfo() {
     const spinButton = document.getElementById('spinButton');
     if (spinButton) spinButton.disabled = true;
   }
+
+  // Show VIP note if active
+  const vipUntil = user.vipUntil ? parseTimestamp(user.vipUntil) : null;
+  const vipNoteEl = document.getElementById('spinVipNote');
+  if (vipNoteEl) {
+    if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
+      vipNoteEl.textContent = `VIP active — daily reward doubled until ${vipUntil.toLocaleString()}`;
+    } else {
+      vipNoteEl.textContent = '';
+    }
+  }
 }
 
 async function spinWheel() {
@@ -221,6 +240,98 @@ async function spinWheel() {
   } catch (error) {
     console.error('Spin error:', error);
     resultEl.textContent = 'Could not spin the wheel. Try again later.';
+  }
+}
+
+/* ------------------ VIP ------------------ */
+let vipCountdownInterval = null;
+
+function clearVipCountdown() {
+  if (vipCountdownInterval) {
+    clearInterval(vipCountdownInterval);
+    vipCountdownInterval = null;
+  }
+}
+
+async function loadVipInfo() {
+  const statusText = document.getElementById('vipStatusText');
+  const countdownEl = document.getElementById('vipCountdown');
+  const buyBtn = document.getElementById('buyVipButton');
+
+  statusText.textContent = '';
+  countdownEl.textContent = '';
+
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) throw new Error('Failed to retrieve user info');
+    const users = await res.json();
+    const user = users.find(u => u.id === currentUserId);
+
+    if (!user) {
+      statusText.textContent = 'User not found';
+      buyBtn.disabled = true;
+      return;
+    }
+
+    const vipUntil = user.vipUntil ? parseTimestamp(user.vipUntil) : null;
+    if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
+      statusText.textContent = `You are a VIP until ${vipUntil.toLocaleString()}`;
+      buyBtn.textContent = 'Extend VIP (30 days)';
+
+      const update = () => {
+        const remaining = vipUntil.getTime() - new Date().getTime();
+        if (remaining <= 0) {
+          clearVipCountdown();
+          statusText.textContent = 'You are not a VIP';
+          countdownEl.textContent = '';
+          buyBtn.textContent = 'Buy VIP';
+          return;
+        }
+        countdownEl.textContent = formatCountdown(remaining);
+      };
+
+      update();
+      clearVipCountdown();
+      vipCountdownInterval = setInterval(update, 1000);
+    } else {
+      statusText.textContent = 'You are not a VIP';
+      buyBtn.textContent = 'Buy VIP';
+      countdownEl.textContent = '';
+    }
+
+    buyBtn.disabled = false;
+  } catch (error) {
+    console.error('Error loading VIP info:', error);
+    statusText.textContent = 'Could not load VIP status';
+    if (buyBtn) buyBtn.disabled = true;
+  }
+}
+
+async function buyVip() {
+  const buyBtn = document.getElementById('buyVipButton');
+  buyBtn.disabled = true;
+  try {
+    const res = await fetch(`${API_URL}/buy-vip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId }
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg || 'Could not purchase VIP');
+      buyBtn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    alert(`✅ VIP active until ${new Date(data.vipUntil).toLocaleString()}`);
+    updateBalance();
+    loadUsers();
+    loadVipInfo();
+  } catch (error) {
+    console.error('Buy VIP error:', error);
+    alert('Could not purchase VIP right now');
+    buyBtn.disabled = false;
   }
 }
 

@@ -211,7 +211,8 @@ app.get('/users', async (req, res) => {
         balance: data.balance,
         isAdmin: data.isAdmin === true,
         createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
-        lastSpin: data.lastSpin ? data.lastSpin.toDate().toISOString() : null
+        lastSpin: data.lastSpin ? (data.lastSpin.toDate ? data.lastSpin.toDate().toISOString() : new Date(data.lastSpin).toISOString()) : null,
+        vipUntil: data.vipUntil ? (data.vipUntil.toDate ? data.vipUntil.toDate().toISOString() : new Date(data.vipUntil).toISOString()) : null
       });
     });
 
@@ -259,7 +260,15 @@ app.post('/spin-wheel', async (req, res) => {
         }
       }
 
+      // Pick base reward
       rewardAmount = rewards[Math.floor(Math.random() * rewards.length)];
+
+      // If user has an active VIP, double the reward
+      const vipUntil = user.vipUntil ? (user.vipUntil.toDate ? user.vipUntil.toDate() : new Date(user.vipUntil)) : null;
+      if (vipUntil && vipUntil.getTime() > now.getTime()) {
+        rewardAmount = rewardAmount * 2;
+      }
+
       newBalance = (user.balance || 0) + rewardAmount;
       nextSpinAt = new Date(now.getTime() + cooldownMs);
 
@@ -851,5 +860,58 @@ app.post('/make-admin', async (req, res) => {
   } catch (error) {
     console.error('Error promoting user to admin:', error);
     res.status(500).send('Could not promote user');
+  }
+});
+
+/* ------------------ BUY VIP ------------------ */
+// Users can purchase VIP for a fixed price (in Footy). VIP lasts 30 days and
+// purchasing while already VIP extends the expiry by 30 days.
+app.post('/buy-vip', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+
+  const VIP_PRICE = 200; // cost in Footy for 30 days
+  const DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+
+  try {
+    const usersRef = db.collection('users');
+    const userRef = usersRef.doc(requesterId);
+
+    let newVipUntil;
+    let newBalance;
+
+    await db.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) throw new Error('User not found');
+
+      const user = userDoc.data();
+      const now = new Date();
+
+      const currentVip = user.vipUntil ? (user.vipUntil.toDate ? user.vipUntil.toDate() : new Date(user.vipUntil)) : null;
+      const baseTime = (currentVip && currentVip.getTime() > now.getTime()) ? currentVip.getTime() : now.getTime();
+      newVipUntil = new Date(baseTime + DURATION_MS);
+
+      if ((user.balance || 0) < VIP_PRICE) {
+        throw new Error('Not enough money');
+      }
+
+      newBalance = (user.balance || 0) - VIP_PRICE;
+
+      transaction.update(userRef, {
+        balance: newBalance,
+        vipUntil: newVipUntil
+      });
+    });
+
+    res.json({ vipUntil: newVipUntil.toISOString(), balance: newBalance });
+  } catch (error) {
+    console.error('Buy VIP error:', error);
+    if (error.message === 'User not found' || error.message === 'Not enough money') {
+      return res.status(400).send(error.message);
+    }
+    res.status(500).send('Could not purchase VIP');
   }
 });
