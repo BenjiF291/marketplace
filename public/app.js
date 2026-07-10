@@ -36,12 +36,30 @@ function showSection(section) {
 
   if (section === 'inventory') {
     clearSpinCountdown();
+
+    // Hide other dashboard cards so Inventory becomes the sole focus
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
+
     marketplaceSection.style.display = 'none';
-    inventorySection.style.display = 'block';
     spinSection.style.display = 'none';
+    inventorySection.style.display = 'block';
+
+    // Mark tab active state
     marketTab.classList.remove('active');
     inventoryTab.classList.add('active');
     spinTab.classList.remove('active');
+
+    // Ensure inventory scrolls into view on mobile
+    inventorySection.scrollIntoView({ behavior: 'smooth' });
+
     loadInventory();
   } else if (section === 'spin') {
     marketplaceSection.style.display = 'none';

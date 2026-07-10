@@ -233,6 +233,43 @@ body {
   border: 1px solid #ddd;
 }
 
+/* Inventory-specific layout: grid of cards, centered content */
+.inventory-section .items-list {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.inventory-section .items-list li {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px;
+  border-left: none;
+}
+
+.inventory-section .item-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 0 10px 0;
+  border-radius: 12px;
+}
+
+@media (max-width: 768px) {
+  .inventory-section .items-list {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .inventory-section .item-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  /* Make inventory take full width on mobile */
+  .main-grid > section { display: none; }
+  .inventory-section { display: block !important; grid-column: 1 / -1; }
+}
+
 .admin-section {
   grid-column: 1 / -1;
   border: 1px solid #dcdcdc;
