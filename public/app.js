@@ -62,7 +62,8 @@ function showSection(section) {
 
 function formatDate(value) {
   if (!value) return 'Unknown date';
-  const date = new Date(value);
+  const date = parseTimestamp(value);
+  if (!date || Number.isNaN(date.getTime())) return 'Unknown date';
   return date.toLocaleString();
 }
 
@@ -70,6 +71,7 @@ function parseTimestamp(value) {
   if (!value) return null;
   if (typeof value === 'string') return new Date(value);
   if (value._seconds) return new Date(value._seconds * 1000);
+  if (value.seconds) return new Date(value.seconds * 1000);
   return new Date(value);
 }
 
