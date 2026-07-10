@@ -62,6 +62,16 @@ function showSection(section) {
 
     loadInventory();
   } else if (section === 'spin') {
+    // Restore dashboard cards (they may have been hidden by Inventory view)
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = '';
+    if (transferSection) transferSection.style.display = '';
+    if (sellSection) sellSection.style.display = '';
+    if (adminCard) adminCard.style.display = currentUserIsAdmin ? 'block' : 'none';
+
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
     spinSection.style.display = 'block';
@@ -71,6 +81,16 @@ function showSection(section) {
     loadSpinInfo();
   } else {
     clearSpinCountdown();
+    // Restore dashboard cards that Inventory hid
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = '';
+    if (transferSection) transferSection.style.display = '';
+    if (sellSection) sellSection.style.display = '';
+    if (adminCard) adminCard.style.display = currentUserIsAdmin ? 'block' : 'none';
+
     marketplaceSection.style.display = 'block';
     inventorySection.style.display = 'none';
     spinSection.style.display = 'none';
