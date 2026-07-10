@@ -63,7 +63,23 @@
 
     <!-- Admin Image Management -->
     <section id="adminSection" class="card admin-section" style="display: none;">
-      <h2>🔧 Admin Item Images</h2>
+      <h2>🔧 Admin Controls</h2>
+      <div class="form-group">
+        <label class="input-label">Grant cards to a user</label>
+        <select id="grantUserSelect" class="input-field"></select>
+        <label class="input-label">Choose a card</label>
+        <select id="grantCardSelect" class="input-field" onchange="updateGrantCardPreview()"></select>
+        <div id="grantCardPreview" style="display:none; align-items:center; gap:10px; margin-bottom:10px;">
+          <img id="grantCardPreviewImage" src="" alt="Selected card" class="item-image" style="width:80px;height:80px;">
+          <span id="grantCardPreviewText"></span>
+        </div>
+        <input id="grantQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
+        <button onclick="grantItemToUser()" class="btn btn-primary">Grant Card</button>
+      </div>
+
+      <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
+      <h2>🖼️ Admin Item Images</h2>
       <div class="form-group">
         <input id="adminItemId" placeholder="Item ID" class="input-field">
         <input id="adminImageUrl" placeholder="Image URL" class="input-field">
@@ -72,7 +88,7 @@
           <button onclick="clearItemImage()" class="btn btn-danger" type="button">Remove Image</button>
         </div>
       </div>
-      <p style="font-size:0.9em; color:#555; margin-top: 10px;">Admin only: set or clear an inventory picture by item ID.</p>
+      <p style="font-size:0.9em; color:#555; margin-top: 10px;">Admin only: grant cards to users or set item images manually.</p>
     </section>
 
     <!-- Marketplace Section -->

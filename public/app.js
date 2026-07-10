@@ -16,6 +16,7 @@ let currentView = 'marketplace';
 let spinCountdownInterval = null;
 let selectedItemForListing = null; // Track selected item for listing
 let currentUserIsAdmin = false;
+let availableCardImages = [];
 
 function logout() {
   localStorage.removeItem('userId');
@@ -229,6 +230,11 @@ async function loadUsers() {
       adminSection.style.display = currentUserIsAdmin ? 'block' : 'none';
     }
 
+    if (currentUserIsAdmin) {
+      populateGrantControls(users);
+      loadCardOptions();
+    }
+
     // Update current user display with admin badge when applicable
     const currentUsernameEl = document.getElementById('currentUsername');
     if (currentUsernameEl) {
@@ -271,6 +277,111 @@ async function updateBalance() {
     if (balanceEl) {
       balanceEl.textContent = "Balance unavailable";
     }
+  }
+}
+
+function populateGrantControls(users) {
+  const userSelect = document.getElementById('grantUserSelect');
+  if (!userSelect) return;
+
+  userSelect.innerHTML = '';
+  users.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.username;
+    option.textContent = user.username + (user.isAdmin ? ' (admin)' : '');
+    userSelect.appendChild(option);
+  });
+}
+
+async function loadCardOptions() {
+  try {
+    const res = await fetch(`${API_URL}/card-images`);
+    if (!res.ok) throw new Error('Could not load card list');
+    availableCardImages = await res.json();
+
+    const cardSelect = document.getElementById('grantCardSelect');
+    if (!cardSelect) return;
+
+    cardSelect.innerHTML = '';
+    availableCardImages.forEach(filename => {
+      const option = document.createElement('option');
+      option.value = filename;
+      option.textContent = filename;
+      cardSelect.appendChild(option);
+    });
+
+    updateGrantCardPreview();
+  } catch (error) {
+    console.error('Error loading card images:', error);
+  }
+}
+
+function updateGrantCardPreview() {
+  const cardSelect = document.getElementById('grantCardSelect');
+  const preview = document.getElementById('grantCardPreview');
+  const previewImage = document.getElementById('grantCardPreviewImage');
+  const previewText = document.getElementById('grantCardPreviewText');
+
+  if (!cardSelect || !preview || !previewImage || !previewText) return;
+
+  const selected = cardSelect.value;
+  if (!selected) {
+    preview.style.display = 'none';
+    return;
+  }
+
+  preview.style.display = 'flex';
+  previewImage.src = `/images/${selected}`;
+  previewText.textContent = `Selected card: ${selected}`;
+}
+
+async function grantItemToUser() {
+  const userSelect = document.getElementById('grantUserSelect');
+  const cardSelect = document.getElementById('grantCardSelect');
+  const quantityInput = document.getElementById('grantQuantity');
+
+  if (!userSelect || !cardSelect || !quantityInput) return;
+
+  const username = userSelect.value;
+  const cardId = cardSelect.value;
+  const quantity = Number(quantityInput.value);
+
+  if (!username) {
+    alert('Select a user');
+    return;
+  }
+
+  if (!cardId) {
+    alert('Select a card');
+    return;
+  }
+
+  if (!quantity || quantity <= 0) {
+    alert('Enter a valid quantity');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/grant-item`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId
+      },
+      body: JSON.stringify({ username, cardId, quantity })
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg);
+      return;
+    }
+
+    const data = await res.json();
+    alert(`✅ Granted ${data.granted} card(s) to ${username}`);
+  } catch (error) {
+    console.error('Grant item error:', error);
+    alert('Unable to grant cards right now');
   }
 }
 

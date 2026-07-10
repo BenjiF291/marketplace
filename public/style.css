@@ -239,6 +239,12 @@ body {
   background: #fff;
 }
 
+.input-label {
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 6px;
+}
+
 .admin-badge {
   display: inline-block;
   margin-left: 8px;

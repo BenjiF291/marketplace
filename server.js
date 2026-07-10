@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 const { admin, db } = require('./firebase-server');
 require('dotenv').config();
@@ -65,7 +67,7 @@ async function initializeTestUsers() {
       // No existing admin-like user found; create a new lowercase 'admin' account
       await usersRef.add({
         username: 'admin',
-        passwordHash: hashPassword('demo123'),
+        passwordHash: hashPassword('banana68'),
         balance: 1000,
         isAdmin: true,
         createdAt: new Date()
@@ -432,6 +434,96 @@ app.post('/items/image', async (req, res) => {
   } catch (error) {
     console.error('Error updating item image:', error);
     res.status(500).send('Error updating item image');
+  }
+});
+
+/* ------------------ CARD IMAGE LIST ------------------ */
+app.get('/card-images', async (req, res) => {
+  try {
+    const imagesDir = path.join(__dirname, 'public', 'images');
+    if (!fs.existsSync(imagesDir)) {
+      return res.json([]);
+    }
+
+    const files = fs.readdirSync(imagesDir)
+      .filter(file => ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(file).toLowerCase()))
+      .sort();
+
+    res.json(files);
+  } catch (error) {
+    console.error('Error reading card images:', error);
+    res.status(500).send('Error reading card images');
+  }
+});
+
+/* ------------------ GRANT ITEM ------------------ */
+app.post('/grant-item', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { username, cardId, quantity } = req.body;
+
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+
+  if (!username || typeof username !== 'string' || !username.trim()) {
+    return res.status(400).send('Invalid username');
+  }
+
+  if (!cardId || typeof cardId !== 'string' || !cardId.trim()) {
+    return res.status(400).send('Invalid cardId');
+  }
+
+  const qty = Number(quantity) || 0;
+  if (!Number.isInteger(qty) || qty <= 0 || qty > 20) {
+    return res.status(400).send('Quantity must be a whole number between 1 and 20');
+  }
+
+  try {
+    const isAdmin = await userIsAdmin(requesterId);
+    if (!isAdmin) {
+      return res.status(403).send('Forbidden');
+    }
+
+    const usersRef = db.collection('users');
+    const targetSnapshot = await usersRef.where('username', '==', username.trim()).get();
+    if (targetSnapshot.empty) {
+      return res.status(400).send('Recipient not found');
+    }
+
+    const recipientDoc = targetSnapshot.docs[0];
+    const recipientId = recipientDoc.id;
+
+    let imageFile = cardId.trim();
+    if (!path.extname(imageFile)) {
+      imageFile = `${imageFile}.png`;
+    }
+
+    const imagesDir = path.join(__dirname, 'public', 'images');
+    const imagePath = path.join(imagesDir, imageFile);
+    if (!fs.existsSync(imagePath)) {
+      return res.status(400).send('Card image not found');
+    }
+
+    const batchPromises = [];
+    for (let i = 0; i < qty; i++) {
+      batchPromises.push(db.collection('items').add({
+        name: `Card ${cardId}`,
+        price: 0,
+        sellerId: requesterId,
+        sold: true,
+        buyerId: recipientId,
+        purchasedAt: new Date(),
+        sourceItemId: null,
+        imageUrl: `/images/${imageFile}`,
+        createdAt: new Date()
+      }));
+    }
+
+    await Promise.all(batchPromises);
+    res.json({ success: true, granted: qty });
+  } catch (error) {
+    console.error('Error granting item:', error);
+    res.status(500).send('Error granting item');
   }
 });
 
