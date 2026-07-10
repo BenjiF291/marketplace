@@ -547,6 +547,15 @@ app.post('/buy', async (req, res) => {
 
       const seller = sellerDoc.data();
 
+      // If the listing came from inventory, read the source item BEFORE performing writes
+      let sourceItemRef = null;
+      let sourceItemDoc = null;
+      if (item.sourceItemId) {
+        sourceItemRef = itemsRef.doc(item.sourceItemId);
+        sourceItemDoc = await transaction.get(sourceItemRef);
+      }
+
+      // Perform writes (all reads must be done before these)
       transaction.update(buyerRef, {
         balance: buyer.balance - item.price
       });
@@ -561,16 +570,11 @@ app.post('/buy', async (req, res) => {
         purchasedAt: new Date()
       });
 
-      // If listing came from inventory, delete the source item (seller no longer owns it)
-      if (item.sourceItemId) {
-        const sourceItemRef = itemsRef.doc(item.sourceItemId);
-        const sourceItemDoc = await transaction.get(sourceItemRef);
-        if (sourceItemDoc.exists) {
-          transaction.delete(sourceItemRef);
-        }
+      // Delete the original source inventory item atomically (if it exists)
+      if (sourceItemDoc && sourceItemDoc.exists) {
+        transaction.delete(sourceItemRef);
       }
     });
-
     res.send('Purchase successful');
   } catch (error) {
     console.error('Error buying item:', error);
