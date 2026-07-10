@@ -55,21 +55,27 @@ async function initializeTestUsers() {
   try {
     const usersRef = db.collection('users');
 
-    const adminSnap = await usersRef.where('username', '==', 'Admin').get();
+    // Prefer an existing 'admin' username (lowercase) if present, otherwise 'Admin'
+    let adminSnap = await usersRef.where('username', '==', 'admin').get();
     if (adminSnap.empty) {
+      adminSnap = await usersRef.where('username', '==', 'Admin').get();
+    }
+
+    if (adminSnap.empty) {
+      // No existing admin-like user found; create a new lowercase 'admin' account
       await usersRef.add({
-        username: 'Admin',
+        username: 'admin',
         passwordHash: hashPassword('demo123'),
         balance: 1000,
         isAdmin: true,
         createdAt: new Date()
       });
-      console.log('Created test user: Admin');
+      console.log('Created test user: admin');
     } else {
       const adminDoc = adminSnap.docs[0];
       if (adminDoc.data().isAdmin !== true) {
         await adminDoc.ref.update({ isAdmin: true });
-        console.log('Updated existing user Admin to admin role');
+        console.log(`Updated existing user ${adminDoc.data().username} to admin role`);
       }
     }
 
@@ -201,6 +207,7 @@ app.get('/users', async (req, res) => {
         id: doc.id,
         username: data.username,
         balance: data.balance,
+        isAdmin: data.isAdmin === true,
         createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
         lastSpin: data.lastSpin ? data.lastSpin.toDate().toISOString() : null
       });
@@ -717,4 +724,40 @@ app.get('/inventory', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+/* ------------------ MAKE ADMIN (temporary, secured) ------------------ */
+// Use only if you need to promote an existing username to admin.
+// Requires environment variable ADMIN_SECRET to be set to a shared secret.
+app.post('/make-admin', async (req, res) => {
+  const { username, secret } = req.body;
+
+  if (!process.env.ADMIN_SECRET) {
+    return res.status(500).send('Server not configured for make-admin');
+  }
+
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).send('Forbidden');
+  }
+
+  if (!username || typeof username !== 'string') {
+    return res.status(400).send('Invalid username');
+  }
+
+  try {
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('username', '==', username).get();
+
+    if (snapshot.empty) {
+      return res.status(400).send('User not found');
+    }
+
+    const userDoc = snapshot.docs[0];
+    await userDoc.ref.update({ isAdmin: true });
+
+    res.send(`Promoted ${username} to admin`);
+  } catch (error) {
+    console.error('Error promoting user to admin:', error);
+    res.status(500).send('Could not promote user');
+  }
 });

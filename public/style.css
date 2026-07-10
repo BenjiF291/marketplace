@@ -239,6 +239,18 @@ body {
   background: #fff;
 }
 
+.admin-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%);
+  color: #4b2e00;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8em;
+  vertical-align: middle;
+}
+
 .item-info {
   flex: 1;
   font-weight: 500;

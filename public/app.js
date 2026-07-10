@@ -228,6 +228,16 @@ async function loadUsers() {
     if (adminSection) {
       adminSection.style.display = currentUserIsAdmin ? 'block' : 'none';
     }
+
+    // Update current user display with admin badge when applicable
+    const currentUsernameEl = document.getElementById('currentUsername');
+    if (currentUsernameEl) {
+      if (currentUserIsAdmin) {
+        currentUsernameEl.innerHTML = `👤 ${username} <span class="admin-badge">ADMIN</span>`;
+      } else {
+        currentUsernameEl.textContent = `👤 ${username}`;
+      }
+    }
   } catch (error) {
     console.error('Error loading user role:', error);
   }
