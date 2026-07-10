@@ -108,10 +108,30 @@
     <section id="spinSection" class="card spin-section" style="display: none;">
       <h2>🎯 Spin the Wheel</h2>
       <p id="spinStatus" class="spin-status">Spin once every 24 hours for a random coin reward.</p>
+      <div class="wheel-area">
+        <div class="wheel-container">
+          <div id="spinWheel" class="wheel">
+            <div class="wheel-segment" style="--i:0"><span>8</span></div>
+            <div class="wheel-segment" style="--i:1"><span>10</span></div>
+            <div class="wheel-segment" style="--i:2"><span>12</span></div>
+            <div class="wheel-segment" style="--i:3"><span>16</span></div>
+            <div class="wheel-segment" style="--i:4"><span>20</span></div>
+            <div class="wheel-segment" style="--i:5"><span>24</span></div>
+            <div class="wheel-segment" style="--i:6"><span>16</span></div>
+            <div class="wheel-segment" style="--i:7"><span>20</span></div>
+            <div class="wheel-segment" style="--i:8"><span>24</span></div>
+            <div class="wheel-segment" style="--i:9"><span>32</span></div>
+            <div class="wheel-segment" style="--i:10"><span>40</span></div>
+            <div class="wheel-segment" style="--i:11"><span>48</span></div>
+          </div>
+          <div class="wheel-pointer"></div>
+          <div class="wheel-center">Go</div>
+        </div>
+      </div>
       <button id="spinButton" onclick="spinWheel()" class="btn btn-success">Spin the Wheel</button>
       <div id="spinResult" class="spin-result"></div>
       <div id="spinCountdown" class="spin-countdown"></div>
-      <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 Footy</div>
+      <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 Footy, double for VIP.</div>
     </section>
 
     <!-- VIP Section -->

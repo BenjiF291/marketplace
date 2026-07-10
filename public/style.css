@@ -386,6 +386,108 @@ body {
   text-align: center;
 }
 
+  .wheel-area {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  .wheel-container {
+    position: relative;
+    width: 320px;
+    height: 320px;
+  }
+
+  .wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    transform: rotate(0deg);
+    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    box-shadow: 0 0 0 8px rgba(255,255,255,0.12), 0 20px 40px rgba(0,0,0,0.12);
+  }
+
+  .wheel-segment {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 0;
+    left: 50%;
+    transform-origin: 0% 100%;
+    transform: rotate(calc(var(--i) * 30deg));
+    overflow: hidden;
+  }
+
+  .wheel-segment span {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    left: -100%;
+    top: -100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: rotate(15deg);
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .wheel-segment:nth-child(odd) {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+  }
+
+  .wheel-segment:nth-child(even) {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 30px solid #ffdd57;
+    transform: translate(-50%, -100%);
+    z-index: 2;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  }
+
+  .wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 84px;
+    height: 84px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #f3f3f3 60%, #d4d4d4);
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #333;
+    box-shadow: inset 0 4px 12px rgba(255,255,255,0.7);
+    z-index: 2;
+  }
+
+  .spin-result {
+    min-height: 44px;
+  }
+
+  @media (max-width: 768px) {
+    .wheel-container {
+      width: 260px;
+      height: 260px;
+    }
+  }
+
 @keyframes slideDown {
   from {
     opacity: 0;

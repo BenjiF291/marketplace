@@ -14,6 +14,10 @@ const API_URL = 'https://marketplace-aw8b.onrender.com';  // Production Render U
 let isServerOnline = true;
 let currentView = 'marketplace';
 let spinCountdownInterval = null;
+let vipCountdownInterval = null;
+let isSpinning = false;
+let wheelRotation = 0;
+const wheelSegments = [8, 10, 12, 16, 20, 24, 16, 20, 24, 32, 40, 48];
 let selectedItemForListing = null; // Track selected item for listing
 let currentUserIsAdmin = false;
 let availableCardImages = [];
@@ -177,6 +181,26 @@ function clearSpinCountdown() {
   }
 }
 
+function clearVipCountdown() {
+  if (vipCountdownInterval) {
+    clearInterval(vipCountdownInterval);
+    vipCountdownInterval = null;
+  }
+}
+
+function normalizeWheelRotation() {
+  wheelRotation = wheelRotation % 360;
+  const wheel = document.getElementById('spinWheel');
+  if (wheel) {
+    wheel.style.transition = 'none';
+    wheel.style.transform = `rotate(${wheelRotation}deg)`;
+  }
+}
+
+function getWheelIndexForReward(amount) {
+  return wheelSegments.findIndex(value => value === amount);
+}
+
 async function loadSpinInfo() {
   const statusEl = document.getElementById('spinStatus');
   const resultEl = document.getElementById('spinResult');
@@ -248,6 +272,10 @@ async function loadSpinInfo() {
 }
 
 async function spinWheel() {
+  if (isSpinning) return;
+  isSpinning = true;
+  const spinButton = document.getElementById('spinButton');
+  if (spinButton) spinButton.disabled = true;
   const resultEl = document.getElementById('spinResult');
   resultEl.textContent = '';
 
@@ -262,22 +290,48 @@ async function spinWheel() {
 
     if (!res.ok) {
       resultEl.textContent = data.message || data.error || 'Could not spin the wheel';
+      document.getElementById('spinButton').disabled = false;
+      isSpinning = false;
       return;
     }
 
-    resultEl.innerHTML = `✅ You won <strong>${data.amount} Footy</strong>! Your balance is now ${data.balance} Footy.`;
-    loadUsers();
-    loadInventory();
-    loadSpinInfo();
+    const amount = data.amount;
+    let targetIndex = getWheelIndexForReward(amount);
+    if (targetIndex < 0) {
+      targetIndex = Math.floor(Math.random() * wheelSegments.length);
+    }
+    const spins = 6;
+    const degreesPerSegment = 360 / wheelSegments.length;
+    const pointerOffset = degreesPerSegment / 2;
+    const targetRotation = spins * 360 + (360 - (targetIndex * degreesPerSegment) - pointerOffset);
+    wheelRotation += targetRotation;
+
+    const wheel = document.getElementById('spinWheel');
+    if (wheel) {
+      wheel.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)';
+      wheel.style.transform = `rotate(${wheelRotation}deg)`;
+    }
+
+    wheel.addEventListener('transitionend', function onEnd() {
+      wheel.removeEventListener('transitionend', onEnd);
+      normalizeWheelRotation();
+      resultEl.innerHTML = `✅ You won <strong>${amount} Footy</strong>! Your balance is now ${data.balance} Footy.`;
+      document.getElementById('spinButton').disabled = false;
+      isSpinning = false;
+      loadUsers();
+      loadInventory();
+      loadSpinInfo();
+    });
   } catch (error) {
     console.error('Spin error:', error);
     resultEl.textContent = 'Could not spin the wheel. Try again later.';
+    const spinButton = document.getElementById('spinButton');
+    if (spinButton) spinButton.disabled = false;
+    isSpinning = false;
   }
 }
 
 /* ------------------ VIP ------------------ */
-let vipCountdownInterval = null;
-
 function clearVipCountdown() {
   if (vipCountdownInterval) {
     clearInterval(vipCountdownInterval);
