@@ -53,11 +53,13 @@ function showSection(section) {
     marketplaceSection.style.display = 'none';
     spinSection.style.display = 'none';
     inventorySection.style.display = 'block';
+    if (vipSection) vipSection.style.display = 'none';
 
     // Mark tab active state
     marketTab.classList.remove('active');
     inventoryTab.classList.add('active');
     spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.remove('active');
 
     // Ensure inventory scrolls into view on mobile
     inventorySection.scrollIntoView({ behavior: 'smooth' });
@@ -78,6 +80,7 @@ function showSection(section) {
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
     spinSection.style.display = 'block';
+    if (vipSection) vipSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -129,6 +132,7 @@ function showSection(section) {
     marketplaceSection.style.display = 'block';
     inventorySection.style.display = 'none';
     spinSection.style.display = 'none';
+    if (vipSection) vipSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
     spinTab.classList.remove('active');
@@ -302,32 +306,45 @@ async function loadVipInfo() {
     }
 
     const vipUntil = user.vipUntil ? parseTimestamp(user.vipUntil) : null;
-    if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
-      statusText.textContent = `You are a VIP until ${vipUntil.toLocaleString()}`;
-      buyBtn.textContent = 'Extend VIP (30 days)';
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+    if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
       const update = () => {
         const remaining = vipUntil.getTime() - new Date().getTime();
         if (remaining <= 0) {
           clearVipCountdown();
           statusText.textContent = 'You are not a VIP';
           countdownEl.textContent = '';
+          document.getElementById('vipDaysLeft').textContent = '0';
+          document.getElementById('vipHoursLeft').textContent = '0';
           buyBtn.textContent = 'Buy VIP';
+          buyBtn.disabled = false;
           return;
         }
+
+        const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        document.getElementById('vipDaysLeft').textContent = days;
+        document.getElementById('vipHoursLeft').textContent = hours;
         countdownEl.textContent = formatCountdown(remaining);
+
+        const canRenew = remaining <= ONE_DAY_MS;
+        buyBtn.disabled = !canRenew;
+        buyBtn.textContent = canRenew ? 'Extend VIP (30 days)' : 'Renew available when 1 day remains';
+        statusText.textContent = `You are a VIP until ${vipUntil.toLocaleString()}`;
       };
 
-      update();
       clearVipCountdown();
+      update();
       vipCountdownInterval = setInterval(update, 1000);
     } else {
       statusText.textContent = 'You are not a VIP';
       buyBtn.textContent = 'Buy VIP';
       countdownEl.textContent = '';
+      document.getElementById('vipDaysLeft').textContent = '0';
+      document.getElementById('vipHoursLeft').textContent = '0';
+      buyBtn.disabled = false;
     }
-
-    buyBtn.disabled = false;
   } catch (error) {
     console.error('Error loading VIP info:', error);
     statusText.textContent = 'Could not load VIP status';

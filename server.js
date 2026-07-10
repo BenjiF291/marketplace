@@ -889,8 +889,13 @@ app.post('/buy-vip', async (req, res) => {
 
       const user = userDoc.data();
       const now = new Date();
-
       const currentVip = user.vipUntil ? (user.vipUntil.toDate ? user.vipUntil.toDate() : new Date(user.vipUntil)) : null;
+      const oneDayMs = 24 * 60 * 60 * 1000;
+
+      if (currentVip && currentVip.getTime() > now.getTime() + oneDayMs) {
+        throw new Error('You can only renew VIP when one day or less remains');
+      }
+
       const baseTime = (currentVip && currentVip.getTime() > now.getTime()) ? currentVip.getTime() : now.getTime();
       newVipUntil = new Date(baseTime + DURATION_MS);
 
