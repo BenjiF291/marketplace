@@ -560,17 +560,16 @@ app.post('/buy', async (req, res) => {
         buyerId: buyerId,
         purchasedAt: new Date()
       });
-    });
 
-    // If listing came from inventory, unmark the source item as listed
-    const itemData = (await itemsRef.doc(itemId).get()).data();
-    if (itemData && itemData.sourceItemId) {
-      const sourceItemRef = itemsRef.doc(itemData.sourceItemId);
-      const sourceItemDoc = await sourceItemRef.get();
-      if (sourceItemDoc.exists) {
-        await sourceItemRef.update({ listedForSale: false });
+      // If listing came from inventory, delete the source item (seller no longer owns it)
+      if (item.sourceItemId) {
+        const sourceItemRef = itemsRef.doc(item.sourceItemId);
+        const sourceItemDoc = await transaction.get(sourceItemRef);
+        if (sourceItemDoc.exists) {
+          transaction.delete(sourceItemRef);
+        }
       }
-    }
+    });
 
     res.send('Purchase successful');
   } catch (error) {
