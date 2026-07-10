@@ -444,35 +444,49 @@ app.post('/delete-item', async (req, res) => {
 
   try {
     const itemsRef = db.collection('items');
-    const itemDoc = await itemsRef.doc(itemId).get();
 
-    if (!itemDoc.exists) {
-      return res.status(400).send('Item not found');
-    }
+    await db.runTransaction(async (transaction) => {
+      const itemRef = itemsRef.doc(itemId);
+      const itemDoc = await transaction.get(itemRef);
 
-    const item = itemDoc.data();
-
-    if (String(item.sellerId) !== String(userId)) {
-      return res.status(403).send('Not your item');
-    }
-
-    if (item.sold) {
-      return res.status(400).send('Cannot delete a sold item');
-    }
-
-    // If this listing came from inventory, mark source item as no longer listed
-    if (item.sourceItemId) {
-      const sourceItemRef = itemsRef.doc(item.sourceItemId);
-      const sourceItemDoc = await sourceItemRef.get();
-      if (sourceItemDoc.exists) {
-        await sourceItemRef.update({ listedForSale: false });
+      if (!itemDoc.exists) {
+        throw new Error('Item not found');
       }
-    }
 
-    await itemsRef.doc(itemId).delete();
+      const item = itemDoc.data();
+
+      if (String(item.sellerId) !== String(userId)) {
+        throw new Error('Not your item');
+      }
+
+      if (item.sold) {
+        throw new Error('Cannot delete a sold item');
+      }
+
+      // If this listing came from inventory, mark source item as no longer listed
+      if (item.sourceItemId) {
+        const sourceItemRef = itemsRef.doc(item.sourceItemId);
+        const sourceItemDoc = await transaction.get(sourceItemRef);
+        if (sourceItemDoc.exists) {
+          transaction.update(sourceItemRef, { listedForSale: false });
+        }
+      }
+
+      transaction.delete(itemRef);
+    });
+
     res.send('Item deleted');
   } catch (error) {
     console.error('Error deleting item:', error);
+
+    if (
+      error.message === 'Item not found' ||
+      error.message === 'Not your item' ||
+      error.message === 'Cannot delete a sold item'
+    ) {
+      return res.status(400).send(error.message);
+    }
+
     res.status(500).send('Error deleting item');
   }
 });
@@ -550,7 +564,7 @@ app.post('/buy', async (req, res) => {
 
     // If listing came from inventory, unmark the source item as listed
     const itemData = (await itemsRef.doc(itemId).get()).data();
-    if (itemData.sourceItemId) {
+    if (itemData && itemData.sourceItemId) {
       const sourceItemRef = itemsRef.doc(itemData.sourceItemId);
       const sourceItemDoc = await sourceItemRef.get();
       if (sourceItemDoc.exists) {
