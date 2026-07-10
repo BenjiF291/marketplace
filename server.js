@@ -599,15 +599,18 @@ app.get('/inventory', async (req, res) => {
     const snapshot = await itemsRef
       .where('buyerId', '==', userId)
       .where('sold', '==', true)
-      .where('listedForSale', '!=', true)
       .get();
 
     const inventoryItems = [];
     snapshot.forEach(doc => {
-      inventoryItems.push({
-        id: doc.id,
-        ...doc.data()
-      });
+      const data = doc.data();
+      // Filter out items that are currently listed for sale
+      if (data.listedForSale !== true) {
+        inventoryItems.push({
+          id: doc.id,
+          ...data
+        });
+      }
     });
 
     res.json(inventoryItems);
