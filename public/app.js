@@ -862,25 +862,23 @@ async function loadInventory() {
 
     inventoryItems.forEach(item => {
       const li = document.createElement('li');
-
+      // Only show thumbnail in inventory view (no name, price, or purchase date)
       if (item.imageUrl) {
         const image = document.createElement('img');
         image.className = 'item-image';
         image.src = item.imageUrl;
-        image.alt = item.name;
+        image.alt = item.name || 'Inventory item';
         li.appendChild(image);
+      } else {
+        // Fallback: small placeholder box to keep layout consistent
+        const placeholder = document.createElement('div');
+        placeholder.style.width = '100px';
+        placeholder.style.height = '100px';
+        placeholder.style.background = '#f0f0f0';
+        placeholder.style.borderRadius = '8px';
+        li.appendChild(placeholder);
       }
 
-      const itemInfo = document.createElement('span');
-      itemInfo.className = 'item-info';
-      itemInfo.textContent = item.name;
-
-      const details = document.createElement('span');
-      details.className = 'item-price';
-      details.textContent = `${item.price} Footy · Purchased ${formatDate(item.purchasedAt)}`;
-
-      li.appendChild(itemInfo);
-      li.appendChild(details);
       list.appendChild(li);
     });
   } catch (error) {
