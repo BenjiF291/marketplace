@@ -42,7 +42,9 @@
     <section class="card transfer-section">
       <h2>💸 Send Footy</h2>
       <div class="form-group">
-        <input id="toId" placeholder="Recipient username" class="input-field">
+        <select id="toId" class="input-field" aria-label="Recipient">
+          <option value="" selected disabled>Select a user</option>
+        </select>
         <input id="amount" placeholder="Amount" type="number" class="input-field">
         <button onclick="transfer()" class="btn btn-primary">Send Transfer</button>
       </div>
@@ -132,7 +134,7 @@
       <h2>💎 VIP Membership</h2>
       <p>Purchase VIP to receive double rewards from the daily spin for 30 days.</p>
       <div style="margin: 12px 0;">
-        <strong>Price:</strong> <span id="vipPrice">200</span> Footy
+        <strong>Price:</strong> <span id="vipPrice">300</span> Footy
       </div>
       <div style="margin-bottom: 12px;">
         <button id="buyVipButton" onclick="buyVip()" class="btn btn-primary">Buy VIP</button>

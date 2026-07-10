@@ -332,7 +332,8 @@ body {
   margin-bottom: 6px;
 }
 
-.admin-badge {
+.admin-badge,
+.vip-badge {
   display: inline-block;
   margin-left: 8px;
   padding: 4px 8px;
@@ -342,6 +343,11 @@ body {
   font-weight: 700;
   font-size: 0.8em;
   vertical-align: middle;
+}
+
+.vip-badge {
+  background: linear-gradient(135deg, #7c4dff 0%, #c471ed 100%);
+  color: #ffffff;
 }
 
 .item-info {

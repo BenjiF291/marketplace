@@ -490,14 +490,14 @@ async function loadUsers() {
       loadCardOptions();
     }
 
-    // Update current user display with admin badge when applicable
+    populateTransferRecipients(users);
+
+    // Update current user display with the applicable role badges.
     const currentUsernameEl = document.getElementById('currentUsername');
     if (currentUsernameEl) {
-      if (currentUserIsAdmin) {
-        currentUsernameEl.innerHTML = `👤 ${username} <span class="admin-badge">ADMIN</span>`;
-      } else {
-        currentUsernameEl.textContent = `👤 ${username}`;
-      }
+      const vipUntil = user && user.vipUntil ? parseTimestamp(user.vipUntil) : null;
+      const isVip = vipUntil && vipUntil.getTime() > Date.now();
+      currentUsernameEl.innerHTML = `👤 ${username}${currentUserIsAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''}${isVip ? ' <span class="vip-badge">VIP</span>' : ''}`;
     }
   } catch (error) {
     console.error('Error loading user role:', error);
@@ -546,6 +546,28 @@ function populateGrantControls(users) {
     option.textContent = user.username + (user.isAdmin ? ' (admin)' : '');
     userSelect.appendChild(option);
   });
+}
+
+function populateTransferRecipients(users) {
+  const recipientSelect = document.getElementById('toId');
+  if (!recipientSelect) return;
+
+  const selectedUsername = recipientSelect.value;
+  recipientSelect.innerHTML = '<option value="" disabled>Select a user</option>';
+
+  users
+    .filter(user => user.id !== currentUserId)
+    .sort((a, b) => a.username.localeCompare(b.username))
+    .forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.username;
+      option.textContent = user.username;
+      recipientSelect.appendChild(option);
+    });
+
+  if ([...recipientSelect.options].some(option => option.value === selectedUsername)) {
+    recipientSelect.value = selectedUsername;
+  }
 }
 
 async function loadCardOptions() {
@@ -651,7 +673,7 @@ async function transfer() {
   const amount = Number(document.getElementById('amount').value);
 
   if (!toUsername || !amount) {
-    alert("Enter valid username and amount");
+    alert("Select a user and enter a valid amount");
     return;
   }
 
@@ -935,7 +957,7 @@ async function openListingModal() {
     list.innerHTML = '';
 
     if (inventoryItems.length === 0) {
-      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">You have not bought any items yet.</li>`;
+      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">Inventory empty</li>`;
       return;
     }
 
@@ -1067,7 +1089,7 @@ async function loadInventory() {
     list.innerHTML = '';
 
     if (inventoryItems.length === 0) {
-      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">You have not bought any items yet.</li>`;
+      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">Inventory empty</li>`;
       return;
     }
 

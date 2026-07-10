@@ -873,7 +873,7 @@ app.post('/buy-vip', async (req, res) => {
     return res.status(401).send('Missing X-User-Id header');
   }
 
-  const VIP_PRICE = 200; // cost in Footy for 30 days
+  const VIP_PRICE = 300; // cost in Footy for 30 days
   const DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
   try {
