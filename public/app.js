@@ -62,22 +62,28 @@ function showSection(section) {
 
     loadInventory();
   } else if (section === 'spin') {
-    // Restore dashboard cards (they may have been hidden by Inventory view)
+    // Focused view like Inventory: hide other dashboard cards so Spin is sole focus
+    clearSpinCountdown();
     const userSection = document.querySelector('.user-section');
     const transferSection = document.querySelector('.transfer-section');
     const sellSection = document.querySelector('.sell-section');
     const adminCard = document.getElementById('adminSection');
-    if (userSection) userSection.style.display = '';
-    if (transferSection) transferSection.style.display = '';
-    if (sellSection) sellSection.style.display = '';
-    if (adminCard) adminCard.style.display = currentUserIsAdmin ? 'block' : 'none';
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
     spinSection.style.display = 'block';
+
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
     spinTab.classList.add('active');
+
+    // Ensure spin section scrolls into view on mobile
+    spinSection.scrollIntoView({ behavior: 'smooth' });
+
     loadSpinInfo();
   } else {
     clearSpinCountdown();
