@@ -389,13 +389,13 @@ body {
   .wheel-area {
     display: flex;
     justify-content: center;
-    margin: 20px 0;
+    margin: 24px 0;
   }
 
   .wheel-container {
     position: relative;
-    width: 320px;
-    height: 320px;
+    width: 340px;
+    height: 340px;
   }
 
   .wheel {
@@ -406,7 +406,9 @@ body {
     position: relative;
     transform: rotate(0deg);
     transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
-    box-shadow: 0 0 0 8px rgba(255,255,255,0.12), 0 20px 40px rgba(0,0,0,0.12);
+    border: 10px solid #fff;
+    background: radial-gradient(circle at center, #f7f9ff 0%, #e3e9ff 80%);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18);
   }
 
   .wheel-segment {
@@ -416,33 +418,57 @@ body {
     top: 0;
     left: 50%;
     transform-origin: 0% 100%;
-    transform: rotate(calc(var(--i) * 30deg));
+    transform: rotate(calc(var(--i) * 60deg));
     overflow: hidden;
+  }
+
+  .wheel-segment::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: 0;
+    left: -100%;
+    border-radius: 50% 0 0 0;
+    transform-origin: 100% 100%;
+    transform: rotate(0deg);
+    background: rgba(0, 0, 0, 0.06);
   }
 
   .wheel-segment span {
     position: absolute;
-    width: 200%;
-    height: 200%;
-    left: -100%;
-    top: -100%;
+    left: 70%;
+    top: 40%;
+    width: 54px;
+    height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    transform: rotate(15deg);
-    font-size: 1.1em;
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 999px;
+    transform: translate(-50%, -50%) rotate(30deg);
+    font-size: 1em;
+    font-weight: 800;
+    color: #1f2733;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.55);
+    backdrop-filter: blur(6px);
   }
 
-  .wheel-segment:nth-child(odd) {
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
+  .wheel-segment:nth-child(odd)::before {
+    background: rgba(255,255,255,0.12);
   }
 
-  .wheel-segment:nth-child(even) {
-    background: linear-gradient(135deg, #43e97b, #38f9d7);
+  .wheel-segment:nth-child(even)::before {
+    background: rgba(0,0,0,0.08);
   }
+
+  .wheel-segment:nth-child(1) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+  .wheel-segment:nth-child(2) { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .wheel-segment:nth-child(3) { background: linear-gradient(135deg, #fd8dff, #ff6fb5); }
+  .wheel-segment:nth-child(4) { background: linear-gradient(135deg, #ffc371, #ffad60); }
+  .wheel-segment:nth-child(5) { background: linear-gradient(135deg, #82e9ff, #8e86ff); }
+  .wheel-segment:nth-child(6) { background: linear-gradient(135deg, #a6ff4d, #43e97b); }
 
   .wheel-pointer {
     position: absolute;
