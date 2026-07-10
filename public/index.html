@@ -13,7 +13,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <div>
         <h1>🏪 Marketplace & Bank</h1>
-        <p class="subtitle">Buy, sell, and transfer coins</p>
+        <p class="subtitle">Buy, sell, and transfer Footy</p>
       </div>
       <button onclick="logout()" style="background: #f5576c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Logout</button>
     </div>
@@ -39,7 +39,7 @@
 
     <!-- Transfer Section -->
     <section class="card transfer-section">
-      <h2>💸 Send Coins</h2>
+      <h2>💸 Send Footy</h2>
       <div class="form-group">
         <input id="toId" placeholder="Recipient username" class="input-field">
         <input id="amount" placeholder="Amount" type="number" class="input-field">
@@ -51,9 +51,13 @@
     <section class="card sell-section">
       <h2>📦 List Item</h2>
       <div class="form-group">
-        <input id="itemName" placeholder="Item name" class="input-field">
+        <button onclick="openListingModal()" class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Select from Inventory</button>
+        <div id="selectedItemDisplay" style="background: #f5f5f5; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none;">
+          <p style="margin: 0; font-size: 0.9em; color: #666;">Selected Item:</p>
+          <p id="selectedItemName" style="margin: 5px 0 0 0; font-weight: bold; color: #333;"></p>
+        </div>
         <input id="itemPrice" placeholder="Price" type="number" class="input-field">
-        <button onclick="addItem()" class="btn btn-primary">List Item</button>
+        <button onclick="listSelectedItem()" class="btn btn-primary">List Item</button>
       </div>
     </section>
 
@@ -76,8 +80,21 @@
       <button id="spinButton" onclick="spinWheel()" class="btn btn-success">Spin the Wheel</button>
       <div id="spinResult" class="spin-result"></div>
       <div id="spinCountdown" class="spin-countdown"></div>
-      <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 coins</div>
+      <div class="spin-chances">Possible rewards: 8, 10, 12, 16, 20, 24 Footy</div>
     </section>
+
+    <!-- List Item Modal -->
+    <div id="listingModal" class="modal" style="display: none;" onclick="if(event.target === this) closeListingModal();">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Select Item to List</h2>
+          <button onclick="closeListingModal()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <ul id="inventoryForListing" class="items-list"></ul>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

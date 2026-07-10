@@ -14,6 +14,7 @@ const API_URL = 'https://marketplace-aw8b.onrender.com';  // Production Render U
 let isServerOnline = true;
 let currentView = 'marketplace';
 let spinCountdownInterval = null;
+let selectedItemForListing = null; // Track selected item for listing
 
 function logout() {
   localStorage.removeItem('userId');
@@ -392,7 +393,7 @@ async function loadItems() {
   }
 }
 
-/* ------------------ ADD ITEM ------------------ */
+/* ------------------ ADD ITEM (Original for direct listings) ------------------ */
 async function addItem() {
   if (!isServerOnline) {
     alert("🔒 Market is closed. The marketplace server is currently offline. Please try again later.");
@@ -427,6 +428,135 @@ async function addItem() {
       alert("✅ Item listed!");
       document.getElementById('itemName').value = '';
       document.getElementById('itemPrice').value = '';
+    }
+
+    loadItems();
+  } catch (error) {
+    console.error('Add item error:', error);
+    isServerOnline = false;
+    alert("🔒 Market is closed. The marketplace server is currently offline. Please try again later.");
+    showMarketClosed();
+  }
+}
+
+/* ------------------ LISTING MODAL FUNCTIONS ------------------ */
+async function openListingModal() {
+  if (!isServerOnline) {
+    alert("🔒 Market is closed. The marketplace server is currently offline. Please try again later.");
+    return;
+  }
+
+  const modal = document.getElementById('listingModal');
+  modal.style.display = 'flex';
+
+  try {
+    const res = await fetch(`${API_URL}/inventory`, {
+      headers: {
+        'X-User-Id': currentUserId
+      }
+    });
+    
+    if (!res.ok) throw new Error('Server offline');
+
+    const inventoryItems = await res.json();
+    const list = document.getElementById('inventoryForListing');
+    list.innerHTML = '';
+
+    if (inventoryItems.length === 0) {
+      list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">You have not bought any items yet.</li>`;
+      return;
+    }
+
+    inventoryItems.forEach(item => {
+      const li = document.createElement('li');
+      li.style.cursor = 'pointer';
+      li.onclick = () => selectItemForListing(item, li);
+
+      const itemInfo = document.createElement('span');
+      itemInfo.className = 'item-info';
+      itemInfo.textContent = item.name;
+
+      const details = document.createElement('span');
+      details.className = 'item-price';
+      details.textContent = `Purchased ${formatDate(item.purchasedAt)}`;
+
+      li.appendChild(itemInfo);
+      li.appendChild(details);
+      list.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error loading inventory for listing:', error);
+    alert('Error loading inventory');
+  }
+}
+
+function closeListingModal() {
+  const modal = document.getElementById('listingModal');
+  modal.style.display = 'none';
+}
+
+function selectItemForListing(item, liElement) {
+  selectedItemForListing = item;
+
+  // Update selected visual feedback
+  const allItems = document.getElementById('inventoryForListing').querySelectorAll('li');
+  allItems.forEach(li => li.classList.remove('selected'));
+  liElement.classList.add('selected');
+
+  // Show selected item in the form
+  const display = document.getElementById('selectedItemDisplay');
+  const nameElement = document.getElementById('selectedItemName');
+  display.style.display = 'block';
+  nameElement.textContent = item.name;
+
+  // Close the modal
+  closeListingModal();
+  
+  // Focus on price input
+  setTimeout(() => {
+    document.getElementById('itemPrice').focus();
+  }, 100);
+}
+
+async function listSelectedItem() {
+  if (!isServerOnline) {
+    alert("🔒 Market is closed. The marketplace server is currently offline. Please try again later.");
+    return;
+  }
+
+  if (!selectedItemForListing) {
+    alert('Please select an item from your inventory');
+    return;
+  }
+
+  const price = Number(document.getElementById('itemPrice').value);
+
+  if (!price || price <= 0) {
+    alert('Enter a valid price');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: selectedItemForListing.name,
+        price,
+        sellerId: currentUserId
+      })
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg);
+    } else {
+      alert("✅ Item listed!");
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('selectedItemDisplay').style.display = 'none';
+      selectedItemForListing = null;
     }
 
     loadItems();
