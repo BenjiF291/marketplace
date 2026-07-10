@@ -147,7 +147,7 @@ app.post('/signup', async (req, res) => {
     const newUser = await usersRef.add({
       username: cleanUsername,
       passwordHash: hashPassword(password),
-      balance: 1000,
+      balance: 0,
       isAdmin: false,
       createdAt: new Date()
     });
