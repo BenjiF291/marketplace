@@ -545,7 +545,8 @@ async function listSelectedItem() {
       body: JSON.stringify({
         name: selectedItemForListing.name,
         price,
-        sellerId: currentUserId
+        sellerId: currentUserId,
+        sourceItemId: selectedItemForListing.id
       })
     });
 

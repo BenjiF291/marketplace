@@ -370,7 +370,7 @@ app.get('/test-items', async (req, res) => {
 
 /* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
-  const { name, price, sellerId } = req.body;
+  const { name, price, sellerId, sourceItemId } = req.body;
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).send('Invalid item name');
@@ -393,6 +393,15 @@ app.post('/items', async (req, res) => {
       return res.status(400).send('Seller not found');
     }
 
+    // If listing from inventory, mark the source item as listedForSale
+    if (sourceItemId) {
+      const sourceItemRef = db.collection('items').doc(sourceItemId);
+      const sourceItemDoc = await sourceItemRef.get();
+      if (sourceItemDoc.exists) {
+        await sourceItemRef.update({ listedForSale: true });
+      }
+    }
+
     await db.collection('items').add({
       name: cleanName,
       price,
@@ -400,6 +409,7 @@ app.post('/items', async (req, res) => {
       sold: false,
       buyerId: null,
       purchasedAt: null,
+      sourceItemId: sourceItemId || null,
       createdAt: new Date()
     });
 
@@ -448,6 +458,15 @@ app.post('/delete-item', async (req, res) => {
 
     if (item.sold) {
       return res.status(400).send('Cannot delete a sold item');
+    }
+
+    // If this listing came from inventory, mark source item as no longer listed
+    if (item.sourceItemId) {
+      const sourceItemRef = itemsRef.doc(item.sourceItemId);
+      const sourceItemDoc = await sourceItemRef.get();
+      if (sourceItemDoc.exists) {
+        await sourceItemRef.update({ listedForSale: false });
+      }
     }
 
     await itemsRef.doc(itemId).delete();
@@ -529,6 +548,16 @@ app.post('/buy', async (req, res) => {
       });
     });
 
+    // If listing came from inventory, unmark the source item as listed
+    const itemData = (await itemsRef.doc(itemId).get()).data();
+    if (itemData.sourceItemId) {
+      const sourceItemRef = itemsRef.doc(itemData.sourceItemId);
+      const sourceItemDoc = await sourceItemRef.get();
+      if (sourceItemDoc.exists) {
+        await sourceItemRef.update({ listedForSale: false });
+      }
+    }
+
     res.send('Purchase successful');
   } catch (error) {
     console.error('Error buying item:', error);
@@ -570,6 +599,7 @@ app.get('/inventory', async (req, res) => {
     const snapshot = await itemsRef
       .where('buyerId', '==', userId)
       .where('sold', '==', true)
+      .where('listedForSale', '!=', true)
       .get();
 
     const inventoryItems = [];
