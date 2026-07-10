@@ -446,13 +446,13 @@ body {
 
   .wheel-pointer-top {
     position: absolute;
-    top: -24px;
+    top: 0;
     left: 50%;
     width: 0;
     height: 0;
     border-left: 20px solid transparent;
     border-right: 20px solid transparent;
-    border-bottom: 32px solid #ffdd57;
+    border-top: 32px solid #ffdd57;
     transform: translateX(-50%);
     z-index: 3;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
