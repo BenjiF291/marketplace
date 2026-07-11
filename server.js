@@ -365,7 +365,14 @@ app.post('/transfer', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     const itemsRef = db.collection('items');
-    const snapshot = await itemsRef.get();
+    const [snapshot, usersSnapshot] = await Promise.all([
+      itemsRef.get(),
+      db.collection('users').get()
+    ]);
+    const hostIds = new Set();
+    usersSnapshot.forEach(doc => {
+      if (doc.data().isAdmin === true) hostIds.add(doc.id);
+    });
 
     const items = [];
     snapshot.forEach(doc => {
@@ -376,6 +383,8 @@ app.get('/items', async (req, res) => {
           name: data.name || 'Unknown Item',
           price: data.price || 0,
           sellerId: data.sellerId || '',
+          isHostListing: hostIds.has(data.sellerId),
+          imageUrl: data.imageUrl || null,
           sold: data.sold || false,
           createdAt: data.createdAt
         });
@@ -708,7 +717,12 @@ app.post('/buy', async (req, res) => {
 
       const buyer = buyerDoc.data();
 
-      if (buyer.balance < item.price) {
+      const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
+      const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
+      const hasHostDiscount = hasActiveVip && seller.isAdmin === true;
+      const purchasePrice = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
+
+      if (buyer.balance < purchasePrice) {
         throw new Error('Not enough money');
       }
 
@@ -731,17 +745,18 @@ app.post('/buy', async (req, res) => {
 
       // Perform writes (all reads must be done before these)
       transaction.update(buyerRef, {
-        balance: buyer.balance - item.price
+        balance: buyer.balance - purchasePrice
       });
 
       transaction.update(sellerRef, {
-        balance: seller.balance + item.price
+        balance: seller.balance + purchasePrice
       });
 
       transaction.update(itemRef, {
         sold: true,
         buyerId: buyerId,
-        purchasedAt: new Date()
+        purchasedAt: new Date(),
+        purchasePrice
       });
 
       // Delete the original source inventory item atomically (if it exists)
@@ -749,7 +764,7 @@ app.post('/buy', async (req, res) => {
         transaction.delete(sourceItemRef);
       }
     });
-    res.send('Purchase successful');
+    res.json({ success: true, purchasePrice, discountApplied: hasHostDiscount, discountAmount: item.price - purchasePrice });
   } catch (error) {
     console.error('Error buying item:', error);
 
