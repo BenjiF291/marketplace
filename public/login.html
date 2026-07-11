@@ -191,6 +191,27 @@
       position: relative;
     }
 
+    .demo-users {
+      background: #f9f9ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 0.85em;
+    }
+
+    .demo-users p {
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .demo-user {
+      background: white;
+      padding: 8px 12px;
+      margin: 4px 0;
+      border-radius: 4px;
+      color: #333;
+      border-left: 3px solid #667eea;
+    }
   </style>
 </head>
 <body>
@@ -198,7 +219,7 @@
 <div class="auth-container">
   <div class="auth-header">
     <h1>🏪 Marketplace</h1>
-    <p>Buy, sell, and transfer coins</p>
+    <p>Buy, sell, and transfer Footy</p>
   </div>
 
   <!-- Login Form -->
@@ -246,6 +267,13 @@
     <span id="toggleText">Don't have an account? <a onclick="toggleForm()">Sign up</a></span>
   </div>
 
+  <!-- Demo Users Info -->
+  <div class="demo-users">
+    <p><strong>Demo Users (Existing):</strong></p>
+    <div class="demo-user">👤 Alice - password: demo123</div>
+    <div class="demo-user">👤 Bob - password: demo123</div>
+    <p style="margin-top: 8px; color: #999; font-size: 0.8em;">Or create a new account</p>
+  </div>
 </div>
 
 <script>
