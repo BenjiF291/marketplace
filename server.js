@@ -46,6 +46,10 @@ function isValidPositiveNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
+function isValidPackColor(value) {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
 function purchaseLimitKeyForItem(item) {
   if (item.itemType === 'pack' && item.packId) return `pack:${item.packId}`;
   if (item.imageUrl) return `card:${path.basename(item.imageUrl)}`;
@@ -502,7 +506,7 @@ app.get('/packs', async (req, res) => {
 
 app.post('/packs', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { name, cardIds } = req.body;
+  const { name, cardIds, color } = req.body;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -513,6 +517,7 @@ app.post('/packs', async (req, res) => {
   if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
     return res.status(400).send('Choose between 1 and 100 cards');
   }
+  if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
   const cards = [...new Set(cardIds)];
   if (cards.some(card => typeof card !== 'string' || card !== path.basename(card))) {
@@ -528,6 +533,7 @@ app.post('/packs', async (req, res) => {
     const pack = await db.collection('packs').add({
       name: name.trim(),
       cardIds: cards,
+      color: color || '#667eea',
       createdBy: requesterId,
       createdAt: new Date()
     });
@@ -540,7 +546,7 @@ app.post('/packs', async (req, res) => {
 
 app.put('/packs/:packId', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { name, cardIds } = req.body;
+  const { name, cardIds, color } = req.body;
   const { packId } = req.params;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
@@ -552,6 +558,7 @@ app.put('/packs/:packId', async (req, res) => {
   if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
     return res.status(400).send('Choose between 1 and 100 cards');
   }
+  if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
   const cards = [...new Set(cardIds)];
   if (cards.some(card => typeof card !== 'string' || card !== path.basename(card))) {
@@ -568,7 +575,7 @@ app.put('/packs/:packId', async (req, res) => {
     if (!packDoc.exists) return res.status(404).send('Pack not found');
     if (packDoc.data().createdBy !== requesterId) return res.status(403).send('You can only edit packs you created');
 
-    await packRef.update({ name: name.trim(), cardIds: cards, updatedAt: new Date() });
+    await packRef.update({ name: name.trim(), cardIds: cards, color: color || '#667eea', updatedAt: new Date() });
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating pack:', error);
@@ -607,6 +614,7 @@ app.post('/grant-pack', async (req, res) => {
         name: `${pack.name} Pack`,
         itemType: 'pack',
         packId,
+        packColor: pack.color || '#667eea',
         price: 0,
         sellerId: requesterId,
         sold: true,
@@ -668,9 +676,9 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
-      return { cardId };
+      return { cardId, packColor: packItem.packColor || pack.color || '#667eea' };
     });
-    res.json({ success: true, cardId: result.cardId, imageUrl: `/images/${result.cardId}` });
+    res.json({ success: true, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
@@ -772,6 +780,7 @@ app.post('/admin/market-listings', async (req, res) => {
     let itemName;
     let imageUrl = null;
     let packId = null;
+    let packColor = null;
     if (itemType === 'card') {
       if (!productId || typeof productId !== 'string' || productId !== path.basename(productId)) {
         return res.status(400).send('Invalid card');
@@ -785,6 +794,7 @@ app.post('/admin/market-listings', async (req, res) => {
       if (!packDoc.exists) return res.status(400).send('Pack not found');
       packId = packDoc.id;
       itemName = `${packDoc.data().name} Pack`;
+      packColor = packDoc.data().color || '#667eea';
     }
 
     const groupRef = db.collection('marketListingGroups').doc();
@@ -794,6 +804,7 @@ app.post('/admin/market-listings', async (req, res) => {
       name: itemName,
       itemType,
       packId,
+      packColor,
       imageUrl,
       price,
       stock,
@@ -807,6 +818,7 @@ app.post('/admin/market-listings', async (req, res) => {
         name: itemName,
         itemType,
         packId,
+        packColor,
         imageUrl,
         price,
         sellerId: requesterId,
@@ -889,6 +901,7 @@ app.post('/items', async (req, res) => {
       imageUrl: sourceItem ? sourceItem.imageUrl || null : imageUrl || null,
       itemType: sourceItem ? sourceItem.itemType || 'card' : 'card',
       packId: sourceItem ? sourceItem.packId || null : null,
+      packColor: sourceItem ? sourceItem.packColor || null : null,
       purchaseLimitKey: sourceItem ? sourceItem.purchaseLimitKey || purchaseLimitKeyForItem(sourceItem) : purchaseLimitKeyForItem({ name: cleanName, imageUrl }),
       limitOnePerUser: limitOnePerUser === true,
       createdAt: new Date()

@@ -91,6 +91,8 @@
         </select>
         <label class="input-label" for="packName">New pack name</label>
         <input id="packName" class="input-field" maxlength="80" placeholder="Example: Legendary Players">
+        <label class="input-label" for="packColor">Pack color</label>
+        <input id="packColor" type="color" value="#667eea" class="pack-color-input">
         <label class="input-label">Cards in this pack</label>
         <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
         <div id="packCardPicker" class="pack-card-picker"></div>
@@ -226,7 +228,7 @@
       </div>
     </section>
 
-    <div id="packOpeningOverlay" class="pack-opening-overlay" hidden aria-live="polite">
+    <div id="packOpeningOverlay" class="pack-opening-overlay" hidden aria-live="polite" role="button" tabindex="0" onclick="dismissPackOpening()" onkeydown="if(event.key === 'Enter' || event.key === ' ') dismissPackOpening();">
       <div class="pack-opening-stage">
         <div id="openingPack" class="opening-pack">PACK</div>
         <img id="openedCardImage" class="opened-card-image" alt="Your new card">

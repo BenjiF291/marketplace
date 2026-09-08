@@ -902,6 +902,7 @@ async function createDirectMarketplaceListing() {
 function loadPackForEditing() {
   const packId = document.getElementById('packEditorSelect').value;
   const nameInput = document.getElementById('packName');
+  const colorInput = document.getElementById('packColor');
   const saveButton = document.getElementById('savePackButton');
   const pack = savedPacks.find(candidate => candidate.id === packId);
 
@@ -909,11 +910,13 @@ function loadPackForEditing() {
     input.checked = !!pack && pack.cardIds.includes(input.value);
   });
   nameInput.value = pack ? pack.name : '';
+  colorInput.value = pack ? (pack.color || '#667eea') : '#667eea';
   saveButton.textContent = pack ? 'Save Pack Changes' : 'Save New Pack';
 }
 
 async function savePack() {
   const nameInput = document.getElementById('packName');
+  const color = document.getElementById('packColor').value;
   const cardIds = [...document.querySelectorAll('#packCardPicker input:checked')].map(input => input.value);
   const packId = document.getElementById('packEditorSelect').value;
   const name = nameInput && nameInput.value.trim();
@@ -924,7 +927,7 @@ async function savePack() {
     const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {
       method: packId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ name, cardIds })
+      body: JSON.stringify({ name, cardIds, color })
     });
     if (!res.ok) return alert(await res.text());
     await loadPacks();
@@ -988,7 +991,8 @@ function showPackOpeningAnimation(result) {
   name.className = 'opened-card-name';
   card.src = result.imageUrl;
   card.alt = result.cardId;
-  name.textContent = result.cardId;
+  name.textContent = `${result.cardId} — click to continue`;
+  pack.style.setProperty('--pack-color', result.packColor || '#667eea');
 
   requestAnimationFrame(() => {
     pack.classList.add('is-opening');
@@ -998,9 +1002,10 @@ function showPackOpeningAnimation(result) {
     card.classList.add('is-revealed');
     name.classList.add('is-revealed');
   }, 750);
-  window.setTimeout(() => {
-    overlay.hidden = true;
-  }, 3800);
+}
+
+function dismissPackOpening() {
+  document.getElementById('packOpeningOverlay').hidden = true;
 }
 
 function updateGrantCardPreview() {
@@ -1511,6 +1516,7 @@ async function loadInventory() {
         const packIcon = document.createElement('div');
         packIcon.className = 'pack-inventory-icon';
         packIcon.textContent = 'PACK';
+        packIcon.style.setProperty('--pack-color', item.packColor || '#667eea');
         const packName = document.createElement('span');
         packName.className = 'item-info';
         packName.textContent = item.name;
