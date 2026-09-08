@@ -1252,6 +1252,12 @@ app.get('/inventory', async (req, res) => {
       }
     });
 
+    inventoryItems.sort((a, b) => {
+      const left = String(a.name || '').toLocaleLowerCase();
+      const right = String(b.name || '').toLocaleLowerCase();
+      return left.localeCompare(right);
+    });
+
     res.json(inventoryItems);
   } catch (error) {
     console.error('Error getting inventory:', error);

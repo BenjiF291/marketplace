@@ -739,6 +739,7 @@ async function viewAdminAccount() {
     });
     if (!inventoryResponse.ok) throw new Error('Could not load inventory');
     const inventory = await inventoryResponse.json();
+    inventory.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
 
     inventoryList.innerHTML = '';
     if (inventory.length === 0) {
@@ -1502,6 +1503,7 @@ async function loadInventory() {
     if (!res.ok) throw new Error('Server offline');
 
     const inventoryItems = await res.json();
+    inventoryItems.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
     const list = document.getElementById('inventoryItems');
     list.innerHTML = '';
 
