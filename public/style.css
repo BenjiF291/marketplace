@@ -473,6 +473,15 @@ body {
   vertical-align: middle;
 }
 
+.listing-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  color: #444;
+  font-size: 0.9em;
+}
+
 .vip-badge {
   background: linear-gradient(135deg, #7c4dff 0%, #c471ed 100%);
   color: #ffffff;

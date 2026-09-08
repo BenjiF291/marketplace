@@ -640,6 +640,12 @@ function populateGrantControls(users) {
   if (!userSelect || !packUserSelect) return;
 
   [userSelect, packUserSelect].forEach(select => { select.innerHTML = ''; });
+  [userSelect, packUserSelect].forEach(select => {
+    const allOption = document.createElement('option');
+    allOption.value = '__all__';
+    allOption.textContent = 'All users';
+    select.appendChild(allOption);
+  });
   users.forEach(user => {
     [userSelect, packUserSelect].forEach(select => {
       const option = document.createElement('option');
@@ -891,8 +897,8 @@ async function grantPackToUser() {
       body: JSON.stringify({ packId, username, quantity })
     });
     if (!res.ok) return alert(await res.text());
-    alert(`Granted ${quantity} pack(s) to ${username}`);
-    if (username === localStorage.getItem('username')) loadInventory();
+    alert(`Granted ${quantity} pack(s) to ${username === '__all__' ? 'all users' : username}`);
+    if (username === '__all__' || username === localStorage.getItem('username')) loadInventory();
   } catch (error) {
     console.error('Error granting pack:', error);
     alert('Could not grant pack');
@@ -978,7 +984,8 @@ async function grantItemToUser() {
     }
 
     const data = await res.json();
-    alert(`✅ Granted ${data.granted} card(s) to ${username}`);
+    alert(`Granted ${data.granted} card(s) to ${username === '__all__' ? 'all users' : username}`);
+    if (username === '__all__' || username === localStorage.getItem('username')) loadInventory();
   } catch (error) {
     console.error('Grant item error:', error);
     alert('Unable to grant cards right now');
@@ -1054,7 +1061,7 @@ async function loadItems() {
 
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';
-      itemInfo.textContent = item.name;
+      itemInfo.textContent = item.limitOnePerUser ? `${item.name} (one per user)` : item.name;
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
@@ -1150,6 +1157,7 @@ async function addItem() {
   
   const name = document.getElementById('itemName').value.trim();
   const price = Number(document.getElementById('itemPrice').value);
+  const limitOnePerUser = document.getElementById('limitOnePerUser').checked;
 
   if (!name || !price) {
     alert("Enter valid item name and price");
@@ -1355,6 +1363,7 @@ async function listSelectedItem() {
   }
 
   const price = Number(document.getElementById('itemPrice').value);
+  const limitOnePerUser = document.getElementById('limitOnePerUser').checked;
 
   if (!price || price <= 0) {
     alert('Enter a valid price');
@@ -1372,7 +1381,8 @@ async function listSelectedItem() {
         price,
         sellerId: currentUserId,
         sourceItemId: selectedItemForListing.id,
-        imageUrl: selectedItemForListing.imageUrl || null
+        imageUrl: selectedItemForListing.imageUrl || null,
+        limitOnePerUser
       })
     });
 
@@ -1382,6 +1392,7 @@ async function listSelectedItem() {
     } else {
       alert("✅ Item listed!");
       document.getElementById('itemPrice').value = '';
+      document.getElementById('limitOnePerUser').checked = false;
       document.getElementById('selectedItemDisplay').style.display = 'none';
       selectedItemForListing = null;
     }

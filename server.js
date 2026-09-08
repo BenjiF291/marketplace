@@ -46,6 +46,12 @@ function isValidPositiveNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
+function purchaseLimitKeyForItem(item) {
+  if (item.itemType === 'pack' && item.packId) return `pack:${item.packId}`;
+  if (item.imageUrl) return `card:${path.basename(item.imageUrl)}`;
+  return `item:${item.name}`;
+}
+
 function serializeDate(value) {
   if (!value) return null;
   const date = value.toDate ? value.toDate() : new Date(value);
@@ -385,6 +391,7 @@ app.get('/items', async (req, res) => {
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
           imageUrl: data.imageUrl || null,
+          limitOnePerUser: data.limitOnePerUser === true,
           sold: data.sold || false,
           createdAt: data.createdAt
         });
@@ -572,32 +579,40 @@ app.post('/grant-pack', async (req, res) => {
 
   try {
     const [recipientSnapshot, packDoc] = await Promise.all([
-      db.collection('users').where('username', '==', username.trim()).limit(1).get(),
+      username === '__all__'
+        ? db.collection('users').get()
+        : db.collection('users').where('username', '==', username.trim()).limit(1).get(),
       db.collection('packs').doc(packId).get()
     ]);
     if (recipientSnapshot.empty) return res.status(400).send('Recipient not found');
     if (!packDoc.exists) return res.status(400).send('Pack not found');
 
-    const recipientId = recipientSnapshot.docs[0].id;
     const pack = packDoc.data();
-    const batch = db.batch();
-    for (let i = 0; i < qty; i++) {
-      batch.set(db.collection('items').doc(), {
+    const writes = [];
+    recipientSnapshot.docs.forEach(recipientDoc => {
+      for (let i = 0; i < qty; i++) writes.push({
+        recipientId: recipientDoc.id,
         name: `${pack.name} Pack`,
         itemType: 'pack',
         packId,
         price: 0,
         sellerId: requesterId,
         sold: true,
-        buyerId: recipientId,
         purchasedAt: new Date(),
         sourceItemId: null,
         imageUrl: null,
         createdAt: new Date()
       });
+    });
+    for (let start = 0; start < writes.length; start += 500) {
+      const batch = db.batch();
+      writes.slice(start, start + 500).forEach(write => {
+        const { recipientId, ...packItem } = write;
+        batch.set(db.collection('items').doc(), { ...packItem, buyerId: recipientId });
+      });
+      await batch.commit();
     }
-    await batch.commit();
-    res.json({ success: true, granted: qty });
+    res.json({ success: true, granted: writes.length });
   } catch (error) {
     console.error('Error granting pack:', error);
     res.status(500).send('Could not grant pack');
@@ -681,13 +696,12 @@ app.post('/grant-item', async (req, res) => {
     }
 
     const usersRef = db.collection('users');
-    const targetSnapshot = await usersRef.where('username', '==', username.trim()).get();
+    const targetSnapshot = username === '__all__'
+      ? await usersRef.get()
+      : await usersRef.where('username', '==', username.trim()).get();
     if (targetSnapshot.empty) {
       return res.status(400).send('Recipient not found');
     }
-
-    const recipientDoc = targetSnapshot.docs[0];
-    const recipientId = recipientDoc.id;
 
     let imageFile = cardId.trim();
     if (!path.extname(imageFile)) {
@@ -700,23 +714,27 @@ app.post('/grant-item', async (req, res) => {
       return res.status(400).send('Card image not found');
     }
 
-    const batchPromises = [];
-    for (let i = 0; i < qty; i++) {
-      batchPromises.push(db.collection('items').add({
+    const writes = [];
+    targetSnapshot.docs.forEach(recipientDoc => {
+      for (let i = 0; i < qty; i++) writes.push({
         name: `Card ${cardId}`,
+        itemType: 'card',
         price: 0,
         sellerId: requesterId,
         sold: true,
-        buyerId: recipientId,
+        buyerId: recipientDoc.id,
         purchasedAt: new Date(),
         sourceItemId: null,
         imageUrl: `/images/${imageFile}`,
         createdAt: new Date()
-      }));
+      });
+    });
+    for (let start = 0; start < writes.length; start += 500) {
+      const batch = db.batch();
+      writes.slice(start, start + 500).forEach(write => batch.set(db.collection('items').doc(), write));
+      await batch.commit();
     }
-
-    await Promise.all(batchPromises);
-    res.json({ success: true, granted: qty });
+    res.json({ success: true, granted: writes.length });
   } catch (error) {
     console.error('Error granting item:', error);
     res.status(500).send('Error granting item');
@@ -739,7 +757,7 @@ app.get('/test-items', async (req, res) => {
 
 /* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
-  const { name, price, sellerId, sourceItemId, imageUrl } = req.body;
+  const { name, price, sellerId, sourceItemId, imageUrl, limitOnePerUser } = req.body;
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).send('Invalid item name');
@@ -785,6 +803,8 @@ app.post('/items', async (req, res) => {
       imageUrl: sourceItem ? sourceItem.imageUrl || null : imageUrl || null,
       itemType: sourceItem ? sourceItem.itemType || 'card' : 'card',
       packId: sourceItem ? sourceItem.packId || null : null,
+      purchaseLimitKey: sourceItem ? sourceItem.purchaseLimitKey || purchaseLimitKeyForItem(sourceItem) : purchaseLimitKeyForItem({ name: cleanName, imageUrl }),
+      limitOnePerUser: limitOnePerUser === true,
       createdAt: new Date()
     });
 
@@ -934,6 +954,18 @@ app.post('/buy', async (req, res) => {
         sourceItemDoc = await transaction.get(sourceItemRef);
       }
 
+      if (item.limitOnePerUser === true) {
+        const previousPurchases = await transaction.get(itemsRef.where('buyerId', '==', buyerId));
+        const purchaseLimitKey = item.purchaseLimitKey || purchaseLimitKeyForItem(item);
+        const alreadyPurchased = previousPurchases.docs.some(doc => {
+          const previousItem = doc.data();
+          return previousItem.purchasedViaMarketplace === true && previousItem.purchaseLimitKey === purchaseLimitKey;
+        });
+        if (alreadyPurchased) {
+          throw new Error('You may only buy this item once');
+        }
+      }
+
       // Perform writes (all reads must be done before these)
       transaction.update(buyerRef, {
         balance: buyer.balance - purchasePrice
@@ -947,7 +979,8 @@ app.post('/buy', async (req, res) => {
         sold: true,
         buyerId: buyerId,
         purchasedAt: new Date(),
-        purchasePrice
+        purchasePrice,
+        purchasedViaMarketplace: true
       });
 
       // Delete the original source inventory item atomically (if it exists)
@@ -971,6 +1004,7 @@ app.post('/buy', async (req, res) => {
       error.message === 'Buyer not found' ||
       error.message === 'Seller not found' ||
       error.message === 'Not enough money' ||
+      error.message === 'You may only buy this item once' ||
       error.message === "You can't buy your own item"
     ) {
       return res.status(400).send(error.message);
