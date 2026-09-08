@@ -465,6 +465,10 @@ body {
   animation: pack-overlay-in 220ms ease-out;
 }
 
+.pack-opening-overlay[hidden] {
+  display: none;
+}
+
 .pack-opening-stage {
   width: min(320px, 90vw);
   min-height: 400px;
