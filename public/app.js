@@ -775,6 +775,7 @@ async function loadCardOptions() {
     });
 
     renderPackCardPicker();
+    populateDirectListingProducts();
     updateGrantCardPreview();
   } catch (error) {
     console.error('Error loading card images:', error);
@@ -841,8 +842,60 @@ async function loadPacks() {
       item.textContent = `${pack.name}: ${pack.cardIds.length} possible card${pack.cardIds.length === 1 ? '' : 's'}`;
       list.appendChild(item);
     });
+    populateDirectListingProducts();
   } catch (error) {
     console.error('Error loading packs:', error);
+  }
+}
+
+function populateDirectListingProducts() {
+  const typeSelect = document.getElementById('marketListingType');
+  const productSelect = document.getElementById('marketListingProduct');
+  if (!typeSelect || !productSelect) return;
+  const type = typeSelect.value;
+  productSelect.innerHTML = '';
+  const products = type === 'card'
+    ? availableCardImages.map(filename => ({ id: filename, label: filename }))
+    : savedPacks.map(pack => ({ id: pack.id, label: `${pack.name} (${pack.cardIds.length} cards)` }));
+  if (products.length === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = type === 'card' ? 'No cards available' : 'No saved packs available';
+    productSelect.appendChild(option);
+    return;
+  }
+  products.forEach(product => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    option.textContent = product.label;
+    productSelect.appendChild(option);
+  });
+}
+
+async function createDirectMarketplaceListing() {
+  const itemType = document.getElementById('marketListingType').value;
+  const productId = document.getElementById('marketListingProduct').value;
+  const price = Number(document.getElementById('marketListingPrice').value);
+  const quantity = Number(document.getElementById('marketListingQuantity').value);
+  const perUserLimit = Number(document.getElementById('marketListingPerUserLimit').value);
+  if (!productId || !price || !Number.isInteger(quantity) || quantity < 1 || !Number.isInteger(perUserLimit) || perUserLimit < 0 || perUserLimit > quantity) {
+    return alert('Choose an item and enter a valid price, stock amount, and per-user maximum');
+  }
+  try {
+    const res = await fetch(`${API_URL}/admin/market-listings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ itemType, productId, price, quantity, perUserLimit })
+    });
+    if (!res.ok) return alert(await res.text());
+    document.getElementById('marketListingPrice').value = '';
+    document.getElementById('marketListingQuantity').value = '1';
+    document.getElementById('marketListingPerUserLimit').value = '0';
+    alert('Marketplace listing posted');
+    loadItems();
+  } catch (error) {
+    console.error('Error creating marketplace listing:', error);
+    alert('Could not post marketplace listing');
   }
 }
 
@@ -1065,7 +1118,7 @@ async function loadItems() {
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
-      itemPrice.textContent = `${item.price} Footy`;
+      itemPrice.textContent = `${item.price} Footy${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
 
       const isOwner = String(item.sellerId) === String(currentUserId);
 
@@ -1157,7 +1210,6 @@ async function addItem() {
   
   const name = document.getElementById('itemName').value.trim();
   const price = Number(document.getElementById('itemPrice').value);
-  const limitOnePerUser = document.getElementById('limitOnePerUser').checked;
 
   if (!name || !price) {
     alert("Enter valid item name and price");
@@ -1363,7 +1415,6 @@ async function listSelectedItem() {
   }
 
   const price = Number(document.getElementById('itemPrice').value);
-  const limitOnePerUser = document.getElementById('limitOnePerUser').checked;
 
   if (!price || price <= 0) {
     alert('Enter a valid price');
@@ -1381,8 +1432,7 @@ async function listSelectedItem() {
         price,
         sellerId: currentUserId,
         sourceItemId: selectedItemForListing.id,
-        imageUrl: selectedItemForListing.imageUrl || null,
-        limitOnePerUser
+        imageUrl: selectedItemForListing.imageUrl || null
       })
     });
 

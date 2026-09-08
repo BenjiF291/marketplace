@@ -381,10 +381,11 @@ app.get('/items', async (req, res) => {
     });
 
     const items = [];
+    const groupedListings = new Map();
     snapshot.forEach(doc => {
       const data = doc.data();
       if (data.sold !== true) {
-        items.push({
+        const item = {
           id: doc.id,
           name: data.name || 'Unknown Item',
           price: data.price || 0,
@@ -392,11 +393,22 @@ app.get('/items', async (req, res) => {
           isHostListing: hostIds.has(data.sellerId),
           imageUrl: data.imageUrl || null,
           limitOnePerUser: data.limitOnePerUser === true,
+          listingGroupId: data.listingGroupId || null,
+          perUserLimit: data.perUserLimit || null,
+          stock: 1,
           sold: data.sold || false,
           createdAt: data.createdAt
-        });
+        };
+        if (item.listingGroupId) {
+          const existing = groupedListings.get(item.listingGroupId);
+          if (existing) existing.stock += 1;
+          else groupedListings.set(item.listingGroupId, item);
+        } else {
+          items.push(item);
+        }
       }
     });
+    items.push(...groupedListings.values());
 
     // Sort by creation date (newest first)
     items.sort((a, b) => {
@@ -741,6 +753,80 @@ app.post('/grant-item', async (req, res) => {
   }
 });
 
+/* ------------------ ADMIN DIRECT MARKETPLACE LISTINGS ------------------ */
+app.post('/admin/market-listings', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { itemType, productId, price, quantity, perUserLimit } = req.body;
+  const stock = Number(quantity);
+  const maxPerUser = Number(perUserLimit) || 0;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+  if (!['card', 'pack'].includes(itemType)) return res.status(400).send('Invalid item type');
+  if (!isValidPositiveNumber(price)) return res.status(400).send('Invalid price');
+  if (!Number.isInteger(stock) || stock < 1 || stock > 100) return res.status(400).send('Stock must be between 1 and 100');
+  if (!Number.isInteger(maxPerUser) || maxPerUser < 0 || maxPerUser > stock) {
+    return res.status(400).send('Maximum per user must be between 0 and the stock amount');
+  }
+
+  try {
+    let itemName;
+    let imageUrl = null;
+    let packId = null;
+    if (itemType === 'card') {
+      if (!productId || typeof productId !== 'string' || productId !== path.basename(productId)) {
+        return res.status(400).send('Invalid card');
+      }
+      const imagePath = path.join(__dirname, 'public', 'images', productId);
+      if (!fs.existsSync(imagePath)) return res.status(400).send('Card image not found');
+      itemName = `Card ${productId}`;
+      imageUrl = `/images/${productId}`;
+    } else {
+      const packDoc = await db.collection('packs').doc(productId).get();
+      if (!packDoc.exists) return res.status(400).send('Pack not found');
+      packId = packDoc.id;
+      itemName = `${packDoc.data().name} Pack`;
+    }
+
+    const groupRef = db.collection('marketListingGroups').doc();
+    const batch = db.batch();
+    batch.set(groupRef, {
+      sellerId: requesterId,
+      name: itemName,
+      itemType,
+      packId,
+      imageUrl,
+      price,
+      stock,
+      soldCount: 0,
+      perUserLimit: maxPerUser || null,
+      purchaseCounts: {},
+      createdAt: new Date()
+    });
+    for (let i = 0; i < stock; i++) {
+      batch.set(db.collection('items').doc(), {
+        name: itemName,
+        itemType,
+        packId,
+        imageUrl,
+        price,
+        sellerId: requesterId,
+        sold: false,
+        buyerId: null,
+        purchasedAt: null,
+        sourceItemId: null,
+        listingGroupId: groupRef.id,
+        perUserLimit: maxPerUser || null,
+        createdAt: new Date()
+      });
+    }
+    await batch.commit();
+    res.status(201).json({ success: true, stock, listingGroupId: groupRef.id });
+  } catch (error) {
+    console.error('Error creating marketplace listing:', error);
+    res.status(500).send('Could not create marketplace listing');
+  }
+});
+
 /* ------------------ TEST ITEMS ------------------ */
 app.get('/test-items', async (req, res) => {
   try {
@@ -903,14 +989,32 @@ app.post('/buy', async (req, res) => {
     const usersRef = db.collection('users');
 
     const purchase = await db.runTransaction(async (transaction) => {
-      const itemRef = itemsRef.doc(itemId);
+      let itemRef = itemsRef.doc(itemId);
       const itemDoc = await transaction.get(itemRef);
 
       if (!itemDoc.exists) {
         throw new Error('Item unavailable');
       }
 
-      const item = itemDoc.data();
+      let item = itemDoc.data();
+
+      let listingGroupRef = null;
+      let listingGroup = null;
+      if (item.listingGroupId) {
+        const listingItems = await transaction.get(itemsRef.where('listingGroupId', '==', item.listingGroupId));
+        const availableItemDoc = listingItems.docs.find(doc => doc.data().sold !== true);
+        if (!availableItemDoc) throw new Error('Item unavailable');
+        itemRef = availableItemDoc.ref;
+        item = availableItemDoc.data();
+        listingGroupRef = db.collection('marketListingGroups').doc(item.listingGroupId);
+        const listingGroupDoc = await transaction.get(listingGroupRef);
+        if (!listingGroupDoc.exists) throw new Error('Item unavailable');
+        listingGroup = listingGroupDoc.data();
+        const purchasedCount = Number(listingGroup.purchaseCounts && listingGroup.purchaseCounts[buyerId]) || 0;
+        if (listingGroup.perUserLimit && purchasedCount >= listingGroup.perUserLimit) {
+          throw new Error('You have reached this listing\'s purchase limit');
+        }
+      }
 
       if (item.sold) {
         throw new Error('Item unavailable');
@@ -983,6 +1087,15 @@ app.post('/buy', async (req, res) => {
         purchasedViaMarketplace: true
       });
 
+      if (listingGroupRef) {
+        const purchaseCounts = { ...(listingGroup.purchaseCounts || {}) };
+        purchaseCounts[buyerId] = (Number(purchaseCounts[buyerId]) || 0) + 1;
+        transaction.update(listingGroupRef, {
+          soldCount: (Number(listingGroup.soldCount) || 0) + 1,
+          purchaseCounts
+        });
+      }
+
       // Delete the original source inventory item atomically (if it exists)
       if (sourceItemDoc && sourceItemDoc.exists) {
         transaction.delete(sourceItemRef);
@@ -1005,6 +1118,7 @@ app.post('/buy', async (req, res) => {
       error.message === 'Seller not found' ||
       error.message === 'Not enough money' ||
       error.message === 'You may only buy this item once' ||
+      error.message === "You have reached this listing's purchase limit" ||
       error.message === "You can't buy your own item"
     ) {
       return res.status(400).send(error.message);

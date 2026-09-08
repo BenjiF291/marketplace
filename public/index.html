@@ -61,10 +61,6 @@
           <p id="selectedItemName" style="margin: 5px 0 0 0; font-weight: bold; color: #333;"></p>
         </div>
         <input id="itemPrice" placeholder="Price" type="number" class="input-field">
-        <label class="listing-option">
-          <input id="limitOnePerUser" type="checkbox">
-          Limit this item to one marketplace purchase per user
-        </label>
         <button onclick="listSelectedItem()" class="btn btn-primary">List Item</button>
       </div>
     </section>
@@ -110,6 +106,24 @@
         <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
       </div>
       <ul id="savedPacks" class="saved-packs"></ul>
+
+      <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
+      <h2>Direct Marketplace Listing</h2>
+      <div class="form-group">
+        <label class="input-label" for="marketListingType">Item type</label>
+        <select id="marketListingType" class="input-field" onchange="populateDirectListingProducts()">
+          <option value="card">Card</option>
+          <option value="pack">Pack</option>
+        </select>
+        <label class="input-label" for="marketListingProduct">Card or pack</label>
+        <select id="marketListingProduct" class="input-field"></select>
+        <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
+        <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
+        <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
+        <button onclick="createDirectMarketplaceListing()" class="btn btn-primary">Post to Marketplace</button>
+        <p class="pack-help">The per-user maximum applies only to this specific marketplace post, not every copy of the card or pack.</p>
+      </div>
 
       <hr style="margin: 20px 0; border-color: #e0e0e0;">
 
