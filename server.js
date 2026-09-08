@@ -519,6 +519,44 @@ app.post('/packs', async (req, res) => {
   }
 });
 
+app.put('/packs/:packId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { name, cardIds } = req.body;
+  const { packId } = req.params;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+  if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
+    return res.status(400).send('Enter a pack name up to 80 characters');
+  }
+  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
+    return res.status(400).send('Choose between 1 and 100 cards');
+  }
+
+  const cards = [...new Set(cardIds)];
+  if (cards.some(card => typeof card !== 'string' || card !== path.basename(card))) {
+    return res.status(400).send('Invalid card selection');
+  }
+  const imagesDir = path.join(__dirname, 'public', 'images');
+  if (cards.some(card => !fs.existsSync(path.join(imagesDir, card)))) {
+    return res.status(400).send('One or more selected card images do not exist');
+  }
+
+  try {
+    const packRef = db.collection('packs').doc(packId);
+    const packDoc = await packRef.get();
+    if (!packDoc.exists) return res.status(404).send('Pack not found');
+    if (packDoc.data().createdBy !== requesterId) return res.status(403).send('You can only edit packs you created');
+
+    await packRef.update({ name: name.trim(), cardIds: cards, updatedAt: new Date() });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating pack:', error);
+    res.status(500).send('Could not update pack');
+  }
+});
+
 app.post('/grant-pack', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { username, packId, quantity } = req.body;

@@ -85,12 +85,16 @@
 
       <h2>Pack Builder</h2>
       <div class="form-group">
+        <label class="input-label" for="packEditorSelect">Edit one of your saved packs</label>
+        <select id="packEditorSelect" class="input-field" onchange="loadPackForEditing()">
+          <option value="">Create a new pack</option>
+        </select>
         <label class="input-label" for="packName">New pack name</label>
         <input id="packName" class="input-field" maxlength="80" placeholder="Example: Legendary Players">
         <label class="input-label">Cards in this pack</label>
         <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
         <div id="packCardPicker" class="pack-card-picker"></div>
-        <button onclick="createPack()" class="btn btn-primary">Save New Pack</button>
+        <button id="savePackButton" onclick="savePack()" class="btn btn-primary">Save New Pack</button>
       </div>
       <div class="form-group">
         <label class="input-label" for="grantPackSelect">Saved pack</label>

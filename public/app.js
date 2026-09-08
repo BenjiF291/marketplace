@@ -805,9 +805,11 @@ async function loadPacks() {
     savedPacks = await res.json();
 
     const select = document.getElementById('grantPackSelect');
+    const editorSelect = document.getElementById('packEditorSelect');
     const list = document.getElementById('savedPacks');
-    if (!select || !list) return;
+    if (!select || !editorSelect || !list) return;
     select.innerHTML = '';
+    editorSelect.innerHTML = '<option value="">Create a new pack</option>';
     list.innerHTML = '';
     if (savedPacks.length === 0) {
       const option = document.createElement('option');
@@ -822,6 +824,13 @@ async function loadPacks() {
       option.textContent = `${pack.name} (${pack.cardIds.length} cards)`;
       select.appendChild(option);
 
+      if (pack.createdBy === currentUserId) {
+        const editorOption = document.createElement('option');
+        editorOption.value = pack.id;
+        editorOption.textContent = `${pack.name} (${pack.cardIds.length} cards)`;
+        editorSelect.appendChild(editorOption);
+      }
+
       const item = document.createElement('li');
       item.textContent = `${pack.name}: ${pack.cardIds.length} possible card${pack.cardIds.length === 1 ? '' : 's'}`;
       list.appendChild(item);
@@ -831,26 +840,40 @@ async function loadPacks() {
   }
 }
 
-async function createPack() {
+function loadPackForEditing() {
+  const packId = document.getElementById('packEditorSelect').value;
+  const nameInput = document.getElementById('packName');
+  const saveButton = document.getElementById('savePackButton');
+  const pack = savedPacks.find(candidate => candidate.id === packId);
+
+  document.querySelectorAll('#packCardPicker input').forEach(input => {
+    input.checked = !!pack && pack.cardIds.includes(input.value);
+  });
+  nameInput.value = pack ? pack.name : '';
+  saveButton.textContent = pack ? 'Save Pack Changes' : 'Save New Pack';
+}
+
+async function savePack() {
   const nameInput = document.getElementById('packName');
   const cardIds = [...document.querySelectorAll('#packCardPicker input:checked')].map(input => input.value);
+  const packId = document.getElementById('packEditorSelect').value;
   const name = nameInput && nameInput.value.trim();
   if (!name) return alert('Enter a pack name');
   if (cardIds.length === 0) return alert('Choose at least one card for the pack');
 
   try {
-    const res = await fetch(`${API_URL}/packs`, {
-      method: 'POST',
+    const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {
+      method: packId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
       body: JSON.stringify({ name, cardIds })
     });
     if (!res.ok) return alert(await res.text());
-    nameInput.value = '';
-    document.querySelectorAll('#packCardPicker input:checked').forEach(input => { input.checked = false; });
     await loadPacks();
-    alert('Pack saved');
+    document.getElementById('packEditorSelect').value = packId || '';
+    loadPackForEditing();
+    alert(packId ? 'Pack updated' : 'Pack saved');
   } catch (error) {
-    console.error('Error creating pack:', error);
+    console.error('Error saving pack:', error);
     alert('Could not save pack');
   }
 }
