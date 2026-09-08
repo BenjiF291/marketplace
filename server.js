@@ -465,6 +465,155 @@ app.get('/card-images', async (req, res) => {
   }
 });
 
+/* ------------------ PACKS ------------------ */
+app.get('/packs', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+
+  try {
+    const snapshot = await db.collection('packs').orderBy('createdAt', 'desc').get();
+    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  } catch (error) {
+    console.error('Error getting packs:', error);
+    res.status(500).send('Error retrieving packs');
+  }
+});
+
+app.post('/packs', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { name, cardIds } = req.body;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+  if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
+    return res.status(400).send('Enter a pack name up to 80 characters');
+  }
+  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
+    return res.status(400).send('Choose between 1 and 100 cards');
+  }
+
+  const cards = [...new Set(cardIds)];
+  if (cards.some(card => typeof card !== 'string' || card !== path.basename(card))) {
+    return res.status(400).send('Invalid card selection');
+  }
+
+  const imagesDir = path.join(__dirname, 'public', 'images');
+  if (cards.some(card => !fs.existsSync(path.join(imagesDir, card)))) {
+    return res.status(400).send('One or more selected card images do not exist');
+  }
+
+  try {
+    const pack = await db.collection('packs').add({
+      name: name.trim(),
+      cardIds: cards,
+      createdBy: requesterId,
+      createdAt: new Date()
+    });
+    res.status(201).json({ success: true, id: pack.id });
+  } catch (error) {
+    console.error('Error creating pack:', error);
+    res.status(500).send('Could not create pack');
+  }
+});
+
+app.post('/grant-pack', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { username, packId, quantity } = req.body;
+  const qty = Number(quantity);
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+  if (!username || typeof username !== 'string' || !packId || typeof packId !== 'string') {
+    return res.status(400).send('Select a user and a pack');
+  }
+  if (!Number.isInteger(qty) || qty < 1 || qty > 20) {
+    return res.status(400).send('Quantity must be a whole number between 1 and 20');
+  }
+
+  try {
+    const [recipientSnapshot, packDoc] = await Promise.all([
+      db.collection('users').where('username', '==', username.trim()).limit(1).get(),
+      db.collection('packs').doc(packId).get()
+    ]);
+    if (recipientSnapshot.empty) return res.status(400).send('Recipient not found');
+    if (!packDoc.exists) return res.status(400).send('Pack not found');
+
+    const recipientId = recipientSnapshot.docs[0].id;
+    const pack = packDoc.data();
+    const batch = db.batch();
+    for (let i = 0; i < qty; i++) {
+      batch.set(db.collection('items').doc(), {
+        name: `${pack.name} Pack`,
+        itemType: 'pack',
+        packId,
+        price: 0,
+        sellerId: requesterId,
+        sold: true,
+        buyerId: recipientId,
+        purchasedAt: new Date(),
+        sourceItemId: null,
+        imageUrl: null,
+        createdAt: new Date()
+      });
+    }
+    await batch.commit();
+    res.json({ success: true, granted: qty });
+  } catch (error) {
+    console.error('Error granting pack:', error);
+    res.status(500).send('Could not grant pack');
+  }
+});
+
+app.post('/open-pack', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { itemId } = req.body;
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!itemId || typeof itemId !== 'string') return res.status(400).send('Invalid pack item');
+
+  try {
+    const result = await db.runTransaction(async transaction => {
+      const packItemRef = db.collection('items').doc(itemId);
+      const packItemDoc = await transaction.get(packItemRef);
+      if (!packItemDoc.exists) throw new Error('Pack not found');
+      const packItem = packItemDoc.data();
+      if (packItem.itemType !== 'pack' || packItem.buyerId !== requesterId || packItem.sold !== true || packItem.listedForSale === true) {
+        throw new Error('You cannot open this pack');
+      }
+
+      const packDoc = await transaction.get(db.collection('packs').doc(packItem.packId));
+      if (!packDoc.exists || !Array.isArray(packDoc.data().cardIds) || packDoc.data().cardIds.length === 0) {
+        throw new Error('Pack has no available cards');
+      }
+      const pack = packDoc.data();
+      const cardId = pack.cardIds[crypto.randomInt(pack.cardIds.length)];
+      const cardRef = db.collection('items').doc();
+      transaction.set(cardRef, {
+        name: `Card ${cardId}`,
+        itemType: 'card',
+        price: 0,
+        sellerId: packItem.sellerId,
+        sold: true,
+        buyerId: requesterId,
+        purchasedAt: new Date(),
+        sourceItemId: null,
+        imageUrl: `/images/${cardId}`,
+        createdAt: new Date(),
+        openedFromPackId: packItem.packId
+      });
+      transaction.delete(packItemRef);
+      return { cardId };
+    });
+    res.json({ success: true, cardId: result.cardId, imageUrl: `/images/${result.cardId}` });
+  } catch (error) {
+    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
+    if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
+    console.error('Error opening pack:', error);
+    res.status(500).send('Could not open pack');
+  }
+});
+
 /* ------------------ GRANT ITEM ------------------ */
 app.post('/grant-item', async (req, res) => {
   const requesterId = req.header('X-User-Id');
@@ -575,13 +724,16 @@ app.post('/items', async (req, res) => {
       return res.status(400).send('Seller not found');
     }
 
-    // If listing from inventory, mark the source item as listedForSale
+    let sourceItem = null;
+    // If listing from inventory, verify ownership and preserve its type (including packs).
     if (sourceItemId) {
       const sourceItemRef = db.collection('items').doc(sourceItemId);
       const sourceItemDoc = await sourceItemRef.get();
-      if (sourceItemDoc.exists) {
-        await sourceItemRef.update({ listedForSale: true });
+      if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true) {
+        return res.status(400).send('Selected inventory item is unavailable');
       }
+      sourceItem = sourceItemDoc.data();
+      await sourceItemRef.update({ listedForSale: true });
     }
 
     await db.collection('items').add({
@@ -592,7 +744,9 @@ app.post('/items', async (req, res) => {
       buyerId: null,
       purchasedAt: null,
       sourceItemId: sourceItemId || null,
-      imageUrl: imageUrl || null,
+      imageUrl: sourceItem ? sourceItem.imageUrl || null : imageUrl || null,
+      itemType: sourceItem ? sourceItem.itemType || 'card' : 'card',
+      packId: sourceItem ? sourceItem.packId || null : null,
       createdAt: new Date()
     });
 

@@ -83,6 +83,28 @@
 
       <hr style="margin: 20px 0; border-color: #e0e0e0;">
 
+      <h2>Pack Builder</h2>
+      <div class="form-group">
+        <label class="input-label" for="packName">New pack name</label>
+        <input id="packName" class="input-field" maxlength="80" placeholder="Example: Legendary Players">
+        <label class="input-label">Cards in this pack</label>
+        <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
+        <div id="packCardPicker" class="pack-card-picker"></div>
+        <button onclick="createPack()" class="btn btn-primary">Save New Pack</button>
+      </div>
+      <div class="form-group">
+        <label class="input-label" for="grantPackSelect">Saved pack</label>
+        <select id="grantPackSelect" class="input-field"></select>
+        <label class="input-label" for="grantPackUserSelect">Give pack to</label>
+        <select id="grantPackUserSelect" class="input-field"></select>
+        <input id="grantPackQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
+        <button onclick="grantPackToUser()" class="btn btn-primary">Grant Pack</button>
+        <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
+      </div>
+      <ul id="savedPacks" class="saved-packs"></ul>
+
+      <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
       <h2>👥 Account Viewer</h2>
       <div class="form-group">
         <label class="input-label" for="adminAccountSelect">Select an account</label>

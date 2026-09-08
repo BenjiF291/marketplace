@@ -21,6 +21,7 @@ const wheelSegments = [8, 10, 12, 16, 20, 24];
 let selectedItemForListing = null; // Track selected item for listing
 let currentUserIsAdmin = false;
 let availableCardImages = [];
+let savedPacks = [];
 
 function logout() {
   localStorage.removeItem('userId');
@@ -585,6 +586,7 @@ async function loadUsers() {
       populateGrantControls(users);
       populateAdminAccountViewer(users);
       loadCardOptions();
+      loadPacks();
     }
 
     populateTransferRecipients(users);
@@ -634,14 +636,17 @@ async function updateBalance() {
 
 function populateGrantControls(users) {
   const userSelect = document.getElementById('grantUserSelect');
-  if (!userSelect) return;
+  const packUserSelect = document.getElementById('grantPackUserSelect');
+  if (!userSelect || !packUserSelect) return;
 
-  userSelect.innerHTML = '';
+  [userSelect, packUserSelect].forEach(select => { select.innerHTML = ''; });
   users.forEach(user => {
-    const option = document.createElement('option');
-    option.value = user.username;
-    option.textContent = user.username + (user.isAdmin ? ' (admin)' : '');
-    userSelect.appendChild(option);
+    [userSelect, packUserSelect].forEach(select => {
+      const option = document.createElement('option');
+      option.value = user.username;
+      option.textContent = user.username + (user.isAdmin ? ' (admin)' : '');
+      select.appendChild(option);
+    });
   });
 }
 
@@ -763,9 +768,128 @@ async function loadCardOptions() {
       cardSelect.appendChild(option);
     });
 
+    renderPackCardPicker();
     updateGrantCardPreview();
   } catch (error) {
     console.error('Error loading card images:', error);
+  }
+}
+
+function renderPackCardPicker() {
+  const picker = document.getElementById('packCardPicker');
+  if (!picker) return;
+  picker.innerHTML = '';
+
+  availableCardImages.forEach(filename => {
+    const label = document.createElement('label');
+    label.className = 'pack-card-option';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = filename;
+    checkbox.setAttribute('aria-label', `Include ${filename}`);
+    const image = document.createElement('img');
+    image.src = `/images/${filename}`;
+    image.alt = filename;
+    const caption = document.createElement('span');
+    caption.textContent = filename;
+    label.append(checkbox, image, caption);
+    picker.appendChild(label);
+  });
+}
+
+async function loadPacks() {
+  if (!currentUserIsAdmin) return;
+  try {
+    const res = await fetch(`${API_URL}/packs`, { headers: { 'X-User-Id': currentUserId } });
+    if (!res.ok) throw new Error(await res.text());
+    savedPacks = await res.json();
+
+    const select = document.getElementById('grantPackSelect');
+    const list = document.getElementById('savedPacks');
+    if (!select || !list) return;
+    select.innerHTML = '';
+    list.innerHTML = '';
+    if (savedPacks.length === 0) {
+      const option = document.createElement('option');
+      option.textContent = 'No saved packs yet';
+      option.value = '';
+      select.appendChild(option);
+      return;
+    }
+    savedPacks.forEach(pack => {
+      const option = document.createElement('option');
+      option.value = pack.id;
+      option.textContent = `${pack.name} (${pack.cardIds.length} cards)`;
+      select.appendChild(option);
+
+      const item = document.createElement('li');
+      item.textContent = `${pack.name}: ${pack.cardIds.length} possible card${pack.cardIds.length === 1 ? '' : 's'}`;
+      list.appendChild(item);
+    });
+  } catch (error) {
+    console.error('Error loading packs:', error);
+  }
+}
+
+async function createPack() {
+  const nameInput = document.getElementById('packName');
+  const cardIds = [...document.querySelectorAll('#packCardPicker input:checked')].map(input => input.value);
+  const name = nameInput && nameInput.value.trim();
+  if (!name) return alert('Enter a pack name');
+  if (cardIds.length === 0) return alert('Choose at least one card for the pack');
+
+  try {
+    const res = await fetch(`${API_URL}/packs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ name, cardIds })
+    });
+    if (!res.ok) return alert(await res.text());
+    nameInput.value = '';
+    document.querySelectorAll('#packCardPicker input:checked').forEach(input => { input.checked = false; });
+    await loadPacks();
+    alert('Pack saved');
+  } catch (error) {
+    console.error('Error creating pack:', error);
+    alert('Could not save pack');
+  }
+}
+
+async function grantPackToUser() {
+  const packId = document.getElementById('grantPackSelect').value;
+  const username = document.getElementById('grantPackUserSelect').value;
+  const quantity = Number(document.getElementById('grantPackQuantity').value);
+  if (!packId || !username || !Number.isInteger(quantity) || quantity < 1) return alert('Select a pack, user, and valid quantity');
+
+  try {
+    const res = await fetch(`${API_URL}/grant-pack`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ packId, username, quantity })
+    });
+    if (!res.ok) return alert(await res.text());
+    alert(`Granted ${quantity} pack(s) to ${username}`);
+    if (username === localStorage.getItem('username')) loadInventory();
+  } catch (error) {
+    console.error('Error granting pack:', error);
+    alert('Could not grant pack');
+  }
+}
+
+async function openPack(itemId) {
+  try {
+    const res = await fetch(`${API_URL}/open-pack`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ itemId })
+    });
+    if (!res.ok) return alert(await res.text());
+    const result = await res.json();
+    alert(`You opened the pack and received: ${result.cardId}`);
+    loadInventory();
+  } catch (error) {
+    console.error('Error opening pack:', error);
+    alert('Could not open pack');
   }
 }
 
@@ -1271,6 +1395,21 @@ async function loadInventory() {
 
     inventoryItems.forEach(item => {
       const li = document.createElement('li');
+      if (item.itemType === 'pack') {
+        const packIcon = document.createElement('div');
+        packIcon.className = 'pack-inventory-icon';
+        packIcon.textContent = 'PACK';
+        const packName = document.createElement('span');
+        packName.className = 'item-info';
+        packName.textContent = item.name;
+        const openButton = document.createElement('button');
+        openButton.className = 'btn btn-success';
+        openButton.textContent = 'Open Pack';
+        openButton.onclick = () => openPack(item.id);
+        li.append(packIcon, packName, openButton);
+        list.appendChild(li);
+        return;
+      }
       // Only show thumbnail in inventory view (no name, price, or purchase date)
       if (item.imageUrl) {
         const image = document.createElement('img');
