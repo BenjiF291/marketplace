@@ -690,7 +690,7 @@ app.post('/buy', async (req, res) => {
     const itemsRef = db.collection('items');
     const usersRef = db.collection('users');
 
-    await db.runTransaction(async (transaction) => {
+    const purchase = await db.runTransaction(async (transaction) => {
       const itemRef = itemsRef.doc(itemId);
       const itemDoc = await transaction.get(itemRef);
 
@@ -717,15 +717,6 @@ app.post('/buy', async (req, res) => {
 
       const buyer = buyerDoc.data();
 
-      const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
-      const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
-      const hasHostDiscount = hasActiveVip && seller.isAdmin === true;
-      const purchasePrice = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
-
-      if (buyer.balance < purchasePrice) {
-        throw new Error('Not enough money');
-      }
-
       const sellerRef = usersRef.doc(item.sellerId);
       const sellerDoc = await transaction.get(sellerRef);
 
@@ -734,6 +725,14 @@ app.post('/buy', async (req, res) => {
       }
 
       const seller = sellerDoc.data();
+      const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
+      const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
+      const hasHostDiscount = hasActiveVip && seller.isAdmin === true;
+      const purchasePrice = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
+
+      if (buyer.balance < purchasePrice) {
+        throw new Error('Not enough money');
+      }
 
       // If the listing came from inventory, read the source item BEFORE performing writes
       let sourceItemRef = null;
@@ -763,8 +762,15 @@ app.post('/buy', async (req, res) => {
       if (sourceItemDoc && sourceItemDoc.exists) {
         transaction.delete(sourceItemRef);
       }
+
+      return { purchasePrice, hasHostDiscount, listedPrice: item.price };
     });
-    res.json({ success: true, purchasePrice, discountApplied: hasHostDiscount, discountAmount: item.price - purchasePrice });
+    res.json({
+      success: true,
+      purchasePrice: purchase.purchasePrice,
+      discountApplied: purchase.hasHostDiscount,
+      discountAmount: purchase.listedPrice - purchase.purchasePrice
+    });
   } catch (error) {
     console.error('Error buying item:', error);
 
