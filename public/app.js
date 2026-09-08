@@ -967,12 +967,40 @@ async function openPack(itemId) {
     });
     if (!res.ok) return alert(await res.text());
     const result = await res.json();
-    alert(`You opened the pack and received: ${result.cardId}`);
+    showPackOpeningAnimation(result);
     loadInventory();
   } catch (error) {
     console.error('Error opening pack:', error);
     alert('Could not open pack');
   }
+}
+
+function showPackOpeningAnimation(result) {
+  const overlay = document.getElementById('packOpeningOverlay');
+  const pack = document.getElementById('openingPack');
+  const card = document.getElementById('openedCardImage');
+  const name = document.getElementById('openedCardName');
+  if (!overlay || !pack || !card || !name) return;
+
+  overlay.hidden = false;
+  pack.className = 'opening-pack';
+  card.className = 'opened-card-image';
+  name.className = 'opened-card-name';
+  card.src = result.imageUrl;
+  card.alt = result.cardId;
+  name.textContent = result.cardId;
+
+  requestAnimationFrame(() => {
+    pack.classList.add('is-opening');
+  });
+  window.setTimeout(() => {
+    pack.classList.add('is-gone');
+    card.classList.add('is-revealed');
+    name.classList.add('is-revealed');
+  }, 750);
+  window.setTimeout(() => {
+    overlay.hidden = true;
+  }, 3800);
 }
 
 function updateGrantCardPreview() {
