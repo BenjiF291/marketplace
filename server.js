@@ -39,20 +39,21 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
-app.use(async (req, res, next) => {
+let marketplaceSyncRunning = false;
+
+async function runMarketplaceSync() {
+  if (marketplaceSyncRunning) return;
+  marketplaceSyncRunning = true;
   try {
     await syncPlannedMarketplaceListings();
   } catch (error) {
-    console.error('Background planning sync failed:', error);
-  }
-  next();
-});
-
-setInterval(() => {
-  syncPlannedMarketplaceListings().catch(error => {
     console.error('Scheduled listing sync failed:', error);
-  });
-}, 60000);
+  } finally {
+    marketplaceSyncRunning = false;
+  }
+}
+
+setInterval(runMarketplaceSync, 60000);
 
 /* ------------------ HELPERS ------------------ */
 function hashPassword(password) {
@@ -528,10 +529,10 @@ app.get('/users', async (req, res) => {
         username: data.username,
         balance: data.balance,
         isAdmin: data.isAdmin === true,
-        createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
-        lastOnline: data.lastOnline ? (data.lastOnline.toDate ? data.lastOnline.toDate().toISOString() : new Date(data.lastOnline).toISOString()) : null,
-        lastSpin: data.lastSpin ? (data.lastSpin.toDate ? data.lastSpin.toDate().toISOString() : new Date(data.lastSpin).toISOString()) : null,
-        vipUntil: data.vipUntil ? (data.vipUntil.toDate ? data.vipUntil.toDate().toISOString() : new Date(data.vipUntil).toISOString()) : null
+        createdAt: serializeDate(data.createdAt),
+        lastOnline: serializeDate(data.lastOnline),
+        lastSpin: serializeDate(data.lastSpin),
+        vipUntil: serializeDate(data.vipUntil)
       });
     });
 
@@ -704,8 +705,6 @@ app.post('/transfer', async (req, res) => {
 /* ------------------ GET ITEMS ------------------ */
 app.get('/items', async (req, res) => {
   try {
-    await syncPlannedMarketplaceListings();
-
     const itemsRef = db.collection('items');
     const [snapshot, usersSnapshot] = await Promise.all([
       itemsRef.get(),

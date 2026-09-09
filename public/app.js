@@ -613,6 +613,7 @@ function getWheelIndexForReward(amount) {
 async function loadSpinInfo() {
   const statusEl = document.getElementById('spinStatus');
   const resultEl = document.getElementById('spinResult');
+  let user = null;
   resultEl.textContent = '';
 
   try {
@@ -620,7 +621,7 @@ async function loadSpinInfo() {
     if (!res.ok) throw new Error('Failed to retrieve user info');
 
     const users = await res.json();
-    const user = users.find(u => u.id === currentUserId);
+    user = users.find(u => u.id === currentUserId);
 
     if (!user) {
       statusEl.textContent = 'Unable to find user info.';
@@ -669,7 +670,7 @@ async function loadSpinInfo() {
   }
 
   // Show VIP note if active
-  const vipUntil = user.vipUntil ? parseTimestamp(user.vipUntil) : null;
+  const vipUntil = user?.vipUntil ? parseTimestamp(user.vipUntil) : null;
   const vipNoteEl = document.getElementById('spinVipNote');
   if (vipNoteEl) {
     if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
