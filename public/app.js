@@ -22,6 +22,7 @@ let selectedItemForListing = null; // Track selected item for listing
 let currentUserIsAdmin = false;
 let availableCardImages = [];
 let savedPacks = [];
+let inventorySellMode = false;
 
 function logout() {
   localStorage.removeItem('userId');
@@ -1714,24 +1715,56 @@ async function listSelectedItem() {
 }
 
 /* ------------------ INVENTORY ------------------ */
+function updateInventorySellModeButton() {
+  const sellModeButton = document.getElementById('inventorySellModeToggle');
+  if (!sellModeButton) return;
+  sellModeButton.textContent = `Sell Mode: ${inventorySellMode ? 'On' : 'Off'}`;
+  sellModeButton.classList.toggle('btn-warning', !inventorySellMode);
+  sellModeButton.classList.toggle('btn-success', inventorySellMode);
+}
+
+function toggleInventorySellMode() {
+  inventorySellMode = !inventorySellMode;
+  updateInventorySellModeButton();
+  loadInventory();
+}
+
 async function loadInventory() {
   if (!isServerOnline) return;
 
   try {
-    const res = await fetch(`${API_URL}/inventory`, {
-      headers: {
-        'X-User-Id': currentUserId
-      }
-    });
-    if (!res.ok) throw new Error('Server offline');
+    const [inventoryRes, tiersRes] = await Promise.all([
+      fetch(`${API_URL}/inventory`, {
+        headers: { 'X-User-Id': currentUserId }
+      }),
+      fetch(`${API_URL}/ascend-tier-config`, {
+        headers: { 'X-User-Id': currentUserId }
+      })
+    ]);
+    if (!inventoryRes.ok) throw new Error('Server offline');
+    if (!tiersRes.ok) throw new Error('Could not load tier prices');
 
-    const inventoryItems = await res.json();
+    const inventoryItems = await inventoryRes.json();
+    const tiers = await tiersRes.json();
+    const sellPriceByCard = {};
+
+    (Array.isArray(tiers) ? tiers : []).forEach(tier => {
+      (tier.cards || []).forEach(fileName => {
+        const normalized = String(fileName).split('/').pop();
+        const price = Number(tier.sellPrice);
+        if (normalized && Number.isFinite(price) && price > 0) {
+          sellPriceByCard[normalized] = price;
+        }
+      });
+    });
+
     inventoryItems.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
     const list = document.getElementById('inventoryItems');
     list.innerHTML = '';
 
     if (inventoryItems.length === 0) {
       list.innerHTML = `<li style="background:#fff4e8; border-left-color:#ffb74d;">Inventory empty</li>`;
+      updateInventorySellModeButton();
       return;
     }
 
@@ -1770,32 +1803,38 @@ async function loadInventory() {
         li.appendChild(placeholder);
       }
 
-      const sellButton = document.createElement('button');
-      sellButton.className = 'btn btn-warning';
-      sellButton.textContent = 'Sell to tier';
-      sellButton.onclick = async () => {
-        const confirmed = window.confirm('Sell this card back to its tier for the configured price?');
-        if (!confirmed) return;
-        try {
-          const res = await fetch(`${API_URL}/sell-tier-card`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-            body: JSON.stringify({ itemId: item.id })
-          });
-          if (!res.ok) return alert(await res.text());
-          const result = await res.json();
-          alert(`✅ Sold for ${result.amount} Footy`);
-          loadInventory();
-          updateBalance();
-        } catch (error) {
-          console.error('Sell card error:', error);
-          alert('Could not sell this card right now.');
-        }
-      };
+      const cardKey = item.imageUrl ? item.imageUrl.split('/').pop() : '';
+      const sellPrice = cardKey ? Number(sellPriceByCard[cardKey]) : 0;
+      if (inventorySellMode && sellPrice > 0) {
+        const sellButton = document.createElement('button');
+        sellButton.className = 'btn btn-warning';
+        sellButton.textContent = `Sell: ${sellPrice}`;
+        sellButton.onclick = async () => {
+          const confirmed = window.confirm(`Sell this card back to its tier for ${sellPrice} Footy?`);
+          if (!confirmed) return;
+          try {
+            const res = await fetch(`${API_URL}/sell-tier-card`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+              body: JSON.stringify({ itemId: item.id })
+            });
+            if (!res.ok) return alert(await res.text());
+            const result = await res.json();
+            alert(`✅ Sold for ${result.amount} Footy`);
+            loadInventory();
+            updateBalance();
+          } catch (error) {
+            console.error('Sell card error:', error);
+            alert('Could not sell this card right now.');
+          }
+        };
+        li.appendChild(sellButton);
+      }
 
-      li.appendChild(sellButton);
       list.appendChild(li);
     });
+
+    updateInventorySellModeButton();
   } catch (error) {
     console.error('Error loading inventory:', error);
     const list = document.getElementById('inventoryItems');
@@ -1804,6 +1843,7 @@ async function loadInventory() {
         Could not load inventory right now. Please switch back to Marketplace or try again later.
       </li>
     `;
+    updateInventorySellModeButton();
   }
 }
 

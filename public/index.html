@@ -189,7 +189,10 @@
     <section id="inventorySection" class="card inventory-section" style="display: none;">
       <div class="inventory-header-row">
         <h2>🎒 Inventory</h2>
-        <button id="openAscendMenuBtn" onclick="openAscendMenu()" class="btn btn-primary">Ascend</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="inventorySellModeToggle" onclick="toggleInventorySellMode()" class="btn btn-warning">Sell Mode: Off</button>
+          <button id="openAscendMenuBtn" onclick="openAscendMenu()" class="btn btn-primary">Ascend</button>
+        </div>
       </div>
       <ul id="inventoryItems" class="items-list"></ul>
     </section>
