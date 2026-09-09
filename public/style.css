@@ -564,6 +564,10 @@ body {
   background: rgba(28, 36, 74, 0.45);
 }
 
+.trade-offer-editor[hidden] {
+  display: none;
+}
+
 .trade-editor-card {
   width: min(100%, 440px);
   padding: 22px;
