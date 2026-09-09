@@ -25,5 +25,6 @@ assert.deepEqual(validateBattleCard({
 assert.equal(validateBattleCard({ name: '', averageScore: 7, top: 3, right: 4, bottom: 5, left: 6, linkedCardImage: 'x.png' }).valid, false);
 assert.equal(validateBattleCard({ name: 'Bad', averageScore: -1, top: 3, right: 4, bottom: 5, left: 6, linkedCardImage: 'x.png' }).valid, false);
 assert.equal(validateBattleCard({ name: 'Bad', averageScore: 7, top: 3, right: 4, bottom: 5, left: 6, linkedCardImage: '' }).valid, false);
+assert.equal(validateBattleCard({ name: 'Bad', averageScore: 7, top: 11, right: 4, bottom: 5, left: 6, linkedCardImage: 'x.png' }).valid, false);
 
 console.log('battle-utils tests passed');

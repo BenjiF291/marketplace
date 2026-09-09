@@ -426,6 +426,12 @@ app.delete('/admin/battle-cards/:cardId', async (req, res) => {
     }
 
     await ref.delete();
+    const issuedItems = await db.collection('items').where('battleCardId', '==', cardId).get();
+    for (let start = 0; start < issuedItems.docs.length; start += 500) {
+      const batch = db.batch();
+      issuedItems.docs.slice(start, start + 500).forEach(itemDoc => batch.delete(itemDoc.ref));
+      await batch.commit();
+    }
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting battle card:', error);
@@ -1907,6 +1913,8 @@ app.get('/inventory', async (req, res) => {
 
   try {
     const itemsRef = db.collection('items');
+    const battleCardsSnapshot = await db.collection('battleCards').get();
+    const activeBattleCardIds = new Set(battleCardsSnapshot.docs.map(doc => doc.id));
     const snapshot = await itemsRef
       .where('buyerId', '==', userId)
       .where('sold', '==', true)
@@ -1916,7 +1924,8 @@ app.get('/inventory', async (req, res) => {
     snapshot.forEach(doc => {
       const data = doc.data();
       // Filter out items that are currently listed for sale
-      if (data.listedForSale !== true) {
+      const isActiveBattleCard = data.itemType !== 'battle-card' || activeBattleCardIds.has(data.battleCardId);
+      if (data.listedForSale !== true && isActiveBattleCard) {
         inventoryItems.push({
           id: doc.id,
           ...data

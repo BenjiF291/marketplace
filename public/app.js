@@ -158,6 +158,7 @@ async function deleteBattleCard(cardId) {
       throw new Error(msg || 'Delete failed');
     }
     loadBattleCards();
+    loadBattleInventory();
   } catch (error) {
     console.error('Delete battle card error:', error);
     alert(error.message || 'Could not delete battle card');

@@ -23,8 +23,8 @@ function validateBattleCard(card) {
   }
 
   for (const sideName of ['top', 'right', 'bottom', 'left']) {
-    if (!Number.isFinite(sides[sideName]) || sides[sideName] < 0) {
-      return { valid: false, error: `${sideName} attack value must be a non-negative number` };
+    if (!Number.isFinite(sides[sideName]) || sides[sideName] < 0 || sides[sideName] > 10) {
+      return { valid: false, error: `${sideName} attack value must be between 0 and 10` };
     }
   }
 
@@ -37,10 +37,10 @@ function validateBattleCard(card) {
     normalized: {
       name: cleanName,
       averageScore,
-      top: Math.round(sides.top),
-      right: Math.round(sides.right),
-      bottom: Math.round(sides.bottom),
-      left: Math.round(sides.left),
+      top: Math.trunc(sides.top),
+      right: Math.trunc(sides.right),
+      bottom: Math.trunc(sides.bottom),
+      left: Math.trunc(sides.left),
       linkedCardImage
     }
   };
