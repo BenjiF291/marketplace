@@ -23,10 +23,6 @@ let currentUserIsAdmin = false;
 let availableCardImages = [];
 let savedPacks = [];
 let inventorySellMode = false;
-let tradeSessionId = null;
-let tradePollInterval = null;
-let presenceInterval = null;
-let tradeInventoryItems = [];
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -217,288 +213,13 @@ async function loadBattleCards() {
 }
 
 function logout() {
-  stopTradePolling();
-  if (presenceInterval) clearInterval(presenceInterval);
   localStorage.removeItem('userId');
   localStorage.removeItem('username');
   window.location.href = 'login.html';
 }
 
-async function sendPresenceHeartbeat() {
-  try {
-    await fetch(`${API_URL}/presence/heartbeat`, {
-      method: 'POST',
-      headers: { 'X-User-Id': currentUserId }
-    });
-  } catch (error) {
-    console.error('Presence heartbeat error:', error);
-  }
-}
-
-function stopTradePolling() {
-  if (tradePollInterval) {
-    clearInterval(tradePollInterval);
-    tradePollInterval = null;
-  }
-}
-
-function tradeFetch(path, options = {}) {
-  return fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId, ...(options.headers || {}) }
-  });
-}
-
-async function loadTradeOnlineUsers() {
-  const list = document.getElementById('tradeOnlineUsers');
-  if (!list) return;
-  try {
-    const [response, sessionsResponse] = await Promise.all([
-      tradeFetch('/trade/online-users'),
-      tradeFetch('/trade/sessions')
-    ]);
-    if (!response.ok || !sessionsResponse.ok) throw new Error(await response.text());
-    const users = await response.json();
-    const sessions = await sessionsResponse.json();
-    const incomingSession = sessions.find(session => session.id !== tradeSessionId);
-    if (incomingSession) {
-      tradeSessionId = incomingSession.id;
-      await loadTradeInventoryChoices();
-      await loadTradeSession();
-      startTradePolling();
-      return;
-    }
-    list.innerHTML = '';
-    if (!users.length) {
-      list.textContent = 'No other users are online right now.';
-      return;
-    }
-    users.forEach(user => {
-      const row = document.createElement('div');
-      row.className = 'trade-online-user';
-      const name = document.createElement('strong');
-      name.textContent = user.username;
-      const button = document.createElement('button');
-      button.className = 'btn btn-primary';
-      button.textContent = 'Invite';
-      button.onclick = () => startTrade(user.id);
-      row.append(name, button);
-      list.appendChild(row);
-    });
-  } catch (error) {
-    console.error('Trade users error:', error);
-    list.textContent = 'Could not load online users.';
-  }
-}
-
-async function loadTradeInventoryChoices() {
-  const select = document.getElementById('tradeCardSelect');
-  if (!select) return;
-  try {
-    const response = await tradeFetch('/inventory');
-    if (!response.ok) throw new Error(await response.text());
-    const inventory = await response.json();
-    tradeInventoryItems = inventory.filter(item => ['card', 'battle-card'].includes(item.itemType));
-    select.innerHTML = '<option value="">Select a card</option>';
-    if (!tradeInventoryItems.length) {
-      select.innerHTML = '<option value="">No cards available</option>';
-      return;
-    }
-    tradeInventoryItems.forEach(item => {
-      const option = document.createElement('option');
-      option.value = item.id;
-      option.textContent = item.name || 'Card';
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Trade inventory error:', error);
-    select.innerHTML = '<option value="">Could not load cards</option>';
-  }
-}
-
-async function startTrade(targetUserId) {
-  try {
-    const response = await tradeFetch('/trade/sessions', {
-      method: 'POST',
-      body: JSON.stringify({ targetUserId })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const session = await response.json();
-    tradeSessionId = session.id;
-    await loadTradeSession();
-    startTradePolling();
-  } catch (error) {
-    alert(error.message || 'Could not start trade');
-  }
-}
-
-function startTradePolling() {
-  stopTradePolling();
-  tradePollInterval = setInterval(() => {
-    loadTradeSession();
-    loadTradeOnlineUsers();
-  }, 1500);
-}
-
-async function loadTradeSession() {
-  if (!tradeSessionId) return;
-  try {
-    const response = await tradeFetch(`/trade/sessions/${tradeSessionId}`);
-    if (!response.ok) throw new Error(await response.text());
-    const session = await response.json();
-    renderTradeSession(session);
-    if (session.status !== 'open') stopTradePolling();
-  } catch (error) {
-    console.error('Trade session error:', error);
-  }
-}
-
-function renderTradeSession(session) {
-  const room = document.getElementById('tradeRoom');
-  const lobby = document.getElementById('tradeLobby');
-  const status = document.getElementById('tradeStatus');
-  if (!room || !lobby) return;
-  room.hidden = false;
-  lobby.hidden = true;
-  const partnerId = session.participantIds.find(id => id !== currentUserId);
-  const partnerName = session.participants[partnerId]?.username || 'other user';
-  document.getElementById('tradePartnerName').textContent = partnerName;
-  document.getElementById('tradeOtherName').textContent = partnerName;
-  const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
-  const otherOffer = session.offers[partnerId] || { money: 0, itemIds: [] };
-  document.getElementById('tradeOwnMoney').textContent = `${ownOffer.money || 0} Footy`;
-  const ownCards = document.getElementById('tradeOwnCards');
-  ownCards.innerHTML = '';
-  (ownOffer.items || []).forEach(item => {
-    const entry = document.createElement('li');
-    entry.textContent = item.name || 'Card';
-    ownCards.appendChild(entry);
-  });
-  if (!ownOffer.items?.length) ownCards.innerHTML = '<li>No cards offered</li>';
-  document.getElementById('tradeOtherMoney').textContent = `${otherOffer.money || 0} Footy`;
-  const otherCards = document.getElementById('tradeOtherCards');
-  otherCards.innerHTML = '';
-  (otherOffer.items || []).forEach(item => {
-    const entry = document.createElement('li');
-    entry.textContent = item.name || 'Card';
-    otherCards.appendChild(entry);
-  });
-  if (!otherOffer.items?.length) otherCards.innerHTML = '<li>No cards offered</li>';
-  const ownAgreed = session.agreed?.[currentUserId] === true;
-  const otherAgreed = session.agreed?.[partnerId] === true;
-  const ownAgreement = document.getElementById('tradeOwnAgreement');
-  ownAgreement.textContent = ownAgreed ? 'Agreed' : 'Not agreed';
-  ownAgreement.classList.toggle('is-agreed', ownAgreed);
-  document.getElementById('tradeAgreementStatus').textContent = session.status === 'completed'
-    ? 'Trade completed.'
-    : `${ownAgreed ? 'You agreed' : 'You have not agreed'} · ${otherAgreed ? `${partnerName} agreed` : `${partnerName} has not agreed`}`;
-  document.getElementById('tradeAgreeButton').textContent = ownAgreed ? 'Agreed' : 'Agree';
-  document.getElementById('tradeAgreeButton').disabled = ownAgreed || session.status !== 'open';
-  status.textContent = session.status === 'completed' ? 'The trade completed successfully.' : 'Both users must agree before anything moves.';
-  if (session.status === 'completed') finishTrade(session);
-}
-
-let tradeEditorType = null;
-
-function openTradeOfferEditor(type) {
-  tradeEditorType = type;
-  const editor = document.getElementById('tradeOfferEditor');
-  const moneyEditor = document.getElementById('tradeMoneyEditor');
-  const cardEditor = document.getElementById('tradeCardEditor');
-  document.getElementById('tradeEditorTitle').textContent = type === 'money' ? 'Offer Footy' : 'Offer Card';
-  moneyEditor.hidden = type !== 'money';
-  cardEditor.hidden = type !== 'card';
-  if (type === 'money') document.getElementById('tradeMoneyInput').value = '0';
-  if (type === 'card') document.getElementById('tradeCardSelect').value = '';
-  editor.hidden = false;
-}
-
-function closeTradeOfferEditor() {
-  document.getElementById('tradeOfferEditor').hidden = true;
-  tradeEditorType = null;
-}
-
-async function submitTradeOfferEdit() {
-  if (!tradeSessionId) return;
-  try {
-    const sessionResponse = await tradeFetch(`/trade/sessions/${tradeSessionId}`);
-    if (!sessionResponse.ok) throw new Error(await sessionResponse.text());
-    const session = await sessionResponse.json();
-    const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
-    let money = Number(ownOffer.money) || 0;
-    let itemIds = [...(ownOffer.itemIds || [])];
-    if (tradeEditorType === 'money') {
-      money = Number(document.getElementById('tradeMoneyInput').value);
-      if (!Number.isFinite(money) || money < 0) throw new Error('Enter a valid Footy amount.');
-    } else {
-      const cardId = document.getElementById('tradeCardSelect').value;
-      if (!cardId) throw new Error('Choose a card first.');
-      if (!itemIds.includes(cardId)) itemIds.push(cardId);
-    }
-
-    const response = await tradeFetch(`/trade/sessions/${tradeSessionId}/offer`, {
-      method: 'POST',
-      body: JSON.stringify({ money, itemIds })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    closeTradeOfferEditor();
-    await loadTradeSession();
-  } catch (error) {
-    alert(error.message || 'Could not update offer');
-  }
-}
-
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !document.getElementById('tradeOfferEditor')?.hidden) {
-    closeTradeOfferEditor();
-  }
-});
-
-function finishTrade(session) {
-  if (!tradeSessionId) return;
-  const completedSessionId = tradeSessionId;
-  tradeSessionId = null;
-  stopTradePolling();
-  const toast = document.getElementById('tradeToast');
-  toast.textContent = 'Trade completed successfully. Your cards and Footy have been exchanged.';
-  toast.classList.add('is-visible');
-  setTimeout(() => {
-    toast.classList.remove('is-visible');
-    if (currentView === 'trade' && completedSessionId) showSection('inventory');
-  }, 1800);
-}
-
-async function agreeToTrade() {
-  if (!tradeSessionId) return;
-  try {
-    const response = await tradeFetch(`/trade/sessions/${tradeSessionId}/agree`, { method: 'POST' });
-    if (!response.ok) throw new Error(await response.text());
-    renderTradeSession(await response.json());
-    loadInventory();
-    updateBalance();
-  } catch (error) {
-    alert(error.message || 'Could not agree to trade');
-  }
-}
-
-async function cancelTrade() {
-  if (!tradeSessionId) return;
-  try {
-    await tradeFetch(`/trade/sessions/${tradeSessionId}/cancel`, { method: 'POST' });
-  } finally {
-    tradeSessionId = null;
-    stopTradePolling();
-    document.getElementById('tradeRoom').hidden = true;
-    document.getElementById('tradeLobby').hidden = false;
-    document.getElementById('tradeStatus').textContent = 'Choose an online user to start a trade.';
-    loadTradeOnlineUsers();
-  }
-}
-
 function showSection(section) {
   currentView = section;
-
-  if (section !== 'trade') closeTradeOfferEditor();
 
   const marketplaceSection = document.getElementById('marketplaceSection');
   const inventorySection = document.getElementById('inventorySection');
@@ -509,13 +230,11 @@ function showSection(section) {
   const historyTab = document.getElementById('historyTab');
   const spinTab = document.getElementById('spinTab');
   const vipTab = document.getElementById('vipTab');
-  const tradeTab = document.getElementById('tradeTab');
   const battleTab = document.getElementById('battleTab');
   const battleManagerTab = document.getElementById('battleManagerTab');
   const vipSection = document.getElementById('vipSection');
   const battleGameSection = document.getElementById('battleGameSection');
   const battleSection = document.getElementById('battleSection');
-  const tradeSection = document.getElementById('tradeSection');
 
   if (section === 'inventory') {
     clearSpinCountdown();
@@ -538,7 +257,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     // Mark tab active state
     marketTab.classList.remove('active');
@@ -548,7 +266,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     // Ensure inventory scrolls into view on mobile
     inventorySection.scrollIntoView({ behavior: 'smooth' });
@@ -572,7 +289,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -581,7 +297,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     if (historySection) historySection.scrollIntoView({ behavior: 'smooth' });
     loadHistory();
@@ -604,7 +319,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -613,7 +327,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     // Ensure spin section scrolls into view on mobile
     spinSection.scrollIntoView({ behavior: 'smooth' });
@@ -638,7 +351,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'block';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -647,44 +359,11 @@ function showSection(section) {
     if (vipTab) vipTab.classList.add('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     // Ensure vip section scrolls into view on mobile
     if (vipSection) vipSection.scrollIntoView({ behavior: 'smooth' });
 
     loadVipInfo();
-  } else if (section === 'trade') {
-    clearSpinCountdown();
-    const userSection = document.querySelector('.user-section');
-    const transferSection = document.querySelector('.transfer-section');
-    const sellSection = document.querySelector('.sell-section');
-    const adminCard = document.getElementById('adminSection');
-    if (userSection) userSection.style.display = 'none';
-    if (transferSection) transferSection.style.display = 'none';
-    if (sellSection) sellSection.style.display = 'none';
-    if (adminCard) adminCard.style.display = 'none';
-    marketplaceSection.style.display = 'none';
-    inventorySection.style.display = 'none';
-    if (historySection) historySection.style.display = 'none';
-    spinSection.style.display = 'none';
-    if (vipSection) vipSection.style.display = 'none';
-    if (battleGameSection) battleGameSection.style.display = 'none';
-    if (battleSection) battleSection.style.display = 'none';
-    tradeSection.style.display = 'block';
-    marketTab.classList.remove('active');
-    inventoryTab.classList.remove('active');
-    if (historyTab) historyTab.classList.remove('active');
-    spinTab.classList.remove('active');
-    if (vipTab) vipTab.classList.remove('active');
-    if (battleTab) battleTab.classList.remove('active');
-    if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.add('active');
-    loadTradeOnlineUsers();
-    loadTradeInventoryChoices();
-    if (tradeSessionId) {
-      loadTradeSession();
-      startTradePolling();
-    }
   } else if (section === 'battle') {
     if (!currentUserIsAdmin) {
       alert('Battle is currently only available to admins.');
@@ -707,7 +386,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'block';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -716,7 +394,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.add('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     loadBattleInventory();
   } else if (section === 'battle-manager') {
@@ -741,7 +418,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'block';
-    if (tradeSection) tradeSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
@@ -750,7 +426,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.add('active');
-    if (tradeTab) tradeTab.classList.remove('active');
 
     loadBattleCards();
   } else {
@@ -772,7 +447,6 @@ function showSection(section) {
     if (vipSection) vipSection.style.display = 'none';
     if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
-    if (tradeSection) tradeSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
     if (historyTab) historyTab.classList.remove('active');
@@ -780,7 +454,6 @@ function showSection(section) {
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
     if (battleManagerTab) battleManagerTab.classList.remove('active');
-    if (tradeTab) tradeTab.classList.remove('active');
   }
 }
 
@@ -2681,6 +2354,4 @@ async function confirmAscend(entry) {
 checkServerStatus();
 loadUsers();
 loadItems();
-sendPresenceHeartbeat();
-presenceInterval = setInterval(sendPresenceHeartbeat, 10000);
 // Inventory loads only when the tab is selected, to avoid closing the market from inventory fetch issues

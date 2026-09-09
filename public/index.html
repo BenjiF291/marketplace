@@ -26,7 +26,6 @@
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
-    <button id="tradeTab" class="tab-button" onclick="showSection('trade')">Trade</button>
     <button id="battleTab" class="tab-button" onclick="showSection('battle')" style="display: none;">Battle</button>
     <button id="battleManagerTab" class="tab-button" onclick="showSection('battle-manager')" style="display: none;">BCM</button>
   </div>
@@ -310,67 +309,6 @@
         <h3>Item purchases and sales</h3>
         <ul id="itemHistory" class="history-list"></ul>
       </div>
-    </section>
-
-    <!-- Trade Section -->
-    <section id="tradeSection" class="card trade-section" style="display: none;">
-      <h2>Trade</h2>
-      <p class="trade-status" id="tradeStatus">Choose an online user to start a trade.</p>
-      <div id="tradeLobby" class="trade-lobby">
-        <h3>Online users</h3>
-        <div id="tradeOnlineUsers" class="trade-online-users"></div>
-      </div>
-      <div id="tradeRoom" class="trade-room" hidden>
-        <div class="trade-room-header">
-          <h3>Trade with <span id="tradePartnerName"></span></h3>
-          <button type="button" onclick="cancelTrade()" class="btn btn-danger">Cancel</button>
-        </div>
-        <div class="trade-offer-grid">
-          <div class="trade-offer-panel trade-own-offer">
-            <div class="trade-panel-heading">
-              <h4>Your offer</h4>
-              <span id="tradeOwnAgreement" class="trade-agreement-pill">Not agreed</span>
-            </div>
-            <div class="trade-offer-summary">
-              <strong>Footy</strong>
-              <span id="tradeOwnMoney">0 Footy</span>
-            </div>
-            <ul id="tradeOwnCards" class="trade-card-list"></ul>
-            <div class="trade-action-row">
-              <button type="button" onclick="openTradeOfferEditor('money')" class="btn btn-primary">Offer Footy</button>
-              <button type="button" onclick="openTradeOfferEditor('card')" class="btn btn-primary">Offer Card</button>
-            </div>
-            <button type="button" id="tradeAgreeButton" onclick="agreeToTrade()" class="btn btn-success">Agree</button>
-          </div>
-          <div class="trade-offer-panel trade-other-offer">
-            <h4><span id="tradeOtherName"></span>'s offer</h4>
-            <p id="tradeOtherMoney">0 Footy</p>
-            <ul id="tradeOtherCards" class="trade-card-list"></ul>
-            <p id="tradeAgreementStatus" class="trade-agreement-status"></p>
-          </div>
-        </div>
-      </div>
-      <div id="tradeOfferEditor" class="trade-offer-editor" hidden onclick="if (event.target === this) closeTradeOfferEditor();">
-        <div class="trade-editor-card">
-          <div class="trade-room-header">
-            <h3 id="tradeEditorTitle">Offer Footy</h3>
-            <button type="button" onclick="closeTradeOfferEditor()" class="modal-close">&times;</button>
-          </div>
-          <div id="tradeMoneyEditor" class="trade-editor-body">
-            <label class="input-label" for="tradeMoneyInput">Amount of Footy</label>
-            <input id="tradeMoneyInput" class="input-field" type="number" min="0" step="1" value="0">
-          </div>
-          <div id="tradeCardEditor" class="trade-editor-body" hidden>
-            <label class="input-label" for="tradeCardSelect">Choose a card</label>
-            <select id="tradeCardSelect" class="input-field"></select>
-          </div>
-          <div class="trade-editor-actions">
-            <button type="button" onclick="closeTradeOfferEditor()" class="btn btn-danger">Cancel</button>
-            <button type="button" onclick="submitTradeOfferEdit()" class="btn btn-primary">Save offer</button>
-          </div>
-        </div>
-      </div>
-      <div id="tradeToast" class="trade-toast" role="status" aria-live="polite"></div>
     </section>
 
     <!-- Spin Wheel Section -->
