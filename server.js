@@ -513,6 +513,250 @@ app.post('/login', async (req, res) => {
   }
 });
 
+/* ------------------ TRADE PRESENCE ------------------ */
+const TRADE_ONLINE_WINDOW_MS = 30000;
+
+function isRecentlyOnline(value) {
+  if (!value) return false;
+  const date = value.toDate ? value.toDate() : new Date(value);
+  return Number.isFinite(date.getTime()) && Date.now() - date.getTime() <= TRADE_ONLINE_WINDOW_MS;
+}
+
+app.post('/presence/heartbeat', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+
+  try {
+    const userRef = db.collection('users').doc(requesterId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).send('User not found');
+    await userRef.update({ lastOnline: new Date() });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Presence heartbeat error:', error);
+    res.status(500).send('Could not update presence');
+  }
+});
+
+app.get('/trade/online-users', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+
+  try {
+    const snapshot = await db.collection('users').get();
+    const users = snapshot.docs
+      .filter(doc => doc.id !== requesterId && isRecentlyOnline(doc.data().lastOnline))
+      .map(doc => ({ id: doc.id, username: doc.data().username }));
+    res.json(users);
+  } catch (error) {
+    console.error('Online trade users error:', error);
+    res.status(500).send('Could not load online users');
+  }
+});
+
+function tradeSessionView(id, data) {
+  return {
+    id,
+    status: data.status,
+    participantIds: data.participantIds,
+    participants: data.participants,
+    offers: data.offers,
+    agreed: data.agreed,
+    createdAt: serializeDate(data.createdAt),
+    updatedAt: serializeDate(data.updatedAt)
+  };
+}
+
+app.post('/trade/sessions', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { targetUserId } = req.body || {};
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!targetUserId || typeof targetUserId !== 'string' || targetUserId === requesterId) return res.status(400).send('Invalid trade partner');
+
+  try {
+    const usersRef = db.collection('users');
+    const [requesterDoc, targetDoc] = await Promise.all([
+      usersRef.doc(requesterId).get(),
+      usersRef.doc(targetUserId).get()
+    ]);
+    if (!requesterDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
+    if (!isRecentlyOnline(targetDoc.data().lastOnline)) return res.status(400).send('That user is no longer online');
+
+    const now = new Date();
+    const sessionRef = db.collection('tradeSessions').doc();
+    const participantIds = [requesterId, targetUserId];
+    const session = {
+      status: 'open',
+      participantIds,
+      participants: {
+        [requesterId]: { username: requesterDoc.data().username },
+        [targetUserId]: { username: targetDoc.data().username }
+      },
+      offers: {
+        [requesterId]: { money: 0, itemIds: [] },
+        [targetUserId]: { money: 0, itemIds: [] }
+      },
+      agreed: { [requesterId]: false, [targetUserId]: false },
+      createdAt: now,
+      updatedAt: now
+    };
+    await sessionRef.set(session);
+    res.status(201).json(tradeSessionView(sessionRef.id, session));
+  } catch (error) {
+    console.error('Create trade session error:', error);
+    res.status(500).send('Could not create trade');
+  }
+});
+
+app.get('/trade/sessions', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const snapshot = await db.collection('tradeSessions').where('participantIds', 'array-contains', requesterId).get();
+    const sessions = snapshot.docs
+      .map(doc => tradeSessionView(doc.id, doc.data()))
+      .filter(session => session.status === 'open')
+      .sort((left, right) => String(right.updatedAt || '').localeCompare(String(left.updatedAt || '')));
+    res.json(sessions);
+  } catch (error) {
+    console.error('List trade sessions error:', error);
+    res.status(500).send('Could not load trades');
+  }
+});
+
+app.get('/trade/sessions/:sessionId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+
+  try {
+    const sessionDoc = await db.collection('tradeSessions').doc(req.params.sessionId).get();
+    if (!sessionDoc.exists || !sessionDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Trade not found');
+    const session = sessionDoc.data();
+    const itemIds = session.participantIds.flatMap(participantId => session.offers?.[participantId]?.itemIds || []);
+    const itemDocs = await Promise.all(itemIds.map(itemId => db.collection('items').doc(itemId).get()));
+    const itemMap = new Map(itemDocs.filter(doc => doc.exists).map(doc => [doc.id, { id: doc.id, name: doc.data().name, imageUrl: doc.data().imageUrl, itemType: doc.data().itemType }]));
+    const view = tradeSessionView(sessionDoc.id, session);
+    view.offers = Object.fromEntries(session.participantIds.map(participantId => [participantId, {
+      ...(view.offers[participantId] || { money: 0, itemIds: [] }),
+      items: (view.offers[participantId]?.itemIds || []).map(itemId => itemMap.get(itemId) || { id: itemId, name: 'Unavailable card' })
+    }]));
+    res.json(view);
+  } catch (error) {
+    console.error('Load trade session error:', error);
+    res.status(500).send('Could not load trade');
+  }
+});
+
+app.post('/trade/sessions/:sessionId/offer', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { money, itemIds } = req.body || {};
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!Number.isFinite(Number(money)) || Number(money) < 0 || Number(money) > 1000000000) return res.status(400).send('Invalid trade money');
+  if (!Array.isArray(itemIds) || itemIds.some(itemId => typeof itemId !== 'string') || new Set(itemIds).size !== itemIds.length || itemIds.length > 50) return res.status(400).send('Invalid trade items');
+
+  try {
+    const sessionRef = db.collection('tradeSessions').doc(req.params.sessionId);
+    const result = await db.runTransaction(async transaction => {
+      const sessionDoc = await transaction.get(sessionRef);
+      if (!sessionDoc.exists) throw new Error('Trade not found');
+      const session = sessionDoc.data();
+      if (!session.participantIds.includes(requesterId) || session.status !== 'open') throw new Error('Trade is no longer open');
+      const itemRefs = itemIds.map(itemId => db.collection('items').doc(itemId));
+      const itemDocs = [];
+      for (const itemRef of itemRefs) itemDocs.push(await transaction.get(itemRef));
+      itemDocs.forEach(itemDoc => {
+        const item = itemDoc.data();
+        if (!itemDoc.exists || item.buyerId !== requesterId || item.sold !== true || item.listedForSale === true || !['card', 'battle-card'].includes(item.itemType)) {
+          throw new Error('One or more offered cards are unavailable');
+        }
+      });
+      const updatedOffers = { ...session.offers, [requesterId]: { money: Number(money), itemIds } };
+      const updatedAgreed = Object.fromEntries(session.participantIds.map(id => [id, false]));
+      transaction.update(sessionRef, { offers: updatedOffers, agreed: updatedAgreed, updatedAt: new Date() });
+      return { ...session, offers: updatedOffers, agreed: updatedAgreed, updatedAt: new Date() };
+    });
+    res.json(tradeSessionView(req.params.sessionId, result));
+  } catch (error) {
+    if (['Trade not found', 'Trade is no longer open', 'One or more offered cards are unavailable'].includes(error.message)) return res.status(400).send(error.message);
+    console.error('Update trade offer error:', error);
+    res.status(500).send('Could not update trade offer');
+  }
+});
+
+app.post('/trade/sessions/:sessionId/agree', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+
+  try {
+    const sessionRef = db.collection('tradeSessions').doc(req.params.sessionId);
+    const result = await db.runTransaction(async transaction => {
+      const sessionDoc = await transaction.get(sessionRef);
+      if (!sessionDoc.exists) throw new Error('Trade not found');
+      const session = sessionDoc.data();
+      if (!session.participantIds.includes(requesterId) || session.status !== 'open') throw new Error('Trade is no longer open');
+
+      const offers = session.offers || {};
+      const itemRefs = [];
+      session.participantIds.forEach(participantId => (offers[participantId]?.itemIds || []).forEach(itemId => itemRefs.push({ participantId, ref: db.collection('items').doc(itemId) })));
+      const userRefs = session.participantIds.map(participantId => db.collection('users').doc(participantId));
+      const userDocs = [];
+      for (const userRef of userRefs) userDocs.push(await transaction.get(userRef));
+      const itemDocs = [];
+      for (const entry of itemRefs) itemDocs.push({ ...entry, doc: await transaction.get(entry.ref) });
+
+      const agreed = { ...(session.agreed || {}), [requesterId]: true };
+      if (!session.participantIds.every(participantId => agreed[participantId] === true)) {
+        transaction.update(sessionRef, { agreed, updatedAt: new Date() });
+        return { ...session, agreed, updatedAt: new Date() };
+      }
+
+      const usersById = new Map(userDocs.map((doc, index) => [session.participantIds[index], doc]));
+      session.participantIds.forEach(participantId => {
+        const userDoc = usersById.get(participantId);
+        const offeredMoney = Number(offers[participantId]?.money || 0);
+        if (!userDoc.exists || Number(userDoc.data().balance || 0) < offeredMoney) throw new Error('A user no longer has enough money');
+      });
+      const seenItems = new Set();
+      itemDocs.forEach(({ participantId, doc }) => {
+        const item = doc.data();
+        if (seenItems.has(doc.id) || !doc.exists || item.buyerId !== participantId || item.sold !== true || item.listedForSale === true || !['card', 'battle-card'].includes(item.itemType)) throw new Error('A card in this trade is no longer available');
+        seenItems.add(doc.id);
+      });
+
+      const firstId = session.participantIds[0];
+      const secondId = session.participantIds[1];
+      const firstMoney = Number(offers[firstId]?.money || 0);
+      const secondMoney = Number(offers[secondId]?.money || 0);
+      transaction.update(userRefs[0], { balance: Number(usersById.get(firstId).data().balance || 0) - firstMoney + secondMoney });
+      transaction.update(userRefs[1], { balance: Number(usersById.get(secondId).data().balance || 0) - secondMoney + firstMoney });
+      itemDocs.forEach(({ participantId, ref }) => transaction.update(ref, { buyerId: participantId === firstId ? secondId : firstId, purchasedAt: new Date(), tradedAt: new Date(), listedForSale: false }));
+      transaction.update(sessionRef, { status: 'completed', agreed, completedAt: new Date(), updatedAt: new Date() });
+      transaction.set(db.collection('transactions').doc(), { type: 'trade', participantIds: session.participantIds, sessionId: req.params.sessionId, offers, createdAt: new Date() });
+      return { ...session, status: 'completed', agreed, updatedAt: new Date() };
+    });
+    res.json(tradeSessionView(req.params.sessionId, result));
+  } catch (error) {
+    if (['Trade not found', 'Trade is no longer open', 'A user no longer has enough money', 'A card in this trade is no longer available'].includes(error.message)) return res.status(400).send(error.message);
+    console.error('Agree trade error:', error);
+    res.status(500).send('Could not complete trade');
+  }
+});
+
+app.post('/trade/sessions/:sessionId/cancel', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const sessionRef = db.collection('tradeSessions').doc(req.params.sessionId);
+    const sessionDoc = await sessionRef.get();
+    if (!sessionDoc.exists || !sessionDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Trade not found');
+    if (sessionDoc.data().status === 'open') await sessionRef.update({ status: 'cancelled', updatedAt: new Date() });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Cancel trade error:', error);
+    res.status(500).send('Could not cancel trade');
+  }
+});
+
 /* ------------------ GET USERS ------------------ */
 // Do NOT expose password hashes
 app.get('/users', async (req, res) => {

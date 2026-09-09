@@ -26,6 +26,7 @@
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
+    <button id="tradeTab" class="tab-button" onclick="showSection('trade')">Trade</button>
     <button id="battleTab" class="tab-button" onclick="showSection('battle')" style="display: none;">Battle</button>
     <button id="battleManagerTab" class="tab-button" onclick="showSection('battle-manager')" style="display: none;">BCM</button>
   </div>
@@ -308,6 +309,39 @@
       <div class="history-group">
         <h3>Item purchases and sales</h3>
         <ul id="itemHistory" class="history-list"></ul>
+      </div>
+    </section>
+
+    <!-- Trade Section -->
+    <section id="tradeSection" class="card trade-section" style="display: none;">
+      <h2>Trade</h2>
+      <p class="trade-status" id="tradeStatus">Choose an online user to start a trade.</p>
+      <div id="tradeLobby" class="trade-lobby">
+        <h3>Online users</h3>
+        <div id="tradeOnlineUsers" class="trade-online-users"></div>
+      </div>
+      <div id="tradeRoom" class="trade-room" hidden>
+        <div class="trade-room-header">
+          <h3>Trade with <span id="tradePartnerName"></span></h3>
+          <button type="button" onclick="cancelTrade()" class="btn btn-danger">Cancel</button>
+        </div>
+        <div class="trade-offer-grid">
+          <div class="trade-offer-panel">
+            <h4>Your offer</h4>
+            <label class="input-label" for="tradeMoney">Footy</label>
+            <input id="tradeMoney" class="input-field" type="number" min="0" step="1" value="0">
+            <h4>Your cards</h4>
+            <div id="tradeInventoryChoices" class="trade-card-choices"></div>
+            <button type="button" onclick="updateTradeOffer()" class="btn btn-primary">Update offer</button>
+            <button type="button" id="tradeAgreeButton" onclick="agreeToTrade()" class="btn btn-success">Agree</button>
+          </div>
+          <div class="trade-offer-panel trade-other-offer">
+            <h4><span id="tradeOtherName"></span>'s offer</h4>
+            <p id="tradeOtherMoney">0 Footy</p>
+            <ul id="tradeOtherCards" class="trade-card-list"></ul>
+            <p id="tradeAgreementStatus" class="trade-agreement-status"></p>
+          </div>
+        </div>
       </div>
     </section>
 
