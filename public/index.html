@@ -112,6 +112,18 @@
 
       <hr style="margin: 20px 0; border-color: #e0e0e0;">
 
+      <h2>🔺 Ascend Tier Setup</h2>
+      <div class="form-group">
+        <label class="input-label" for="newAscendTierName">New tier name</label>
+        <input id="newAscendTierName" class="input-field" placeholder="Example: Rare Bronze">
+        <label class="input-label" for="newAscendTierOrder">Tier order</label>
+        <input id="newAscendTierOrder" class="input-field" type="number" min="0" value="0">
+        <button onclick="createAscendTier()" class="btn btn-primary">Create Tier</button>
+      </div>
+      <div id="ascendTierConfig" class="ascend-tier-config"></div>
+
+      <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
       <h2>Direct Marketplace Listing</h2>
       <div class="form-group">
         <label class="input-label" for="marketListingType">Item type</label>

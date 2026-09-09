@@ -338,6 +338,74 @@ body {
   font-size: 0.9em;
 }
 
+.ascend-tier-config {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ascend-tier-card {
+  border: 1px solid #e0e4f0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8f9ff;
+}
+
+.ascend-tier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ascend-tier-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.ascend-tier-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.ascend-tier-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #eaeef7;
+}
+
+.ascend-tier-list button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #f5576c;
+  color: white;
+  cursor: pointer;
+}
+
+.ascend-tier-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.ascend-tier-actions select,
+.ascend-tier-actions input {
+  flex: 1;
+  min-width: 140px;
+}
+
 .history-section {
   grid-column: 1 / -1;
 }

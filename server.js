@@ -63,6 +63,60 @@ function serializeDate(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+const DEFAULT_ASCEND_TIERS = [
+  'Bronze',
+  'Rare Bronze',
+  'Silver',
+  'Rare Silver',
+  'Gold',
+  'Rare Gold',
+  'Platinum',
+  'Lightning',
+  'Ultra'
+];
+
+async function ensureDefaultAscendTiers() {
+  try {
+    const tiersRef = db.collection('ascendTiers');
+    const snapshot = await tiersRef.orderBy('order', 'asc').get();
+    if (!snapshot.empty) return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const writes = DEFAULT_ASCEND_TIERS.map((name, index) => ({
+      name,
+      order: index,
+      cards: [],
+      packs: [],
+      createdAt: new Date()
+    }));
+
+    const batch = db.batch();
+    writes.forEach(entry => {
+      batch.set(tiersRef.doc(), entry);
+    });
+    await batch.commit();
+    return writes;
+  } catch (error) {
+    console.error('Error ensuring default ascend tiers:', error);
+    return [];
+  }
+}
+
+async function getAscendTierConfig() {
+  const tiers = await ensureDefaultAscendTiers();
+  return tiers.sort((a, b) => Number(a.order) - Number(b.order));
+}
+
+async function findTierForCard(cardFileName) {
+  const tiers = await getAscendTierConfig();
+  const normalized = path.basename(String(cardFileName || ''));
+  return tiers.find(tier => (tier.cards || []).some(card => path.basename(String(card)) === normalized));
+}
+
+async function findTierForPack(packId) {
+  const tiers = await getAscendTierConfig();
+  return tiers.find(tier => (tier.packs || []).some(pack => String(pack) === String(packId)));
+}
+
 async function userIsAdmin(userId) {
   if (!userId || typeof userId !== 'string') return false;
   const userDoc = await db.collection('users').doc(userId).get();
@@ -486,6 +540,149 @@ app.get('/card-images', async (req, res) => {
   } catch (error) {
     console.error('Error reading card images:', error);
     res.status(500).send('Error reading card images');
+  }
+});
+
+/* ------------------ ASCEND TIERS ------------------ */
+app.get('/ascend-tier-config', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+
+  try {
+    const tiers = await getAscendTierConfig();
+    res.json(tiers);
+  } catch (error) {
+    console.error('Error loading ascend tier config:', error);
+    res.status(500).send('Could not load tier config');
+  }
+});
+
+app.post('/ascend-tier-config', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { name, order } = req.body;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).send('Enter a tier name');
+  }
+
+  const tierOrder = Number(order);
+  if (!Number.isInteger(tierOrder) || tierOrder < 0) {
+    return res.status(400).send('Tier order must be a valid integer');
+  }
+
+  try {
+    const tierRef = db.collection('ascendTiers').doc();
+    const tier = {
+      name: name.trim(),
+      order: tierOrder,
+      cards: [],
+      packs: [],
+      createdAt: new Date()
+    };
+    await tierRef.set(tier);
+    res.status(201).json({ success: true, id: tierRef.id, ...tier });
+  } catch (error) {
+    console.error('Error creating tier:', error);
+    res.status(500).send('Could not create tier');
+  }
+});
+
+app.put('/ascend-tier-config/:tierId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { tierId } = req.params;
+  const { name, order } = req.body;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+  if (!tierId || typeof tierId !== 'string') {
+    return res.status(400).send('Invalid tier');
+  }
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).send('Enter a tier name');
+  }
+
+  const tierOrder = Number(order);
+  if (!Number.isInteger(tierOrder) || tierOrder < 0) {
+    return res.status(400).send('Tier order must be a valid integer');
+  }
+
+  try {
+    await db.collection('ascendTiers').doc(tierId).update({
+      name: name.trim(),
+      order: tierOrder,
+      updatedAt: new Date()
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating tier:', error);
+    res.status(500).send('Could not update tier');
+  }
+});
+
+app.delete('/ascend-tier-config/:tierId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { tierId } = req.params;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+
+  try {
+    const tierRef = db.collection('ascendTiers').doc(tierId);
+    const tierDoc = await tierRef.get();
+    if (!tierDoc.exists) return res.status(404).send('Tier not found');
+    await tierRef.delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting tier:', error);
+    res.status(500).send('Could not delete tier');
+  }
+});
+
+app.post('/ascend-tier-assignment', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { tierId, type, value, action } = req.body;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+  if (!tierId || typeof tierId !== 'string') {
+    return res.status(400).send('Invalid tier');
+  }
+  if (!['card', 'pack'].includes(type)) {
+    return res.status(400).send('Invalid assignment type');
+  }
+  if (!value || typeof value !== 'string' || !value.trim()) {
+    return res.status(400).send('Invalid value');
+  }
+  if (!['add', 'remove'].includes(action)) {
+    return res.status(400).send('Invalid action');
+  }
+
+  try {
+    const tierRef = db.collection('ascendTiers').doc(tierId);
+    const tierDoc = await tierRef.get();
+    if (!tierDoc.exists) return res.status(404).send('Tier not found');
+
+    const tierData = tierDoc.data();
+    const field = type === 'card' ? 'cards' : 'packs';
+    const values = Array.isArray(tierData[field]) ? tierData[field] : [];
+    const trimmed = type === 'card' ? path.basename(value.trim()) : value.trim();
+    const nextValues = action === 'add'
+      ? [...new Set([...values, trimmed])]
+      : values.filter(entry => String(entry) !== String(trimmed));
+
+    await tierRef.update({ [field]: nextValues, updatedAt: new Date() });
+    res.json({ success: true, [field]: nextValues });
+  } catch (error) {
+    console.error('Error updating tier assignments:', error);
+    res.status(500).send('Could not update tier assignments');
   }
 });
 
@@ -1227,15 +1424,24 @@ app.post('/ascend', async (req, res) => {
     return res.status(400).send('Select a card to ascend');
   }
 
-  const cleanCardKey = path.basename(cardKey.trim());
-  const groupKey = canonicalizeCardKey(cleanCardKey);
-  const tierInfo = getAscendTierInfo(groupKey);
-
-  if (!tierInfo || !tierInfo.canAscend) {
-    return res.status(400).send('This card cannot be ascended');
-  }
-
   try {
+    const cleanedCardKey = path.basename(cardKey.trim());
+    const tiers = await getAscendTierConfig();
+    const currentTierIndex = tiers.findIndex(tier => (tier.cards || []).some(card => path.basename(String(card)) === cleanedCardKey));
+
+    if (currentTierIndex === -1) {
+      return res.status(400).send('This card is not assigned to any ascend tier');
+    }
+    if (currentTierIndex >= tiers.length - 1) {
+      return res.status(400).send('This tier cannot be ascended any further');
+    }
+
+    const nextTier = tiers[currentTierIndex + 1];
+    const rewardPackIds = Array.isArray(nextTier.packs) ? nextTier.packs : [];
+    if (rewardPackIds.length === 0) {
+      return res.status(400).send(`The ${nextTier.name} tier has no packs assigned yet`);
+    }
+
     const itemsRef = db.collection('items');
     const snapshot = await itemsRef
       .where('buyerId', '==', requesterId)
@@ -1245,70 +1451,44 @@ app.post('/ascend', async (req, res) => {
     const matchingCards = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(item => item.itemType !== 'pack' && item.listedForSale !== true)
-      .filter(item => {
-        const imageName = item.imageUrl ? path.basename(item.imageUrl) : '';
-        return canonicalizeCardKey(imageName) === groupKey;
-      });
+      .filter(item => item.imageUrl && path.basename(item.imageUrl) === cleanedCardKey);
 
     if (matchingCards.length < 3) {
-      return res.status(400).send('You need at least 3 copies of this card to ascend');
+      return res.status(400).send('You need 3 copies of this card to ascend');
     }
 
     const selectedCards = matchingCards.slice(0, 3);
-    const packName = tierInfo.packName;
-    const packColor = {
-      'rare-bronze': '#b07600',
-      'silver': '#b0bec5',
-      'rare-silver': '#8ca1b5',
-      'gold': '#d7b737',
-      'rare-gold': '#e5b024',
-      'platinum': '#dfe7f3',
-      'lightning': '#6ad6ff'
-    }[tierInfo.nextTier] || '#667eea';
+    const chosenPackId = rewardPackIds[Math.floor(Math.random() * rewardPackIds.length)];
+    const packDoc = await db.collection('packs').doc(chosenPackId).get();
+    if (!packDoc.exists) {
+      return res.status(400).send('The configured reward pack is missing');
+    }
 
-    const imagesDir = path.join(__dirname, 'public', 'images');
-    const nextTierCards = fs.existsSync(imagesDir)
-      ? fs.readdirSync(imagesDir)
-          .filter(file => ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(file).toLowerCase()))
-          .filter(file => normalizeAscendString(file).includes(normalizeAscendString(tierInfo.nextTier)))
-      : [];
+    const pack = packDoc.data();
+    const packName = pack.name || 'Pack';
 
-    const packRef = db.collection('packs').doc();
     await db.runTransaction(async transaction => {
-      const packDoc = await transaction.get(packRef);
-      if (packDoc.exists) {
-        throw new Error('Pack creation collision');
-      }
-
-      transaction.set(packRef, {
-        name: packName,
-        color: packColor,
-        cardIds: nextTierCards.length > 0 ? nextTierCards : [cleanCardKey],
-        createdBy: requesterId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-
       selectedCards.forEach(card => {
-        transaction.delete(db.collection('items').doc(card.id));
+        transaction.delete(itemsRef.doc(card.id));
       });
 
-      transaction.set(db.collection('items').doc(), {
-        name: packName,
+      transaction.set(itemsRef.doc(), {
+        name: `${packName} Pack`,
         itemType: 'pack',
-        packId: packRef.id,
-        packColor: packColor,
+        packId: chosenPackId,
+        packColor: pack.color || '#667eea',
         price: 0,
         sellerId: requesterId,
         sold: true,
         buyerId: requesterId,
         purchasedAt: new Date(),
         sourceItemId: null,
+        imageUrl: null,
         createdAt: new Date()
       });
     });
 
-    res.json({ success: true, packName, nextTier: tierInfo.nextTier });
+    res.json({ success: true, packName: `${packName} Pack`, nextTier: nextTier.name });
   } catch (error) {
     console.error('Error ascending card:', error);
     res.status(500).send(error.message || 'Could not ascend card');

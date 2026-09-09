@@ -587,6 +587,7 @@ async function loadUsers() {
       populateAdminAccountViewer(users);
       loadCardOptions();
       loadPacks();
+      loadAscendTierConfig();
     }
 
     populateTransferRecipients(users);
@@ -938,6 +939,191 @@ async function savePack() {
   } catch (error) {
     console.error('Error saving pack:', error);
     alert('Could not save pack');
+  }
+}
+
+async function loadAscendTierConfig() {
+  if (!currentUserIsAdmin) return;
+  try {
+    const res = await fetch(`${API_URL}/ascend-tier-config`, { headers: { 'X-User-Id': currentUserId } });
+    if (!res.ok) throw new Error(await res.text());
+    const tiers = await res.json();
+    const container = document.getElementById('ascendTierConfig');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!Array.isArray(tiers) || tiers.length === 0) {
+      container.innerHTML = '<p class="pack-help">No ascend tiers created yet.</p>';
+      return;
+    }
+
+    tiers.sort((a, b) => Number(a.order) - Number(b.order));
+
+    tiers.forEach(tier => {
+      const card = document.createElement('div');
+      card.className = 'ascend-tier-card';
+
+      const header = document.createElement('div');
+      header.className = 'ascend-tier-header';
+      const title = document.createElement('strong');
+      title.textContent = tier.name;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-danger';
+      deleteBtn.textContent = 'Delete tier';
+      deleteBtn.onclick = async () => {
+        const confirmDelete = window.confirm(`Delete the ${tier.name} tier?`);
+        if (!confirmDelete) return;
+        const delRes = await fetch(`${API_URL}/ascend-tier-config/${encodeURIComponent(tier.id)}`, {
+          method: 'DELETE',
+          headers: { 'X-User-Id': currentUserId }
+        });
+        if (!delRes.ok) return alert(await delRes.text());
+        loadAscendTierConfig();
+      };
+      header.append(title, deleteBtn);
+
+      const layout = document.createElement('div');
+      layout.className = 'ascend-tier-layout';
+
+      const cardColumn = document.createElement('div');
+      cardColumn.innerHTML = '<strong>Cards</strong>';
+      const cardList = document.createElement('ul');
+      cardList.className = 'ascend-tier-list';
+      (tier.cards || []).forEach(fileName => {
+        const item = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = fileName;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.onclick = async () => {
+          const res = await fetch(`${API_URL}/ascend-tier-assignment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+            body: JSON.stringify({ tierId: tier.id, type: 'card', value: fileName, action: 'remove' })
+          });
+          if (!res.ok) return alert(await res.text());
+          loadAscendTierConfig();
+        };
+        item.append(label, remove);
+        cardList.appendChild(item);
+      });
+      if ((tier.cards || []).length === 0) {
+        const empty = document.createElement('li');
+        empty.textContent = 'No cards assigned';
+        cardList.appendChild(empty);
+      }
+
+      const packColumn = document.createElement('div');
+      packColumn.innerHTML = '<strong>Packs</strong>';
+      const packList = document.createElement('ul');
+      packList.className = 'ascend-tier-list';
+      const packIds = Array.isArray(tier.packs) ? tier.packs : [];
+      packIds.forEach(packId => {
+        const pack = savedPacks.find(entry => entry.id === packId);
+        const item = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = pack ? pack.name : packId;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.onclick = async () => {
+          const res = await fetch(`${API_URL}/ascend-tier-assignment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+            body: JSON.stringify({ tierId: tier.id, type: 'pack', value: packId, action: 'remove' })
+          });
+          if (!res.ok) return alert(await res.text());
+          loadAscendTierConfig();
+        };
+        item.append(label, remove);
+        packList.appendChild(item);
+      });
+      if (packIds.length === 0) {
+        const empty = document.createElement('li');
+        empty.textContent = 'No packs assigned';
+        packList.appendChild(empty);
+      }
+
+      cardColumn.appendChild(cardList);
+      packColumn.appendChild(packList);
+
+      const actions = document.createElement('div');
+      actions.className = 'ascend-tier-actions';
+      const cardSelect = document.createElement('select');
+      cardSelect.innerHTML = '<option value="">Add card…</option>';
+      availableCardImages.forEach(filename => {
+        const option = document.createElement('option');
+        option.value = filename;
+        option.textContent = filename;
+        cardSelect.appendChild(option);
+      });
+      const addCardBtn = document.createElement('button');
+      addCardBtn.className = 'btn btn-primary';
+      addCardBtn.textContent = 'Add card';
+      addCardBtn.onclick = async () => {
+        if (!cardSelect.value) return alert('Choose a card');
+        const res = await fetch(`${API_URL}/ascend-tier-assignment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+          body: JSON.stringify({ tierId: tier.id, type: 'card', value: cardSelect.value, action: 'add' })
+        });
+        if (!res.ok) return alert(await res.text());
+        loadAscendTierConfig();
+      };
+
+      const packSelect = document.createElement('select');
+      packSelect.innerHTML = '<option value="">Add pack…</option>';
+      savedPacks.forEach(pack => {
+        const option = document.createElement('option');
+        option.value = pack.id;
+        option.textContent = pack.name;
+        packSelect.appendChild(option);
+      });
+      const addPackBtn = document.createElement('button');
+      addPackBtn.className = 'btn btn-primary';
+      addPackBtn.textContent = 'Add pack';
+      addPackBtn.onclick = async () => {
+        if (!packSelect.value) return alert('Choose a pack');
+        const res = await fetch(`${API_URL}/ascend-tier-assignment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+          body: JSON.stringify({ tierId: tier.id, type: 'pack', value: packSelect.value, action: 'add' })
+        });
+        if (!res.ok) return alert(await res.text());
+        loadAscendTierConfig();
+      };
+
+      actions.append(cardSelect, addCardBtn, packSelect, addPackBtn);
+      card.append(header, layout, actions);
+      layout.append(cardColumn, packColumn);
+      container.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Error loading ascend tier config:', error);
+    const container = document.getElementById('ascendTierConfig');
+    if (container) container.innerHTML = '<p class="pack-help">Could not load ascend tiers.</p>';
+  }
+}
+
+async function createAscendTier() {
+  const name = document.getElementById('newAscendTierName').value.trim();
+  const order = Number(document.getElementById('newAscendTierOrder').value);
+  if (!name) return alert('Enter a tier name');
+  try {
+    const res = await fetch(`${API_URL}/ascend-tier-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ name, order })
+    });
+    if (!res.ok) return alert(await res.text());
+    document.getElementById('newAscendTierName').value = '';
+    document.getElementById('newAscendTierOrder').value = String((Number(document.getElementById('newAscendTierOrder').value) || 0) + 1);
+    loadAscendTierConfig();
+  } catch (error) {
+    console.error('Error creating ascend tier:', error);
+    alert('Could not create tier');
   }
 }
 
@@ -1583,32 +1769,45 @@ function getCardGroupKey(item) {
 
 async function openAscendMenu() {
   try {
-    const res = await fetch(`${API_URL}/inventory`, {
-      headers: { 'X-User-Id': currentUserId }
-    });
-    if (!res.ok) throw new Error('Could not load inventory');
+    const [inventoryRes, tiersRes] = await Promise.all([
+      fetch(`${API_URL}/inventory`, { headers: { 'X-User-Id': currentUserId } }),
+      fetch(`${API_URL}/ascend-tier-config`, { headers: { 'X-User-Id': currentUserId } })
+    ]);
+    if (!inventoryRes.ok) throw new Error('Could not load inventory');
+    if (!tiersRes.ok) throw new Error('Could not load tier config');
 
-    const inventory = await res.json();
+    const inventory = await inventoryRes.json();
+    const tiers = await tiersRes.json();
     const grouped = new Map();
 
     inventory.forEach(item => {
-      if (item.itemType === 'pack') return;
-      const key = getCardKeyFromItem(item);
-      const groupKey = getCardGroupKey(item);
-      if (!key || !groupKey) return;
+      if (item.itemType === 'pack' || !item.imageUrl) return;
+      const cardFile = item.imageUrl.split('/').pop();
+      const tier = Array.isArray(tiers) ? tiers.find(entry => (entry.cards || []).includes(cardFile)) : null;
+      if (!tier) return;
 
-      const existing = grouped.get(groupKey) || { key: groupKey, items: [] };
+      const existing = grouped.get(cardFile) || { key: cardFile, tierName: tier.name, items: [] };
       existing.items.push(item);
-      grouped.set(groupKey, existing);
+      grouped.set(cardFile, existing);
     });
 
     const eligible = [...grouped.values()]
-      .map(({ key, items }) => {
-        const info = (window.AscendUtils || window.ascendUtils || {}).getAscendTierInfo?.(key);
-        if (!info || !info.canAscend || items.length < 3) return null;
-        const imageUrl = items[0].imageUrl || `/images/${key}`;
-        const tierLabel = info.currentTier ? (window.AscendUtils || window.ascendUtils || {}).formatTierLabel?.(info.currentTier) || info.currentTier : key;
-        return { key, label: tierLabel, count: items.length, imageUrl, info };
+      .map(({ key, tierName, items }) => {
+        const tierIndex = tiers.findIndex(entry => entry.name === tierName);
+        const nextTier = tierIndex >= 0 && tierIndex < tiers.length - 1 ? tiers[tierIndex + 1] : null;
+        if (!nextTier || items.length < 3) return null;
+
+        const packChoices = Array.isArray(nextTier.packs) ? nextTier.packs : [];
+        if (packChoices.length === 0) return null;
+
+        return {
+          key,
+          label: key,
+          count: items.length,
+          imageUrl: items[0].imageUrl || `/images/${key}`,
+          nextTierName: nextTier.name,
+          packChoices
+        };
       })
       .filter(Boolean)
       .sort((a, b) => a.key.localeCompare(b.key));
@@ -1619,7 +1818,7 @@ async function openAscendMenu() {
     list.innerHTML = '';
     if (eligible.length === 0) {
       const emptyState = document.createElement('p');
-      emptyState.textContent = 'You need 3 copies of the same card to ascend.';
+      emptyState.textContent = 'You need 3 copies of a card assigned to a tier and a configured next-tier pack.';
       list.appendChild(emptyState);
       const modal = document.getElementById('ascendModal');
       if (modal) modal.hidden = false;
@@ -1633,7 +1832,7 @@ async function openAscendMenu() {
       option.innerHTML = `
         <img src="${entry.imageUrl}" alt="${entry.label}">
         <h4>${entry.label}</h4>
-        <p>${entry.count} copies · ${entry.info.nextPackName} Pack</p>
+        <p>${entry.count} copies · to ${entry.nextTierName}</p>
       `;
       option.addEventListener('click', () => confirmAscend(entry));
       list.appendChild(option);
@@ -1654,7 +1853,7 @@ function closeAscendModal() {
 
 async function confirmAscend(entry) {
   if (!entry) return;
-  const yes = window.confirm(`Use 3 copies of ${entry.key} to receive a ${entry.info.nextPackName} Pack?`);
+  const yes = window.confirm(`Use 3 copies of ${entry.key} to receive a pack from ${entry.nextTierName}?`);
   if (!yes) return;
 
   try {
@@ -1680,7 +1879,7 @@ async function confirmAscend(entry) {
     }
 
     closeAscendModal();
-    alert(`✅ Ascended ${entry.key} and received ${payload.packName || entry.info.nextPackName + ' Pack'}!`);
+    alert(`✅ Ascended ${entry.key} and received ${payload.packName || 'a next-tier pack'}!`);
     loadInventory();
   } catch (error) {
     console.error('Ascend error:', error);
