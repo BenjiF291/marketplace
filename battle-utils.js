@@ -1,0 +1,44 @@
+function validateBattleCard(card) {
+  if (!card || typeof card !== 'object') {
+    return { valid: false, error: 'Card data is required' };
+  }
+
+  const cleanName = typeof card.name === 'string' ? card.name.trim() : '';
+  const averageScore = Number(card.averageScore);
+  const sides = {
+    top: Number(card.top),
+    right: Number(card.right),
+    bottom: Number(card.bottom),
+    left: Number(card.left)
+  };
+
+  if (!cleanName) {
+    return { valid: false, error: 'Card name is required' };
+  }
+
+  if (!Number.isFinite(averageScore) || averageScore < 0) {
+    return { valid: false, error: 'Average score must be a non-negative number' };
+  }
+
+  for (const sideName of ['top', 'right', 'bottom', 'left']) {
+    if (!Number.isFinite(sides[sideName]) || sides[sideName] < 0) {
+      return { valid: false, error: `${sideName} attack value must be a non-negative number` };
+    }
+  }
+
+  return {
+    valid: true,
+    normalized: {
+      name: cleanName,
+      averageScore,
+      top: Math.round(sides.top),
+      right: Math.round(sides.right),
+      bottom: Math.round(sides.bottom),
+      left: Math.round(sides.left)
+    }
+  };
+}
+
+module.exports = {
+  validateBattleCard
+};

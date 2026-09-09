@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
+const { validateBattleCard } = require('./battle-utils');
 
 /* ------------------ CORS ------------------ */
 // Must be first
@@ -301,6 +302,54 @@ initializeTestUsers();
 /* ------------------ HEALTH CHECK ------------------ */
 app.get('/health', (req, res) => {
   res.status(200).json({ ok: true });
+});
+
+app.get('/battle-cards', async (req, res) => {
+  try {
+    const snapshot = await db.collection('battleCards').orderBy('createdAt', 'desc').get();
+    const cards = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        averageScore: Number(data.averageScore) || 0,
+        top: Number(data.top) || 0,
+        right: Number(data.right) || 0,
+        bottom: Number(data.bottom) || 0,
+        left: Number(data.left) || 0,
+        createdAt: serializeDate(data.createdAt)
+      };
+    });
+    res.json(cards);
+  } catch (error) {
+    console.error('Error loading battle cards:', error);
+    res.status(500).send('Could not load battle cards');
+  }
+});
+
+app.post('/admin/battle-cards', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const validation = validateBattleCard(req.body || {});
+  if (!validation.valid) {
+    return res.status(400).send(validation.error || 'Invalid battle card');
+  }
+
+  try {
+    const card = validation.normalized;
+    const cardRef = await db.collection('battleCards').add({
+      ...card,
+      createdAt: new Date()
+    });
+
+    res.status(201).json({ id: cardRef.id, card });
+  } catch (error) {
+    console.error('Error creating battle card:', error);
+    res.status(500).send('Could not create battle card');
+  }
 });
 
 /* ------------------ SIGNUP ------------------ */

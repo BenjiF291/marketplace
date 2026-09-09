@@ -155,6 +155,32 @@ body {
   line-height: 1.5;
 }
 
+.battle-side-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.battle-card-list-wrap {
+  margin-top: 20px;
+}
+
+.battle-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.battle-card-list li {
+  border: 1px solid #e3e8f8;
+  border-radius: 10px;
+  background: #f9faff;
+  padding: 12px 14px;
+  line-height: 1.6;
+}
+
 .tab-group {
   display: flex;
   gap: 10px;

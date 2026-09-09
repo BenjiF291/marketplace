@@ -26,6 +26,7 @@
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
+    <button id="battleTab" class="tab-button" onclick="showSection('battle')" style="display: none;">Battle</button>
   </div>
 
   <div class="main-grid">
@@ -191,6 +192,43 @@
     <section id="marketplaceSection" class="card marketplace-section">
       <h2>🛍️ Marketplace</h2>
       <ul id="items" class="items-list"></ul>
+    </section>
+
+    <section id="battleSection" class="card battle-section" style="display: none;">
+      <h2>⚔️ Battle Cards</h2>
+      <div class="form-group">
+        <label class="input-label" for="battleCardName">Card name</label>
+        <input id="battleCardName" class="input-field" maxlength="80" placeholder="Example: Wolf Fang">
+
+        <label class="input-label" for="battleCardAverageScore">Average score</label>
+        <input id="battleCardAverageScore" class="input-field" type="number" min="0" step="0.1" placeholder="7.5">
+
+        <div class="battle-side-grid">
+          <div>
+            <label class="input-label" for="battleCardTop">Top</label>
+            <input id="battleCardTop" type="number" min="0" step="1" class="input-field" value="0">
+          </div>
+          <div>
+            <label class="input-label" for="battleCardRight">Right</label>
+            <input id="battleCardRight" type="number" min="0" step="1" class="input-field" value="0">
+          </div>
+          <div>
+            <label class="input-label" for="battleCardBottom">Bottom</label>
+            <input id="battleCardBottom" type="number" min="0" step="1" class="input-field" value="0">
+          </div>
+          <div>
+            <label class="input-label" for="battleCardLeft">Left</label>
+            <input id="battleCardLeft" type="number" min="0" step="1" class="input-field" value="0">
+          </div>
+        </div>
+
+        <button onclick="createBattleCard()" class="btn btn-primary">Create Battle Card</button>
+      </div>
+
+      <div class="battle-card-list-wrap">
+        <h3>Existing battle cards</h3>
+        <ul id="battleCardList" class="battle-card-list"></ul>
+      </div>
     </section>
 
     <!-- Inventory Section -->

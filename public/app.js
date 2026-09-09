@@ -24,6 +24,75 @@ let availableCardImages = [];
 let savedPacks = [];
 let inventorySellMode = false;
 
+async function createBattleCard() {
+  if (!currentUserIsAdmin) {
+    alert('Only admins can create battle cards.');
+    return;
+  }
+
+  const payload = {
+    name: document.getElementById('battleCardName').value,
+    averageScore: document.getElementById('battleCardAverageScore').value,
+    top: document.getElementById('battleCardTop').value,
+    right: document.getElementById('battleCardRight').value,
+    bottom: document.getElementById('battleCardBottom').value,
+    left: document.getElementById('battleCardLeft').value
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/admin/battle-cards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || 'Could not create battle card');
+    }
+
+    const result = await res.json();
+    alert(`Battle card created: ${result.card.name}`);
+    document.getElementById('battleCardName').value = '';
+    document.getElementById('battleCardAverageScore').value = '';
+    document.getElementById('battleCardTop').value = '0';
+    document.getElementById('battleCardRight').value = '0';
+    document.getElementById('battleCardBottom').value = '0';
+    document.getElementById('battleCardLeft').value = '0';
+    loadBattleCards();
+  } catch (error) {
+    console.error('Battle card creation failed:', error);
+    alert(error.message || 'Battle card creation failed');
+  }
+}
+
+async function loadBattleCards() {
+  try {
+    const res = await fetch(`${API_URL}/battle-cards`);
+    if (!res.ok) return;
+    const cards = await res.json();
+    const list = document.getElementById('battleCardList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!Array.isArray(cards) || cards.length === 0) {
+      list.innerHTML = '<li>No battle cards created yet.</li>';
+      return;
+    }
+
+    cards.forEach(card => {
+      const item = document.createElement('li');
+      item.innerHTML = `<strong>${card.name}</strong><br>Avg: ${card.averageScore} · Top ${card.top} / Right ${card.right} / Bottom ${card.bottom} / Left ${card.left}`;
+      list.appendChild(item);
+    });
+  } catch (error) {
+    console.error('Error loading battle cards:', error);
+  }
+}
+
 function logout() {
   localStorage.removeItem('userId');
   localStorage.removeItem('username');
@@ -42,7 +111,9 @@ function showSection(section) {
   const historyTab = document.getElementById('historyTab');
   const spinTab = document.getElementById('spinTab');
   const vipTab = document.getElementById('vipTab');
+  const battleTab = document.getElementById('battleTab');
   const vipSection = document.getElementById('vipSection');
+  const battleSection = document.getElementById('battleSection');
 
   if (section === 'inventory') {
     clearSpinCountdown();
@@ -63,6 +134,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     inventorySection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleSection) battleSection.style.display = 'none';
 
     // Mark tab active state
     marketTab.classList.remove('active');
@@ -70,6 +142,7 @@ function showSection(section) {
     if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.remove('active');
 
     // Ensure inventory scrolls into view on mobile
     inventorySection.scrollIntoView({ behavior: 'smooth' });
@@ -91,12 +164,14 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'block';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
     if (historyTab) historyTab.classList.add('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.remove('active');
 
     if (historySection) historySection.scrollIntoView({ behavior: 'smooth' });
     loadHistory();
@@ -117,12 +192,14 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
     if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.add('active');
     if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.remove('active');
 
     // Ensure spin section scrolls into view on mobile
     spinSection.scrollIntoView({ behavior: 'smooth' });
@@ -145,17 +222,49 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'block';
+    if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
     inventoryTab.classList.remove('active');
     if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.add('active');
+    if (battleTab) battleTab.classList.remove('active');
 
     // Ensure vip section scrolls into view on mobile
     if (vipSection) vipSection.scrollIntoView({ behavior: 'smooth' });
 
     loadVipInfo();
+  } else if (section === 'battle') {
+    if (!currentUserIsAdmin) {
+      alert('Battle is currently admin-only.');
+      return;
+    }
+
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
+
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
+    spinSection.style.display = 'none';
+    if (vipSection) vipSection.style.display = 'none';
+    if (battleSection) battleSection.style.display = 'block';
+
+    marketTab.classList.remove('active');
+    inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.remove('active');
+    spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.add('active');
+
+    loadBattleCards();
   } else {
     clearSpinCountdown();
     // Restore dashboard cards that Inventory hid
@@ -173,11 +282,13 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleSection) battleSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
     if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.remove('active');
   }
 }
 
@@ -613,12 +724,18 @@ async function loadUsers() {
     }
 
     if (currentUserIsAdmin) {
+      const battleTab = document.getElementById('battleTab');
+      if (battleTab) battleTab.style.display = 'inline-flex';
       populateGrantControls(users);
       populateAdminAccountViewer(users);
       loadCardOptions();
       loadPacks();
       loadAscendTierConfig();
       loadPlannedMarketplaceListings();
+      loadBattleCards();
+    } else {
+      const battleTab = document.getElementById('battleTab');
+      if (battleTab) battleTab.style.display = 'none';
     }
 
     populateTransferRecipients(users);
