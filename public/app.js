@@ -566,6 +566,35 @@ function showTransferError() {
   });
 }
 
+async function loadPlannedMarketplaceListings() {
+  if (!currentUserIsAdmin) return;
+  try {
+    const res = await fetch(`${API_URL}/admin/market-listings/planned`, {
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) return;
+    const listings = await res.json();
+    const list = document.getElementById('plannedMarketplaceListings');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!Array.isArray(listings) || listings.length === 0) {
+      list.innerHTML = '<li>No planned listings yet.</li>';
+      return;
+    }
+
+    listings.forEach(entry => {
+      const item = document.createElement('li');
+      const scheduledText = entry.scheduledAt ? new Date(entry.scheduledAt).toLocaleString() : 'No scheduled time';
+      const expiresText = entry.expiresAt ? ` · expires ${new Date(entry.expiresAt).toLocaleString()}` : '';
+      item.textContent = `${entry.itemType.toUpperCase()} · ${entry.productName || entry.productId} · ${entry.status} · ${scheduledText}${expiresText}`;
+      list.appendChild(item);
+    });
+  } catch (error) {
+    console.error('Error loading planned marketplace listings:', error);
+  }
+}
+
 /* ------------------ LOAD USERS ------------------ */
 async function loadUsers() {
   // Display current logged in user
@@ -589,6 +618,7 @@ async function loadUsers() {
       loadCardOptions();
       loadPacks();
       loadAscendTierConfig();
+      loadPlannedMarketplaceListings();
     }
 
     populateTransferRecipients(users);
@@ -907,6 +937,7 @@ async function createDirectMarketplaceListing() {
     const result = await res.json();
     alert(result.scheduled ? 'Marketplace listing scheduled' : 'Marketplace listing posted');
     loadItems();
+    loadPlannedMarketplaceListings();
   } catch (error) {
     console.error('Error creating marketplace listing:', error);
     alert('Could not post marketplace listing');

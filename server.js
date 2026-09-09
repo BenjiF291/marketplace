@@ -1120,6 +1120,39 @@ app.post('/grant-item', async (req, res) => {
 });
 
 /* ------------------ ADMIN DIRECT MARKETPLACE LISTINGS ------------------ */
+app.get('/admin/market-listings/planned', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+
+  try {
+    const snapshot = await db.collection('marketListingPlans').orderBy('scheduledAt', 'asc').get();
+    const plans = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate().toISOString() : new Date(data.scheduledAt).toISOString()) : null;
+      const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate().toISOString() : new Date(data.expiresAt).toISOString()) : null;
+
+      return {
+        id: doc.id,
+        itemType: data.itemType,
+        productId: data.productId,
+        productName: data.productName || data.productId,
+        price: Number(data.price) || 0,
+        quantity: Number(data.quantity) || 0,
+        perUserLimit: Number(data.perUserLimit) || 0,
+        scheduledAt,
+        expiresAt,
+        status: data.status || 'scheduled',
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : new Date(data.createdAt).toISOString()) : null
+      };
+    });
+
+    res.json(plans);
+  } catch (error) {
+    console.error('Error loading planned marketplace listings:', error);
+    res.status(500).send('Could not load planned listings');
+  }
+});
+
 app.post('/admin/market-listings', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt } = req.body;
@@ -1148,6 +1181,7 @@ app.post('/admin/market-listings', async (req, res) => {
         sellerId: requesterId,
         itemType,
         productId,
+        productName: productId,
         price,
         quantity: stock,
         perUserLimit: maxPerUser || null,

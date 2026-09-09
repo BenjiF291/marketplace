@@ -69,114 +69,122 @@
     <!-- Admin Image Management -->
     <section id="adminSection" class="card admin-section" style="display: none;">
       <h2>🔧 Admin Controls</h2>
-      <div class="form-group">
-        <label class="input-label">Grant cards to a user</label>
-        <select id="grantUserSelect" class="input-field"></select>
-        <label class="input-label">Choose a card</label>
-        <select id="grantCardSelect" class="input-field" onchange="updateGrantCardPreview()"></select>
-        <div id="grantCardPreview" style="display:none; align-items:center; gap:10px; margin-bottom:10px;">
-          <img id="grantCardPreviewImage" src="" alt="Selected card" class="item-image" style="width:80px;height:80px;">
-          <span id="grantCardPreviewText"></span>
+
+      <details class="admin-foldable">
+        <summary>Grant cards to a user</summary>
+        <div class="form-group admin-panel-body">
+          <label class="input-label">Grant cards to a user</label>
+          <select id="grantUserSelect" class="input-field"></select>
+          <label class="input-label">Choose a card</label>
+          <select id="grantCardSelect" class="input-field" onchange="updateGrantCardPreview()"></select>
+          <div id="grantCardPreview" style="display:none; align-items:center; gap:10px; margin-bottom:10px;">
+            <img id="grantCardPreviewImage" src="" alt="Selected card" class="item-image" style="width:80px;height:80px;">
+            <span id="grantCardPreviewText"></span>
+          </div>
+          <input id="grantQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
+          <button onclick="grantItemToUser()" class="btn btn-primary">Grant Card</button>
         </div>
-        <input id="grantQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
-        <button onclick="grantItemToUser()" class="btn btn-primary">Grant Card</button>
-      </div>
+      </details>
 
-      <hr style="margin: 20px 0; border-color: #e0e0e0;">
-
-      <h2>Pack Builder</h2>
-      <div class="form-group">
-        <label class="input-label" for="packEditorSelect">Edit one of your saved packs</label>
-        <select id="packEditorSelect" class="input-field" onchange="loadPackForEditing()">
-          <option value="">Create a new pack</option>
-        </select>
-        <label class="input-label" for="packName">New pack name</label>
-        <input id="packName" class="input-field" maxlength="80" placeholder="Example: Legendary Players">
-        <label class="input-label" for="packColor">Pack color</label>
-        <input id="packColor" type="color" value="#667eea" class="pack-color-input">
-        <label class="input-label">Cards in this pack</label>
-        <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
-        <div id="packCardPicker" class="pack-card-picker"></div>
-        <button id="savePackButton" onclick="savePack()" class="btn btn-primary">Save New Pack</button>
-      </div>
-      <div class="form-group">
-        <label class="input-label" for="grantPackSelect">Saved pack</label>
-        <select id="grantPackSelect" class="input-field"></select>
-        <label class="input-label" for="grantPackUserSelect">Give pack to</label>
-        <select id="grantPackUserSelect" class="input-field"></select>
-        <input id="grantPackQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
-        <button onclick="grantPackToUser()" class="btn btn-primary">Grant Pack</button>
-        <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
-      </div>
-      <ul id="savedPacks" class="saved-packs"></ul>
-
-      <hr style="margin: 20px 0; border-color: #e0e0e0;">
-
-      <h2>🔺 Ascend Tier Setup</h2>
-      <div class="form-group">
-        <label class="input-label" for="newAscendTierName">New tier name</label>
-        <input id="newAscendTierName" class="input-field" placeholder="Example: Rare Bronze">
-        <label class="input-label" for="newAscendTierOrder">Tier order</label>
-        <input id="newAscendTierOrder" class="input-field" type="number" min="0" value="0">
-        <label class="input-label" for="newAscendTierSellPrice">Sell price for cards in this tier</label>
-        <input id="newAscendTierSellPrice" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = not sellable">
-        <button onclick="createAscendTier()" class="btn btn-primary">Create Tier</button>
-      </div>
-      <div id="ascendTierConfig" class="ascend-tier-config"></div>
-
-      <hr style="margin: 20px 0; border-color: #e0e0e0;">
-
-      <h2>Direct Marketplace Listing</h2>
-      <div class="form-group">
-        <label class="input-label" for="marketListingType">Item type</label>
-        <select id="marketListingType" class="input-field" onchange="populateDirectListingProducts()">
-          <option value="card">Card</option>
-          <option value="pack">Pack</option>
-        </select>
-        <label class="input-label" for="marketListingProduct">Card or pack</label>
-        <select id="marketListingProduct" class="input-field"></select>
-        <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
-        <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
-        <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
-        <label class="input-label" for="marketListingScheduledAt">Schedule date/time (optional)</label>
-        <input id="marketListingScheduledAt" type="datetime-local" class="input-field">
-        <label class="input-label" for="marketListingExpiresAt">Expiration date/time (optional)</label>
-        <input id="marketListingExpiresAt" type="datetime-local" class="input-field">
-        <button onclick="createDirectMarketplaceListing()" class="btn btn-primary">Post to Marketplace</button>
-        <p class="pack-help">The per-user maximum applies only to this specific marketplace post, not every copy of the card or pack. If a schedule time is set, the listing will appear automatically later. If an expiration time is set, it will disappear at that time.</p>
-      </div>
-
-      <hr style="margin: 20px 0; border-color: #e0e0e0;">
-
-      <h2>👥 Account Viewer</h2>
-      <div class="form-group">
-        <label class="input-label" for="adminAccountSelect">Select an account</label>
-        <select id="adminAccountSelect" class="input-field" onchange="viewAdminAccount()">
-          <option value="" selected disabled>Select a user</option>
-        </select>
-      </div>
-      <div id="adminAccountDetails" class="admin-account-details" hidden>
-        <div class="admin-account-summary">
-          <div><strong>Balance:</strong> <span id="adminAccountBalance"></span></div>
-          <div><strong>Last online:</strong> <span id="adminAccountLastOnline"></span></div>
-          <div><strong>VIP:</strong> <span id="adminAccountVip"></span></div>
+      <details class="admin-foldable">
+        <summary>Pack Builder</summary>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="packEditorSelect">Edit one of your saved packs</label>
+          <select id="packEditorSelect" class="input-field" onchange="loadPackForEditing()">
+            <option value="">Create a new pack</option>
+          </select>
+          <label class="input-label" for="packName">New pack name</label>
+          <input id="packName" class="input-field" maxlength="80" placeholder="Example: Legendary Players">
+          <label class="input-label" for="packColor">Pack color</label>
+          <input id="packColor" type="color" value="#667eea" class="pack-color-input">
+          <label class="input-label">Cards in this pack</label>
+          <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
+          <div id="packCardPicker" class="pack-card-picker"></div>
+          <button id="savePackButton" onclick="savePack()" class="btn btn-primary">Save New Pack</button>
         </div>
-        <strong>Inventory</strong>
-        <ul id="adminAccountInventory" class="admin-account-inventory"></ul>
-      </div>
-
-      <hr style="margin: 20px 0; border-color: #e0e0e0;">
-
-      <h2>🖼️ Admin Item Images</h2>
-      <div class="form-group">
-        <input id="adminItemId" placeholder="Item ID" class="input-field">
-        <input id="adminImageUrl" placeholder="Image URL" class="input-field">
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button onclick="updateItemImage()" class="btn btn-primary">Save Image</button>
-          <button onclick="clearItemImage()" class="btn btn-danger" type="button">Remove Image</button>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="grantPackSelect">Saved pack</label>
+          <select id="grantPackSelect" class="input-field"></select>
+          <label class="input-label" for="grantPackUserSelect">Give pack to</label>
+          <select id="grantPackUserSelect" class="input-field"></select>
+          <input id="grantPackQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
+          <button onclick="grantPackToUser()" class="btn btn-primary">Grant Pack</button>
+          <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
         </div>
-      </div>
-      <p style="font-size:0.9em; color:#555; margin-top: 10px;">Admin only: grant cards to users or set item images manually.</p>
+        <ul id="savedPacks" class="saved-packs"></ul>
+      </details>
+
+      <details class="admin-foldable">
+        <summary>Ascend Tier Setup</summary>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="newAscendTierName">New tier name</label>
+          <input id="newAscendTierName" class="input-field" placeholder="Example: Rare Bronze">
+          <label class="input-label" for="newAscendTierOrder">Tier order</label>
+          <input id="newAscendTierOrder" class="input-field" type="number" min="0" value="0">
+          <label class="input-label" for="newAscendTierSellPrice">Sell price for cards in this tier</label>
+          <input id="newAscendTierSellPrice" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = not sellable">
+          <button onclick="createAscendTier()" class="btn btn-primary">Create Tier</button>
+        </div>
+        <div id="ascendTierConfig" class="ascend-tier-config"></div>
+      </details>
+
+      <details class="admin-foldable">
+        <summary>Direct Marketplace Listing</summary>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="marketListingType">Item type</label>
+          <select id="marketListingType" class="input-field" onchange="populateDirectListingProducts()">
+            <option value="card">Card</option>
+            <option value="pack">Pack</option>
+          </select>
+          <label class="input-label" for="marketListingProduct">Card or pack</label>
+          <select id="marketListingProduct" class="input-field"></select>
+          <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
+          <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
+          <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
+          <label class="input-label" for="marketListingScheduledAt">Schedule date/time (optional)</label>
+          <input id="marketListingScheduledAt" type="datetime-local" class="input-field">
+          <label class="input-label" for="marketListingExpiresAt">Expiration date/time (optional)</label>
+          <input id="marketListingExpiresAt" type="datetime-local" class="input-field">
+          <button onclick="createDirectMarketplaceListing()" class="btn btn-primary">Post to Marketplace</button>
+          <p class="pack-help">The per-user maximum applies only to this specific marketplace post, not every copy of the card or pack. If a schedule time is set, the listing will appear automatically later. If an expiration time is set, it will disappear at that time.</p>
+        </div>
+        <div class="admin-panel-body">
+          <h3 class="planned-listing-heading">Planned listings</h3>
+          <ul id="plannedMarketplaceListings" class="planned-listings"></ul>
+        </div>
+      </details>
+
+      <details class="admin-foldable">
+        <summary>Account Viewer</summary>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="adminAccountSelect">Select an account</label>
+          <select id="adminAccountSelect" class="input-field" onchange="viewAdminAccount()">
+            <option value="" selected disabled>Select a user</option>
+          </select>
+        </div>
+        <div id="adminAccountDetails" class="admin-account-details admin-panel-body" hidden>
+          <div class="admin-account-summary">
+            <div><strong>Balance:</strong> <span id="adminAccountBalance"></span></div>
+            <div><strong>Last online:</strong> <span id="adminAccountLastOnline"></span></div>
+            <div><strong>VIP:</strong> <span id="adminAccountVip"></span></div>
+          </div>
+          <strong>Inventory</strong>
+          <ul id="adminAccountInventory" class="admin-account-inventory"></ul>
+        </div>
+      </details>
+
+      <details class="admin-foldable">
+        <summary>Admin Item Images</summary>
+        <div class="form-group admin-panel-body">
+          <input id="adminItemId" placeholder="Item ID" class="input-field">
+          <input id="adminImageUrl" placeholder="Image URL" class="input-field">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="updateItemImage()" class="btn btn-primary">Save Image</button>
+            <button onclick="clearItemImage()" class="btn btn-danger" type="button">Remove Image</button>
+          </div>
+        </div>
+        <p class="pack-help admin-panel-body">Admin only: grant cards to users or set item images manually.</p>
+      </details>
     </section>
 
     <!-- Marketplace Section -->
