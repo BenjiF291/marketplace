@@ -24,6 +24,40 @@ let availableCardImages = [];
 let savedPacks = [];
 let inventorySellMode = false;
 
+function updateBattleCardPreview() {
+  const name = document.getElementById('battleCardName')?.value || 'Card preview';
+  const avg = Number(document.getElementById('battleCardAverageScore')?.value || 0);
+  const top = Number(document.getElementById('battleCardTop')?.value || 0);
+  const right = Number(document.getElementById('battleCardRight')?.value || 0);
+  const bottom = Number(document.getElementById('battleCardBottom')?.value || 0);
+  const left = Number(document.getElementById('battleCardLeft')?.value || 0);
+
+  const previewName = document.getElementById('battlePreviewName');
+  const previewAvg = document.getElementById('battlePreviewAvg');
+  const previewTop = document.getElementById('battlePreviewTop');
+  const previewRight = document.getElementById('battlePreviewRight');
+  const previewBottom = document.getElementById('battlePreviewBottom');
+  const previewLeft = document.getElementById('battlePreviewLeft');
+
+  if (previewName) previewName.textContent = name || 'Card preview';
+  if (previewAvg) previewAvg.textContent = Number.isFinite(avg) ? String(avg) : '0';
+  if (previewTop) previewTop.textContent = Number.isFinite(top) ? String(top) : '0';
+  if (previewRight) previewRight.textContent = Number.isFinite(right) ? String(right) : '0';
+  if (previewBottom) previewBottom.textContent = Number.isFinite(bottom) ? String(bottom) : '0';
+  if (previewLeft) previewLeft.textContent = Number.isFinite(left) ? String(left) : '0';
+}
+
+function bindBattleCardPreviewInputs() {
+  const ids = ['battleCardName', 'battleCardAverageScore', 'battleCardTop', 'battleCardRight', 'battleCardBottom', 'battleCardLeft'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', updateBattleCardPreview);
+      el.addEventListener('change', updateBattleCardPreview);
+    }
+  });
+}
+
 async function createBattleCard() {
   if (!currentUserIsAdmin) {
     alert('Only admins can create battle cards.');
@@ -36,7 +70,8 @@ async function createBattleCard() {
     top: document.getElementById('battleCardTop').value,
     right: document.getElementById('battleCardRight').value,
     bottom: document.getElementById('battleCardBottom').value,
-    left: document.getElementById('battleCardLeft').value
+    left: document.getElementById('battleCardLeft').value,
+    linkedCardImage: document.getElementById('battleLinkedCardSelect').value
   };
 
   try {
@@ -62,10 +97,33 @@ async function createBattleCard() {
     document.getElementById('battleCardRight').value = '0';
     document.getElementById('battleCardBottom').value = '0';
     document.getElementById('battleCardLeft').value = '0';
+    if (document.getElementById('battleLinkedCardSelect')) document.getElementById('battleLinkedCardSelect').value = '';
+    updateBattleCardPreview();
     loadBattleCards();
   } catch (error) {
     console.error('Battle card creation failed:', error);
     alert(error.message || 'Battle card creation failed');
+  }
+}
+
+async function deleteBattleCard(cardId) {
+  if (!cardId) return;
+  const confirmed = window.confirm('Delete this battle card?');
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`${API_URL}/admin/battle-cards/${cardId}`, {
+      method: 'DELETE',
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || 'Delete failed');
+    }
+    loadBattleCards();
+  } catch (error) {
+    console.error('Delete battle card error:', error);
+    alert(error.message || 'Could not delete battle card');
   }
 }
 
@@ -85,7 +143,35 @@ async function loadBattleCards() {
 
     cards.forEach(card => {
       const item = document.createElement('li');
-      item.innerHTML = `<strong>${card.name}</strong><br>Avg: ${card.averageScore} · Top ${card.top} / Right ${card.right} / Bottom ${card.bottom} / Left ${card.left}`;
+      item.className = 'battle-card-item';
+      item.innerHTML = `
+        <div class="battle-card-small">
+          <div class="battle-card-small-header">
+            <span>${(card.name || 'Card').slice(0, 10)}</span>
+            <span>${Number(card.averageScore || 0)}</span>
+          </div>
+          <div class="battle-card-small-center">
+            <span class="battle-score battle-top">${card.top || 0}</span>
+            <span class="battle-score battle-right">${card.right || 0}</span>
+            <span class="battle-score battle-bottom">${card.bottom || 0}</span>
+            <span class="battle-score battle-left">${card.left || 0}</span>
+          </div>
+        </div>
+        <div>
+          <strong>${card.name}</strong><br>
+          <small>Linked: ${card.linkedCardImage || 'Unassigned'}</small><br>
+          <small>Top ${card.top} / Right ${card.right} / Bottom ${card.bottom} / Left ${card.left}</small>
+        </div>
+      `;
+
+      const actionWrap = document.createElement('div');
+      actionWrap.className = 'battle-card-item-actions';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-danger';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = () => deleteBattleCard(card.id);
+      actionWrap.appendChild(deleteBtn);
+      item.appendChild(actionWrap);
       list.appendChild(item);
     });
   } catch (error) {
@@ -914,19 +1000,31 @@ async function loadCardOptions() {
     availableCardImages = await res.json();
 
     const cardSelect = document.getElementById('grantCardSelect');
-    if (!cardSelect) return;
+    if (cardSelect) {
+      cardSelect.innerHTML = '';
+      availableCardImages.forEach(filename => {
+        const option = document.createElement('option');
+        option.value = filename;
+        option.textContent = filename;
+        cardSelect.appendChild(option);
+      });
+    }
 
-    cardSelect.innerHTML = '';
-    availableCardImages.forEach(filename => {
-      const option = document.createElement('option');
-      option.value = filename;
-      option.textContent = filename;
-      cardSelect.appendChild(option);
-    });
+    const battleLinkedCardSelect = document.getElementById('battleLinkedCardSelect');
+    if (battleLinkedCardSelect) {
+      battleLinkedCardSelect.innerHTML = '<option value="">Select a normal card</option>';
+      availableCardImages.forEach(filename => {
+        const option = document.createElement('option');
+        option.value = filename;
+        option.textContent = filename;
+        battleLinkedCardSelect.appendChild(option);
+      });
+    }
 
     renderPackCardPicker();
     populateDirectListingProducts();
     updateGrantCardPreview();
+    updateBattleCardPreview();
   } catch (error) {
     console.error('Error loading card images:', error);
   }

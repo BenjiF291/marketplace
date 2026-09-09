@@ -170,15 +170,103 @@ body {
   padding: 0;
   margin: 12px 0 0;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
-.battle-card-list li {
+.battle-card-preview {
+  width: 180px;
+  height: 250px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #101827 0%, #303f6f 100%);
+  color: white;
+  padding: 12px 14px;
+  position: relative;
+  box-shadow: 0 10px 20px rgba(16,24,39,0.2);
+  border: 3px solid #d1d9ff;
+  margin: 8px auto 0;
+}
+
+.battle-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+}
+
+.battle-card-center {
+  position: relative;
+  width: 100%;
+  height: 170px;
+}
+
+.battle-score {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.battle-top { top: 10px; left: 50%; transform: translateX(-50%); }
+.battle-right { right: 10px; top: 50%; transform: translateY(-50%); }
+.battle-bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
+.battle-left { left: 10px; top: 50%; transform: translateY(-50%); }
+
+.battle-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   border: 1px solid #e3e8f8;
   border-radius: 10px;
   background: #f9faff;
   padding: 12px 14px;
-  line-height: 1.6;
+}
+
+.battle-card-item .battle-card-small {
+  width: 110px;
+  height: 150px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #101827 0%, #303f6f 100%);
+  color: white;
+  padding: 8px;
+  position: relative;
+  border: 2px solid #d1d9ff;
+  flex-shrink: 0;
+}
+
+.battle-card-small .battle-card-small-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.battle-card-small .battle-card-small-center {
+  position: relative;
+  width: 100%;
+  height: 88px;
+}
+
+.battle-card-small .battle-score {
+  width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
+}
+
+.battle-card-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
 }
 
 .tab-group {

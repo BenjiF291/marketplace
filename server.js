@@ -79,6 +79,47 @@ function serializeDate(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+async function awardLinkedBattleCard(userId, normalCardImage) {
+  if (!userId || typeof userId !== 'string' || !normalCardImage || typeof normalCardImage !== 'string') {
+    return null;
+  }
+
+  try {
+    const battleCardsRef = db.collection('battleCards');
+    const snapshot = await battleCardsRef.where('linkedCardImage', '==', normalCardImage).limit(1).get();
+    if (snapshot.empty) return null;
+
+    const battleCard = snapshot.docs[0].data();
+    const battleItem = {
+      name: battleCard.name,
+      itemType: 'battle-card',
+      battleCardId: snapshot.docs[0].id,
+      linkedCardImage: normalCardImage,
+      imageUrl: `/images/${normalCardImage}`,
+      price: 0,
+      sellerId: 'system',
+      sold: true,
+      buyerId: userId,
+      purchasedAt: new Date(),
+      sourceItemId: null,
+      createdAt: new Date(),
+      averageScore: Number(battleCard.averageScore) || 0,
+      top: Number(battleCard.top) || 0,
+      right: Number(battleCard.right) || 0,
+      bottom: Number(battleCard.bottom) || 0,
+      left: Number(battleCard.left) || 0,
+      isBattleCard: true
+    };
+
+    const battleRef = db.collection('items').doc();
+    await battleRef.set(battleItem);
+    return battleRef.id;
+  } catch (error) {
+    console.error('Error awarding linked battle card:', error);
+    return null;
+  }
+}
+
 const DEFAULT_ASCEND_TIERS = [
   'Bronze',
   'Rare Bronze',
@@ -317,6 +358,7 @@ app.get('/battle-cards', async (req, res) => {
         right: Number(data.right) || 0,
         bottom: Number(data.bottom) || 0,
         left: Number(data.left) || 0,
+        linkedCardImage: data.linkedCardImage || null,
         createdAt: serializeDate(data.createdAt)
       };
     });
@@ -349,6 +391,33 @@ app.post('/admin/battle-cards', async (req, res) => {
   } catch (error) {
     console.error('Error creating battle card:', error);
     res.status(500).send('Could not create battle card');
+  }
+});
+
+app.delete('/admin/battle-cards/:cardId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { cardId } = req.params;
+
+  if (!requesterId || !(await userIsAdmin(requesterId))) {
+    return res.status(403).send('Forbidden');
+  }
+
+  if (!cardId || typeof cardId !== 'string') {
+    return res.status(400).send('Invalid battle card');
+  }
+
+  try {
+    const ref = db.collection('battleCards').doc(cardId);
+    const cardDoc = await ref.get();
+    if (!cardDoc.exists) {
+      return res.status(404).send('Battle card not found');
+    }
+
+    await ref.delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting battle card:', error);
+    res.status(500).send('Could not delete battle card');
   }
 });
 
@@ -1085,6 +1154,7 @@ app.post('/open-pack', async (req, res) => {
       transaction.delete(packItemRef);
       return { cardId, packColor: packItem.packColor || pack.color || '#667eea' };
     });
+    await awardLinkedBattleCard(requesterId, result.cardId);
     res.json({ success: true, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
@@ -1143,24 +1213,32 @@ app.post('/grant-item', async (req, res) => {
 
     const writes = [];
     targetSnapshot.docs.forEach(recipientDoc => {
-      for (let i = 0; i < qty; i++) writes.push({
-        name: `Card ${cardId}`,
-        itemType: 'card',
-        price: 0,
-        sellerId: requesterId,
-        sold: true,
-        buyerId: recipientDoc.id,
-        purchasedAt: new Date(),
-        sourceItemId: null,
-        imageUrl: `/images/${imageFile}`,
-        createdAt: new Date()
-      });
+      for (let i = 0; i < qty; i++) {
+        writes.push({
+          name: `Card ${cardId}`,
+          itemType: 'card',
+          price: 0,
+          sellerId: requesterId,
+          sold: true,
+          buyerId: recipientDoc.id,
+          purchasedAt: new Date(),
+          sourceItemId: null,
+          imageUrl: `/images/${imageFile}`,
+          createdAt: new Date()
+        });
+      }
     });
+
     for (let start = 0; start < writes.length; start += 500) {
       const batch = db.batch();
       writes.slice(start, start + 500).forEach(write => batch.set(db.collection('items').doc(), write));
       await batch.commit();
     }
+
+    for (const write of writes) {
+      await awardLinkedBattleCard(write.buyerId, path.basename(write.imageUrl));
+    }
+
     res.json({ success: true, granted: writes.length });
   } catch (error) {
     console.error('Error granting item:', error);
@@ -1522,6 +1600,33 @@ app.post('/buy', async (req, res) => {
         purchasedViaMarketplace: true
       });
 
+      if (item.imageUrl) {
+        const linkedBattleCard = await db.collection('battleCards').where('linkedCardImage', '==', path.basename(item.imageUrl)).limit(1).get();
+        if (!linkedBattleCard.empty) {
+          const battleCard = linkedBattleCard.docs[0];
+          transaction.set(db.collection('items').doc(), {
+            name: battleCard.data().name,
+            itemType: 'battle-card',
+            battleCardId: battleCard.id,
+            linkedCardImage: path.basename(item.imageUrl),
+            imageUrl: item.imageUrl,
+            price: 0,
+            sellerId: 'system',
+            sold: true,
+            buyerId: buyerId,
+            purchasedAt: new Date(),
+            sourceItemId: itemRef.id,
+            createdAt: new Date(),
+            isBattleCard: true,
+            averageScore: Number(battleCard.data().averageScore) || 0,
+            top: Number(battleCard.data().top) || 0,
+            right: Number(battleCard.data().right) || 0,
+            bottom: Number(battleCard.data().bottom) || 0,
+            left: Number(battleCard.data().left) || 0
+          });
+        }
+      }
+
       if (listingGroupRef) {
         const purchaseCounts = { ...(listingGroup.purchaseCounts || {}) };
         purchaseCounts[buyerId] = (Number(purchaseCounts[buyerId]) || 0) + 1;
@@ -1538,6 +1643,10 @@ app.post('/buy', async (req, res) => {
 
       return { purchasePrice, hasHostDiscount, listedPrice: item.price };
     });
+    if (item.imageUrl) {
+      await awardLinkedBattleCard(buyerId, path.basename(item.imageUrl));
+    }
+
     res.json({
       success: true,
       purchasePrice: purchase.purchasePrice,

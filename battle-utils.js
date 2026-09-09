@@ -12,6 +12,8 @@ function validateBattleCard(card) {
     left: Number(card.left)
   };
 
+  const linkedCardImage = typeof card.linkedCardImage === 'string' ? card.linkedCardImage.trim() : '';
+
   if (!cleanName) {
     return { valid: false, error: 'Card name is required' };
   }
@@ -26,6 +28,10 @@ function validateBattleCard(card) {
     }
   }
 
+  if (!linkedCardImage) {
+    return { valid: false, error: 'Select a normal card to link this battle card to' };
+  }
+
   return {
     valid: true,
     normalized: {
@@ -34,7 +40,8 @@ function validateBattleCard(card) {
       top: Math.round(sides.top),
       right: Math.round(sides.right),
       bottom: Math.round(sides.bottom),
-      left: Math.round(sides.left)
+      left: Math.round(sides.left),
+      linkedCardImage
     }
   };
 }
