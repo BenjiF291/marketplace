@@ -880,20 +880,31 @@ async function createDirectMarketplaceListing() {
   const price = Number(document.getElementById('marketListingPrice').value);
   const quantity = Number(document.getElementById('marketListingQuantity').value);
   const perUserLimit = Number(document.getElementById('marketListingPerUserLimit').value);
+  const scheduledAt = document.getElementById('marketListingScheduledAt').value;
+  const expiresAt = document.getElementById('marketListingExpiresAt').value;
+
   if (!productId || !price || !Number.isInteger(quantity) || quantity < 1 || !Number.isInteger(perUserLimit) || perUserLimit < 0 || perUserLimit > quantity) {
     return alert('Choose an item and enter a valid price, stock amount, and per-user maximum');
   }
+
+  if (scheduledAt && expiresAt && new Date(expiresAt).getTime() <= new Date(scheduledAt).getTime()) {
+    return alert('Expiration time must be after the scheduled start time.');
+  }
+
   try {
     const res = await fetch(`${API_URL}/admin/market-listings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ itemType, productId, price, quantity, perUserLimit })
+      body: JSON.stringify({ itemType, productId, price, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
     });
     if (!res.ok) return alert(await res.text());
     document.getElementById('marketListingPrice').value = '';
     document.getElementById('marketListingQuantity').value = '1';
     document.getElementById('marketListingPerUserLimit').value = '0';
-    alert('Marketplace listing posted');
+    document.getElementById('marketListingScheduledAt').value = '';
+    document.getElementById('marketListingExpiresAt').value = '';
+    const result = await res.json();
+    alert(result.scheduled ? 'Marketplace listing scheduled' : 'Marketplace listing posted');
     loadItems();
   } catch (error) {
     console.error('Error creating marketplace listing:', error);
@@ -966,7 +977,7 @@ async function loadAscendTierConfig() {
       const header = document.createElement('div');
       header.className = 'ascend-tier-header';
       const title = document.createElement('strong');
-      title.textContent = tier.name;
+      title.textContent = `${tier.name}${Number(tier.sellPrice) > 0 ? ` · Sell ${tier.sellPrice} Footy` : ' · No sell price'}`;
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn btn-danger';
@@ -1049,6 +1060,30 @@ async function loadAscendTierConfig() {
       cardColumn.appendChild(cardList);
       packColumn.appendChild(packList);
 
+      const priceRow = document.createElement('div');
+      priceRow.className = 'ascend-tier-actions';
+      const priceInput = document.createElement('input');
+      priceInput.type = 'number';
+      priceInput.min = '0';
+      priceInput.step = '1';
+      priceInput.value = Number(tier.sellPrice) || 0;
+      priceInput.placeholder = 'Sell price';
+      const savePriceBtn = document.createElement('button');
+      savePriceBtn.className = 'btn btn-primary';
+      savePriceBtn.textContent = 'Save sell price';
+      savePriceBtn.onclick = async () => {
+        const sellPrice = Number(priceInput.value);
+        if (!Number.isFinite(sellPrice) || sellPrice < 0) return alert('Enter a valid non-negative sell price');
+        const res = await fetch(`${API_URL}/ascend-tier-config/${encodeURIComponent(tier.id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+          body: JSON.stringify({ name: tier.name, order: Number(tier.order), sellPrice })
+        });
+        if (!res.ok) return alert(await res.text());
+        loadAscendTierConfig();
+      };
+      priceRow.append(priceInput, savePriceBtn);
+
       const actions = document.createElement('div');
       actions.className = 'ascend-tier-actions';
       const cardSelect = document.createElement('select');
@@ -1096,7 +1131,7 @@ async function loadAscendTierConfig() {
       };
 
       actions.append(cardSelect, addCardBtn, packSelect, addPackBtn);
-      card.append(header, layout, actions);
+      card.append(header, priceRow, layout, actions);
       layout.append(cardColumn, packColumn);
       container.appendChild(card);
     });
@@ -1110,16 +1145,18 @@ async function loadAscendTierConfig() {
 async function createAscendTier() {
   const name = document.getElementById('newAscendTierName').value.trim();
   const order = Number(document.getElementById('newAscendTierOrder').value);
+  const sellPrice = Number(document.getElementById('newAscendTierSellPrice').value);
   if (!name) return alert('Enter a tier name');
   try {
     const res = await fetch(`${API_URL}/ascend-tier-config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ name, order })
+      body: JSON.stringify({ name, order, sellPrice: Number.isFinite(sellPrice) ? sellPrice : 0 })
     });
     if (!res.ok) return alert(await res.text());
     document.getElementById('newAscendTierName').value = '';
     document.getElementById('newAscendTierOrder').value = String((Number(document.getElementById('newAscendTierOrder').value) || 0) + 1);
+    document.getElementById('newAscendTierSellPrice').value = '0';
     loadAscendTierConfig();
   } catch (error) {
     console.error('Error creating ascend tier:', error);
@@ -1733,6 +1770,30 @@ async function loadInventory() {
         li.appendChild(placeholder);
       }
 
+      const sellButton = document.createElement('button');
+      sellButton.className = 'btn btn-warning';
+      sellButton.textContent = 'Sell to tier';
+      sellButton.onclick = async () => {
+        const confirmed = window.confirm('Sell this card back to its tier for the configured price?');
+        if (!confirmed) return;
+        try {
+          const res = await fetch(`${API_URL}/sell-tier-card`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+            body: JSON.stringify({ itemId: item.id })
+          });
+          if (!res.ok) return alert(await res.text());
+          const result = await res.json();
+          alert(`✅ Sold for ${result.amount} Footy`);
+          loadInventory();
+          updateBalance();
+        } catch (error) {
+          console.error('Sell card error:', error);
+          alert('Could not sell this card right now.');
+        }
+      };
+
+      li.appendChild(sellButton);
       list.appendChild(li);
     });
   } catch (error) {

@@ -118,6 +118,8 @@
         <input id="newAscendTierName" class="input-field" placeholder="Example: Rare Bronze">
         <label class="input-label" for="newAscendTierOrder">Tier order</label>
         <input id="newAscendTierOrder" class="input-field" type="number" min="0" value="0">
+        <label class="input-label" for="newAscendTierSellPrice">Sell price for cards in this tier</label>
+        <input id="newAscendTierSellPrice" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = not sellable">
         <button onclick="createAscendTier()" class="btn btn-primary">Create Tier</button>
       </div>
       <div id="ascendTierConfig" class="ascend-tier-config"></div>
@@ -136,8 +138,12 @@
         <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
         <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
         <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
+        <label class="input-label" for="marketListingScheduledAt">Schedule date/time (optional)</label>
+        <input id="marketListingScheduledAt" type="datetime-local" class="input-field">
+        <label class="input-label" for="marketListingExpiresAt">Expiration date/time (optional)</label>
+        <input id="marketListingExpiresAt" type="datetime-local" class="input-field">
         <button onclick="createDirectMarketplaceListing()" class="btn btn-primary">Post to Marketplace</button>
-        <p class="pack-help">The per-user maximum applies only to this specific marketplace post, not every copy of the card or pack.</p>
+        <p class="pack-help">The per-user maximum applies only to this specific marketplace post, not every copy of the card or pack. If a schedule time is set, the listing will appear automatically later. If an expiration time is set, it will disappear at that time.</p>
       </div>
 
       <hr style="margin: 20px 0; border-color: #e0e0e0;">

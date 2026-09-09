@@ -38,6 +38,21 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
+app.use(async (req, res, next) => {
+  try {
+    await syncPlannedMarketplaceListings();
+  } catch (error) {
+    console.error('Background planning sync failed:', error);
+  }
+  next();
+});
+
+setInterval(() => {
+  syncPlannedMarketplaceListings().catch(error => {
+    console.error('Scheduled listing sync failed:', error);
+  });
+}, 60000);
+
 /* ------------------ HELPERS ------------------ */
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -103,7 +118,131 @@ async function ensureDefaultAscendTiers() {
 
 async function getAscendTierConfig() {
   const tiers = await ensureDefaultAscendTiers();
-  return tiers.sort((a, b) => Number(a.order) - Number(b.order));
+  return tiers
+    .map(tier => ({
+      ...tier,
+      sellPrice: Number(tier.sellPrice) || 0
+    }))
+    .sort((a, b) => Number(a.order) - Number(b.order));
+}
+
+async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, listingGroupIdOverride = null }) {
+  let itemName;
+  let imageUrl = null;
+  let packId = null;
+  let packColor = null;
+  const stock = Number(quantity);
+  const maxPerUser = Number(perUserLimit) || 0;
+
+  if (itemType === 'card') {
+    if (!productId || typeof productId !== 'string' || productId !== path.basename(productId)) {
+      throw new Error('Invalid card');
+    }
+    const imagePath = path.join(__dirname, 'public', 'images', productId);
+    if (!fs.existsSync(imagePath)) throw new Error('Card image not found');
+    itemName = `Card ${productId}`;
+    imageUrl = `/images/${productId}`;
+  } else {
+    const packDoc = await db.collection('packs').doc(productId).get();
+    if (!packDoc.exists) throw new Error('Pack not found');
+    packId = packDoc.id;
+    itemName = `${packDoc.data().name} Pack`;
+    packColor = packDoc.data().color || '#667eea';
+  }
+
+  const groupRef = listingGroupIdOverride ? db.collection('marketListingGroups').doc(listingGroupIdOverride) : db.collection('marketListingGroups').doc();
+  const batch = db.batch();
+  batch.set(groupRef, {
+    sellerId,
+    name: itemName,
+    itemType,
+    packId,
+    packColor,
+    imageUrl,
+    price,
+    stock,
+    soldCount: 0,
+    perUserLimit: maxPerUser || null,
+    purchaseCounts: {},
+    scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+    expiresAt: expiresAt ? new Date(expiresAt) : null,
+    createdAt: new Date()
+  });
+
+  for (let i = 0; i < stock; i++) {
+    batch.set(db.collection('items').doc(), {
+      name: itemName,
+      itemType,
+      packId,
+      packColor,
+      imageUrl,
+      price,
+      sellerId,
+      sold: false,
+      buyerId: null,
+      purchasedAt: null,
+      sourceItemId: null,
+      listingGroupId: groupRef.id,
+      perUserLimit: maxPerUser || null,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      createdAt: new Date()
+    });
+  }
+
+  await batch.commit();
+  return groupRef.id;
+}
+
+async function syncPlannedMarketplaceListings() {
+  const now = new Date();
+
+  const scheduledPlans = await db.collection('marketListingPlans').where('status', '==', 'scheduled').get();
+  for (const doc of scheduledPlans.docs) {
+    const data = doc.data();
+    const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate() : new Date(data.scheduledAt)) : null;
+    if (!scheduledAt || now.getTime() < scheduledAt.getTime()) continue;
+
+    try {
+      const groupId = await createMarketplaceListingEntries({
+        sellerId: data.sellerId,
+        itemType: data.itemType,
+        productId: data.productId,
+        price: Number(data.price),
+        quantity: Number(data.quantity),
+        perUserLimit: Number(data.perUserLimit) || 0,
+        scheduledAt: scheduledAt.toISOString(),
+        expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)).toISOString() : null,
+        listingGroupIdOverride: data.listingGroupId || null
+      });
+
+      await doc.ref.update({
+        status: 'published',
+        publishedAt: now,
+        listingGroupId: groupId
+      });
+    } catch (error) {
+      console.error('Error publishing scheduled listing:', error);
+    }
+  }
+
+  const activePlans = await db.collection('marketListingPlans').where('status', '==', 'published').get();
+  for (const doc of activePlans.docs) {
+    const data = doc.data();
+    const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null;
+    if (!expiresAt || now.getTime() < expiresAt.getTime()) continue;
+
+    const listingGroupId = data.listingGroupId;
+    if (listingGroupId) {
+      const itemsSnapshot = await db.collection('items').where('listingGroupId', '==', listingGroupId).get();
+      const batch = db.batch();
+      itemsSnapshot.docs.forEach(itemDoc => batch.delete(itemDoc.ref));
+      if (itemsSnapshot.docs.length > 0) await batch.commit();
+      await db.collection('marketListingGroups').doc(listingGroupId).delete().catch(() => {});
+    }
+
+    await doc.ref.update({ status: 'expired', expiredAt: now });
+  }
 }
 
 async function findTierForCard(cardFileName) {
@@ -429,6 +568,8 @@ app.post('/transfer', async (req, res) => {
 /* ------------------ GET ITEMS ------------------ */
 app.get('/items', async (req, res) => {
   try {
+    await syncPlannedMarketplaceListings();
+
     const itemsRef = db.collection('items');
     const [snapshot, usersSnapshot] = await Promise.all([
       itemsRef.get(),
@@ -439,11 +580,18 @@ app.get('/items', async (req, res) => {
       if (doc.data().isAdmin === true) hostIds.add(doc.id);
     });
 
+    const now = Date.now();
     const items = [];
     const groupedListings = new Map();
     snapshot.forEach(doc => {
       const data = doc.data();
       if (data.sold !== true) {
+        const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate() : new Date(data.scheduledAt)) : null;
+        const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null;
+
+        if (scheduledAt && scheduledAt.getTime() > now) return;
+        if (expiresAt && expiresAt.getTime() <= now) return;
+
         const item = {
           id: doc.id,
           name: data.name || 'Unknown Item',
@@ -561,7 +709,7 @@ app.get('/ascend-tier-config', async (req, res) => {
 
 app.post('/ascend-tier-config', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { name, order } = req.body;
+  const { name, order, sellPrice } = req.body;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -575,11 +723,17 @@ app.post('/ascend-tier-config', async (req, res) => {
     return res.status(400).send('Tier order must be a valid integer');
   }
 
+  const tierSellPrice = Number(sellPrice);
+  if (!Number.isFinite(tierSellPrice) || tierSellPrice < 0) {
+    return res.status(400).send('Sell price must be a valid non-negative number');
+  }
+
   try {
     const tierRef = db.collection('ascendTiers').doc();
     const tier = {
       name: name.trim(),
       order: tierOrder,
+      sellPrice: tierSellPrice,
       cards: [],
       packs: [],
       createdAt: new Date()
@@ -595,7 +749,7 @@ app.post('/ascend-tier-config', async (req, res) => {
 app.put('/ascend-tier-config/:tierId', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { tierId } = req.params;
-  const { name, order } = req.body;
+  const { name, order, sellPrice } = req.body;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -612,10 +766,16 @@ app.put('/ascend-tier-config/:tierId', async (req, res) => {
     return res.status(400).send('Tier order must be a valid integer');
   }
 
+  const tierSellPrice = Number(sellPrice);
+  if (!Number.isFinite(tierSellPrice) || tierSellPrice < 0) {
+    return res.status(400).send('Sell price must be a valid non-negative number');
+  }
+
   try {
     await db.collection('ascendTiers').doc(tierId).update({
       name: name.trim(),
       order: tierOrder,
+      sellPrice: tierSellPrice,
       updatedAt: new Date()
     });
     res.json({ success: true });
@@ -962,9 +1122,11 @@ app.post('/grant-item', async (req, res) => {
 /* ------------------ ADMIN DIRECT MARKETPLACE LISTINGS ------------------ */
 app.post('/admin/market-listings', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { itemType, productId, price, quantity, perUserLimit } = req.body;
+  const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt } = req.body;
   const stock = Number(quantity);
   const maxPerUser = Number(perUserLimit) || 0;
+  const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
+  const expirationDate = expiresAt ? new Date(expiresAt) : null;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
   if (!['card', 'pack'].includes(itemType)) return res.status(400).send('Invalid item type');
@@ -973,67 +1135,46 @@ app.post('/admin/market-listings', async (req, res) => {
   if (!Number.isInteger(maxPerUser) || maxPerUser < 0 || maxPerUser > stock) {
     return res.status(400).send('Maximum per user must be between 0 and the stock amount');
   }
+  if (scheduledDate && Number.isNaN(scheduledDate.getTime())) return res.status(400).send('Scheduled time is invalid');
+  if (expirationDate && Number.isNaN(expirationDate.getTime())) return res.status(400).send('Expiration time is invalid');
+  if (scheduledDate && expirationDate && expirationDate.getTime() <= scheduledDate.getTime()) {
+    return res.status(400).send('Expiration time must be after the scheduled time');
+  }
 
   try {
-    let itemName;
-    let imageUrl = null;
-    let packId = null;
-    let packColor = null;
-    if (itemType === 'card') {
-      if (!productId || typeof productId !== 'string' || productId !== path.basename(productId)) {
-        return res.status(400).send('Invalid card');
-      }
-      const imagePath = path.join(__dirname, 'public', 'images', productId);
-      if (!fs.existsSync(imagePath)) return res.status(400).send('Card image not found');
-      itemName = `Card ${productId}`;
-      imageUrl = `/images/${productId}`;
-    } else {
-      const packDoc = await db.collection('packs').doc(productId).get();
-      if (!packDoc.exists) return res.status(400).send('Pack not found');
-      packId = packDoc.id;
-      itemName = `${packDoc.data().name} Pack`;
-      packColor = packDoc.data().color || '#667eea';
+    if (scheduledDate && scheduledDate.getTime() > Date.now()) {
+      const planRef = db.collection('marketListingPlans').doc();
+      const plan = {
+        sellerId: requesterId,
+        itemType,
+        productId,
+        price,
+        quantity: stock,
+        perUserLimit: maxPerUser || null,
+        scheduledAt: scheduledDate,
+        expiresAt: expirationDate,
+        status: 'scheduled',
+        createdAt: new Date()
+      };
+      await planRef.set(plan);
+      return res.status(201).json({ success: true, scheduled: true, listingPlanId: planRef.id, scheduledAt: scheduledDate.toISOString(), expiresAt: expirationDate ? expirationDate.toISOString() : null });
     }
 
-    const groupRef = db.collection('marketListingGroups').doc();
-    const batch = db.batch();
-    batch.set(groupRef, {
+    const groupId = await createMarketplaceListingEntries({
       sellerId: requesterId,
-      name: itemName,
       itemType,
-      packId,
-      packColor,
-      imageUrl,
+      productId,
       price,
-      stock,
-      soldCount: 0,
-      perUserLimit: maxPerUser || null,
-      purchaseCounts: {},
-      createdAt: new Date()
+      quantity: stock,
+      perUserLimit: maxPerUser,
+      scheduledAt: null,
+      expiresAt: expirationDate ? expirationDate.toISOString() : null
     });
-    for (let i = 0; i < stock; i++) {
-      batch.set(db.collection('items').doc(), {
-        name: itemName,
-        itemType,
-        packId,
-        packColor,
-        imageUrl,
-        price,
-        sellerId: requesterId,
-        sold: false,
-        buyerId: null,
-        purchasedAt: null,
-        sourceItemId: null,
-        listingGroupId: groupRef.id,
-        perUserLimit: maxPerUser || null,
-        createdAt: new Date()
-      });
-    }
-    await batch.commit();
-    res.status(201).json({ success: true, stock, listingGroupId: groupRef.id });
+
+    res.status(201).json({ success: true, stock, listingGroupId: groupId, scheduled: false });
   } catch (error) {
     console.error('Error creating marketplace listing:', error);
-    res.status(500).send('Could not create marketplace listing');
+    res.status(500).send(error.message || 'Could not create marketplace listing');
   }
 });
 
@@ -1492,6 +1633,52 @@ app.post('/ascend', async (req, res) => {
   } catch (error) {
     console.error('Error ascending card:', error);
     res.status(500).send(error.message || 'Could not ascend card');
+  }
+});
+
+app.post('/sell-tier-card', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { itemId } = req.body;
+
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+  if (!itemId || typeof itemId !== 'string') {
+    return res.status(400).send('Invalid inventory item');
+  }
+
+  try {
+    const itemRef = db.collection('items').doc(itemId);
+    const itemDoc = await itemRef.get();
+    if (!itemDoc.exists) return res.status(404).send('Inventory item not found');
+
+    const item = itemDoc.data();
+    if (item.buyerId !== requesterId || item.sold !== true || item.listedForSale === true || item.itemType === 'pack') {
+      return res.status(400).send('This item cannot be sold');
+    }
+
+    const tier = await findTierForCard(item.imageUrl ? path.basename(item.imageUrl) : item.name);
+    if (!tier || !(Number(tier.sellPrice) > 0)) {
+      return res.status(400).send('This card tier does not have a sell price configured');
+    }
+
+    const userRef = db.collection('users').doc(requesterId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).send('User not found');
+
+    await db.runTransaction(async transaction => {
+      const latestUserDoc = await transaction.get(userRef);
+      const latestUser = latestUserDoc.data() || {};
+      const updatedBalance = Number(latestUser.balance || 0) + Number(tier.sellPrice);
+
+      transaction.update(userRef, { balance: updatedBalance });
+      transaction.delete(itemRef);
+    });
+
+    res.json({ success: true, amount: Number(tier.sellPrice) });
+  } catch (error) {
+    console.error('Error selling card to tier:', error);
+    res.status(500).send(error.message || 'Could not sell this card');
   }
 });
 
