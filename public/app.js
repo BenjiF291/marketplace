@@ -29,43 +29,58 @@ function clampBattleToothCount(value) {
   return Math.min(10, Math.max(0, Math.trunc(numeric)));
 }
 
-function renderBattleTeeth(side, count, holder) {
-  if (!holder) return;
-  holder.innerHTML = '';
-  const total = clampBattleToothCount(count);
-  for (let i = 0; i < total; i += 1) {
-    const tooth = document.createElement('span');
-    tooth.className = 'battle-tooth';
-    if (side === 'top' || side === 'bottom') {
-      tooth.style.left = `${((i + 0.5) / Math.max(1, total)) * 100}%`;
-    } else {
-      tooth.style.top = `${((i + 0.5) / Math.max(1, total)) * 100}%`;
+function buildBattleCardMarkup(card, { small = false } = {}) {
+  const name = String(card?.name || 'Card preview');
+  const average = Number(card?.averageScore ?? 0);
+  const top = clampBattleToothCount(card?.top ?? 0);
+  const right = clampBattleToothCount(card?.right ?? 0);
+  const bottom = clampBattleToothCount(card?.bottom ?? 0);
+  const left = clampBattleToothCount(card?.left ?? 0);
+
+  const makeTeeth = (count, side) => {
+    const teeth = [];
+    for (let i = 0; i < count; i += 1) {
+      teeth.push(`<span class="battle-tooth battle-tooth-${side}"></span>`);
     }
-    holder.appendChild(tooth);
-  }
+    return teeth.join('');
+  };
+
+  return `
+    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}">
+      <span class="battle-side-number battle-side-number-top">${top}</span>
+      <div class="battle-teeth battle-teeth-top">${makeTeeth(top, 'top')}</div>
+
+      <span class="battle-side-number battle-side-number-right">${right}</span>
+      <div class="battle-teeth battle-teeth-right">${makeTeeth(right, 'right')}</div>
+
+      <span class="battle-side-number battle-side-number-bottom">${bottom}</span>
+      <div class="battle-teeth battle-teeth-bottom">${makeTeeth(bottom, 'bottom')}</div>
+
+      <span class="battle-side-number battle-side-number-left">${left}</span>
+      <div class="battle-teeth battle-teeth-left">${makeTeeth(left, 'left')}</div>
+
+      <div class="battle-card-inner">
+        <div class="battle-card-average">${Number.isFinite(average) ? average : 0}</div>
+        <div class="battle-card-name">${name}</div>
+      </div>
+    </div>
+  `;
 }
 
 function updateBattleCardPreview() {
-  const name = document.getElementById('battleCardName')?.value || 'Card preview';
-  const avg = Number(document.getElementById('battleCardAverageScore')?.value || 0);
-  const top = clampBattleToothCount(document.getElementById('battleCardTop')?.value || 0);
-  const right = clampBattleToothCount(document.getElementById('battleCardRight')?.value || 0);
-  const bottom = clampBattleToothCount(document.getElementById('battleCardBottom')?.value || 0);
-  const left = clampBattleToothCount(document.getElementById('battleCardLeft')?.value || 0);
+  const preview = document.getElementById('battleCardVisualPreview');
+  if (!preview) return;
 
-  const previewName = document.getElementById('battlePreviewName');
-  const previewAvg = document.getElementById('battlePreviewAvg');
-  const previewTop = document.getElementById('battlePreviewTop');
-  const previewRight = document.getElementById('battlePreviewRight');
-  const previewBottom = document.getElementById('battlePreviewBottom');
-  const previewLeft = document.getElementById('battlePreviewLeft');
+  const card = {
+    name: document.getElementById('battleCardName')?.value || 'Card preview',
+    averageScore: Number(document.getElementById('battleCardAverageScore')?.value || 0),
+    top: document.getElementById('battleCardTop')?.value || 0,
+    right: document.getElementById('battleCardRight')?.value || 0,
+    bottom: document.getElementById('battleCardBottom')?.value || 0,
+    left: document.getElementById('battleCardLeft')?.value || 0
+  };
 
-  if (previewName) previewName.textContent = name || 'Card preview';
-  if (previewAvg) previewAvg.textContent = Number.isFinite(avg) ? String(avg) : '0';
-  renderBattleTeeth('top', top, previewTop);
-  renderBattleTeeth('right', right, previewRight);
-  renderBattleTeeth('bottom', bottom, previewBottom);
-  renderBattleTeeth('left', left, previewLeft);
+  preview.innerHTML = buildBattleCardMarkup(card, { small: false });
 }
 
 function bindBattleCardPreviewInputs() {
@@ -166,24 +181,16 @@ async function loadBattleCards() {
     cards.forEach(card => {
       const item = document.createElement('li');
       item.className = 'battle-card-item';
-      item.innerHTML = `
-        <div class="battle-card-small">
-          <div class="battle-card-small-header">
-            <span>${(card.name || 'Card').slice(0, 10)}</span>
-            <span>${Number(card.averageScore || 0)}</span>
-          </div>
-          <div class="battle-card-small-center">
-            <span class="battle-score battle-top">${card.top || 0}</span>
-            <span class="battle-score battle-right">${card.right || 0}</span>
-            <span class="battle-score battle-bottom">${card.bottom || 0}</span>
-            <span class="battle-score battle-left">${card.left || 0}</span>
-          </div>
-        </div>
-        <div>
-          <strong>${card.name}</strong><br>
-          <small>Linked: ${card.linkedCardImage || 'Unassigned'}</small><br>
-          <small>Top ${card.top} / Right ${card.right} / Bottom ${card.bottom} / Left ${card.left}</small>
-        </div>
+
+      const visualWrap = document.createElement('div');
+      visualWrap.innerHTML = buildBattleCardMarkup(card, { small: true });
+
+      const meta = document.createElement('div');
+      meta.className = 'battle-card-meta';
+      meta.innerHTML = `
+        <strong>${card.name}</strong><br>
+        <small>Linked: ${card.linkedCardImage || 'Unassigned'}</small><br>
+        <small>Top ${card.top} / Right ${card.right} / Bottom ${card.bottom} / Left ${card.left}</small>
       `;
 
       const actionWrap = document.createElement('div');
@@ -193,6 +200,9 @@ async function loadBattleCards() {
       deleteBtn.textContent = 'Delete';
       deleteBtn.onclick = () => deleteBattleCard(card.id);
       actionWrap.appendChild(deleteBtn);
+
+      item.appendChild(visualWrap);
+      item.appendChild(meta);
       item.appendChild(actionWrap);
       list.appendChild(item);
     });
@@ -468,8 +478,9 @@ async function loadBattleInventory() {
     list.innerHTML = '';
     battleItems.forEach(item => {
       const li = document.createElement('li');
+      li.className = 'battle-inventory-entry';
       li.innerHTML = `
-        <img src="${item.imageUrl || '/images/unknown.png'}" alt="${item.name || 'Battle card'}" class="item-image" style="width:52px;height:52px;">
+        <div class="battle-inventory-visual">${buildBattleCardMarkup(item, { small: true })}</div>
         <span>${item.name || 'Battle card'}</span>
       `;
       list.appendChild(li);

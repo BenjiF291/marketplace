@@ -173,58 +173,97 @@ body {
   gap: 12px;
 }
 
-.battle-card-preview {
+.battle-card-display {
   position: relative;
-  width: 200px;
-  height: 200px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #101827 0%, #303f6f 100%);
-  color: white;
-  box-shadow: 0 10px 20px rgba(16,24,39,0.2);
-  border: 3px solid #d1d9ff;
-  margin: 8px auto 0;
+  width: 220px;
+  height: 220px;
+  margin: 10px auto;
+  background: #eeeeee;
+  border: 4px solid #113744;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.battle-card-display-small {
+  width: 110px;
+  height: 110px;
+  margin: 0;
+}
+
+.battle-card-inner {
+  position: absolute;
+  inset: 12px;
+  background: #efefef;
+  border: 2px solid rgba(17, 55, 68, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .battle-card-average {
   position: absolute;
   left: 50%;
-  top: 24%;
-  transform: translate(-50%, -50%);
-  font-size: 0.8rem;
+  top: 50%;
+  transform: translate(-50%, -56%);
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: #0a7385;
+  letter-spacing: 0.02em;
 }
 
 .battle-card-name {
   position: absolute;
   left: 50%;
-  top: 54%;
-  transform: translate(-50%, -50%);
-  font-size: 1rem;
-  font-weight: 800;
+  bottom: 14%;
+  transform: translateX(-50%);
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
+  font-weight: 900;
   text-align: center;
-  width: 72%;
-  line-height: 1.2;
+  width: 78%;
+  color: #d9b936;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.battle-side-number {
+  position: absolute;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #b5bec2;
+  z-index: 2;
+}
+
+.battle-side-number-top {
+  left: 50%;
+  top: -28px;
+  transform: translateX(-50%);
+}
+
+.battle-side-number-right {
+  right: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.battle-side-number-bottom {
+  left: 50%;
+  bottom: -28px;
+  transform: translateX(-50%);
+}
+
+.battle-side-number-left {
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .battle-teeth {
   position: absolute;
-  display: block;
-  width: 100%;
-  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-}
-
-.battle-tooth {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
-  margin-left: -4px;
-  margin-top: -4px;
 }
 
 .battle-teeth-top,
@@ -232,21 +271,15 @@ body {
   left: 0;
   right: 0;
   height: 18px;
+  gap: 6px;
 }
 
 .battle-teeth-top {
-  top: -14px;
+  top: -18px;
 }
 
 .battle-teeth-bottom {
-  bottom: -14px;
-}
-
-.battle-teeth-top .battle-tooth,
-.battle-teeth-bottom .battle-tooth {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: -18px;
 }
 
 .battle-teeth-left,
@@ -254,41 +287,43 @@ body {
   top: 0;
   bottom: 0;
   width: 18px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .battle-teeth-left {
-  left: -14px;
+  left: -18px;
 }
 
 .battle-teeth-right {
-  right: -14px;
+  right: -18px;
 }
 
-.battle-teeth-left .battle-tooth,
-.battle-teeth-right .battle-tooth {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.battle-tooth {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid #113744;
 }
 
-.battle-teeth-top .battle-tooth {
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
+.battle-tooth-right,
+.battle-tooth-left {
+  transform: rotate(90deg);
 }
 
 .battle-teeth-bottom .battle-tooth {
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 8px solid rgba(255, 255, 255, 0.9);
   border-bottom: 0;
+  border-top: 10px solid #113744;
 }
 
-.battle-teeth-left .battle-tooth,
+.battle-teeth-left .battle-tooth {
+  transform: rotate(-90deg);
+}
+
 .battle-teeth-right .battle-tooth {
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
+  transform: rotate(90deg);
 }
 
 .battle-game-layout {
