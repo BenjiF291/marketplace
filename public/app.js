@@ -1560,6 +1560,119 @@ async function loadInventory() {
   }
 }
 
+function getCardKeyFromItem(item) {
+  if (!item) return '';
+  if (item.imageUrl) {
+    const basename = item.imageUrl.split('/').pop();
+    return basename || '';
+  }
+  return String(item.name || '').trim();
+}
+
+async function openAscendMenu() {
+  try {
+    const res = await fetch(`${API_URL}/inventory`, {
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) throw new Error('Could not load inventory');
+
+    const inventory = await res.json();
+    const grouped = new Map();
+
+    inventory.forEach(item => {
+      if (item.itemType === 'pack') return;
+      const key = getCardKeyFromItem(item);
+      if (!key) return;
+      const existing = grouped.get(key) || [];
+      existing.push(item);
+      grouped.set(key, existing);
+    });
+
+    const eligible = [...grouped.entries()]
+      .map(([key, items]) => {
+        const info = (window.AscendUtils || window.ascendUtils || {}).getAscendTierInfo?.(key);
+        if (!info || !info.canAscend || items.length < 3) return null;
+        const imageUrl = items[0].imageUrl || `/images/${key}`;
+        return { key, count: items.length, imageUrl, info };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.key.localeCompare(b.key));
+
+    const list = document.getElementById('ascendOptions');
+    if (!list) return;
+
+    list.innerHTML = '';
+    if (eligible.length === 0) {
+      const emptyState = document.createElement('p');
+      emptyState.textContent = 'You need 3 copies of the same card to ascend.';
+      list.appendChild(emptyState);
+      const modal = document.getElementById('ascendModal');
+      if (modal) modal.hidden = false;
+      return;
+    }
+
+    eligible.forEach(entry => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'ascend-option';
+      option.innerHTML = `
+        <img src="${entry.imageUrl}" alt="${entry.key}">
+        <h4>${entry.key}</h4>
+        <p>${entry.count} copies · ${entry.info.nextPackName} Pack</p>
+      `;
+      option.addEventListener('click', () => confirmAscend(entry));
+      list.appendChild(option);
+    });
+
+    const modal = document.getElementById('ascendModal');
+    if (modal) modal.hidden = false;
+  } catch (error) {
+    console.error('Error opening ascend menu:', error);
+    alert('Could not load the ascend menu right now.');
+  }
+}
+
+function closeAscendModal() {
+  const modal = document.getElementById('ascendModal');
+  if (modal) modal.hidden = true;
+}
+
+async function confirmAscend(entry) {
+  if (!entry) return;
+  const yes = window.confirm(`Use 3 copies of ${entry.key} to receive a ${entry.info.nextPackName} Pack?`);
+  if (!yes) return;
+
+  try {
+    const res = await fetch(`${API_URL}/ascend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId
+      },
+      body: JSON.stringify({ cardKey: entry.key })
+    });
+
+    const text = await res.text();
+    let payload = {};
+    try {
+      payload = text ? JSON.parse(text) : {};
+    } catch (error) {
+      payload = {};
+    }
+
+    if (!res.ok) {
+      throw new Error(payload.error || text || 'Ascend failed');
+    }
+
+    closeAscendModal();
+    alert(`✅ Ascended ${entry.key} and received ${payload.packName || entry.info.nextPackName + ' Pack'}!`);
+    loadInventory();
+  } catch (error) {
+    console.error('Ascend error:', error);
+    alert(error.message || 'Could not ascend this card.');
+  }
+}
+
 /* ------------------ INIT ------------------ */
 checkServerStatus();
 loadUsers();

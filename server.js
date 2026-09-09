@@ -6,6 +6,7 @@ const { admin, db } = require('./firebase-server');
 require('dotenv').config();
 
 const app = express();
+const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString } = require('./ascend-utils');
 
 /* ------------------ CORS ------------------ */
 // Must be first
@@ -1214,6 +1215,105 @@ app.get('/history', async (req, res) => {
 });
 
 /* ------------------ INVENTORY ------------------ */
+app.post('/ascend', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { cardKey } = req.body;
+
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
+  }
+
+  if (!cardKey || typeof cardKey !== 'string' || !cardKey.trim()) {
+    return res.status(400).send('Select a card to ascend');
+  }
+
+  const cleanCardKey = path.basename(cardKey.trim());
+  const tierInfo = getAscendTierInfo(cleanCardKey);
+
+  if (!tierInfo || !tierInfo.canAscend) {
+    return res.status(400).send('This card cannot be ascended');
+  }
+
+  try {
+    const itemsRef = db.collection('items');
+    const snapshot = await itemsRef
+      .where('buyerId', '==', requesterId)
+      .where('sold', '==', true)
+      .get();
+
+    const matchingCards = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => item.itemType !== 'pack' && item.listedForSale !== true)
+      .filter(item => {
+        const imageName = item.imageUrl ? path.basename(item.imageUrl) : '';
+        return imageName === cleanCardKey || normalizeAscendString(imageName) === normalizeAscendString(cleanCardKey);
+      });
+
+    if (matchingCards.length < 3) {
+      return res.status(400).send('You need at least 3 copies of this card to ascend');
+    }
+
+    const selectedCards = matchingCards.slice(0, 3);
+    const packName = tierInfo.packName;
+    const packColor = {
+      'rare-bronze': '#b07600',
+      'silver': '#b0bec5',
+      'rare-silver': '#8ca1b5',
+      'gold': '#d7b737',
+      'rare-gold': '#e5b024',
+      'platinum': '#dfe7f3',
+      'lightning': '#6ad6ff'
+    }[tierInfo.nextTier] || '#667eea';
+
+    const imagesDir = path.join(__dirname, 'public', 'images');
+    const nextTierCards = fs.existsSync(imagesDir)
+      ? fs.readdirSync(imagesDir)
+          .filter(file => ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(file).toLowerCase()))
+          .filter(file => normalizeAscendString(file).includes(normalizeAscendString(tierInfo.nextTier)))
+      : [];
+
+    const packRef = db.collection('packs').doc();
+    await db.runTransaction(async transaction => {
+      const packDoc = await transaction.get(packRef);
+      if (packDoc.exists) {
+        throw new Error('Pack creation collision');
+      }
+
+      transaction.set(packRef, {
+        name: packName,
+        color: packColor,
+        cardIds: nextTierCards.length > 0 ? nextTierCards : [cleanCardKey],
+        createdBy: requesterId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      selectedCards.forEach(card => {
+        transaction.delete(db.collection('items').doc(card.id));
+      });
+
+      transaction.set(db.collection('items').doc(), {
+        name: packName,
+        itemType: 'pack',
+        packId: packRef.id,
+        packColor: packColor,
+        price: 0,
+        sellerId: requesterId,
+        sold: true,
+        buyerId: requesterId,
+        purchasedAt: new Date(),
+        sourceItemId: null,
+        createdAt: new Date()
+      });
+    });
+
+    res.json({ success: true, packName, nextTier: tierInfo.nextTier });
+  } catch (error) {
+    console.error('Error ascending card:', error);
+    res.status(500).send(error.message || 'Could not ascend card');
+  }
+});
+
 app.get('/inventory', async (req, res) => {
   // Require the requester to identify themselves via the X-User-Id header.
   // This prevents callers from requesting other users' inventories.

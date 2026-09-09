@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<script src="ascend-utils.js"></script>
 
 <div class="container">
   <header class="header">
@@ -168,9 +169,23 @@
 
     <!-- Inventory Section -->
     <section id="inventorySection" class="card inventory-section" style="display: none;">
-      <h2>🎒 Inventory</h2>
+      <div class="inventory-header-row">
+        <h2>🎒 Inventory</h2>
+        <button id="openAscendMenuBtn" onclick="openAscendMenu()" class="btn btn-primary">Ascend</button>
+      </div>
       <ul id="inventoryItems" class="items-list"></ul>
     </section>
+
+    <div id="ascendModal" class="ascend-modal" hidden>
+      <div class="ascend-modal-card" role="dialog" aria-modal="true" aria-labelledby="ascendModalTitle">
+        <div class="ascend-modal-header">
+          <h3 id="ascendModalTitle">Ascend cards</h3>
+          <button type="button" class="btn btn-danger" onclick="closeAscendModal()">Close</button>
+        </div>
+        <p class="pack-help">Select a card with 3 or more copies. Three copies will be consumed to create one pack from the next tier.</p>
+        <div id="ascendOptions" class="ascend-options"></div>
+      </div>
+    </div>
 
     <!-- History Section -->
     <section id="historySection" class="card history-section" style="display: none;">
