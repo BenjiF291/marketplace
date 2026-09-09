@@ -6,7 +6,7 @@ const { admin, db } = require('./firebase-server');
 require('dotenv').config();
 
 const app = express();
-const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString } = require('./ascend-utils');
+const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
 
 /* ------------------ CORS ------------------ */
 // Must be first
@@ -1228,7 +1228,8 @@ app.post('/ascend', async (req, res) => {
   }
 
   const cleanCardKey = path.basename(cardKey.trim());
-  const tierInfo = getAscendTierInfo(cleanCardKey);
+  const groupKey = canonicalizeCardKey(cleanCardKey);
+  const tierInfo = getAscendTierInfo(groupKey);
 
   if (!tierInfo || !tierInfo.canAscend) {
     return res.status(400).send('This card cannot be ascended');
@@ -1246,7 +1247,7 @@ app.post('/ascend', async (req, res) => {
       .filter(item => item.itemType !== 'pack' && item.listedForSale !== true)
       .filter(item => {
         const imageName = item.imageUrl ? path.basename(item.imageUrl) : '';
-        return imageName === cleanCardKey || normalizeAscendString(imageName) === normalizeAscendString(cleanCardKey);
+        return canonicalizeCardKey(imageName) === groupKey;
       });
 
     if (matchingCards.length < 3) {

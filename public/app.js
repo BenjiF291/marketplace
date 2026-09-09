@@ -1597,7 +1597,7 @@ async function openAscendMenu() {
       const groupKey = getCardGroupKey(item);
       if (!key || !groupKey) return;
 
-      const existing = grouped.get(groupKey) || { key, items: [] };
+      const existing = grouped.get(groupKey) || { key: groupKey, items: [] };
       existing.items.push(item);
       grouped.set(groupKey, existing);
     });
@@ -1607,7 +1607,8 @@ async function openAscendMenu() {
         const info = (window.AscendUtils || window.ascendUtils || {}).getAscendTierInfo?.(key);
         if (!info || !info.canAscend || items.length < 3) return null;
         const imageUrl = items[0].imageUrl || `/images/${key}`;
-        return { key, count: items.length, imageUrl, info };
+        const tierLabel = info.currentTier ? (window.AscendUtils || window.ascendUtils || {}).formatTierLabel?.(info.currentTier) || info.currentTier : key;
+        return { key, label: tierLabel, count: items.length, imageUrl, info };
       })
       .filter(Boolean)
       .sort((a, b) => a.key.localeCompare(b.key));
@@ -1630,8 +1631,8 @@ async function openAscendMenu() {
       option.type = 'button';
       option.className = 'ascend-option';
       option.innerHTML = `
-        <img src="${entry.imageUrl}" alt="${entry.key}">
-        <h4>${entry.key}</h4>
+        <img src="${entry.imageUrl}" alt="${entry.label}">
+        <h4>${entry.label}</h4>
         <p>${entry.count} copies · ${entry.info.nextPackName} Pack</p>
       `;
       option.addEventListener('click', () => confirmAscend(entry));

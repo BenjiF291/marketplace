@@ -8,10 +8,6 @@ const ascendUtils = {
   normalizeAscendString
 };
 
-if (typeof window !== 'undefined') {
-  window.AscendUtils = ascendUtils;
-}
-
 function normalizeAscendString(value) {
   if (value === null || value === undefined) return '';
   const raw = String(value)
@@ -28,14 +24,11 @@ function canonicalizeCardKey(cardName) {
   const normalized = normalizeAscendString(cardName);
   if (!normalized) return '';
 
-  const tierInfo = getAscendTierInfo(normalized);
-  if (tierInfo && tierInfo.currentTier) {
-    return tierInfo.currentTier;
-  }
+  const tier = getAscendTierFromCardName(normalized);
+  if (tier) return tier;
 
-  const pieces = normalized.split('-');
-  if (pieces.length <= 2) return normalized;
-  return pieces.slice(0, -1).join('-');
+  const withoutZzPrefix = normalized.replace(/^zz\d+-/, '');
+  return withoutZzPrefix || normalized;
 }
 
 function getAscendTierFromCardName(cardName) {
@@ -101,7 +94,10 @@ function getAscendTierInfo(cardName) {
   };
 }
 
-module.exports = {
-  ...ascendUtils,
-  canonicalizeCardKey
-};
+ascendUtils.canonicalizeCardKey = canonicalizeCardKey;
+
+if (typeof window !== 'undefined') {
+  window.AscendUtils = ascendUtils;
+}
+
+module.exports = ascendUtils;

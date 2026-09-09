@@ -8,6 +8,7 @@ assert.strictEqual(getAscendTierFromCardName('Ultra_boris'), 'ultra');
 assert.strictEqual(getAscendTierFromCardName('zz2-Lightning_naomi'), 'lightning');
 assert.strictEqual(require('./ascend-utils').canonicalizeCardKey('zz5-Bronze_Effie.png'), 'bronze');
 assert.strictEqual(require('./ascend-utils').canonicalizeCardKey('Bronze_Mats.png'), 'bronze');
+assert.strictEqual(require('./ascend-utils').canonicalizeCardKey('Rare-bronze_liza.png'), 'rare-bronze');
 
 assert.deepStrictEqual(getAscendTierInfo('bronze_ari'), {
   currentTier: 'bronze',
