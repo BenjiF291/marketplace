@@ -292,36 +292,27 @@ async function loadTradeOnlineUsers() {
 }
 
 async function loadTradeInventoryChoices() {
-  const choices = document.getElementById('tradeInventoryChoices');
-  if (!choices) return;
+  const select = document.getElementById('tradeCardSelect');
+  if (!select) return;
   try {
     const response = await tradeFetch('/inventory');
     if (!response.ok) throw new Error(await response.text());
     const inventory = await response.json();
     tradeInventoryItems = inventory.filter(item => ['card', 'battle-card'].includes(item.itemType));
-    choices.innerHTML = '';
+    select.innerHTML = '<option value="">Select a card</option>';
     if (!tradeInventoryItems.length) {
-      choices.textContent = 'No cards available to trade.';
+      select.innerHTML = '<option value="">No cards available</option>';
       return;
     }
     tradeInventoryItems.forEach(item => {
-      const label = document.createElement('label');
-      label.className = 'trade-card-choice';
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = item.id;
-      checkbox.dataset.tradeItem = 'true';
-      const image = document.createElement('img');
-      image.src = item.imageUrl || '';
-      image.alt = item.name || 'Card';
-      const name = document.createElement('span');
-      name.textContent = item.name || 'Card';
-      label.append(checkbox, image, name);
-      choices.appendChild(label);
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.name || 'Card';
+      select.appendChild(option);
     });
   } catch (error) {
     console.error('Trade inventory error:', error);
-    choices.textContent = 'Could not load your cards.';
+    select.innerHTML = '<option value="">Could not load cards</option>';
   }
 }
 
@@ -375,8 +366,15 @@ function renderTradeSession(session) {
   document.getElementById('tradeOtherName').textContent = partnerName;
   const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
   const otherOffer = session.offers[partnerId] || { money: 0, itemIds: [] };
-  document.getElementById('tradeMoney').value = ownOffer.money || 0;
-  document.querySelectorAll('[data-trade-item="true"]').forEach(input => { input.checked = ownOffer.itemIds.includes(input.value); });
+  document.getElementById('tradeOwnMoney').textContent = `${ownOffer.money || 0} Footy`;
+  const ownCards = document.getElementById('tradeOwnCards');
+  ownCards.innerHTML = '';
+  (ownOffer.items || []).forEach(item => {
+    const entry = document.createElement('li');
+    entry.textContent = item.name || 'Card';
+    ownCards.appendChild(entry);
+  });
+  if (!ownOffer.items?.length) ownCards.innerHTML = '<li>No cards offered</li>';
   document.getElementById('tradeOtherMoney').textContent = `${otherOffer.money || 0} Footy`;
   const otherCards = document.getElementById('tradeOtherCards');
   otherCards.innerHTML = '';
@@ -388,27 +386,79 @@ function renderTradeSession(session) {
   if (!otherOffer.items?.length) otherCards.innerHTML = '<li>No cards offered</li>';
   const ownAgreed = session.agreed?.[currentUserId] === true;
   const otherAgreed = session.agreed?.[partnerId] === true;
+  const ownAgreement = document.getElementById('tradeOwnAgreement');
+  ownAgreement.textContent = ownAgreed ? 'Agreed' : 'Not agreed';
+  ownAgreement.classList.toggle('is-agreed', ownAgreed);
   document.getElementById('tradeAgreementStatus').textContent = session.status === 'completed'
     ? 'Trade completed.'
     : `${ownAgreed ? 'You agreed' : 'You have not agreed'} · ${otherAgreed ? `${partnerName} agreed` : `${partnerName} has not agreed`}`;
   document.getElementById('tradeAgreeButton').textContent = ownAgreed ? 'Agreed' : 'Agree';
   document.getElementById('tradeAgreeButton').disabled = ownAgreed || session.status !== 'open';
   status.textContent = session.status === 'completed' ? 'The trade completed successfully.' : 'Both users must agree before anything moves.';
+  if (session.status === 'completed') finishTrade(session);
 }
 
-async function updateTradeOffer() {
+let tradeEditorType = null;
+
+function openTradeOfferEditor(type) {
+  tradeEditorType = type;
+  const editor = document.getElementById('tradeOfferEditor');
+  const moneyEditor = document.getElementById('tradeMoneyEditor');
+  const cardEditor = document.getElementById('tradeCardEditor');
+  document.getElementById('tradeEditorTitle').textContent = type === 'money' ? 'Offer Footy' : 'Offer Card';
+  moneyEditor.hidden = type !== 'money';
+  cardEditor.hidden = type !== 'card';
+  if (type === 'money') document.getElementById('tradeMoneyInput').value = '0';
+  if (type === 'card') document.getElementById('tradeCardSelect').value = '';
+  editor.hidden = false;
+}
+
+function closeTradeOfferEditor() {
+  document.getElementById('tradeOfferEditor').hidden = true;
+  tradeEditorType = null;
+}
+
+async function submitTradeOfferEdit() {
   if (!tradeSessionId) return;
-  const itemIds = [...document.querySelectorAll('[data-trade-item="true"]:checked')].map(input => input.value);
+  const sessionResponse = await tradeFetch(`/trade/sessions/${tradeSessionId}`);
+  if (!sessionResponse.ok) return;
+  const session = await sessionResponse.json();
+  const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
+  let money = Number(ownOffer.money) || 0;
+  let itemIds = [...(ownOffer.itemIds || [])];
+  if (tradeEditorType === 'money') {
+    money = Number(document.getElementById('tradeMoneyInput').value);
+    if (!Number.isFinite(money) || money < 0) return alert('Enter a valid Footy amount.');
+  } else {
+    const cardId = document.getElementById('tradeCardSelect').value;
+    if (!cardId) return alert('Choose a card first.');
+    if (!itemIds.includes(cardId)) itemIds.push(cardId);
+  }
   try {
     const response = await tradeFetch(`/trade/sessions/${tradeSessionId}/offer`, {
       method: 'POST',
-      body: JSON.stringify({ money: Number(document.getElementById('tradeMoney').value) || 0, itemIds })
+      body: JSON.stringify({ money, itemIds })
     });
     if (!response.ok) throw new Error(await response.text());
-    renderTradeSession(await response.json());
+    closeTradeOfferEditor();
+    await loadTradeSession();
   } catch (error) {
     alert(error.message || 'Could not update offer');
   }
+}
+
+function finishTrade(session) {
+  if (!tradeSessionId) return;
+  const completedSessionId = tradeSessionId;
+  tradeSessionId = null;
+  stopTradePolling();
+  const toast = document.getElementById('tradeToast');
+  toast.textContent = 'Trade completed successfully. Your cards and Footy have been exchanged.';
+  toast.classList.add('is-visible');
+  setTimeout(() => {
+    toast.classList.remove('is-visible');
+    if (currentView === 'trade' && completedSessionId) showSection('inventory');
+  }, 1800);
 }
 
 async function agreeToTrade() {
