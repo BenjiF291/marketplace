@@ -546,8 +546,8 @@ app.get('/card-images', async (req, res) => {
 /* ------------------ ASCEND TIERS ------------------ */
 app.get('/ascend-tier-config', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  if (!requesterId || !(await userIsAdmin(requesterId))) {
-    return res.status(403).send('Forbidden');
+  if (!requesterId || typeof requesterId !== 'string') {
+    return res.status(401).send('Missing X-User-Id header');
   }
 
   try {
