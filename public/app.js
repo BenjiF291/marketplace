@@ -1569,6 +1569,18 @@ function getCardKeyFromItem(item) {
   return String(item.name || '').trim();
 }
 
+function getCardGroupKey(item) {
+  const fileName = getCardKeyFromItem(item);
+  if (!fileName) return '';
+
+  if (typeof window !== 'undefined' && window.AscendUtils && typeof window.AscendUtils.canonicalizeCardKey === 'function') {
+    const canonical = window.AscendUtils.canonicalizeCardKey(fileName);
+    if (canonical) return canonical;
+  }
+
+  return fileName;
+}
+
 async function openAscendMenu() {
   try {
     const res = await fetch(`${API_URL}/inventory`, {
@@ -1582,14 +1594,16 @@ async function openAscendMenu() {
     inventory.forEach(item => {
       if (item.itemType === 'pack') return;
       const key = getCardKeyFromItem(item);
-      if (!key) return;
-      const existing = grouped.get(key) || [];
-      existing.push(item);
-      grouped.set(key, existing);
+      const groupKey = getCardGroupKey(item);
+      if (!key || !groupKey) return;
+
+      const existing = grouped.get(groupKey) || { key, items: [] };
+      existing.items.push(item);
+      grouped.set(groupKey, existing);
     });
 
-    const eligible = [...grouped.entries()]
-      .map(([key, items]) => {
+    const eligible = [...grouped.values()]
+      .map(({ key, items }) => {
         const info = (window.AscendUtils || window.ascendUtils || {}).getAscendTierInfo?.(key);
         if (!info || !info.canAscend || items.length < 3) return null;
         const imageUrl = items[0].imageUrl || `/images/${key}`;

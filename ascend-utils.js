@@ -24,6 +24,20 @@ function normalizeAscendString(value) {
     .replace(/[-_\s]+/g, '-');
 }
 
+function canonicalizeCardKey(cardName) {
+  const normalized = normalizeAscendString(cardName);
+  if (!normalized) return '';
+
+  const tierInfo = getAscendTierInfo(normalized);
+  if (tierInfo && tierInfo.currentTier) {
+    return tierInfo.currentTier;
+  }
+
+  const pieces = normalized.split('-');
+  if (pieces.length <= 2) return normalized;
+  return pieces.slice(0, -1).join('-');
+}
+
 function getAscendTierFromCardName(cardName) {
   if (!cardName) return null;
 
@@ -87,4 +101,7 @@ function getAscendTierInfo(cardName) {
   };
 }
 
-module.exports = ascendUtils;
+module.exports = {
+  ...ascendUtils,
+  canonicalizeCardKey
+};
