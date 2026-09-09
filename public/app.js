@@ -37,9 +37,9 @@ function renderBattleTeeth(side, count, holder) {
     const tooth = document.createElement('span');
     tooth.className = 'battle-tooth';
     if (side === 'top' || side === 'bottom') {
-      tooth.style.left = `${((i + 0.5) / total) * 100}%`;
+      tooth.style.left = `${((i + 0.5) / Math.max(1, total)) * 100}%`;
     } else {
-      tooth.style.top = `${((i + 0.5) / total) * 100}%`;
+      tooth.style.top = `${((i + 0.5) / Math.max(1, total)) * 100}%`;
     }
     holder.appendChild(tooth);
   }
@@ -354,6 +354,11 @@ function showSection(section) {
 
     loadVipInfo();
   } else if (section === 'battle') {
+    if (!currentUserIsAdmin) {
+      alert('Battle is currently only available to admins.');
+      return;
+    }
+
     const userSection = document.querySelector('.user-section');
     const transferSection = document.querySelector('.transfer-section');
     const sellSection = document.querySelector('.sell-section');
@@ -361,7 +366,7 @@ function showSection(section) {
     if (userSection) userSection.style.display = 'none';
     if (transferSection) transferSection.style.display = 'none';
     if (sellSection) sellSection.style.display = 'none';
-    if (adminCard) adminCard.style.display = currentUserIsAdmin ? 'block' : 'none';
+    if (adminCard) adminCard.style.display = 'none';
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
@@ -393,7 +398,7 @@ function showSection(section) {
     if (userSection) userSection.style.display = 'none';
     if (transferSection) transferSection.style.display = 'none';
     if (sellSection) sellSection.style.display = 'none';
-    if (adminCard) adminCard.style.display = 'block';
+    if (adminCard) adminCard.style.display = 'none';
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
@@ -908,10 +913,12 @@ async function loadUsers() {
 
     const battleTab = document.getElementById('battleTab');
     const battleManagerTab = document.getElementById('battleManagerTab');
-    if (battleTab) battleTab.style.display = 'inline-flex';
+    if (battleTab) battleTab.style.display = currentUserIsAdmin ? 'inline-flex' : 'none';
     if (battleManagerTab) battleManagerTab.style.display = currentUserIsAdmin ? 'inline-flex' : 'none';
 
     if (currentUserIsAdmin) {
+      bindBattleCardPreviewInputs();
+      updateBattleCardPreview();
       populateGrantControls(users);
       populateAdminAccountViewer(users);
       loadCardOptions();

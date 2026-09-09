@@ -240,13 +240,13 @@ body {
 
 .battle-teeth-bottom {
   bottom: -14px;
-  transform: rotate(180deg);
 }
 
 .battle-teeth-top .battle-tooth,
 .battle-teeth-bottom .battle-tooth {
   top: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .battle-teeth-left,
@@ -258,18 +258,37 @@ body {
 
 .battle-teeth-left {
   left: -14px;
-  transform: rotate(-90deg);
 }
 
 .battle-teeth-right {
   right: -14px;
-  transform: rotate(90deg);
 }
 
 .battle-teeth-left .battle-tooth,
 .battle-teeth-right .battle-tooth {
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
+}
+
+.battle-teeth-top .battle-tooth {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
+}
+
+.battle-teeth-bottom .battle-tooth {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 8px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 0;
+}
+
+.battle-teeth-left .battle-tooth,
+.battle-teeth-right .battle-tooth {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
 }
 
 .battle-game-layout {

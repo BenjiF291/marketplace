@@ -90,10 +90,22 @@ async function awardLinkedBattleCard(userId, normalCardImage) {
     if (snapshot.empty) return null;
 
     const battleCard = snapshot.docs[0].data();
+    const battleCardId = snapshot.docs[0].id;
+
+    const existingSnapshot = await db.collection('items')
+      .where('buyerId', '==', userId)
+      .where('battleCardId', '==', battleCardId)
+      .limit(1)
+      .get();
+
+    if (!existingSnapshot.empty) {
+      return existingSnapshot.docs[0].id;
+    }
+
     const battleItem = {
       name: battleCard.name,
       itemType: 'battle-card',
-      battleCardId: snapshot.docs[0].id,
+      battleCardId,
       linkedCardImage: normalCardImage,
       imageUrl: `/images/${normalCardImage}`,
       price: 0,
@@ -386,30 +398,6 @@ app.post('/admin/battle-cards', async (req, res) => {
       ...card,
       createdAt: new Date()
     });
-
-    if (card.linkedCardImage) {
-      const battleItem = {
-        name: card.name,
-        itemType: 'battle-card',
-        battleCardId: cardRef.id,
-        linkedCardImage: card.linkedCardImage,
-        imageUrl: `/images/${card.linkedCardImage}`,
-        price: 0,
-        sellerId: 'system',
-        sold: true,
-        buyerId: requesterId,
-        purchasedAt: new Date(),
-        sourceItemId: null,
-        createdAt: new Date(),
-        isBattleCard: true,
-        averageScore: Number(card.averageScore) || 0,
-        top: Number(card.top) || 0,
-        right: Number(card.right) || 0,
-        bottom: Number(card.bottom) || 0,
-        left: Number(card.left) || 0
-      };
-      await db.collection('items').add(battleItem);
-    }
 
     res.status(201).json({ id: cardRef.id, card });
   } catch (error) {
