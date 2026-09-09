@@ -350,7 +350,7 @@
           </div>
         </div>
       </div>
-      <div id="tradeOfferEditor" class="trade-offer-editor" hidden>
+      <div id="tradeOfferEditor" class="trade-offer-editor" hidden onclick="if (event.target === this) closeTradeOfferEditor();">
         <div class="trade-editor-card">
           <div class="trade-room-header">
             <h3 id="tradeEditorTitle">Offer Footy</h3>
@@ -364,7 +364,10 @@
             <label class="input-label" for="tradeCardSelect">Choose a card</label>
             <select id="tradeCardSelect" class="input-field"></select>
           </div>
-          <button type="button" onclick="submitTradeOfferEdit()" class="btn btn-primary">Add to offer</button>
+          <div class="trade-editor-actions">
+            <button type="button" onclick="closeTradeOfferEditor()" class="btn btn-danger">Cancel</button>
+            <button type="button" onclick="submitTradeOfferEdit()" class="btn btn-primary">Save offer</button>
+          </div>
         </div>
       </div>
       <div id="tradeToast" class="trade-toast" role="status" aria-live="polite"></div>

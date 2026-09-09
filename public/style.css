@@ -580,6 +580,11 @@ body {
   margin: 18px 0;
 }
 
+.trade-editor-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .trade-toast {
   position: fixed;
   right: 24px;

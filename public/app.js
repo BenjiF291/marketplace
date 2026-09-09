@@ -420,21 +420,22 @@ function closeTradeOfferEditor() {
 
 async function submitTradeOfferEdit() {
   if (!tradeSessionId) return;
-  const sessionResponse = await tradeFetch(`/trade/sessions/${tradeSessionId}`);
-  if (!sessionResponse.ok) return;
-  const session = await sessionResponse.json();
-  const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
-  let money = Number(ownOffer.money) || 0;
-  let itemIds = [...(ownOffer.itemIds || [])];
-  if (tradeEditorType === 'money') {
-    money = Number(document.getElementById('tradeMoneyInput').value);
-    if (!Number.isFinite(money) || money < 0) return alert('Enter a valid Footy amount.');
-  } else {
-    const cardId = document.getElementById('tradeCardSelect').value;
-    if (!cardId) return alert('Choose a card first.');
-    if (!itemIds.includes(cardId)) itemIds.push(cardId);
-  }
   try {
+    const sessionResponse = await tradeFetch(`/trade/sessions/${tradeSessionId}`);
+    if (!sessionResponse.ok) throw new Error(await sessionResponse.text());
+    const session = await sessionResponse.json();
+    const ownOffer = session.offers[currentUserId] || { money: 0, itemIds: [] };
+    let money = Number(ownOffer.money) || 0;
+    let itemIds = [...(ownOffer.itemIds || [])];
+    if (tradeEditorType === 'money') {
+      money = Number(document.getElementById('tradeMoneyInput').value);
+      if (!Number.isFinite(money) || money < 0) throw new Error('Enter a valid Footy amount.');
+    } else {
+      const cardId = document.getElementById('tradeCardSelect').value;
+      if (!cardId) throw new Error('Choose a card first.');
+      if (!itemIds.includes(cardId)) itemIds.push(cardId);
+    }
+
     const response = await tradeFetch(`/trade/sessions/${tradeSessionId}/offer`, {
       method: 'POST',
       body: JSON.stringify({ money, itemIds })
@@ -446,6 +447,12 @@ async function submitTradeOfferEdit() {
     alert(error.message || 'Could not update offer');
   }
 }
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !document.getElementById('tradeOfferEditor')?.hidden) {
+    closeTradeOfferEditor();
+  }
+});
 
 function finishTrade(session) {
   if (!tradeSessionId) return;
@@ -490,6 +497,8 @@ async function cancelTrade() {
 
 function showSection(section) {
   currentView = section;
+
+  if (section !== 'trade') closeTradeOfferEditor();
 
   const marketplaceSection = document.getElementById('marketplaceSection');
   const inventorySection = document.getElementById('inventorySection');
