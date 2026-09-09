@@ -26,7 +26,8 @@
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
-    <button id="battleTab" class="tab-button" onclick="showSection('battle')" style="display: none;">Battle</button>
+    <button id="battleTab" class="tab-button" onclick="showSection('battle')">Battle</button>
+    <button id="battleManagerTab" class="tab-button" onclick="showSection('battle-manager')" style="display: none;">BCM</button>
   </div>
 
   <div class="main-grid">
@@ -194,8 +195,39 @@
       <ul id="items" class="items-list"></ul>
     </section>
 
+    <section id="battleGameSection" class="card battle-game-section" style="display: none;">
+      <h2>⚔️ Battle</h2>
+      <div class="battle-game-layout">
+        <div class="battle-inventory-panel">
+          <h3>Your battle inventory</h3>
+          <ul id="battleInventoryItems" class="battle-inventory-list"></ul>
+        </div>
+
+        <div class="battle-board-panel">
+          <div class="battle-board" aria-label="Battle board">
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+            <div class="battle-board-cell"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="battleSection" class="card battle-section" style="display: none;">
-      <h2>⚔️ Battle Cards</h2>
+      <h2>🧩 BCM</h2>
       <div class="form-group">
         <label class="input-label" for="battleCardName">Card name</label>
         <input id="battleCardName" class="input-field" maxlength="80" placeholder="Example: Wolf Fang">
@@ -226,16 +258,12 @@
         </div>
 
         <div id="battleCardVisualPreview" class="battle-card-preview" aria-live="polite">
-          <div class="battle-card-header">
-            <span id="battlePreviewName">Card preview</span>
-            <span id="battlePreviewAvg">0</span>
-          </div>
-          <div class="battle-card-center">
-            <span class="battle-score battle-top" id="battlePreviewTop">0</span>
-            <span class="battle-score battle-right" id="battlePreviewRight">0</span>
-            <span class="battle-score battle-bottom" id="battlePreviewBottom">0</span>
-            <span class="battle-score battle-left" id="battlePreviewLeft">0</span>
-          </div>
+          <span class="battle-score battle-top" id="battlePreviewTop">0</span>
+          <span class="battle-score battle-right" id="battlePreviewRight">0</span>
+          <span class="battle-score battle-bottom" id="battlePreviewBottom">0</span>
+          <span class="battle-score battle-left" id="battlePreviewLeft">0</span>
+          <span class="battle-card-average" id="battlePreviewAvg">0</span>
+          <span class="battle-card-name" id="battlePreviewName">Card preview</span>
         </div>
 
         <button onclick="createBattleCard()" class="btn btn-primary">Create Battle Card</button>

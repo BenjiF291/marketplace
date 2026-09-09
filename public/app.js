@@ -198,7 +198,9 @@ function showSection(section) {
   const spinTab = document.getElementById('spinTab');
   const vipTab = document.getElementById('vipTab');
   const battleTab = document.getElementById('battleTab');
+  const battleManagerTab = document.getElementById('battleManagerTab');
   const vipSection = document.getElementById('vipSection');
+  const battleGameSection = document.getElementById('battleGameSection');
   const battleSection = document.getElementById('battleSection');
 
   if (section === 'inventory') {
@@ -220,6 +222,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     inventorySection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
 
     // Mark tab active state
@@ -229,6 +232,7 @@ function showSection(section) {
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
 
     // Ensure inventory scrolls into view on mobile
     inventorySection.scrollIntoView({ behavior: 'smooth' });
@@ -250,6 +254,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'block';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
@@ -258,6 +263,7 @@ function showSection(section) {
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
 
     if (historySection) historySection.scrollIntoView({ behavior: 'smooth' });
     loadHistory();
@@ -278,6 +284,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'block';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
@@ -286,6 +293,7 @@ function showSection(section) {
     spinTab.classList.add('active');
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
 
     // Ensure spin section scrolls into view on mobile
     spinSection.scrollIntoView({ behavior: 'smooth' });
@@ -308,6 +316,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'block';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
 
     marketTab.classList.remove('active');
@@ -316,14 +325,42 @@ function showSection(section) {
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.add('active');
     if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
 
     // Ensure vip section scrolls into view on mobile
     if (vipSection) vipSection.scrollIntoView({ behavior: 'smooth' });
 
     loadVipInfo();
   } else if (section === 'battle') {
+    const userSection = document.querySelector('.user-section');
+    const transferSection = document.querySelector('.transfer-section');
+    const sellSection = document.querySelector('.sell-section');
+    const adminCard = document.getElementById('adminSection');
+    if (userSection) userSection.style.display = 'none';
+    if (transferSection) transferSection.style.display = 'none';
+    if (sellSection) sellSection.style.display = 'none';
+    if (adminCard) adminCard.style.display = currentUserIsAdmin ? 'block' : 'none';
+
+    marketplaceSection.style.display = 'none';
+    inventorySection.style.display = 'none';
+    if (historySection) historySection.style.display = 'none';
+    spinSection.style.display = 'none';
+    if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'block';
+    if (battleSection) battleSection.style.display = 'none';
+
+    marketTab.classList.remove('active');
+    inventoryTab.classList.remove('active');
+    if (historyTab) historyTab.classList.remove('active');
+    spinTab.classList.remove('active');
+    if (vipTab) vipTab.classList.remove('active');
+    if (battleTab) battleTab.classList.add('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
+
+    loadBattleInventory();
+  } else if (section === 'battle-manager') {
     if (!currentUserIsAdmin) {
-      alert('Battle is currently admin-only.');
+      alert('Only admins can access BCM.');
       return;
     }
 
@@ -334,13 +371,14 @@ function showSection(section) {
     if (userSection) userSection.style.display = 'none';
     if (transferSection) transferSection.style.display = 'none';
     if (sellSection) sellSection.style.display = 'none';
-    if (adminCard) adminCard.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'block';
 
     marketplaceSection.style.display = 'none';
     inventorySection.style.display = 'none';
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'block';
 
     marketTab.classList.remove('active');
@@ -348,7 +386,8 @@ function showSection(section) {
     if (historyTab) historyTab.classList.remove('active');
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
-    if (battleTab) battleTab.classList.add('active');
+    if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.add('active');
 
     loadBattleCards();
   } else {
@@ -368,6 +407,7 @@ function showSection(section) {
     if (historySection) historySection.style.display = 'none';
     spinSection.style.display = 'none';
     if (vipSection) vipSection.style.display = 'none';
+    if (battleGameSection) battleGameSection.style.display = 'none';
     if (battleSection) battleSection.style.display = 'none';
     marketTab.classList.add('active');
     inventoryTab.classList.remove('active');
@@ -375,7 +415,31 @@ function showSection(section) {
     spinTab.classList.remove('active');
     if (vipTab) vipTab.classList.remove('active');
     if (battleTab) battleTab.classList.remove('active');
+    if (battleManagerTab) battleManagerTab.classList.remove('active');
   }
+}
+
+function loadBattleInventory() {
+  const list = document.getElementById('battleInventoryItems');
+  if (!list) return;
+
+  list.innerHTML = '<li>Loading battle cards...</li>';
+
+  const battleItems = Array.isArray(window.battleInventoryCache) ? window.battleInventoryCache : [];
+  if (battleItems.length === 0) {
+    list.innerHTML = '<li>No battle cards in your inventory.</li>';
+    return;
+  }
+
+  list.innerHTML = '';
+  battleItems.forEach(item => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <img src="${item.imageUrl || '/images/unknown.png'}" alt="${item.name || 'Battle card'}" class="item-image" style="width:52px;height:52px;">
+      <span>${item.name || 'Battle card'}</span>
+    `;
+    list.appendChild(li);
+  });
 }
 
 /** Handle VIP tab display */
@@ -809,9 +873,12 @@ async function loadUsers() {
       adminSection.style.display = currentUserIsAdmin ? 'block' : 'none';
     }
 
+    const battleTab = document.getElementById('battleTab');
+    const battleManagerTab = document.getElementById('battleManagerTab');
+    if (battleTab) battleTab.style.display = 'inline-flex';
+    if (battleManagerTab) battleManagerTab.style.display = currentUserIsAdmin ? 'inline-flex' : 'none';
+
     if (currentUserIsAdmin) {
-      const battleTab = document.getElementById('battleTab');
-      if (battleTab) battleTab.style.display = 'inline-flex';
       populateGrantControls(users);
       populateAdminAccountViewer(users);
       loadCardOptions();
@@ -819,9 +886,6 @@ async function loadUsers() {
       loadAscendTierConfig();
       loadPlannedMarketplaceListings();
       loadBattleCards();
-    } else {
-      const battleTab = document.getElementById('battleTab');
-      if (battleTab) battleTab.style.display = 'none';
     }
 
     populateTransferRecipients(users);
