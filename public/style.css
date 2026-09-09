@@ -183,13 +183,12 @@ body {
   box-shadow: 0 10px 20px rgba(16,24,39,0.2);
   border: 3px solid #d1d9ff;
   margin: 8px auto 0;
-  overflow: hidden;
 }
 
 .battle-card-average {
   position: absolute;
   left: 50%;
-  top: 26%;
+  top: 24%;
   transform: translate(-50%, -50%);
   font-size: 0.8rem;
   font-weight: 800;
@@ -200,7 +199,7 @@ body {
 .battle-card-name {
   position: absolute;
   left: 50%;
-  top: 52%;
+  top: 54%;
   transform: translate(-50%, -50%);
   font-size: 1rem;
   font-weight: 800;
@@ -209,44 +208,68 @@ body {
   line-height: 1.2;
 }
 
-.battle-score {
+.battle-teeth {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.18);
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: white;
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
-.battle-top {
-  top: 8px;
+.battle-tooth {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.9);
+  margin-left: -4px;
+  margin-top: -4px;
+}
+
+.battle-teeth-top,
+.battle-teeth-bottom {
+  left: 0;
+  right: 0;
+  height: 18px;
+}
+
+.battle-teeth-top {
+  top: -14px;
+}
+
+.battle-teeth-bottom {
+  bottom: -14px;
+  transform: rotate(180deg);
+}
+
+.battle-teeth-top .battle-tooth,
+.battle-teeth-bottom .battle-tooth {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.battle-teeth-left,
+.battle-teeth-right {
+  top: 0;
+  bottom: 0;
+  width: 18px;
+}
+
+.battle-teeth-left {
+  left: -14px;
+  transform: rotate(-90deg);
+}
+
+.battle-teeth-right {
+  right: -14px;
+  transform: rotate(90deg);
+}
+
+.battle-teeth-left .battle-tooth,
+.battle-teeth-right .battle-tooth {
   left: 50%;
   transform: translateX(-50%);
-}
-
-.battle-right {
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%) rotate(90deg);
-}
-
-.battle-bottom {
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%) rotate(180deg);
-}
-
-.battle-left {
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
 }
 
 .battle-game-layout {

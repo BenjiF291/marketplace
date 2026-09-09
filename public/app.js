@@ -24,13 +24,34 @@ let availableCardImages = [];
 let savedPacks = [];
 let inventorySellMode = false;
 
+function clampBattleToothCount(value) {
+  const numeric = Number(value) || 0;
+  return Math.min(10, Math.max(0, Math.trunc(numeric)));
+}
+
+function renderBattleTeeth(side, count, holder) {
+  if (!holder) return;
+  holder.innerHTML = '';
+  const total = clampBattleToothCount(count);
+  for (let i = 0; i < total; i += 1) {
+    const tooth = document.createElement('span');
+    tooth.className = 'battle-tooth';
+    if (side === 'top' || side === 'bottom') {
+      tooth.style.left = `${((i + 0.5) / total) * 100}%`;
+    } else {
+      tooth.style.top = `${((i + 0.5) / total) * 100}%`;
+    }
+    holder.appendChild(tooth);
+  }
+}
+
 function updateBattleCardPreview() {
   const name = document.getElementById('battleCardName')?.value || 'Card preview';
   const avg = Number(document.getElementById('battleCardAverageScore')?.value || 0);
-  const top = Number(document.getElementById('battleCardTop')?.value || 0);
-  const right = Number(document.getElementById('battleCardRight')?.value || 0);
-  const bottom = Number(document.getElementById('battleCardBottom')?.value || 0);
-  const left = Number(document.getElementById('battleCardLeft')?.value || 0);
+  const top = clampBattleToothCount(document.getElementById('battleCardTop')?.value || 0);
+  const right = clampBattleToothCount(document.getElementById('battleCardRight')?.value || 0);
+  const bottom = clampBattleToothCount(document.getElementById('battleCardBottom')?.value || 0);
+  const left = clampBattleToothCount(document.getElementById('battleCardLeft')?.value || 0);
 
   const previewName = document.getElementById('battlePreviewName');
   const previewAvg = document.getElementById('battlePreviewAvg');
@@ -41,10 +62,10 @@ function updateBattleCardPreview() {
 
   if (previewName) previewName.textContent = name || 'Card preview';
   if (previewAvg) previewAvg.textContent = Number.isFinite(avg) ? String(avg) : '0';
-  if (previewTop) previewTop.textContent = Number.isFinite(top) ? String(top) : '0';
-  if (previewRight) previewRight.textContent = Number.isFinite(right) ? String(right) : '0';
-  if (previewBottom) previewBottom.textContent = Number.isFinite(bottom) ? String(bottom) : '0';
-  if (previewLeft) previewLeft.textContent = Number.isFinite(left) ? String(left) : '0';
+  renderBattleTeeth('top', top, previewTop);
+  renderBattleTeeth('right', right, previewRight);
+  renderBattleTeeth('bottom', bottom, previewBottom);
+  renderBattleTeeth('left', left, previewLeft);
 }
 
 function bindBattleCardPreviewInputs() {
@@ -100,6 +121,7 @@ async function createBattleCard() {
     if (document.getElementById('battleLinkedCardSelect')) document.getElementById('battleLinkedCardSelect').value = '';
     updateBattleCardPreview();
     loadBattleCards();
+    loadBattleInventory();
   } catch (error) {
     console.error('Battle card creation failed:', error);
     alert(error.message || 'Battle card creation failed');
@@ -419,27 +441,38 @@ function showSection(section) {
   }
 }
 
-function loadBattleInventory() {
+async function loadBattleInventory() {
   const list = document.getElementById('battleInventoryItems');
   if (!list) return;
 
   list.innerHTML = '<li>Loading battle cards...</li>';
 
-  const battleItems = Array.isArray(window.battleInventoryCache) ? window.battleInventoryCache : [];
-  if (battleItems.length === 0) {
-    list.innerHTML = '<li>No battle cards in your inventory.</li>';
-    return;
-  }
+  try {
+    const res = await fetch(`${API_URL}/inventory`, {
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) throw new Error('Could not load battle inventory');
+    const items = await res.json();
+    const battleItems = Array.isArray(items) ? items.filter(item => item.itemType === 'battle-card') : [];
 
-  list.innerHTML = '';
-  battleItems.forEach(item => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <img src="${item.imageUrl || '/images/unknown.png'}" alt="${item.name || 'Battle card'}" class="item-image" style="width:52px;height:52px;">
-      <span>${item.name || 'Battle card'}</span>
-    `;
-    list.appendChild(li);
-  });
+    if (battleItems.length === 0) {
+      list.innerHTML = '<li>No battle cards in your inventory.</li>';
+      return;
+    }
+
+    list.innerHTML = '';
+    battleItems.forEach(item => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <img src="${item.imageUrl || '/images/unknown.png'}" alt="${item.name || 'Battle card'}" class="item-image" style="width:52px;height:52px;">
+        <span>${item.name || 'Battle card'}</span>
+      `;
+      list.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error loading battle inventory:', error);
+    list.innerHTML = '<li>Could not load battle cards.</li>';
+  }
 }
 
 /** Handle VIP tab display */

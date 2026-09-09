@@ -387,6 +387,30 @@ app.post('/admin/battle-cards', async (req, res) => {
       createdAt: new Date()
     });
 
+    if (card.linkedCardImage) {
+      const battleItem = {
+        name: card.name,
+        itemType: 'battle-card',
+        battleCardId: cardRef.id,
+        linkedCardImage: card.linkedCardImage,
+        imageUrl: `/images/${card.linkedCardImage}`,
+        price: 0,
+        sellerId: 'system',
+        sold: true,
+        buyerId: requesterId,
+        purchasedAt: new Date(),
+        sourceItemId: null,
+        createdAt: new Date(),
+        isBattleCard: true,
+        averageScore: Number(card.averageScore) || 0,
+        top: Number(card.top) || 0,
+        right: Number(card.right) || 0,
+        bottom: Number(card.bottom) || 0,
+        left: Number(card.left) || 0
+      };
+      await db.collection('items').add(battleItem);
+    }
+
     res.status(201).json({ id: cardRef.id, card });
   } catch (error) {
     console.error('Error creating battle card:', error);
