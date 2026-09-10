@@ -509,6 +509,42 @@ body {
   border: 1px solid #d5dffb;
 }
 
+.battle-board-cell {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.battle-board-cell:disabled {
+  cursor: default;
+}
+
+.battle-board-card {
+  transform: scale(0.82);
+  transform-origin: center;
+}
+
+.battle-hand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.battle-hand-card {
+  border: 2px solid #d7defd;
+  border-radius: 8px;
+  padding: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.battle-hand-card.is-active {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
 .battle-card-item {
   display: flex;
   align-items: center;

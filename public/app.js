@@ -30,6 +30,7 @@ let battleMatch = null;
 let battleInventoryCache = [];
 let battleMatchPoll = null;
 let battleDeckSavePending = false;
+let battleSelectedPlacementCard = null;
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -600,6 +601,12 @@ function prepareBattleDeck({ syncSelection = true } = {}) {
   document.getElementById('battleMatchLobby').hidden = true;
   document.getElementById('battleSetupPanel').hidden = false;
   document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Build a six-card deck.`;
+  if (['board', 'finished'].includes(battleMatch.status)) {
+    document.getElementById('battleSetupPanel').hidden = true;
+    document.getElementById('battleBoardPanel').hidden = false;
+    renderBattleBoard();
+    return;
+  }
   if (syncSelection) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
   battleReady = battleMatch.ready?.[currentUserId] === true;
   const readyButton = document.getElementById('battleReadyButton');
@@ -623,6 +630,7 @@ async function cancelBattleMatch() {
     battleReady = false;
     document.getElementById('battleMatchLobby').hidden = false;
     document.getElementById('battleSetupPanel').hidden = true;
+    document.getElementById('battleBoardPanel').hidden = true;
     document.getElementById('battleReadyStatus').textContent = '';
     loadBattleInventory();
   } catch (error) {
@@ -637,7 +645,10 @@ async function saveBattleDeck() {
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/deck`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ cardIds: [...selectedBattleCards] })
+      body: JSON.stringify({
+        cardIds: [...selectedBattleCards],
+        color: document.getElementById('battlePlayerColor')?.value || '#2878d0'
+      })
     });
     if (!response.ok) throw new Error(await response.text());
     battleMatch = await response.json();
@@ -647,6 +658,71 @@ async function saveBattleDeck() {
     alert(error.message || 'Could not save deck');
   } finally {
     battleDeckSavePending = false;
+  }
+}
+
+function renderBattleBoard() {
+  const board = document.getElementById('battleBoard');
+  const hand = document.getElementById('battleHand');
+  const turnStatus = document.getElementById('battleTurnStatus');
+  if (!board || !hand || !battleMatch) return;
+  const isMyTurn = battleMatch.turnPlayerId === currentUserId;
+  const starterName = battleMatch.participants?.[battleMatch.starterId]?.username || 'player';
+  if (battleMatch.status === 'finished') {
+    const result = battleMatch.winnerId ? `${battleMatch.participants?.[battleMatch.winnerId]?.username || 'A player'} wins the battle!` : 'The battle is a draw.';
+    turnStatus.textContent = result;
+  } else {
+    turnStatus.textContent = isMyTurn
+      ? 'Your turn. Select a card, then click an empty space.'
+      : `${battleMatch.participants?.[battleMatch.turnPlayerId]?.username || 'The other player'} is choosing a card. ${starterName} started.`;
+  }
+  board.innerHTML = '';
+  const cells = Array.isArray(battleMatch.board) ? battleMatch.board : Array(16).fill(null);
+  cells.forEach((entry, index) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'battle-board-cell';
+    cell.disabled = !!entry || !isMyTurn || !battleSelectedPlacementCard;
+    if (entry) {
+      cell.innerHTML = `<div class="battle-board-card">${buildBattleCardMarkup(entry, { small: true })}</div>`;
+      cell.style.setProperty('--battle-card-color', entry.color || '#eeeeee');
+    } else {
+      cell.textContent = '＋';
+      cell.onclick = () => placeBattleCard(index);
+    }
+    board.appendChild(cell);
+  });
+
+  const playedIds = new Set(cells.filter(Boolean).map(entry => entry.cardId));
+  const myDeck = new Set(battleMatch.decks?.[currentUserId] || []);
+  hand.innerHTML = '';
+  battleInventoryCache.filter(card => myDeck.has(card.battleCardId) && !playedIds.has(card.battleCardId)).forEach(card => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `battle-hand-card ${battleSelectedPlacementCard === card.battleCardId ? 'is-active' : ''}`;
+    button.innerHTML = buildBattleCardMarkup(card, { small: true });
+    button.onclick = () => {
+      battleSelectedPlacementCard = battleSelectedPlacementCard === card.battleCardId ? null : card.battleCardId;
+      renderBattleBoard();
+    };
+    hand.appendChild(button);
+  });
+}
+
+async function placeBattleCard(position) {
+  if (!battleMatchId || !battleSelectedPlacementCard || battleMatch.turnPlayerId !== currentUserId) return;
+  try {
+    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/place`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ cardId: battleSelectedPlacementCard, position })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    battleMatch = await response.json();
+    battleSelectedPlacementCard = null;
+    renderBattleBoard();
+  } catch (error) {
+    alert(error.message || 'Could not place card');
   }
 }
 
@@ -664,7 +740,7 @@ async function loadBattleMatch() {
     if (!battleDeckSavePending) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
     battleReady = battleMatch.ready?.[currentUserId] === true;
     prepareBattleDeck({ syncSelection: !battleDeckSavePending });
-    if (battleMatch.status === 'board' && battleMatchPoll) clearInterval(battleMatchPoll);
+    if (['board', 'finished'].includes(battleMatch.status) && battleMatchPoll) clearInterval(battleMatchPoll);
   } catch (error) {
     console.error('Battle match polling error:', error);
   }

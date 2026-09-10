@@ -458,7 +458,12 @@ function battleMatchView(id, data) {
     participantIds: data.participantIds,
     participants: data.participants,
     decks: data.decks,
+    colors: data.colors,
     ready: data.ready,
+    starterId: data.starterId || null,
+    turnPlayerId: data.turnPlayerId || null,
+    board: data.board || Array(16).fill(null),
+    winnerId: data.winnerId || null,
     createdAt: serializeDate(data.createdAt),
     updatedAt: serializeDate(data.updatedAt)
   };
@@ -476,7 +481,38 @@ async function getBattleCardsForUser(userId) {
   });
   return battleCardsSnapshot.docs
     .filter(doc => ownedImages.has(doc.data().linkedCardImage))
-    .map(doc => ({ id: doc.id, averageScore: Number(doc.data().averageScore) || 0 }));
+    .map(doc => ({
+      id: doc.id,
+      name: doc.data().name,
+      color: doc.data().color || '#eeeeee',
+      averageScore: Number(doc.data().averageScore) || 0,
+      top: Number(doc.data().top) || 0,
+      right: Number(doc.data().right) || 0,
+      bottom: Number(doc.data().bottom) || 0,
+      left: Number(doc.data().left) || 0
+    }));
+}
+
+function isBattleColor(value) {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
+function otherBattlePlayer(match, playerId) {
+  return match.participantIds.find(id => id !== playerId);
+}
+
+function battleCardForBoard(card, playerId, color) {
+  return {
+    cardId: card.id,
+    ownerId: playerId,
+    name: card.name,
+    color,
+    averageScore: card.averageScore,
+    top: card.top,
+    right: card.right,
+    bottom: card.bottom,
+    left: card.left
+  };
 }
 
 app.post('/battle-matches', async (req, res) => {
@@ -502,7 +538,11 @@ app.post('/battle-matches', async (req, res) => {
         [opponentId]: { username: opponentDoc.data().username }
       },
       decks: { [requesterId]: [], [opponentId]: [] },
+      colors: { [requesterId]: null, [opponentId]: null },
       ready: { [requesterId]: false, [opponentId]: false },
+      starterId: null,
+      turnPlayerId: null,
+      board: Array(16).fill(null),
       createdAt: now,
       updatedAt: now
     };
@@ -550,7 +590,7 @@ app.post('/battle-matches/:matchId/cancel', async (req, res) => {
     const matchRef = db.collection('battleMatches').doc(req.params.matchId);
     const matchDoc = await matchRef.get();
     if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
-    if (matchDoc.data().status === 'setup') await matchRef.update({ status: 'cancelled', updatedAt: new Date() });
+    if (['setup', 'board'].includes(matchDoc.data().status)) await matchRef.update({ status: 'cancelled', updatedAt: new Date() });
     res.json({ success: true });
   } catch (error) {
     console.error('Cancel battle match error:', error);
@@ -560,9 +600,10 @@ app.post('/battle-matches/:matchId/cancel', async (req, res) => {
 
 app.post('/battle-matches/:matchId/deck', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { cardIds } = req.body || {};
+  const { cardIds, color } = req.body || {};
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   if (!Array.isArray(cardIds) || cardIds.length > 6 || new Set(cardIds).size !== cardIds.length || cardIds.some(id => typeof id !== 'string')) return res.status(400).send('A deck can contain up to six different cards');
+  if (!isBattleColor(color)) return res.status(400).send('Choose a valid player color');
   try {
     const matchRef = db.collection('battleMatches').doc(req.params.matchId);
     const result = await db.runTransaction(async transaction => {
@@ -576,13 +617,16 @@ app.post('/battle-matches/:matchId/deck', async (req, res) => {
       const total = cardIds.reduce((sum, id) => sum + ownedById.get(id).averageScore, 0);
       if (cardIds.length === 6 && total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
       const decks = { ...match.decks, [requesterId]: cardIds };
+      const opponentId = otherBattlePlayer(match, requesterId);
+      if (match.colors?.[opponentId] === color) throw new Error('Choose a color different from the other player');
+      const colors = { ...match.colors, [requesterId]: color };
       const ready = { ...match.ready, [requesterId]: false };
-      transaction.update(matchRef, { decks, ready, updatedAt: new Date() });
-      return { ...match, decks, ready, updatedAt: new Date() };
+      transaction.update(matchRef, { decks, colors, ready, updatedAt: new Date() });
+      return { ...match, decks, colors, ready, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    if (['Match not found', 'Deck setup is closed', 'One or more selected cards are not in your inventory', 'This deck is above the match average limit'].includes(error.message)) return res.status(400).send(error.message);
+    if (['Match not found', 'Deck setup is closed', 'One or more selected cards are not in your inventory', 'This deck is above the match average limit', 'Choose a valid player color', 'Choose a color different from the other player'].includes(error.message)) return res.status(400).send(error.message);
     console.error('Save battle deck error:', error);
     res.status(500).send('Could not save deck');
   }
@@ -606,15 +650,91 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
       if (total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
       const ready = { ...match.ready, [requesterId]: true };
       const bothReady = match.participantIds.every(id => ready[id] === true);
-      const status = bothReady ? 'board' : 'setup';
-      transaction.update(matchRef, { ready, status, updatedAt: new Date() });
-      return { ...match, ready, status, updatedAt: new Date() };
+      let status = 'setup';
+      let starterId = match.starterId || null;
+      let turnPlayerId = match.turnPlayerId || null;
+      if (bothReady) {
+        const totals = new Map();
+        for (const participantId of match.participantIds) {
+          const participantCards = await getBattleCardsForUser(participantId);
+          const scoreById = new Map(participantCards.map(card => [card.id, card.averageScore]));
+          totals.set(participantId, (match.decks[participantId] || []).reduce((sum, id) => sum + (scoreById.get(id) || 0), 0));
+        }
+        starterId = match.participantIds[0];
+        if (totals.get(match.participantIds[1]) > totals.get(starterId)) starterId = match.participantIds[1];
+        turnPlayerId = starterId;
+        status = 'board';
+      }
+      transaction.update(matchRef, { ready, status, starterId, turnPlayerId, updatedAt: new Date() });
+      return { ...match, ready, status, starterId, turnPlayerId, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
     if (['Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit'].includes(error.message)) return res.status(400).send(error.message);
     console.error('Ready battle match error:', error);
     res.status(500).send('Could not ready the match');
+  }
+});
+
+app.post('/battle-matches/:matchId/place', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { cardId, position } = req.body || {};
+  const cell = Number(position);
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (typeof cardId !== 'string' || !Number.isInteger(cell) || cell < 0 || cell > 15) return res.status(400).send('Choose a card and board space');
+
+  try {
+    const matchRef = db.collection('battleMatches').doc(req.params.matchId);
+    const result = await db.runTransaction(async transaction => {
+      const matchDoc = await transaction.get(matchRef);
+      if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) throw new Error('Match not found');
+      const match = matchDoc.data();
+      if (match.status !== 'board') throw new Error('The board is not active');
+      if (match.turnPlayerId !== requesterId) throw new Error('It is not your turn');
+      const deck = match.decks?.[requesterId] || [];
+      if (!deck.includes(cardId)) throw new Error('That card is not in your deck');
+      const board = Array.isArray(match.board) ? [...match.board] : Array(16).fill(null);
+      if (board[cell]) throw new Error('That board space is occupied');
+      if (board.some(entry => entry?.cardId === cardId)) throw new Error('That card has already been played');
+      const playerCards = await getBattleCardsForUser(requesterId);
+      const opponentId = otherBattlePlayer(match, requesterId);
+      const card = playerCards.find(entry => entry.id === cardId);
+      if (!card) throw new Error('That card is no longer available');
+      const placed = battleCardForBoard(card, requesterId, match.colors[requesterId]);
+      const neighborDirections = [
+        { offset: -4, attack: 'top', defend: 'bottom', valid: cell >= 4 },
+        { offset: 4, attack: 'bottom', defend: 'top', valid: cell < 12 },
+        { offset: -1, attack: 'left', defend: 'right', valid: cell % 4 !== 0 },
+        { offset: 1, attack: 'right', defend: 'left', valid: cell % 4 !== 3 }
+      ];
+      neighborDirections.forEach(direction => {
+        if (!direction.valid) return;
+        const neighborCell = cell + direction.offset;
+        const neighbor = board[neighborCell];
+        if (!neighbor || neighbor.ownerId === requesterId) return;
+        if (placed[direction.attack] > neighbor[direction.defend]) {
+          neighbor.ownerId = requesterId;
+          neighbor.color = match.colors[requesterId];
+        }
+      });
+      board[cell] = placed;
+      const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
+      const isFinished = board.filter(Boolean).length >= totalCards;
+      const ownedCounts = match.participantIds.map(id => ({ id, count: board.filter(entry => entry?.ownerId === id).length }));
+      const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
+      const winners = ownedCounts.filter(entry => entry.count === highestCount);
+      const winnerId = isFinished && winners.length === 1 ? winners[0].id : null;
+      const nextTurn = isFinished ? null : match.participantIds.find(id => id !== requesterId);
+      const status = isFinished ? 'finished' : 'board';
+      transaction.update(matchRef, { board, status, winnerId, turnPlayerId: nextTurn, updatedAt: new Date() });
+      return { ...match, board, status, winnerId, turnPlayerId: nextTurn, updatedAt: new Date() };
+    });
+    res.json(battleMatchView(req.params.matchId, result));
+  } catch (error) {
+    const expected = ['Match not found', 'The board is not active', 'It is not your turn', 'That card is not in your deck', 'That board space is occupied', 'That card has already been played', 'That card is no longer available'];
+    if (expected.includes(error.message)) return res.status(400).send(error.message);
+    console.error('Place battle card error:', error);
+    res.status(500).send('Could not place card');
   }
 });
 

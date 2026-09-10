@@ -206,6 +206,8 @@
       </div>
       <div id="battleSetupPanel" hidden>
         <p id="battleMatchStatus" class="battle-help"></p>
+        <label class="input-label" for="battlePlayerColor">Your card color</label>
+        <input id="battlePlayerColor" type="color" class="battle-card-color" value="#2878d0" onchange="saveBattleDeck()">
         <div class="battle-deck-budget">Points remaining: <strong id="battlePointsRemaining">0</strong></div>
         <p id="battleDeckStatus" class="battle-help">Choose exactly six cards.</p>
         <button id="battleCancelButton" type="button" onclick="cancelBattleMatch()" class="btn btn-danger">Cancel match</button>
@@ -216,6 +218,15 @@
         <ul id="battleInventoryItems" class="battle-inventory-list"></ul>
         <button id="battleReadyButton" type="button" onclick="toggleBattleReady()" class="btn btn-success" disabled>Ready</button>
         <p id="battleReadyStatus" class="battle-ready-status"></p>
+      </div>
+      <div id="battleBoardPanel" class="battle-board-panel" hidden>
+        <p id="battleTurnStatus" class="battle-help"></p>
+        <button type="button" onclick="cancelBattleMatch()" class="btn btn-danger">Cancel battle</button>
+        <div id="battleBoard" class="battle-board" aria-label="Battle board"></div>
+        <div>
+          <h3>Your remaining cards</h3>
+          <div id="battleHand" class="battle-hand"></div>
+        </div>
       </div>
     </section>
 
