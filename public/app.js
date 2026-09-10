@@ -51,10 +51,13 @@ function buildBattleCardMarkup(card, { small = false } = {}) {
     return teeth.join('');
   };
 
-  const color = /^#[0-9a-fA-F]{6}$/.test(String(card?.color || '')) ? card.color : '#eeeeee';
+  const tierColors = card?.tierColors || {};
+  const color = /^#[0-9a-fA-F]{6}$/.test(String(tierColors.backgroundColor || card?.color || '')) ? (tierColors.backgroundColor || card.color) : '#eeeeee';
+  const nameColor = /^#[0-9a-fA-F]{6}$/.test(String(tierColors.nameColor || '')) ? tierColors.nameColor : '#d9b936';
+  const scoreColor = /^#[0-9a-fA-F]{6}$/.test(String(tierColors.scoreColor || '')) ? tierColors.scoreColor : '#0a7385';
 
   return `
-    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}" style="--battle-card-color: ${color}">
+    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}" style="--battle-card-color: ${color}; --battle-card-name-color: ${nameColor}; --battle-card-score-color: ${scoreColor}">
       <span class="battle-side-number battle-side-number-top">${top}</span>
       <div class="battle-teeth battle-teeth-top">${makeTeeth(top, 'top')}</div>
 
@@ -1608,6 +1611,47 @@ async function loadAscendTierConfig() {
       };
       priceRow.append(priceInput, savePriceBtn);
 
+      const colorRow = document.createElement('div');
+      colorRow.className = 'ascend-tier-colors';
+      const tierColorFields = [
+        ['backgroundColor', 'Background'],
+        ['nameColor', 'Name text'],
+        ['scoreColor', 'Score text']
+      ];
+      const tierColorInputs = {};
+      tierColorFields.forEach(([key, labelText]) => {
+        const label = document.createElement('label');
+        label.className = 'tier-color-field';
+        label.textContent = labelText;
+        const input = document.createElement('input');
+        input.type = 'color';
+        input.value = tier[key] || '#eeeeee';
+        input.setAttribute('aria-label', `${tier.name} ${labelText} color`);
+        tierColorInputs[key] = input;
+        label.appendChild(input);
+        colorRow.appendChild(label);
+      });
+      const saveColorsBtn = document.createElement('button');
+      saveColorsBtn.className = 'btn btn-primary';
+      saveColorsBtn.textContent = 'Save tier colors';
+      saveColorsBtn.onclick = async () => {
+        const res = await fetch(`${API_URL}/ascend-tier-config/${encodeURIComponent(tier.id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+          body: JSON.stringify({
+            name: tier.name,
+            order: Number(tier.order),
+            sellPrice: Number(tier.sellPrice) || 0,
+            backgroundColor: tierColorInputs.backgroundColor.value,
+            nameColor: tierColorInputs.nameColor.value,
+            scoreColor: tierColorInputs.scoreColor.value
+          })
+        });
+        if (!res.ok) return alert(await res.text());
+        loadAscendTierConfig();
+      };
+      colorRow.appendChild(saveColorsBtn);
+
       const actions = document.createElement('div');
       actions.className = 'ascend-tier-actions';
       const cardSelect = document.createElement('select');
@@ -1655,7 +1699,7 @@ async function loadAscendTierConfig() {
       };
 
       actions.append(cardSelect, addCardBtn, packSelect, addPackBtn);
-      card.append(header, priceRow, layout, actions);
+      card.append(header, priceRow, colorRow, layout, actions);
       layout.append(cardColumn, packColumn);
       container.appendChild(card);
     });

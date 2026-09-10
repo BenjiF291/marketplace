@@ -145,6 +145,20 @@ const DEFAULT_ASCEND_TIERS = [
   'Ultra'
 ];
 
+const DEFAULT_TIER_COLORS = {
+  backgroundColor: '#eeeeee',
+  nameColor: '#d9b936',
+  scoreColor: '#0a7385'
+};
+
+function normalizeTierColors(tier) {
+  return {
+    backgroundColor: /^#[0-9a-fA-F]{6}$/.test(tier.backgroundColor || '') ? tier.backgroundColor : DEFAULT_TIER_COLORS.backgroundColor,
+    nameColor: /^#[0-9a-fA-F]{6}$/.test(tier.nameColor || '') ? tier.nameColor : DEFAULT_TIER_COLORS.nameColor,
+    scoreColor: /^#[0-9a-fA-F]{6}$/.test(tier.scoreColor || '') ? tier.scoreColor : DEFAULT_TIER_COLORS.scoreColor
+  };
+}
+
 async function ensureDefaultAscendTiers() {
   try {
     const tiersRef = db.collection('ascendTiers');
@@ -156,6 +170,7 @@ async function ensureDefaultAscendTiers() {
       order: index,
       cards: [],
       packs: [],
+      ...DEFAULT_TIER_COLORS,
       createdAt: new Date()
     }));
 
@@ -176,7 +191,8 @@ async function getAscendTierConfig() {
   return tiers
     .map(tier => ({
       ...tier,
-      sellPrice: Number(tier.sellPrice) || 0
+      sellPrice: Number(tier.sellPrice) || 0,
+      ...normalizeTierColors(tier)
     }))
     .sort((a, b) => Number(a.order) - Number(b.order));
 }
@@ -360,9 +376,13 @@ app.get('/health', (req, res) => {
 
 app.get('/battle-cards', async (req, res) => {
   try {
-    const snapshot = await db.collection('battleCards').orderBy('createdAt', 'desc').get();
+    const [snapshot, tiers] = await Promise.all([
+      db.collection('battleCards').orderBy('createdAt', 'desc').get(),
+      getAscendTierConfig()
+    ]);
     const cards = snapshot.docs.map(doc => {
       const data = doc.data();
+      const tier = tiers.find(candidate => (candidate.cards || []).includes(data.linkedCardImage));
       return {
         id: doc.id,
         name: data.name,
@@ -373,6 +393,7 @@ app.get('/battle-cards', async (req, res) => {
         left: Number(data.left) || 0,
         linkedCardImage: data.linkedCardImage || null,
         color: data.color || '#eeeeee',
+        tierColors: tier ? normalizeTierColors(tier) : null,
         createdAt: serializeDate(data.createdAt)
       };
     });
@@ -388,9 +409,10 @@ app.get('/battle-inventory', async (req, res) => {
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
 
   try {
-    const [itemsSnapshot, battleCardsSnapshot] = await Promise.all([
+    const [itemsSnapshot, battleCardsSnapshot, tiers] = await Promise.all([
       db.collection('items').where('buyerId', '==', requesterId).where('sold', '==', true).get(),
-      db.collection('battleCards').get()
+      db.collection('battleCards').get(),
+      getAscendTierConfig()
     ]);
     const ownedImages = new Set();
     itemsSnapshot.forEach(doc => {
@@ -403,6 +425,7 @@ app.get('/battle-inventory', async (req, res) => {
     const battleItems = [];
     battleCardsSnapshot.forEach(doc => {
       const card = doc.data();
+      const tier = tiers.find(candidate => (candidate.cards || []).includes(card.linkedCardImage));
       if (ownedImages.has(card.linkedCardImage)) {
         battleItems.push({
           id: doc.id,
@@ -411,6 +434,7 @@ app.get('/battle-inventory', async (req, res) => {
           itemType: 'battle-card',
           linkedCardImage: card.linkedCardImage,
           color: card.color || '#eeeeee',
+          tierColors: tier ? normalizeTierColors(tier) : null,
           averageScore: Number(card.averageScore) || 0,
           top: Number(card.top) || 0,
           right: Number(card.right) || 0,
@@ -1041,7 +1065,7 @@ app.get('/ascend-tier-config', async (req, res) => {
 
 app.post('/ascend-tier-config', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { name, order, sellPrice } = req.body;
+  const { name, order, sellPrice, backgroundColor, nameColor, scoreColor } = req.body;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -1060,6 +1084,8 @@ app.post('/ascend-tier-config', async (req, res) => {
     return res.status(400).send('Sell price must be a valid non-negative number');
   }
 
+  const colors = normalizeTierColors({ backgroundColor, nameColor, scoreColor });
+
   try {
     const tierRef = db.collection('ascendTiers').doc();
     const tier = {
@@ -1068,6 +1094,7 @@ app.post('/ascend-tier-config', async (req, res) => {
       sellPrice: tierSellPrice,
       cards: [],
       packs: [],
+      ...colors,
       createdAt: new Date()
     };
     await tierRef.set(tier);
@@ -1081,7 +1108,7 @@ app.post('/ascend-tier-config', async (req, res) => {
 app.put('/ascend-tier-config/:tierId', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { tierId } = req.params;
-  const { name, order, sellPrice } = req.body;
+  const { name, order, sellPrice, backgroundColor, nameColor, scoreColor } = req.body;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -1103,11 +1130,14 @@ app.put('/ascend-tier-config/:tierId', async (req, res) => {
     return res.status(400).send('Sell price must be a valid non-negative number');
   }
 
+  const colors = normalizeTierColors({ backgroundColor, nameColor, scoreColor });
+
   try {
     await db.collection('ascendTiers').doc(tierId).update({
       name: name.trim(),
       order: tierOrder,
       sellPrice: tierSellPrice,
+      ...colors,
       updatedAt: new Date()
     });
     res.json({ success: true });
