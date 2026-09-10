@@ -603,10 +603,14 @@ function prepareBattleDeck({ syncSelection = true } = {}) {
   document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Build a six-card deck.`;
   if (['board', 'finished'].includes(battleMatch.status)) {
     document.getElementById('battleSetupPanel').hidden = true;
+    document.getElementById('battleDeckPanel').hidden = true;
     document.getElementById('battleBoardPanel').hidden = false;
+    const playerColor = battleMatch.colors?.[currentUserId];
+    if (playerColor) document.getElementById('battlePlayerColor').value = playerColor;
     renderBattleBoard();
     return;
   }
+  document.getElementById('battleDeckPanel').hidden = false;
   if (syncSelection) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
   battleReady = battleMatch.ready?.[currentUserId] === true;
   const readyButton = document.getElementById('battleReadyButton');
@@ -740,7 +744,7 @@ async function loadBattleMatch() {
     if (!battleDeckSavePending) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
     battleReady = battleMatch.ready?.[currentUserId] === true;
     prepareBattleDeck({ syncSelection: !battleDeckSavePending });
-    if (['board', 'finished'].includes(battleMatch.status) && battleMatchPoll) clearInterval(battleMatchPoll);
+    if (battleMatch.status === 'finished' && battleMatchPoll) clearInterval(battleMatchPoll);
   } catch (error) {
     console.error('Battle match polling error:', error);
   }
@@ -758,6 +762,7 @@ async function toggleBattleReady() {
     battleMatch = await response.json();
     battleReady = true;
     updateBattleBudget();
+    prepareBattleDeck();
     document.getElementById('battleReadyStatus').textContent = battleMatch.status === 'board'
       ? 'Both players are ready. The board is next.'
       : 'You are ready. Waiting for the other player.';

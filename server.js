@@ -461,6 +461,7 @@ function battleMatchView(id, data) {
     colors: data.colors,
     ready: data.ready,
     starterId: data.starterId || null,
+    starterCard: data.starterCard || null,
     turnPlayerId: data.turnPlayerId || null,
     board: data.board || Array(16).fill(null),
     winnerId: data.winnerId || null,
@@ -541,6 +542,7 @@ app.post('/battle-matches', async (req, res) => {
       colors: { [requesterId]: null, [opponentId]: null },
       ready: { [requesterId]: false, [opponentId]: false },
       starterId: null,
+      starterCard: null,
       turnPlayerId: null,
       board: Array(16).fill(null),
       createdAt: now,
@@ -653,6 +655,8 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
       let status = 'setup';
       let starterId = match.starterId || null;
       let turnPlayerId = match.turnPlayerId || null;
+      let starterCard = match.starterCard || null;
+      let board = match.board || Array(16).fill(null);
       if (bothReady) {
         const totals = new Map();
         for (const participantId of match.participantIds) {
@@ -663,10 +667,26 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
         starterId = match.participantIds[0];
         if (totals.get(match.participantIds[1]) > totals.get(starterId)) starterId = match.participantIds[1];
         turnPlayerId = starterId;
+        const allBattleCards = await db.collection('battleCards').get();
+        const starterCandidates = allBattleCards.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+          color: '#8a8f98',
+          averageScore: Number(doc.data().averageScore) || 0,
+          top: Number(doc.data().top) || 0,
+          right: Number(doc.data().right) || 0,
+          bottom: Number(doc.data().bottom) || 0,
+          left: Number(doc.data().left) || 0
+        }));
+        starterCandidates.sort((left, right) => Math.abs(left.averageScore - match.averageLimit) - Math.abs(right.averageScore - match.averageLimit));
+        starterCard = starterCandidates[0] ? battleCardForBoard(starterCandidates[0], 'starter', '#8a8f98') : null;
+        if (starterCard) starterCard.cardId = `starter:${starterCard.cardId}`;
+        board = Array(16).fill(null);
+        board[5] = starterCard;
         status = 'board';
       }
-      transaction.update(matchRef, { ready, status, starterId, turnPlayerId, updatedAt: new Date() });
-      return { ...match, ready, status, starterId, turnPlayerId, updatedAt: new Date() };
+      transaction.update(matchRef, { ready, status, starterId, turnPlayerId, starterCard, board, updatedAt: new Date() });
+      return { ...match, ready, status, starterId, turnPlayerId, starterCard, board, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
@@ -719,7 +739,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       });
       board[cell] = placed;
       const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
-      const isFinished = board.filter(Boolean).length >= totalCards;
+      const isFinished = board.filter(Boolean).length >= totalCards + 1;
       const ownedCounts = match.participantIds.map(id => ({ id, count: board.filter(entry => entry?.ownerId === id).length }));
       const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
       const winners = ownedCounts.filter(entry => entry.count === highestCount);
