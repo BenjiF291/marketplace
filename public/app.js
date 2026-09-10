@@ -29,6 +29,7 @@ let battleMatchId = null;
 let battleMatch = null;
 let battleInventoryCache = [];
 let battleMatchPoll = null;
+let battleDeckSavePending = false;
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -487,8 +488,18 @@ async function loadBattleInventory() {
       return;
     }
 
-    list.innerHTML = '';
-    battleItems.forEach(item => {
+    renderBattleInventory();
+  } catch (error) {
+    console.error('Error loading battle inventory:', error);
+    list.innerHTML = '<li>Could not load battle cards.</li>';
+  }
+}
+
+function renderBattleInventory() {
+  const list = document.getElementById('battleInventoryItems');
+  if (!list) return;
+  list.innerHTML = '';
+  battleInventoryCache.forEach(item => {
       const li = document.createElement('li');
       li.className = 'battle-inventory-entry';
       li.classList.toggle('is-selected', selectedBattleCards.has(item.battleCardId));
@@ -500,22 +511,20 @@ async function loadBattleInventory() {
         if (battleMatch && battleMatch.status === 'setup' && battleReady) return;
         if (selectedBattleCards.has(item.battleCardId)) selectedBattleCards.delete(item.battleCardId);
         else selectedBattleCards.add(item.battleCardId);
+        updateBattleBudget();
+        renderBattleInventory();
         saveBattleDeck();
-        loadBattleInventory();
       };
       list.appendChild(li);
-    });
-  } catch (error) {
-    console.error('Error loading battle inventory:', error);
-    list.innerHTML = '<li>Could not load battle cards.</li>';
-  }
+  });
 }
 
 function updateBattleBudget() {
   const limit = Number(battleMatch?.averageLimit || 0);
   const totalBudget = limit * 6;
+  const currentDeckIds = selectedBattleCards;
   const used = battleInventoryCache
-    .filter(item => selectedBattleCards.has(item.battleCardId))
+    .filter(item => currentDeckIds.has(item.battleCardId))
     .reduce((sum, item) => sum + Number(item.averageScore || 0), 0);
   const remaining = totalBudget - used;
   const points = document.getElementById('battlePointsRemaining');
@@ -587,11 +596,11 @@ async function findBattleInvitation() {
   }
 }
 
-function prepareBattleDeck() {
+function prepareBattleDeck({ syncSelection = true } = {}) {
   document.getElementById('battleMatchLobby').hidden = true;
   document.getElementById('battleSetupPanel').hidden = false;
   document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Build a six-card deck.`;
-  selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+  if (syncSelection) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
   battleReady = battleMatch.ready?.[currentUserId] === true;
   const readyButton = document.getElementById('battleReadyButton');
   if (readyButton) readyButton.textContent = battleReady ? 'Ready' : 'Ready';
@@ -623,6 +632,7 @@ async function cancelBattleMatch() {
 
 async function saveBattleDeck() {
   if (!battleMatchId || selectedBattleCards.size > 6) return;
+  battleDeckSavePending = true;
   try {
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/deck`, {
       method: 'POST',
@@ -635,6 +645,8 @@ async function saveBattleDeck() {
   } catch (error) {
     console.error('Save battle deck error:', error);
     alert(error.message || 'Could not save deck');
+  } finally {
+    battleDeckSavePending = false;
   }
 }
 
@@ -649,9 +661,9 @@ async function loadBattleMatch() {
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}`, { headers: { 'X-User-Id': currentUserId } });
     if (!response.ok) return;
     battleMatch = await response.json();
-    if (!selectedBattleCards.size) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+    if (!battleDeckSavePending) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
     battleReady = battleMatch.ready?.[currentUserId] === true;
-    prepareBattleDeck();
+    prepareBattleDeck({ syncSelection: !battleDeckSavePending });
     if (battleMatch.status === 'board' && battleMatchPoll) clearInterval(battleMatchPoll);
   } catch (error) {
     console.error('Battle match polling error:', error);
