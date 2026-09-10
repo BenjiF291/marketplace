@@ -25,6 +25,10 @@ let savedPacks = [];
 let inventorySellMode = false;
 let selectedBattleCards = new Set();
 let battleReady = false;
+let battleMatchId = null;
+let battleMatch = null;
+let battleInventoryCache = [];
+let battleMatchPoll = null;
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -398,6 +402,8 @@ function showSection(section) {
     if (battleManagerTab) battleManagerTab.classList.remove('active');
 
     loadBattleInventory();
+    loadBattleOpponents();
+    findBattleInvitation();
   } else if (section === 'battle-manager') {
     if (!currentUserIsAdmin) {
       alert('Only admins can access BCM.');
@@ -471,6 +477,7 @@ async function loadBattleInventory() {
     });
     if (!res.ok) throw new Error('Could not load battle inventory');
     const battleItems = await res.json();
+    battleInventoryCache = Array.isArray(battleItems) ? battleItems : [];
 
     if (battleItems.length === 0) {
       list.innerHTML = '<li>No battle cards in your inventory.</li>';
@@ -484,11 +491,13 @@ async function loadBattleInventory() {
       li.classList.toggle('is-selected', selectedBattleCards.has(item.battleCardId));
       li.innerHTML = `<button type="button" class="battle-card-select" aria-pressed="${selectedBattleCards.has(item.battleCardId)}">
         <div class="battle-inventory-visual">${buildBattleCardMarkup(item, { small: true })}</div>
-        <span>${item.name || 'Battle card'}</span>
+        <span><strong>${item.name || 'Battle card'}</strong><small>Score: ${Number(item.averageScore || 0)}</small></span>
       </button>`;
       li.querySelector('button').onclick = () => {
+        if (battleMatch && battleMatch.status === 'setup' && battleReady) return;
         if (selectedBattleCards.has(item.battleCardId)) selectedBattleCards.delete(item.battleCardId);
         else selectedBattleCards.add(item.battleCardId);
+        saveBattleDeck();
         loadBattleInventory();
       };
       list.appendChild(li);
@@ -499,14 +508,148 @@ async function loadBattleInventory() {
   }
 }
 
-function toggleBattleReady() {
-  battleReady = !battleReady;
-  const button = document.getElementById('battleReadyButton');
-  const status = document.getElementById('battleReadyStatus');
-  if (button) button.textContent = battleReady ? 'Not ready' : 'Ready';
-  if (status) status.textContent = battleReady
-    ? 'You are ready. Waiting for the other player.'
-    : 'Select your cards, then click Ready.';
+function updateBattleBudget() {
+  const limit = Number(battleMatch?.averageLimit || 0);
+  const totalBudget = limit * 6;
+  const used = battleInventoryCache
+    .filter(item => selectedBattleCards.has(item.battleCardId))
+    .reduce((sum, item) => sum + Number(item.averageScore || 0), 0);
+  const remaining = totalBudget - used;
+  const points = document.getElementById('battlePointsRemaining');
+  const deckStatus = document.getElementById('battleDeckStatus');
+  const readyButton = document.getElementById('battleReadyButton');
+  if (points) points.textContent = String(remaining);
+  if (deckStatus) deckStatus.textContent = selectedBattleCards.size === 6
+    ? (remaining >= 0 ? 'Deck is valid. You can Ready.' : 'Deck is above the allowed average.')
+    : `Choose ${6 - selectedBattleCards.size} more card${selectedBattleCards.size === 5 ? '' : 's'}.`;
+  if (readyButton) readyButton.disabled = selectedBattleCards.size !== 6 || remaining < 0 || !battleMatchId || battleReady;
+}
+
+async function loadBattleOpponents() {
+  const select = document.getElementById('battleOpponentSelect');
+  if (!select) return;
+  try {
+    const response = await fetch(`${API_URL}/users`);
+    if (!response.ok) throw new Error('Could not load players');
+    const users = await response.json();
+    select.innerHTML = '<option value="">Choose a player</option>';
+    users.filter(user => user.id !== currentUserId).forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.id;
+      option.textContent = user.username;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Battle opponents error:', error);
+    select.innerHTML = '<option value="">Players unavailable</option>';
+  }
+}
+
+async function inviteBattlePlayer() {
+  const opponentId = document.getElementById('battleOpponentSelect')?.value;
+  const averageLimit = Number(document.getElementById('battleAverageLimit')?.value);
+  if (!opponentId) return alert('Choose a player to invite.');
+  if (!Number.isInteger(averageLimit) || averageLimit < 1 || averageLimit > 99) return alert('Enter an average value from 1 to 99.');
+  try {
+    const response = await fetch(`${API_URL}/battle-matches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ opponentId, averageLimit })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    battleMatch = await response.json();
+    battleMatchId = battleMatch.id;
+    prepareBattleDeck();
+    startBattleMatchPolling();
+  } catch (error) {
+    alert(error.message || 'Could not invite player');
+  }
+}
+
+async function findBattleInvitation() {
+  if (battleMatchId) return;
+  try {
+    const response = await fetch(`${API_URL}/battle-matches`, { headers: { 'X-User-Id': currentUserId } });
+    if (!response.ok) return;
+    const matches = await response.json();
+    if (matches[0]) {
+      battleMatch = matches[0];
+      battleMatchId = battleMatch.id;
+      prepareBattleDeck();
+      await loadBattleInventory();
+      startBattleMatchPolling();
+    }
+  } catch (error) {
+    console.error('Battle invitation error:', error);
+  }
+}
+
+function prepareBattleDeck() {
+  document.getElementById('battleMatchLobby').hidden = true;
+  document.getElementById('battleSetupPanel').hidden = false;
+  document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Build a six-card deck.`;
+  selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+  battleReady = battleMatch.ready?.[currentUserId] === true;
+  const readyButton = document.getElementById('battleReadyButton');
+  if (readyButton) readyButton.textContent = battleReady ? 'Ready' : 'Ready';
+  updateBattleBudget();
+}
+
+async function saveBattleDeck() {
+  if (!battleMatchId || selectedBattleCards.size > 6) return;
+  try {
+    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/deck`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ cardIds: [...selectedBattleCards] })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    battleMatch = await response.json();
+    updateBattleBudget();
+  } catch (error) {
+    console.error('Save battle deck error:', error);
+    alert(error.message || 'Could not save deck');
+  }
+}
+
+function startBattleMatchPolling() {
+  if (battleMatchPoll) clearInterval(battleMatchPoll);
+  battleMatchPoll = setInterval(loadBattleMatch, 1500);
+}
+
+async function loadBattleMatch() {
+  if (!battleMatchId) return;
+  try {
+    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}`, { headers: { 'X-User-Id': currentUserId } });
+    if (!response.ok) return;
+    battleMatch = await response.json();
+    if (!selectedBattleCards.size) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+    battleReady = battleMatch.ready?.[currentUserId] === true;
+    prepareBattleDeck();
+    if (battleMatch.status === 'board' && battleMatchPoll) clearInterval(battleMatchPoll);
+  } catch (error) {
+    console.error('Battle match polling error:', error);
+  }
+}
+
+async function toggleBattleReady() {
+  if (!battleMatchId || battleReady) return;
+  try {
+    await saveBattleDeck();
+    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/ready`, {
+      method: 'POST',
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!response.ok) throw new Error(await response.text());
+    battleMatch = await response.json();
+    battleReady = true;
+    updateBattleBudget();
+    document.getElementById('battleReadyStatus').textContent = battleMatch.status === 'board'
+      ? 'Both players are ready. The board is next.'
+      : 'You are ready. Waiting for the other player.';
+  } catch (error) {
+    alert(error.message || 'Could not ready the match');
+  }
 }
 
 /** Handle VIP tab display */

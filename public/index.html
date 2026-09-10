@@ -197,11 +197,23 @@
 
     <section id="battleGameSection" class="card battle-game-section" style="display: none;">
       <h2>⚔️ Battle</h2>
+      <div id="battleMatchLobby" class="battle-match-lobby">
+        <label class="input-label" for="battleAverageLimit">Maximum average card score</label>
+        <input id="battleAverageLimit" class="input-field" type="number" min="1" max="99" step="1" placeholder="1 to 99">
+        <label class="input-label" for="battleOpponentSelect">Invite player</label>
+        <select id="battleOpponentSelect" class="input-field"></select>
+        <button type="button" onclick="inviteBattlePlayer()" class="btn btn-primary">Invite to match</button>
+      </div>
+      <div id="battleSetupPanel" hidden>
+        <p id="battleMatchStatus" class="battle-help"></p>
+        <div class="battle-deck-budget">Points remaining: <strong id="battlePointsRemaining">0</strong></div>
+        <p id="battleDeckStatus" class="battle-help">Choose exactly six cards.</p>
+      </div>
       <div class="battle-inventory-panel">
         <h3>Select your battle cards</h3>
         <p class="battle-help">Choose the cards you want to take into the battle.</p>
         <ul id="battleInventoryItems" class="battle-inventory-list"></ul>
-        <button id="battleReadyButton" type="button" onclick="toggleBattleReady()" class="btn btn-success">Ready</button>
+        <button id="battleReadyButton" type="button" onclick="toggleBattleReady()" class="btn btn-success" disabled>Ready</button>
         <p id="battleReadyStatus" class="battle-ready-status"></p>
       </div>
     </section>

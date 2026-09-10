@@ -426,6 +426,159 @@ app.get('/battle-inventory', async (req, res) => {
   }
 });
 
+function battleMatchView(id, data) {
+  return {
+    id,
+    status: data.status,
+    averageLimit: data.averageLimit,
+    participantIds: data.participantIds,
+    participants: data.participants,
+    decks: data.decks,
+    ready: data.ready,
+    createdAt: serializeDate(data.createdAt),
+    updatedAt: serializeDate(data.updatedAt)
+  };
+}
+
+async function getBattleCardsForUser(userId) {
+  const [itemsSnapshot, battleCardsSnapshot] = await Promise.all([
+    db.collection('items').where('buyerId', '==', userId).where('sold', '==', true).get(),
+    db.collection('battleCards').get()
+  ]);
+  const ownedImages = new Set();
+  itemsSnapshot.forEach(doc => {
+    const item = doc.data();
+    if (item.listedForSale !== true && item.itemType !== 'battle-card' && item.imageUrl) ownedImages.add(path.basename(item.imageUrl));
+  });
+  return battleCardsSnapshot.docs
+    .filter(doc => ownedImages.has(doc.data().linkedCardImage))
+    .map(doc => ({ id: doc.id, averageScore: Number(doc.data().averageScore) || 0 }));
+}
+
+app.post('/battle-matches', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { opponentId, averageLimit } = req.body || {};
+  const limit = Number(averageLimit);
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!opponentId || typeof opponentId !== 'string' || opponentId === requesterId) return res.status(400).send('Choose another player');
+  if (!Number.isInteger(limit) || limit < 1 || limit > 99) return res.status(400).send('Average limit must be a whole number from 1 to 99');
+
+  try {
+    const usersRef = db.collection('users');
+    const [requesterDoc, opponentDoc] = await Promise.all([usersRef.doc(requesterId).get(), usersRef.doc(opponentId).get()]);
+    if (!requesterDoc.exists || !opponentDoc.exists) return res.status(404).send('Player not found');
+    const now = new Date();
+    const matchRef = db.collection('battleMatches').doc();
+    const match = {
+      status: 'setup',
+      averageLimit: limit,
+      participantIds: [requesterId, opponentId],
+      participants: {
+        [requesterId]: { username: requesterDoc.data().username },
+        [opponentId]: { username: opponentDoc.data().username }
+      },
+      decks: { [requesterId]: [], [opponentId]: [] },
+      ready: { [requesterId]: false, [opponentId]: false },
+      createdAt: now,
+      updatedAt: now
+    };
+    await matchRef.set(match);
+    res.status(201).json(battleMatchView(matchRef.id, match));
+  } catch (error) {
+    console.error('Create battle match error:', error);
+    res.status(500).send('Could not invite player');
+  }
+});
+
+app.get('/battle-matches', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const snapshot = await db.collection('battleMatches').where('participantIds', 'array-contains', requesterId).get();
+    const matches = snapshot.docs
+      .map(doc => battleMatchView(doc.id, doc.data()))
+      .filter(match => match.status === 'setup')
+      .sort((left, right) => String(right.updatedAt || '').localeCompare(String(left.updatedAt || '')));
+    res.json(matches);
+  } catch (error) {
+    console.error('List battle matches error:', error);
+    res.status(500).send('Could not load battle invitations');
+  }
+});
+
+app.get('/battle-matches/:matchId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const matchDoc = await db.collection('battleMatches').doc(req.params.matchId).get();
+    if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
+    res.json(battleMatchView(matchDoc.id, matchDoc.data()));
+  } catch (error) {
+    console.error('Load battle match error:', error);
+    res.status(500).send('Could not load match');
+  }
+});
+
+app.post('/battle-matches/:matchId/deck', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { cardIds } = req.body || {};
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!Array.isArray(cardIds) || cardIds.length > 6 || new Set(cardIds).size !== cardIds.length || cardIds.some(id => typeof id !== 'string')) return res.status(400).send('A deck can contain up to six different cards');
+  try {
+    const matchRef = db.collection('battleMatches').doc(req.params.matchId);
+    const result = await db.runTransaction(async transaction => {
+      const matchDoc = await transaction.get(matchRef);
+      if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) throw new Error('Match not found');
+      const match = matchDoc.data();
+      if (match.status !== 'setup') throw new Error('Deck setup is closed');
+      const ownedCards = await getBattleCardsForUser(requesterId);
+      const ownedById = new Map(ownedCards.map(card => [card.id, card]));
+      if (cardIds.some(id => !ownedById.has(id))) throw new Error('One or more selected cards are not in your inventory');
+      const total = cardIds.reduce((sum, id) => sum + ownedById.get(id).averageScore, 0);
+      if (cardIds.length === 6 && total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
+      const decks = { ...match.decks, [requesterId]: cardIds };
+      const ready = { ...match.ready, [requesterId]: false };
+      transaction.update(matchRef, { decks, ready, updatedAt: new Date() });
+      return { ...match, decks, ready, updatedAt: new Date() };
+    });
+    res.json(battleMatchView(req.params.matchId, result));
+  } catch (error) {
+    if (['Match not found', 'Deck setup is closed', 'One or more selected cards are not in your inventory', 'This deck is above the match average limit'].includes(error.message)) return res.status(400).send(error.message);
+    console.error('Save battle deck error:', error);
+    res.status(500).send('Could not save deck');
+  }
+});
+
+app.post('/battle-matches/:matchId/ready', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const matchRef = db.collection('battleMatches').doc(req.params.matchId);
+    const result = await db.runTransaction(async transaction => {
+      const matchDoc = await transaction.get(matchRef);
+      if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) throw new Error('Match not found');
+      const match = matchDoc.data();
+      if (match.status !== 'setup') throw new Error('Match setup is closed');
+      const deck = match.decks?.[requesterId] || [];
+      if (deck.length !== 6) throw new Error('Choose exactly six cards before Ready');
+      const cards = await getBattleCardsForUser(requesterId);
+      const scoreById = new Map(cards.map(card => [card.id, card.averageScore]));
+      const total = deck.reduce((sum, id) => sum + (scoreById.get(id) ?? Infinity), 0);
+      if (total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
+      const ready = { ...match.ready, [requesterId]: true };
+      const bothReady = match.participantIds.every(id => ready[id] === true);
+      const status = bothReady ? 'board' : 'setup';
+      transaction.update(matchRef, { ready, status, updatedAt: new Date() });
+      return { ...match, ready, status, updatedAt: new Date() };
+    });
+    res.json(battleMatchView(req.params.matchId, result));
+  } catch (error) {
+    if (['Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit'].includes(error.message)) return res.status(400).send(error.message);
+    console.error('Ready battle match error:', error);
+    res.status(500).send('Could not ready the match');
+  }
+});
+
 app.post('/admin/battle-cards', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || !(await userIsAdmin(requesterId))) {
