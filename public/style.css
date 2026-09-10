@@ -259,6 +259,44 @@ body {
   left: -15px;
 }
 
+.battle-card-display-small .battle-teeth-top,
+.battle-card-display-small .battle-teeth-bottom {
+  height: 10px;
+  gap: 2px;
+}
+
+.battle-card-display-small .battle-teeth-top {
+  top: -10px;
+}
+
+.battle-card-display-small .battle-teeth-bottom {
+  bottom: -10px;
+}
+
+.battle-card-display-small .battle-teeth-left,
+.battle-card-display-small .battle-teeth-right {
+  width: 10px;
+  gap: 2px;
+}
+
+.battle-card-display-small .battle-teeth-left {
+  left: -10px;
+}
+
+.battle-card-display-small .battle-teeth-right {
+  right: -10px;
+}
+
+.battle-card-display-small .battle-tooth {
+  border-left-width: 3px;
+  border-right-width: 3px;
+  border-bottom-width: 6px;
+}
+
+.battle-card-display-small .battle-teeth-bottom .battle-tooth {
+  border-top-width: 6px;
+}
+
 .battle-side-number {
   position: absolute;
   font-size: 1.2rem;

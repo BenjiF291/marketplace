@@ -543,6 +543,21 @@ app.get('/battle-matches/:matchId', async (req, res) => {
   }
 });
 
+app.post('/battle-matches/:matchId/cancel', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const matchRef = db.collection('battleMatches').doc(req.params.matchId);
+    const matchDoc = await matchRef.get();
+    if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
+    if (matchDoc.data().status === 'setup') await matchRef.update({ status: 'cancelled', updatedAt: new Date() });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Cancel battle match error:', error);
+    res.status(500).send('Could not cancel match');
+  }
+});
+
 app.post('/battle-matches/:matchId/deck', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { cardIds } = req.body || {};

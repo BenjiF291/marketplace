@@ -598,6 +598,29 @@ function prepareBattleDeck() {
   updateBattleBudget();
 }
 
+async function cancelBattleMatch() {
+  if (!battleMatchId) return;
+  try {
+    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/cancel`, {
+      method: 'POST',
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!response.ok) throw new Error(await response.text());
+    if (battleMatchPoll) clearInterval(battleMatchPoll);
+    battleMatchPoll = null;
+    battleMatchId = null;
+    battleMatch = null;
+    selectedBattleCards = new Set();
+    battleReady = false;
+    document.getElementById('battleMatchLobby').hidden = false;
+    document.getElementById('battleSetupPanel').hidden = true;
+    document.getElementById('battleReadyStatus').textContent = '';
+    loadBattleInventory();
+  } catch (error) {
+    alert(error.message || 'Could not cancel match');
+  }
+}
+
 async function saveBattleDeck() {
   if (!battleMatchId || selectedBattleCards.size > 6) return;
   try {
