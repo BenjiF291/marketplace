@@ -197,32 +197,12 @@
 
     <section id="battleGameSection" class="card battle-game-section" style="display: none;">
       <h2>⚔️ Battle</h2>
-      <div class="battle-game-layout">
-        <div class="battle-inventory-panel">
-          <h3>Your battle inventory</h3>
-          <ul id="battleInventoryItems" class="battle-inventory-list"></ul>
-        </div>
-
-        <div class="battle-board-panel">
-          <div class="battle-board" aria-label="Battle board">
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-            <div class="battle-board-cell"></div>
-          </div>
-        </div>
+      <div class="battle-inventory-panel">
+        <h3>Select your battle cards</h3>
+        <p class="battle-help">Choose the cards you want to take into the battle.</p>
+        <ul id="battleInventoryItems" class="battle-inventory-list"></ul>
+        <button id="battleReadyButton" type="button" onclick="toggleBattleReady()" class="btn btn-success">Ready</button>
+        <p id="battleReadyStatus" class="battle-ready-status"></p>
       </div>
     </section>
 
@@ -237,6 +217,9 @@
 
         <label class="input-label" for="battleLinkedCardSelect">Link to normal card</label>
         <select id="battleLinkedCardSelect" class="input-field"></select>
+
+        <label class="input-label" for="battleCardColor">Card color</label>
+        <input id="battleCardColor" type="color" class="battle-card-color" value="#eeeeee">
 
         <div class="battle-side-grid">
           <div>

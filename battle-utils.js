@@ -13,6 +13,7 @@ function validateBattleCard(card) {
   };
 
   const linkedCardImage = typeof card.linkedCardImage === 'string' ? card.linkedCardImage.trim() : '';
+  const color = typeof card.color === 'string' ? card.color.trim() : '#eeeeee';
 
   if (!cleanName) {
     return { valid: false, error: 'Card name is required' };
@@ -32,6 +33,10 @@ function validateBattleCard(card) {
     return { valid: false, error: 'Select a normal card to link this battle card to' };
   }
 
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+    return { valid: false, error: 'Card color must be a valid hex color' };
+  }
+
   return {
     valid: true,
     normalized: {
@@ -41,7 +46,8 @@ function validateBattleCard(card) {
       right: Math.trunc(sides.right),
       bottom: Math.trunc(sides.bottom),
       left: Math.trunc(sides.left),
-      linkedCardImage
+      linkedCardImage,
+      color
     }
   };
 }

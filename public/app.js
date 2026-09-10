@@ -23,6 +23,8 @@ let currentUserIsAdmin = false;
 let availableCardImages = [];
 let savedPacks = [];
 let inventorySellMode = false;
+let selectedBattleCards = new Set();
+let battleReady = false;
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -45,8 +47,10 @@ function buildBattleCardMarkup(card, { small = false } = {}) {
     return teeth.join('');
   };
 
+  const color = /^#[0-9a-fA-F]{6}$/.test(String(card?.color || '')) ? card.color : '#eeeeee';
+
   return `
-    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}">
+    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}" style="--battle-card-color: ${color}">
       <span class="battle-side-number battle-side-number-top">${top}</span>
       <div class="battle-teeth battle-teeth-top">${makeTeeth(top, 'top')}</div>
 
@@ -77,14 +81,15 @@ function updateBattleCardPreview() {
     top: document.getElementById('battleCardTop')?.value || 0,
     right: document.getElementById('battleCardRight')?.value || 0,
     bottom: document.getElementById('battleCardBottom')?.value || 0,
-    left: document.getElementById('battleCardLeft')?.value || 0
+    left: document.getElementById('battleCardLeft')?.value || 0,
+    color: document.getElementById('battleCardColor')?.value || '#eeeeee'
   };
 
   preview.innerHTML = buildBattleCardMarkup(card, { small: false });
 }
 
 function bindBattleCardPreviewInputs() {
-  const ids = ['battleCardName', 'battleCardAverageScore', 'battleCardTop', 'battleCardRight', 'battleCardBottom', 'battleCardLeft'];
+  const ids = ['battleCardName', 'battleCardAverageScore', 'battleCardTop', 'battleCardRight', 'battleCardBottom', 'battleCardLeft', 'battleCardColor'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -107,6 +112,7 @@ async function createBattleCard() {
     right: document.getElementById('battleCardRight').value,
     bottom: document.getElementById('battleCardBottom').value,
     left: document.getElementById('battleCardLeft').value,
+    color: document.getElementById('battleCardColor').value,
     linkedCardImage: document.getElementById('battleLinkedCardSelect').value
   };
 
@@ -133,6 +139,7 @@ async function createBattleCard() {
     document.getElementById('battleCardRight').value = '0';
     document.getElementById('battleCardBottom').value = '0';
     document.getElementById('battleCardLeft').value = '0';
+    document.getElementById('battleCardColor').value = '#eeeeee';
     if (document.getElementById('battleLinkedCardSelect')) document.getElementById('battleLinkedCardSelect').value = '';
     updateBattleCardPreview();
     loadBattleCards();
@@ -365,11 +372,6 @@ function showSection(section) {
 
     loadVipInfo();
   } else if (section === 'battle') {
-    if (!currentUserIsAdmin) {
-      alert('Battle is currently only available to admins.');
-      return;
-    }
-
     const userSection = document.querySelector('.user-section');
     const transferSection = document.querySelector('.transfer-section');
     const sellSection = document.querySelector('.sell-section');
@@ -464,12 +466,11 @@ async function loadBattleInventory() {
   list.innerHTML = '<li>Loading battle cards...</li>';
 
   try {
-    const res = await fetch(`${API_URL}/inventory`, {
+    const res = await fetch(`${API_URL}/battle-inventory`, {
       headers: { 'X-User-Id': currentUserId }
     });
     if (!res.ok) throw new Error('Could not load battle inventory');
-    const items = await res.json();
-    const battleItems = Array.isArray(items) ? items.filter(item => item.itemType === 'battle-card') : [];
+    const battleItems = await res.json();
 
     if (battleItems.length === 0) {
       list.innerHTML = '<li>No battle cards in your inventory.</li>';
@@ -480,16 +481,32 @@ async function loadBattleInventory() {
     battleItems.forEach(item => {
       const li = document.createElement('li');
       li.className = 'battle-inventory-entry';
-      li.innerHTML = `
+      li.classList.toggle('is-selected', selectedBattleCards.has(item.battleCardId));
+      li.innerHTML = `<button type="button" class="battle-card-select" aria-pressed="${selectedBattleCards.has(item.battleCardId)}">
         <div class="battle-inventory-visual">${buildBattleCardMarkup(item, { small: true })}</div>
         <span>${item.name || 'Battle card'}</span>
-      `;
+      </button>`;
+      li.querySelector('button').onclick = () => {
+        if (selectedBattleCards.has(item.battleCardId)) selectedBattleCards.delete(item.battleCardId);
+        else selectedBattleCards.add(item.battleCardId);
+        loadBattleInventory();
+      };
       list.appendChild(li);
     });
   } catch (error) {
     console.error('Error loading battle inventory:', error);
     list.innerHTML = '<li>Could not load battle cards.</li>';
   }
+}
+
+function toggleBattleReady() {
+  battleReady = !battleReady;
+  const button = document.getElementById('battleReadyButton');
+  const status = document.getElementById('battleReadyStatus');
+  if (button) button.textContent = battleReady ? 'Not ready' : 'Ready';
+  if (status) status.textContent = battleReady
+    ? 'You are ready. Waiting for the other player.'
+    : 'Select your cards, then click Ready.';
 }
 
 /** Handle VIP tab display */
@@ -926,7 +943,7 @@ async function loadUsers() {
 
     const battleTab = document.getElementById('battleTab');
     const battleManagerTab = document.getElementById('battleManagerTab');
-    if (battleTab) battleTab.style.display = currentUserIsAdmin ? 'inline-flex' : 'none';
+    if (battleTab) battleTab.style.display = 'inline-flex';
     if (battleManagerTab) battleManagerTab.style.display = currentUserIsAdmin ? 'inline-flex' : 'none';
 
     if (currentUserIsAdmin) {

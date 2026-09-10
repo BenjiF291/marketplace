@@ -372,6 +372,7 @@ app.get('/battle-cards', async (req, res) => {
         bottom: Number(data.bottom) || 0,
         left: Number(data.left) || 0,
         linkedCardImage: data.linkedCardImage || null,
+        color: data.color || '#eeeeee',
         createdAt: serializeDate(data.createdAt)
       };
     });
@@ -379,6 +380,49 @@ app.get('/battle-cards', async (req, res) => {
   } catch (error) {
     console.error('Error loading battle cards:', error);
     res.status(500).send('Could not load battle cards');
+  }
+});
+
+app.get('/battle-inventory', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+
+  try {
+    const [itemsSnapshot, battleCardsSnapshot] = await Promise.all([
+      db.collection('items').where('buyerId', '==', requesterId).where('sold', '==', true).get(),
+      db.collection('battleCards').get()
+    ]);
+    const ownedImages = new Set();
+    itemsSnapshot.forEach(doc => {
+      const item = doc.data();
+      if (item.listedForSale !== true && item.itemType !== 'battle-card' && item.imageUrl) {
+        ownedImages.add(path.basename(item.imageUrl));
+      }
+    });
+
+    const battleItems = [];
+    battleCardsSnapshot.forEach(doc => {
+      const card = doc.data();
+      if (ownedImages.has(card.linkedCardImage)) {
+        battleItems.push({
+          id: doc.id,
+          battleCardId: doc.id,
+          name: card.name,
+          itemType: 'battle-card',
+          linkedCardImage: card.linkedCardImage,
+          color: card.color || '#eeeeee',
+          averageScore: Number(card.averageScore) || 0,
+          top: Number(card.top) || 0,
+          right: Number(card.right) || 0,
+          bottom: Number(card.bottom) || 0,
+          left: Number(card.left) || 0
+        });
+      }
+    });
+    res.json(battleItems);
+  } catch (error) {
+    console.error('Error loading battle inventory:', error);
+    res.status(500).send('Could not load battle inventory');
   }
 });
 

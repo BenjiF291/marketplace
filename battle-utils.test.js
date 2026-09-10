@@ -8,7 +8,8 @@ assert.deepEqual(validateBattleCard({
   right: 8,
   bottom: 6,
   left: 2,
-  linkedCardImage: 'wolf-fang.png'
+  linkedCardImage: 'wolf-fang.png',
+  color: '#d8f3dc'
 }), {
   valid: true,
   normalized: {
@@ -18,7 +19,8 @@ assert.deepEqual(validateBattleCard({
     right: 8,
     bottom: 6,
     left: 2,
-    linkedCardImage: 'wolf-fang.png'
+    linkedCardImage: 'wolf-fang.png',
+    color: '#d8f3dc'
   }
 });
 
