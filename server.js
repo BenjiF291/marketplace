@@ -462,6 +462,8 @@ function battleMatchView(id, data) {
     ready: data.ready,
     starterId: data.starterId || null,
     starterCard: data.starterCard || null,
+    prize: Number(data.prize) || 0,
+    prizePaid: data.prizePaid === true,
     turnPlayerId: data.turnPlayerId || null,
     board: data.board || Array(16).fill(null),
     winnerId: data.winnerId || null,
@@ -518,11 +520,13 @@ function battleCardForBoard(card, playerId, color) {
 
 app.post('/battle-matches', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { opponentId, averageLimit } = req.body || {};
+  const { opponentId, averageLimit, prize } = req.body || {};
   const limit = Number(averageLimit);
+  const matchPrize = Number(prize);
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   if (!opponentId || typeof opponentId !== 'string' || opponentId === requesterId) return res.status(400).send('Choose another player');
   if (!Number.isInteger(limit) || limit < 1 || limit > 99) return res.status(400).send('Average limit must be a whole number from 1 to 99');
+  if (!Number.isInteger(matchPrize) || matchPrize < 0 || matchPrize > 1000000000) return res.status(400).send('Prize must be a whole number of 0 or more');
 
   try {
     const usersRef = db.collection('users');
@@ -533,6 +537,8 @@ app.post('/battle-matches', async (req, res) => {
     const match = {
       status: 'setup',
       averageLimit: limit,
+      prize: matchPrize,
+      prizePaid: false,
       participantIds: [requesterId, opponentId],
       participants: {
         [requesterId]: { username: requesterDoc.data().username },
@@ -645,6 +651,10 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
       const match = matchDoc.data();
       if (match.status !== 'setup') throw new Error('Match setup is closed');
       const deck = match.decks?.[requesterId] || [];
+      if (Number(match.prize || 0) > 0) {
+        const playerDoc = await transaction.get(db.collection('users').doc(requesterId));
+        if (!playerDoc.exists || Number(playerDoc.data().balance || 0) < Number(match.prize)) throw new Error('You cannot cover the agreed prize');
+      }
       if (deck.length !== 6) throw new Error('Choose exactly six cards before Ready');
       const cards = await getBattleCardsForUser(requesterId);
       const scoreById = new Map(cards.map(card => [card.id, card.averageScore]));
@@ -690,7 +700,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    if (['Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit'].includes(error.message)) return res.status(400).send(error.message);
+    if (['Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit', 'You cannot cover the agreed prize'].includes(error.message)) return res.status(400).send(error.message);
     console.error('Ready battle match error:', error);
     res.status(500).send('Could not ready the match');
   }
@@ -721,6 +731,8 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const card = playerCards.find(entry => entry.id === cardId);
       if (!card) throw new Error('That card is no longer available');
       const placed = battleCardForBoard(card, requesterId, match.colors[requesterId]);
+      let placedOwnerId = requesterId;
+      let placedColor = match.colors[requesterId];
       const neighborDirections = [
         { offset: -4, attack: 'top', defend: 'bottom', valid: cell >= 4 },
         { offset: 4, attack: 'bottom', defend: 'top', valid: cell < 12 },
@@ -735,8 +747,13 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
         if (placed[direction.attack] > neighbor[direction.defend]) {
           neighbor.ownerId = requesterId;
           neighbor.color = match.colors[requesterId];
+        } else if (placed[direction.attack] < neighbor[direction.defend] && neighbor.ownerId !== 'starter') {
+          placedOwnerId = neighbor.ownerId;
+          placedColor = neighbor.color;
         }
       });
+      placed.ownerId = placedOwnerId;
+      placed.color = placedColor;
       board[cell] = placed;
       const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
       const isFinished = board.filter(Boolean).length >= totalCards + 1;
@@ -746,12 +763,33 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const winnerId = isFinished && winners.length === 1 ? winners[0].id : null;
       const nextTurn = isFinished ? null : match.participantIds.find(id => id !== requesterId);
       const status = isFinished ? 'finished' : 'board';
-      transaction.update(matchRef, { board, status, winnerId, turnPlayerId: nextTurn, updatedAt: new Date() });
-      return { ...match, board, status, winnerId, turnPlayerId: nextTurn, updatedAt: new Date() };
+      let prizePaid = match.prizePaid === true;
+      if (isFinished && !prizePaid && Number(match.prize || 0) > 0) {
+        const firstUserRef = db.collection('users').doc(match.participantIds[0]);
+        const secondUserRef = db.collection('users').doc(match.participantIds[1]);
+        const firstUserDoc = await transaction.get(firstUserRef);
+        const secondUserDoc = await transaction.get(secondUserRef);
+        const prize = Number(match.prize);
+        if (!firstUserDoc.exists || !secondUserDoc.exists || Number(firstUserDoc.data().balance || 0) < prize || Number(secondUserDoc.data().balance || 0) < prize) {
+          throw new Error('A player cannot cover the agreed prize');
+        }
+        if (winnerId) {
+          const winnerRef = db.collection('users').doc(winnerId);
+          const loserId = otherBattlePlayer(match, winnerId);
+          const loserRef = db.collection('users').doc(loserId);
+          const winnerDoc = winnerId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
+          const loserDoc = loserId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
+          transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize });
+          transaction.update(loserRef, { balance: Number(loserDoc.data().balance || 0) - prize });
+        }
+        prizePaid = true;
+      }
+      transaction.update(matchRef, { board, status, winnerId, prizePaid, turnPlayerId: nextTurn, updatedAt: new Date() });
+      return { ...match, board, status, winnerId, prizePaid, turnPlayerId: nextTurn, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    const expected = ['Match not found', 'The board is not active', 'It is not your turn', 'That card is not in your deck', 'That board space is occupied', 'That card has already been played', 'That card is no longer available'];
+    const expected = ['Match not found', 'The board is not active', 'It is not your turn', 'That card is not in your deck', 'That board space is occupied', 'That card has already been played', 'That card is no longer available', 'A player cannot cover the agreed prize'];
     if (expected.includes(error.message)) return res.status(400).send(error.message);
     console.error('Place battle card error:', error);
     res.status(500).send('Could not place card');

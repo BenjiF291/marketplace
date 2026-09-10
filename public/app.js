@@ -561,13 +561,15 @@ async function loadBattleOpponents() {
 async function inviteBattlePlayer() {
   const opponentId = document.getElementById('battleOpponentSelect')?.value;
   const averageLimit = Number(document.getElementById('battleAverageLimit')?.value);
+  const prize = Number(document.getElementById('battlePrize')?.value || 0);
   if (!opponentId) return alert('Choose a player to invite.');
   if (!Number.isInteger(averageLimit) || averageLimit < 1 || averageLimit > 99) return alert('Enter an average value from 1 to 99.');
+  if (!Number.isInteger(prize) || prize < 0) return alert('Enter a valid prize.');
   try {
     const response = await fetch(`${API_URL}/battle-matches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ opponentId, averageLimit })
+      body: JSON.stringify({ opponentId, averageLimit, prize })
     });
     if (!response.ok) throw new Error(await response.text());
     battleMatch = await response.json();
@@ -600,7 +602,7 @@ async function findBattleInvitation() {
 function prepareBattleDeck({ syncSelection = true } = {}) {
   document.getElementById('battleMatchLobby').hidden = true;
   document.getElementById('battleSetupPanel').hidden = false;
-  document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Build a six-card deck.`;
+  document.getElementById('battleMatchStatus').textContent = `Match average limit: ${battleMatch.averageLimit}. Agreed prize: ${battleMatch.prize || 0} Footy. Build a six-card deck.`;
   if (['board', 'finished'].includes(battleMatch.status)) {
     document.getElementById('battleSetupPanel').hidden = true;
     document.getElementById('battleDeckPanel').hidden = true;
@@ -675,10 +677,18 @@ function renderBattleBoard() {
   if (battleMatch.status === 'finished') {
     const result = battleMatch.winnerId ? `${battleMatch.participants?.[battleMatch.winnerId]?.username || 'A player'} wins the battle!` : 'The battle is a draw.';
     turnStatus.textContent = result;
+    const resultEl = document.getElementById('battleResult');
+    if (resultEl) {
+      resultEl.textContent = battleMatch.winnerId === currentUserId
+        ? `You won: ${battleMatch.prize || 0} Footy`
+        : battleMatch.winnerId ? 'You lost.' : 'Draw: no prize was awarded.';
+    }
   } else {
     turnStatus.textContent = isMyTurn
       ? 'Your turn. Select a card, then click an empty space.'
       : `${battleMatch.participants?.[battleMatch.turnPlayerId]?.username || 'The other player'} is choosing a card. ${starterName} started.`;
+    const resultEl = document.getElementById('battleResult');
+    if (resultEl) resultEl.textContent = '';
   }
   board.innerHTML = '';
   const cells = Array.isArray(battleMatch.board) ? battleMatch.board : Array(16).fill(null);
