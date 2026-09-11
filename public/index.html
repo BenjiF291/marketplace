@@ -202,6 +202,8 @@
         <input id="battleAverageLimit" class="input-field" type="number" min="1" max="99" step="1" placeholder="1 to 99">
         <label class="input-label" for="battlePrize">Prize each player agrees to stake</label>
         <input id="battlePrize" class="input-field" type="number" min="0" step="1" placeholder="0 for no prize">
+        <label class="input-label" for="battleTimeControl">Time control (seconds per player)</label>
+        <input id="battleTimeControl" class="input-field" type="number" min="15" max="3600" step="1" value="90" placeholder="15 to 3600">
         <label class="input-label" for="battleOpponentSelect">Invite player</label>
         <select id="battleOpponentSelect" class="input-field"></select>
         <button type="button" onclick="inviteBattlePlayer()" class="btn btn-primary">Invite to match</button>

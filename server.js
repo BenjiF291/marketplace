@@ -544,8 +544,8 @@ app.post('/battle-matches', async (req, res) => {
       averageLimit: limit,
       prize: matchPrize,
       prizePaid: false,
-      timeControlSeconds: timeControl,
-      clocks: { [requesterId]: timeControl * 1000, [opponentId]: timeControl * 1000 },
+      timeControlSeconds,
+      clocks: { [requesterId]: timeControlSeconds * 1000, [opponentId]: timeControlSeconds * 1000 },
       participantIds: [requesterId, opponentId],
       participants: {
         [requesterId]: { username: requesterDoc.data().username },

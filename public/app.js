@@ -571,14 +571,16 @@ async function inviteBattlePlayer() {
   const opponentId = document.getElementById('battleOpponentSelect')?.value;
   const averageLimit = Number(document.getElementById('battleAverageLimit')?.value);
   const prize = Number(document.getElementById('battlePrize')?.value || 0);
+  const timeControlSeconds = Number(document.getElementById('battleTimeControl')?.value || 90);
   if (!opponentId) return alert('Choose a player to invite.');
   if (!Number.isInteger(averageLimit) || averageLimit < 1 || averageLimit > 99) return alert('Enter an average value from 1 to 99.');
   if (!Number.isInteger(prize) || prize < 0) return alert('Enter a valid prize.');
+  if (!Number.isInteger(timeControlSeconds) || timeControlSeconds < 15 || timeControlSeconds > 3600) return alert('Time control must be between 15 and 3600 seconds.');
   try {
     const response = await fetch(`${API_URL}/battle-matches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ opponentId, averageLimit, prize })
+      body: JSON.stringify({ opponentId, averageLimit, prize, timeControlSeconds })
     });
     if (!response.ok) throw new Error(await response.text());
     battleMatch = await response.json();
