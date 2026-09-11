@@ -718,7 +718,7 @@ function renderBattleBoard() {
     board.appendChild(cell);
   });
 
-  const playedIds = new Set(cells.filter(entry => entry && entry.ownerId === currentUserId).map(entry => entry.cardId));
+  const playedIds = new Set(cells.filter(entry => entry && (entry.playedBy || entry.ownerId) === currentUserId).map(entry => entry.cardId));
   const myDeck = new Set(battleMatch.decks?.[currentUserId] || []);
   hand.innerHTML = '';
   battleInventoryCache.filter(card => myDeck.has(card.battleCardId) && !playedIds.has(card.battleCardId)).forEach(card => {
