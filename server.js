@@ -734,7 +734,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       if (!deck.includes(cardId)) throw new Error('That card is not in your deck');
       const board = Array.isArray(match.board) ? [...match.board] : Array(16).fill(null);
       if (board[cell]) throw new Error('That board space is occupied');
-      if (board.some(entry => entry?.cardId === cardId)) throw new Error('That card has already been played');
+      if (board.some(entry => entry?.ownerId === requesterId && entry?.cardId === cardId)) throw new Error('That card has already been played');
       const playerCards = await getBattleCardsForUser(requesterId);
       const opponentId = otherBattlePlayer(match, requesterId);
       const card = playerCards.find(entry => entry.id === cardId);
