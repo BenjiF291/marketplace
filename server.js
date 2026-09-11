@@ -464,6 +464,9 @@ function battleMatchView(id, data) {
     starterCard: data.starterCard || null,
     prize: Number(data.prize) || 0,
     prizePaid: data.prizePaid === true,
+    timeControlSeconds: Number(data.timeControlSeconds) || 90,
+    clocks: data.clocks || {},
+    turnStartedAt: serializeDate(data.turnStartedAt),
     turnPlayerId: data.turnPlayerId || null,
     board: data.board || Array(16).fill(null),
     winnerId: data.winnerId || null,
@@ -521,12 +524,14 @@ function battleCardForBoard(card, playerId, color) {
 app.post('/battle-matches', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   const { opponentId, averageLimit, prize } = req.body || {};
+  const { timeControlSeconds } = req.body || {};
   const limit = Number(averageLimit);
   const matchPrize = Number(prize);
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   if (!opponentId || typeof opponentId !== 'string' || opponentId === requesterId) return res.status(400).send('Choose another player');
   if (!Number.isInteger(limit) || limit < 1 || limit > 99) return res.status(400).send('Average limit must be a whole number from 1 to 99');
   if (!Number.isInteger(matchPrize) || matchPrize < 0 || matchPrize > 1000000000) return res.status(400).send('Prize must be a whole number of 0 or more');
+  if (!Number.isInteger(timeControlSeconds) || timeControlSeconds < 15 || timeControlSeconds > 3600) return res.status(400).send('Time control must be between 15 and 3600 seconds');
 
   try {
     const usersRef = db.collection('users');
@@ -539,6 +544,8 @@ app.post('/battle-matches', async (req, res) => {
       averageLimit: limit,
       prize: matchPrize,
       prizePaid: false,
+      timeControlSeconds: timeControl,
+      clocks: { [requesterId]: timeControl * 1000, [opponentId]: timeControl * 1000 },
       participantIds: [requesterId, opponentId],
       participants: {
         [requesterId]: { username: requesterDoc.data().username },
@@ -677,6 +684,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
         starterId = match.participantIds[0];
         if (totals.get(match.participantIds[1]) > totals.get(starterId)) starterId = match.participantIds[1];
         turnPlayerId = starterId;
+        const turnStartedAt = new Date();
         const allBattleCards = await db.collection('battleCards').get();
         const starterCandidates = allBattleCards.docs.map(doc => ({
           id: doc.id,
@@ -695,8 +703,9 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
         board[5] = starterCard;
         status = 'board';
       }
-      transaction.update(matchRef, { ready, status, starterId, turnPlayerId, starterCard, board, updatedAt: new Date() });
-      return { ...match, ready, status, starterId, turnPlayerId, starterCard, board, updatedAt: new Date() };
+      const turnStartedAtValue = bothReady ? new Date() : match.turnStartedAt || null;
+      transaction.update(matchRef, { ready, status, starterId, turnPlayerId, starterCard, board, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
+      return { ...match, ready, status, starterId, turnPlayerId, starterCard, board, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {

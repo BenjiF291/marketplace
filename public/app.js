@@ -21,6 +21,7 @@ const wheelSegments = [8, 10, 12, 16, 20, 24];
 let selectedItemForListing = null; // Track selected item for listing
 let currentUserIsAdmin = false;
 let availableCardImages = [];
+let linkedBattleCardImages = new Set();
 let savedPacks = [];
 let inventorySellMode = false;
 let selectedBattleCards = new Set();
@@ -189,6 +190,14 @@ async function loadBattleCards() {
     const list = document.getElementById('battleCardList');
     if (!list) return;
     list.innerHTML = '';
+
+    // Track which normal cards are already linked to a battle card
+    linkedBattleCardImages = new Set(
+      (Array.isArray(cards) ? cards : [])
+        .map(card => card.linkedCardImage)
+        .filter(Boolean)
+    );
+    populateBattleLinkedCardSelect();
 
     if (!Array.isArray(cards) || cards.length === 0) {
       list.innerHTML = '<li>No battle cards created yet.</li>';
@@ -1416,16 +1425,7 @@ async function loadCardOptions() {
       });
     }
 
-    const battleLinkedCardSelect = document.getElementById('battleLinkedCardSelect');
-    if (battleLinkedCardSelect) {
-      battleLinkedCardSelect.innerHTML = '<option value="">Select a normal card</option>';
-      availableCardImages.forEach(filename => {
-        const option = document.createElement('option');
-        option.value = filename;
-        option.textContent = filename;
-        battleLinkedCardSelect.appendChild(option);
-      });
-    }
+    populateBattleLinkedCardSelect();
 
     renderPackCardPicker();
     populateDirectListingProducts();
@@ -1434,6 +1434,21 @@ async function loadCardOptions() {
   } catch (error) {
     console.error('Error loading card images:', error);
   }
+}
+
+function populateBattleLinkedCardSelect() {
+  const battleLinkedCardSelect = document.getElementById('battleLinkedCardSelect');
+  if (!battleLinkedCardSelect) return;
+
+  battleLinkedCardSelect.innerHTML = '<option value="">Select a normal card</option>';
+  availableCardImages.forEach(filename => {
+    // Skip normal cards that are already linked to a battle card
+    if (linkedBattleCardImages.has(filename)) return;
+    const option = document.createElement('option');
+    option.value = filename;
+    option.textContent = filename;
+    battleLinkedCardSelect.appendChild(option);
+  });
 }
 
 function renderPackCardPicker() {
