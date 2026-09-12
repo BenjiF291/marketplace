@@ -32,6 +32,8 @@ let battleInventoryCache = [];
 let battleMatchPoll = null;
 let battleDeckSavePending = false;
 let battleSelectedPlacementCard = null;
+let battleClockInterval = null;
+let savedBattleDecks = [];
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
@@ -417,6 +419,7 @@ function showSection(section) {
 
     loadBattleInventory();
     loadBattleOpponents();
+    loadSavedBattleDecks();
     findBattleInvitation();
   } else if (section === 'battle-manager') {
     if (!currentUserIsAdmin) {
@@ -639,6 +642,7 @@ async function cancelBattleMatch() {
       headers: { 'X-User-Id': currentUserId }
     });
     if (!response.ok) throw new Error(await response.text());
+    stopBattleClockTicking();
     if (battleMatchPoll) clearInterval(battleMatchPoll);
     battleMatchPoll = null;
     battleMatchId = null;
@@ -678,11 +682,143 @@ async function saveBattleDeck() {
   }
 }
 
+/* ------------------ SAVED BATTLE DECKS ------------------ */
+async function loadSavedBattleDecks() {
+  try {
+    const res = await fetch(`${API_URL}/battle-decks`, { headers: { 'X-User-Id': currentUserId } });
+    if (!res.ok) return;
+    savedBattleDecks = await res.json();
+    const select = document.getElementById('battleSavedDeckSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select a saved deck…</option>';
+    savedBattleDecks.forEach(deck => {
+      const option = document.createElement('option');
+      option.value = deck.id;
+      option.textContent = deck.name;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error loading saved battle decks:', error);
+  }
+}
+
+async function saveCurrentBattleDeck() {
+  const nameInput = document.getElementById('battleDeckName');
+  const name = nameInput && nameInput.value.trim();
+  if (!name) return alert('Enter a deck name first.');
+  if (selectedBattleCards.size !== 6) return alert('Select exactly six cards before saving.');
+  try {
+    const res = await fetch(`${API_URL}/battle-decks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({
+        name,
+        cardIds: [...selectedBattleCards],
+        color: document.getElementById('battlePlayerColor')?.value || '#2878d0'
+      })
+    });
+    if (!res.ok) return alert(await res.text());
+    alert('Deck saved!');
+    nameInput.value = '';
+    await loadSavedBattleDecks();
+  } catch (error) {
+    console.error('Error saving battle deck:', error);
+    alert('Could not save deck.');
+  }
+}
+
+async function loadSavedBattleDeck() {
+  const select = document.getElementById('battleSavedDeckSelect');
+  const deckId = select && select.value;
+  if (!deckId) return alert('Select a saved deck first.');
+  const deck = savedBattleDecks.find(d => d.id === deckId);
+  if (!deck) return alert('Deck not found.');
+  selectedBattleCards = new Set(deck.cardIds);
+  const colorInput = document.getElementById('battlePlayerColor');
+  if (colorInput && deck.color) colorInput.value = deck.color;
+  updateBattleBudget();
+  renderBattleInventory();
+  saveBattleDeck();
+}
+
+async function deleteSavedBattleDeck() {
+  const select = document.getElementById('battleSavedDeckSelect');
+  const deckId = select && select.value;
+  if (!deckId) return alert('Select a saved deck first.');
+  const confirmed = window.confirm('Delete this saved deck?');
+  if (!confirmed) return;
+  try {
+    const res = await fetch(`${API_URL}/battle-decks/${deckId}`, {
+      method: 'DELETE',
+      headers: { 'X-User-Id': currentUserId }
+    });
+    if (!res.ok) return alert(await res.text());
+    alert('Deck deleted.');
+    await loadSavedBattleDecks();
+  } catch (error) {
+    console.error('Error deleting battle deck:', error);
+    alert('Could not delete deck.');
+  }
+}
+
+function formatClockTime(ms) {
+  if (!Number.isFinite(ms) || ms < 0) ms = 0;
+  const totalSeconds = Math.ceil(ms / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function updateBattleClocks() {
+  if (!battleMatch || !battleMatch.clocks) return;
+  const meEl = document.getElementById('battleClockMyTime');
+  const oppEl = document.getElementById('battleClockOpponentTime');
+  const meClockEl = document.getElementById('battleClockMe');
+  const oppClockEl = document.getElementById('battleClockOpponent');
+  if (!meEl || !oppEl || !meClockEl || !oppClockEl) return;
+
+  const myId = currentUserId;
+  const opponentId = battleMatch.participantIds.find(id => id !== myId);
+  const myClock = Number(battleMatch.clocks[myId]) || 0;
+  const oppClock = Number(battleMatch.clocks[opponentId]) || 0;
+
+  let myDisplay = myClock;
+  let oppDisplay = oppClock;
+  if (battleMatch.status === 'board' && battleMatch.turnPlayerId === myId && battleMatch.turnStartedAt) {
+    const elapsed = Date.now() - new Date(battleMatch.turnStartedAt).getTime();
+    myDisplay = Math.max(0, myClock - elapsed);
+  } else if (battleMatch.status === 'board' && battleMatch.turnPlayerId === opponentId && battleMatch.turnStartedAt) {
+    const elapsed = Date.now() - new Date(battleMatch.turnStartedAt).getTime();
+    oppDisplay = Math.max(0, oppClock - elapsed);
+  }
+
+  meEl.textContent = formatClockTime(myDisplay);
+  oppEl.textContent = formatClockTime(oppDisplay);
+  meClockEl.classList.toggle('is-active', battleMatch.turnPlayerId === myId && battleMatch.status === 'board');
+  oppClockEl.classList.toggle('is-active', battleMatch.turnPlayerId === opponentId && battleMatch.status === 'board');
+}
+
+function startBattleClockTicking() {
+  if (battleClockInterval) clearInterval(battleClockInterval);
+  updateBattleClocks();
+  battleClockInterval = setInterval(updateBattleClocks, 250);
+}
+
+function stopBattleClockTicking() {
+  if (battleClockInterval) {
+    clearInterval(battleClockInterval);
+    battleClockInterval = null;
+  }
+}
+
 function renderBattleBoard() {
   const board = document.getElementById('battleBoard');
   const hand = document.getElementById('battleHand');
   const turnStatus = document.getElementById('battleTurnStatus');
   if (!board || !hand || !battleMatch) return;
+  updateBattleClocks();
+  if (battleMatch.status === 'board') startBattleClockTicking();
+  else stopBattleClockTicking();
   const isMyTurn = battleMatch.turnPlayerId === currentUserId;
   const starterName = battleMatch.participants?.[battleMatch.starterId]?.username || 'player';
   if (battleMatch.status === 'finished') {
@@ -765,7 +901,10 @@ async function loadBattleMatch() {
     if (!battleDeckSavePending) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
     battleReady = battleMatch.ready?.[currentUserId] === true;
     prepareBattleDeck({ syncSelection: !battleDeckSavePending });
-    if (battleMatch.status === 'finished' && battleMatchPoll) clearInterval(battleMatchPoll);
+    if (battleMatch.status === 'finished') {
+      stopBattleClockTicking();
+      if (battleMatchPoll) clearInterval(battleMatchPoll);
+    }
   } catch (error) {
     console.error('Battle match polling error:', error);
   }
@@ -784,6 +923,7 @@ async function toggleBattleReady() {
     battleReady = true;
     updateBattleBudget();
     prepareBattleDeck();
+    if (battleMatch.status === 'board') startBattleClockTicking();
     document.getElementById('battleReadyStatus').textContent = battleMatch.status === 'board'
       ? 'Both players are ready. The board is next.'
       : 'You are ready. Waiting for the other player.';

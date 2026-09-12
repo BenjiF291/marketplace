@@ -450,6 +450,60 @@ app.get('/battle-inventory', async (req, res) => {
   }
 });
 
+/* ------------------ SAVED BATTLE DECKS ------------------ */
+app.get('/battle-decks', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const snapshot = await db.collection('battleDecks').where('userId', '==', requesterId).orderBy('createdAt', 'desc').get();
+    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  } catch (error) {
+    console.error('Error loading battle decks:', error);
+    res.status(500).send('Could not load battle decks');
+  }
+});
+
+app.post('/battle-decks', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { name, cardIds, color } = req.body || {};
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 50) return res.status(400).send('Enter a deck name up to 50 characters');
+  if (!Array.isArray(cardIds) || cardIds.length !== 6 || new Set(cardIds).size !== cardIds.length || cardIds.some(id => typeof id !== 'string')) return res.status(400).send('A saved deck must contain exactly six different cards');
+  if (!isBattleColor(color)) return res.status(400).send('Choose a valid player color');
+  try {
+    const ownedCards = await getBattleCardsForUser(requesterId);
+    const ownedById = new Map(ownedCards.map(card => [card.id, card]));
+    if (cardIds.some(id => !ownedById.has(id))) return res.status(400).send('One or more selected cards are not in your inventory');
+    const deckRef = await db.collection('battleDecks').add({
+      userId: requesterId,
+      name: name.trim(),
+      cardIds,
+      color,
+      createdAt: new Date()
+    });
+    res.status(201).json({ success: true, id: deckRef.id });
+  } catch (error) {
+    console.error('Error saving battle deck:', error);
+    res.status(500).send('Could not save battle deck');
+  }
+});
+
+app.delete('/battle-decks/:deckId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { deckId } = req.params;
+  if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
+  try {
+    const deckRef = db.collection('battleDecks').doc(deckId);
+    const deckDoc = await deckRef.get();
+    if (!deckDoc.exists || deckDoc.data().userId !== requesterId) return res.status(404).send('Deck not found');
+    await deckRef.delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting battle deck:', error);
+    res.status(500).send('Could not delete battle deck');
+  }
+});
+
 function battleMatchView(id, data) {
   return {
     id,
@@ -765,14 +819,25 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       placed.ownerId = placedOwnerId;
       placed.color = placedColor;
       board[cell] = placed;
+
+      // Decrement the current player's clock by the time taken for this turn
+      const now = new Date();
+      const turnStarted = match.turnStartedAt ? (match.turnStartedAt.toDate ? match.turnStartedAt.toDate() : new Date(match.turnStartedAt)) : now;
+      const elapsedMs = Math.max(0, now.getTime() - turnStarted.getTime());
+      const clocks = { ...(match.clocks || {}) };
+      const currentClock = Math.max(0, (Number(clocks[requesterId]) || 0) - elapsedMs);
+      clocks[requesterId] = currentClock;
+      const timeOut = currentClock <= 0;
+
       const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
-      const isFinished = board.filter(Boolean).length >= totalCards + 1;
+      const isFinished = timeOut || board.filter(Boolean).length >= totalCards + 1;
       const ownedCounts = match.participantIds.map(id => ({ id, count: board.filter(entry => entry?.ownerId === id).length }));
       const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
       const winners = ownedCounts.filter(entry => entry.count === highestCount);
       const winnerId = isFinished && winners.length === 1 ? winners[0].id : null;
       const nextTurn = isFinished ? null : match.participantIds.find(id => id !== requesterId);
       const status = isFinished ? 'finished' : 'board';
+      const turnStartedAtValue = isFinished ? null : now;
       let prizePaid = match.prizePaid === true;
       if (isFinished && !prizePaid && Number(match.prize || 0) > 0) {
         const firstUserRef = db.collection('users').doc(match.participantIds[0]);
@@ -794,8 +859,8 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
         }
         prizePaid = true;
       }
-      transaction.update(matchRef, { board, status, winnerId, prizePaid, turnPlayerId: nextTurn, updatedAt: new Date() });
-      return { ...match, board, status, winnerId, prizePaid, turnPlayerId: nextTurn, updatedAt: new Date() };
+      transaction.update(matchRef, { board, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
+      return { ...match, board, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
