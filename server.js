@@ -8,6 +8,7 @@ require('dotenv').config();
 const app = express();
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
 const { validateBattleCard } = require('./battle-utils');
+const { gemRecipe, validateGemCards } = require('./gem-utils');
 
 /* ------------------ CORS ------------------ */
 // Must be first
@@ -2383,6 +2384,56 @@ app.post('/sell-tier-card', async (req, res) => {
   } catch (error) {
     console.error('Error selling card to tier:', error);
     res.status(500).send(error.message || 'Could not sell this card');
+  }
+});
+
+app.get('/gem-converter', async (req, res) => {
+  const userId = req.header('X-User-Id');
+  if (!userId) return res.status(401).send('Missing X-User-Id header');
+  try {
+    const [user, tiers] = await Promise.all([db.collection('users').doc(userId).get(), getAscendTierConfig()]);
+    if (!user.exists) return res.status(404).send('User not found');
+    const recipes = tiers.filter(tier => Number(tier.sellPrice) > 0).map(tier => ({
+      ...gemRecipe(tier), cards: tier.cards || [],
+      costs: [1, 2, 3].map(count => gemRecipe(tier, count).cost)
+    }));
+    res.json({ recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
+  } catch (error) {
+    console.error('Error loading gem converter:', error);
+    res.status(500).send('Could not load gem converter');
+  }
+});
+
+app.post('/gem-converter', async (req, res) => {
+  const userId = req.header('X-User-Id');
+  if (!userId) return res.status(401).send('Missing X-User-Id header');
+  const { tierId, itemIds } = req.body;
+  if (typeof tierId !== 'string' || !tierId || tierId.includes('/') || !Array.isArray(itemIds) ||
+    itemIds.length < 1 || itemIds.length > 3 || new Set(itemIds).size !== itemIds.length ||
+    itemIds.some(id => typeof id !== 'string' || !id || id.includes('/'))) {
+    return res.status(400).send('Choose a tier and one to three different cards');
+  }
+  try {
+    const result = await db.runTransaction(async transaction => {
+      const userRef = db.collection('users').doc(userId);
+      const refs = itemIds.map(id => db.collection('items').doc(id));
+      const [user, tierDoc, ...cards] = await transaction.getAll(userRef, db.collection('ascendTiers').doc(tierId), ...refs);
+      if (!user.exists || !tierDoc.exists) throw new Error('User or tier no longer exists');
+      const tier = { ...tierDoc.data(), id: tierDoc.id };
+      validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
+      const recipe = gemRecipe(tier, itemIds.length);
+      const balance = Number(user.data().balance || 0);
+      if (!Number.isFinite(balance) || balance < recipe.cost) throw new Error('Not enough Footy');
+      const gems = { ...(user.data().gems || {}) };
+      gems[recipe.gemKey] = Number(gems[recipe.gemKey] || 0) + recipe.reward;
+      const newBalance = Math.round((balance - recipe.cost) * 100) / 100;
+      transaction.update(userRef, { balance: newBalance, gems });
+      refs.forEach(ref => transaction.delete(ref));
+      return { ...recipe, gems, balance: newBalance };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(400).send(error.message || 'Could not convert cards');
   }
 });
 

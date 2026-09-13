@@ -2843,3 +2843,117 @@ checkServerStatus();
 loadUsers();
 loadItems();
 // Inventory loads only when the tab is selected, to avoid closing the market from inventory fetch issues
+
+let gemConverterData = null;
+let gemInventory = [];
+let gemSelection = new Set();
+let gemBusy = false;
+let gemLoading = false;
+
+async function loadGemConverter() {
+  if (gemBusy || gemLoading) return;
+  gemLoading = true;
+  document.getElementById('gemStart').disabled = true;
+  const status = document.getElementById('gemStatus');
+  status.textContent = 'Loading converter…';
+  try {
+    const responses = await Promise.all([
+      fetch(`${API_URL}/gem-converter`, { headers: { 'X-User-Id': currentUserId } }),
+      fetch(`${API_URL}/inventory`, { headers: { 'X-User-Id': currentUserId } })
+    ]);
+    for (const response of responses) if (!response.ok) throw new Error(await response.text());
+    [gemConverterData, gemInventory] = await Promise.all(responses.map(response => response.json()));
+    const select = document.getElementById('gemRecipe');
+    const previous = select.value;
+    select.replaceChildren();
+    for (const recipe of gemConverterData.recipes) {
+      const option = document.createElement('option');
+      option.value = recipe.tierId;
+      option.textContent = `${recipe.gemName} — ${recipe.tierName}`;
+      select.appendChild(option);
+    }
+    if (gemConverterData.recipes.some(recipe => recipe.tierId === previous)) select.value = previous;
+    const names = Object.fromEntries(gemConverterData.recipes.map(recipe => [recipe.gemKey, recipe.gemName]));
+    document.getElementById('gemBalances').textContent = 'Your gems: ' +
+      (Object.entries(gemConverterData.gems).map(([key, count]) => `${names[key] || key}: ${count}`).join(' · ') || 'None yet');
+    status.textContent = gemConverterData.recipes.length ? '' : 'No tiers have sell prices configured yet.';
+    gemLoading = false;
+    selectGemRecipe();
+  } catch (error) {
+    gemConverterData = null;
+    document.getElementById('gemCards').replaceChildren();
+    status.textContent = error.message || 'Could not load converter';
+  } finally {
+    gemLoading = false;
+  }
+}
+
+function selectGemRecipe() {
+  gemSelection.clear();
+  renderGemCards();
+}
+
+function renderGemCards() {
+  const recipe = gemConverterData?.recipes.find(entry => entry.tierId === document.getElementById('gemRecipe').value);
+  const container = document.getElementById('gemCards');
+  container.replaceChildren();
+  const eligible = recipe ? gemInventory.filter(item => (!item.itemType || item.itemType === 'card') &&
+    !item.listedForSale && recipe.cards.some(card => String(card).split(/[\\/]/).pop() === getCardKeyFromItem(item))) : [];
+  for (const item of eligible) {
+    const label = document.createElement('label');
+    label.className = 'gem-card';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = gemSelection.has(item.id);
+    checkbox.disabled = gemBusy || gemLoading || (!checkbox.checked && gemSelection.size >= 3);
+    checkbox.onchange = () => {
+      if (checkbox.checked) gemSelection.add(item.id);
+      else gemSelection.delete(item.id);
+      renderGemCards();
+    };
+    label.appendChild(checkbox);
+    if (item.imageUrl) {
+      const img = document.createElement('img');
+      img.src = item.imageUrl;
+      img.alt = item.name || 'Card';
+      label.appendChild(img);
+    }
+    const name = document.createElement('span');
+    name.textContent = item.name || 'Card';
+    label.appendChild(name);
+    container.appendChild(label);
+  }
+  if (!eligible.length) container.textContent = 'No available cards for this gem.';
+  const count = gemSelection.size;
+  const cost = count && recipe ? recipe.costs[count - 1] : 0;
+  document.getElementById('gemQuote').textContent = `${count}/3 cards loaded · ${[0, 3, 7, 12][count]} gems · ${cost} Footy (balance: ${gemConverterData?.balance || 0})`;
+  document.getElementById('gemStart').disabled = gemBusy || gemLoading || !count || !recipe || cost > gemConverterData.balance;
+  document.getElementById('gemStart').textContent = gemBusy ? 'Converting…' : `Start converter · ${cost} Footy`;
+  document.getElementById('gemRecipe').disabled = gemBusy || gemLoading;
+}
+
+async function startGemConverter() {
+  if (gemBusy || gemLoading || !gemSelection.size) return;
+  const tierId = document.getElementById('gemRecipe').value;
+  const itemIds = [...gemSelection];
+  gemBusy = true;
+  renderGemCards();
+  let message;
+  try {
+    const response = await fetch(`${API_URL}/gem-converter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ tierId, itemIds })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const result = await response.json();
+    message = `Created ${result.reward} ${result.gemName} gems for ${result.cost} Footy. ${itemIds.length} cards consumed.`;
+  } catch (error) {
+    message = error.message || 'Conversion could not be confirmed. Refresh your inventory before trying again.';
+  } finally {
+    gemBusy = false;
+    gemSelection.clear();
+    await Promise.all([loadGemConverter(), loadInventory(), updateBalance()]);
+    document.getElementById('gemStatus').textContent = message;
+  }
+}

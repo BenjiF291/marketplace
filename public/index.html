@@ -316,6 +316,19 @@
           <button id="openAscendMenuBtn" onclick="openAscendMenu()" class="btn btn-primary">Ascend</button>
         </div>
       </div>
+      <details id="gemConverter" class="gem-converter" ontoggle="if (this.open) loadGemConverter()">
+        <summary>💎 Gem Converter</summary>
+        <p>Choose a gem, then load up to 3 cards of its tier. Cards are consumed when you start the machine.</p>
+        <p>1 card → 3 gems · 2 cards → 7 gems · 3 cards → 12 gems</p>
+        <p>Startup cost: tier sell price × 1.5 per card.</p>
+        <div id="gemBalances" aria-label="Your gems"></div>
+        <label for="gemRecipe">Gem to make</label>
+        <select id="gemRecipe" onchange="selectGemRecipe()"></select>
+        <div id="gemCards" class="gem-cards"></div>
+        <p id="gemQuote"></p>
+        <button id="gemStart" class="btn btn-primary" onclick="startGemConverter()" disabled>Start converter</button>
+        <p id="gemStatus" role="status" aria-live="polite"></p>
+      </details>
       <ul id="inventoryItems" class="items-list"></ul>
     </section>
 
