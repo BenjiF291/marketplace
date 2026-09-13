@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
+const { effects: amuletEffects, discounted, round: roundFooty } = require('./amulet-utils');
 const { validateBattleCard } = require('./battle-utils');
 const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
 
@@ -198,7 +199,17 @@ async function getAscendTierConfig() {
     .sort((a, b) => Number(a.order) - Number(b.order));
 }
 
-async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, listingGroupIdOverride = null }) {
+async function listingCurrency(key = 'footy') {
+  if (!key || key === 'footy') return { currency: 'footy', currencyName: 'Footy' };
+  const tiers = await getAscendTierConfig();
+  const gem = tiers.map(gemIdentity).find(gem => gem.gemKey === key);
+  if (!gem) throw new Error('Unknown gem currency');
+  return { currency: gem.gemKey, currencyName: gem.gemName };
+}
+
+async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', listingGroupIdOverride = null }) {
+  const money = await listingCurrency(currency);
+  if (money.currency !== 'footy' && !Number.isSafeInteger(price)) throw new Error('Gem prices must be whole numbers');
   let itemName;
   let imageUrl = null;
   let packId = null;
@@ -232,6 +243,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
     packColor,
     imageUrl,
     price,
+    ...money,
     stock,
     soldCount: 0,
     perUserLimit: maxPerUser || null,
@@ -249,6 +261,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
       packColor,
       imageUrl,
       price,
+    ...money,
       sellerId,
       sold: false,
       buyerId: null,
@@ -281,6 +294,7 @@ async function syncPlannedMarketplaceListings() {
         itemType: data.itemType,
         productId: data.productId,
         price: Number(data.price),
+        currency: data.currency || 'footy',
         quantity: Number(data.quantity),
         perUserLimit: Number(data.perUserLimit) || 0,
         scheduledAt: scheduledAt.toISOString(),
@@ -855,7 +869,8 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
           const loserRef = db.collection('users').doc(loserId);
           const winnerDoc = winnerId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
           const loserDoc = loserId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
-          transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize });
+          const battleBonus = roundFooty(Math.min(5, prize * (amuletEffects(winnerDoc.data()).battle || 0) / 100));
+          transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize + battleBonus });
           transaction.update(loserRef, { balance: Number(loserDoc.data().balance || 0) - prize });
         }
         prizePaid = true;
@@ -1044,13 +1059,14 @@ app.post('/spin-wheel', async (req, res) => {
   const rewards = [8, 10, 12, 16, 20, 24];
   const cooldownMs = 23 * 60 * 60 * 1000;
 
+  let nextSpinAt;
   try {
     const usersRef = db.collection('users');
     const userRef = usersRef.doc(userId);
 
     let rewardAmount;
+    let baseReward;
     let newBalance;
-    let nextSpinAt;
 
     await db.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
@@ -1072,6 +1088,7 @@ app.post('/spin-wheel', async (req, res) => {
 
       // Pick base reward
       rewardAmount = rewards[Math.floor(Math.random() * rewards.length)];
+      baseReward = rewardAmount;
 
       // If user has an active VIP, double the reward
       const vipUntil = user.vipUntil ? (user.vipUntil.toDate ? user.vipUntil.toDate() : new Date(user.vipUntil)) : null;
@@ -1079,6 +1096,7 @@ app.post('/spin-wheel', async (req, res) => {
         rewardAmount = rewardAmount * 2;
       }
 
+      rewardAmount += amuletEffects(user).wheel || 0;
       newBalance = (user.balance || 0) + rewardAmount;
       nextSpinAt = new Date(now.getTime() + cooldownMs);
 
@@ -1089,7 +1107,7 @@ app.post('/spin-wheel', async (req, res) => {
       });
     });
 
-    res.json({ amount: rewardAmount, balance: newBalance, nextSpinAt: nextSpinAt.toISOString() });
+    res.json({ amount: rewardAmount, baseReward, balance: newBalance, nextSpinAt: nextSpinAt.toISOString() });
   } catch (error) {
     console.error('Spin wheel error:', error);
 
@@ -1221,6 +1239,7 @@ app.get('/items', async (req, res) => {
           id: doc.id,
           name: data.name || 'Unknown Item',
           price: data.price || 0,
+          currency: data.currency || 'footy', currencyName: data.currencyName || 'Footy',
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
           imageUrl: data.imageUrl || null,
@@ -1651,6 +1670,10 @@ app.post('/open-pack', async (req, res) => {
       const pack = packDoc.data();
       const cardId = pack.cardIds[crypto.randomInt(pack.cardIds.length)];
       const cardRef = db.collection('items').doc();
+      const openerRef = db.collection('users').doc(requesterId);
+      const opener = await transaction.get(openerRef);
+      const packBonus = amuletEffects(opener.data() || {}).pack || 0;
+      if (packBonus) transaction.update(openerRef, { balance: roundFooty(Number(opener.data().balance || 0) + packBonus) });
       transaction.set(cardRef, {
         name: `Card ${cardId}`,
         itemType: 'card',
@@ -1665,10 +1688,10 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
-      return { cardId, packColor: packItem.packColor || pack.color || '#667eea' };
+      return { cardId, packBonus, packColor: packItem.packColor || pack.color || '#667eea' };
     });
     await awardLinkedBattleCard(requesterId, result.cardId);
-    res.json({ success: true, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
+    res.json({ success: true, packBonus: result.packBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
@@ -1795,7 +1818,7 @@ app.get('/admin/market-listings/planned', async (req, res) => {
 
 app.post('/admin/market-listings', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt } = req.body;
+  const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy' } = req.body;
   const stock = Number(quantity);
   const maxPerUser = Number(perUserLimit) || 0;
   const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
@@ -1815,6 +1838,8 @@ app.post('/admin/market-listings', async (req, res) => {
   }
 
   try {
+    const money = await listingCurrency(currency);
+    if (currency !== 'footy' && !Number.isSafeInteger(price)) return res.status(400).send('Gem prices must be whole numbers');
     if (scheduledDate && scheduledDate.getTime() > Date.now()) {
       const planRef = db.collection('marketListingPlans').doc();
       const plan = {
@@ -1822,6 +1847,7 @@ app.post('/admin/market-listings', async (req, res) => {
         itemType,
         productId,
         productName: productId,
+        ...money,
         price,
         quantity: stock,
         perUserLimit: maxPerUser || null,
@@ -1836,6 +1862,7 @@ app.post('/admin/market-listings', async (req, res) => {
 
     const groupId = await createMarketplaceListingEntries({
       sellerId: requesterId,
+      currency,
       itemType,
       productId,
       price,
@@ -1868,7 +1895,8 @@ app.get('/test-items', async (req, res) => {
 
 /* ------------------ ADD ITEM ------------------ */
 app.post('/items', async (req, res) => {
-  const { name, price, sellerId, sourceItemId, imageUrl, limitOnePerUser } = req.body;
+  const { name, price, sellerId, sourceItemId, imageUrl, limitOnePerUser, currency = 'footy' } = req.body;
+  if (req.header('X-User-Id') !== sellerId) return res.status(403).send('Forbidden');
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).send('Invalid item name');
@@ -1885,27 +1913,32 @@ app.post('/items', async (req, res) => {
   const cleanName = name.trim();
 
   try {
+    const money = await listingCurrency(currency);
+    if (currency !== 'footy' && !Number.isSafeInteger(price)) return res.status(400).send('Gem prices must be whole numbers');
     const sellerDoc = await db.collection('users').doc(sellerId).get();
 
     if (!sellerDoc.exists) {
       return res.status(400).send('Seller not found');
     }
 
+    await db.runTransaction(async transaction => {
     let sourceItem = null;
     // If listing from inventory, verify ownership and preserve its type (including packs).
+    if (!sourceItemId && sellerDoc.data().isAdmin !== true) throw new Error('Select an inventory item');
     if (sourceItemId) {
       const sourceItemRef = db.collection('items').doc(sourceItemId);
-      const sourceItemDoc = await sourceItemRef.get();
+      const sourceItemDoc = await transaction.get(sourceItemRef);
       if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true) {
-        return res.status(400).send('Selected inventory item is unavailable');
+        throw new Error('Selected inventory item is unavailable');
       }
       sourceItem = sourceItemDoc.data();
-      await sourceItemRef.update({ listedForSale: true });
+      transaction.update(sourceItemRef, { listedForSale: true });
     }
 
-    await db.collection('items').add({
+    transaction.set(db.collection('items').doc(), {
       name: cleanName,
       price,
+      ...money,
       sellerId,
       sold: false,
       buyerId: null,
@@ -1920,15 +1953,7 @@ app.post('/items', async (req, res) => {
       createdAt: new Date()
     });
 
-    // // Cheat code: listing banana for 68 coins gives 1e50 coins
-    // if (cleanName === 'banana' && price === 68) 
-    // {
-    //   const currentBalance = sellerDoc.data().balance || 0;
-
-    //   await db.collection('users').doc(sellerId).update({
-    //     balance: currentBalance + 1e50
-    //   });
-    // }
+    });
 
     res.send('Item added');
   } catch (error) {
@@ -2001,6 +2026,7 @@ app.post('/delete-item', async (req, res) => {
 /* ------------------ BUY ITEM ------------------ */
 app.post('/buy', async (req, res) => {
   const { itemId, buyerId } = req.body;
+  if (req.header('X-User-Id') !== buyerId) return res.status(403).send('Forbidden');
 
   if (!itemId || typeof itemId !== 'string') {
     return res.status(400).send('Invalid itemId');
@@ -2042,7 +2068,8 @@ app.post('/buy', async (req, res) => {
         }
       }
 
-      if (item.sold) {
+      const saleTime = value => value?.toDate ? value.toDate().getTime() : new Date(value).getTime();
+      if (item.sold || (item.scheduledAt && saleTime(item.scheduledAt) > Date.now()) || (item.expiresAt && saleTime(item.expiresAt) <= Date.now())) {
         throw new Error('Item unavailable');
       }
 
@@ -2069,10 +2096,13 @@ app.post('/buy', async (req, res) => {
       const seller = sellerDoc.data();
       const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
       const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
-      const hasHostDiscount = hasActiveVip && seller.isAdmin === true;
-      const purchasePrice = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
-
-      if (buyer.balance < purchasePrice) {
+      const currency = item.currency || 'footy';
+      const hasHostDiscount = currency === 'footy' && hasActiveVip && seller.isAdmin === true;
+      const sellerPayment = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
+      const purchasePrice = currency === 'footy' && seller.isAdmin === true ? discounted(sellerPayment, amuletEffects(buyer).market) : sellerPayment;
+      const buyerFunds = currency === 'footy' ? Number(buyer.balance || 0) : Number((buyer.gems || {})[currency] || 0);
+      if (!Number.isFinite(purchasePrice) || purchasePrice <= 0 || (currency !== 'footy' && !Number.isSafeInteger(purchasePrice))) throw new Error('Invalid listing price');
+      if (buyerFunds < purchasePrice) {
         throw new Error('Not enough money');
       }
 
@@ -2082,6 +2112,7 @@ app.post('/buy', async (req, res) => {
       if (item.sourceItemId) {
         sourceItemRef = itemsRef.doc(item.sourceItemId);
         sourceItemDoc = await transaction.get(sourceItemRef);
+        if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== item.sellerId || sourceItemDoc.data().listedForSale !== true) throw new Error('Item unavailable');
       }
 
       if (item.limitOnePerUser === true) {
@@ -2097,19 +2128,23 @@ app.post('/buy', async (req, res) => {
       }
 
       // Perform writes (all reads must be done before these)
-      transaction.update(buyerRef, {
-        balance: buyer.balance - purchasePrice
-      });
-
-      transaction.update(sellerRef, {
-        balance: seller.balance + purchasePrice
-      });
+      if (currency === 'footy') {
+        transaction.update(buyerRef, { balance: roundFooty(buyerFunds - purchasePrice) });
+        transaction.update(sellerRef, { balance: roundFooty(Number(seller.balance || 0) + sellerPayment) });
+      } else {
+        const buyerGems = { ...(buyer.gems || {}), [currency]: buyerFunds - purchasePrice };
+        const sellerGems = { ...(seller.gems || {}), [currency]: Number((seller.gems || {})[currency] || 0) + sellerPayment };
+        if (!Number.isSafeInteger(sellerGems[currency])) throw new Error('Gem balance too large');
+        transaction.update(buyerRef, { gems: buyerGems });
+        transaction.update(sellerRef, { gems: sellerGems });
+      }
 
       transaction.update(itemRef, {
         sold: true,
         buyerId: buyerId,
         purchasedAt: new Date(),
         purchasePrice,
+        sellerPayment,
         purchasedViaMarketplace: true
       });
 
@@ -2154,15 +2189,12 @@ app.post('/buy', async (req, res) => {
         transaction.delete(sourceItemRef);
       }
 
-      return { purchasePrice, hasHostDiscount, listedPrice: item.price };
+      return { purchasePrice, hasHostDiscount, listedPrice: item.price, currencyName: item.currencyName || 'Footy' };
     });
-    if (item.imageUrl) {
-      await awardLinkedBattleCard(buyerId, path.basename(item.imageUrl));
-    }
-
     res.json({
       success: true,
       purchasePrice: purchase.purchasePrice,
+      currencyName: purchase.currencyName,
       discountApplied: purchase.hasHostDiscount,
       discountAmount: purchase.listedPrice - purchase.purchasePrice
     });
@@ -2230,7 +2262,8 @@ app.get('/history', async (req, res) => {
         direction: 'bought',
         itemName: item.name || 'Unknown item',
         counterparty: usernames.get(item.sellerId) || 'Unknown user',
-        amount: item.price || 0,
+        amount: item.purchasePrice ?? item.price ?? 0,
+        currencyName: item.currencyName || 'Footy',
         occurredAt: serializeDate(item.purchasedAt)
       });
     });
@@ -2241,7 +2274,8 @@ app.get('/history', async (req, res) => {
         direction: 'sold',
         itemName: item.name || 'Unknown item',
         counterparty: usernames.get(item.buyerId) || 'Unknown user',
-        amount: item.price || 0,
+        amount: item.sellerPayment ?? item.price ?? 0,
+        currencyName: item.currencyName || 'Footy',
         occurredAt: serializeDate(item.purchasedAt)
       });
     });
@@ -2314,6 +2348,12 @@ app.post('/ascend', async (req, res) => {
     const packName = pack.name || 'Pack';
 
     await db.runTransaction(async transaction => {
+      const ascendUserRef = db.collection('users').doc(requesterId);
+      const ascendUser = await transaction.get(ascendUserRef);
+      const latestCards = await transaction.getAll(...selectedCards.map(card => itemsRef.doc(card.id)));
+      if (latestCards.some(doc => !doc.exists || doc.data().buyerId !== requesterId || doc.data().listedForSale === true)) throw new Error('Selected cards are no longer available');
+      const ascendBonus = amuletEffects(ascendUser.data() || {}).ascend || 0;
+      if (ascendBonus) transaction.update(ascendUserRef, { balance: roundFooty(Number(ascendUser.data().balance || 0) + ascendBonus) });
       selectedCards.forEach(card => {
         transaction.delete(itemsRef.doc(card.id));
       });
@@ -2371,16 +2411,19 @@ app.post('/sell-tier-card', async (req, res) => {
     const userDoc = await userRef.get();
     if (!userDoc.exists) return res.status(404).send('User not found');
 
-    await db.runTransaction(async transaction => {
+    const amount = await db.runTransaction(async transaction => {
       const latestUserDoc = await transaction.get(userRef);
+      const latestItem = await transaction.get(itemRef);
+      if (!latestItem.exists || latestItem.data().buyerId !== requesterId || latestItem.data().listedForSale === true) throw new Error('Card no longer available');
       const latestUser = latestUserDoc.data() || {};
-      const updatedBalance = Number(latestUser.balance || 0) + Number(tier.sellPrice);
+      const updatedBalance = roundFooty(Number(latestUser.balance || 0) + Number(tier.sellPrice) * (1 + (amuletEffects(latestUser).salvage || 0) / 100));
 
       transaction.update(userRef, { balance: updatedBalance });
       transaction.delete(itemRef);
+      return roundFooty(updatedBalance - Number(latestUser.balance || 0));
     });
 
-    res.json({ success: true, amount: Number(tier.sellPrice) });
+    res.json({ success: true, amount });
   } catch (error) {
     console.error('Error selling card to tier:', error);
     res.status(500).send(error.message || 'Could not sell this card');
@@ -2396,7 +2439,7 @@ app.get('/gem-converter', async (req, res) => {
     const progress = converterProgress(tiers, user.data());
     const recipes = tiers.map((tier, index) => ({
       ...gemIdentity(tier), cards: tier.cards || [], unlocked: index <= progress.level,
-      costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => gemRecipe(tier, count).cost) : null
+      costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter)) : null
     }));
     res.json({ ...progress, recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
   } catch (error) {
@@ -2476,6 +2519,7 @@ app.post('/gem-converter', async (req, res) => {
       const tier = { ...tierDoc.data(), id: tierDoc.id };
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
       const recipe = gemRecipe(tier, itemIds.length);
+      recipe.cost = discounted(recipe.cost, amuletEffects(user.data()).converter);
       const balance = Number(user.data().balance || 0);
       if (!Number.isFinite(balance) || balance < recipe.cost) throw new Error('Not enough Footy');
       const gems = { ...(user.data().gems || {}) };
@@ -2544,6 +2588,8 @@ app.get('/inventory', async (req, res) => {
     res.status(500).send('Error retrieving inventory');
   }
 });
+
+require('./amulet-routes')(app, db, getAscendTierConfig);
 
 /* ------------------ START SERVER ------------------ */
 const PORT = process.env.PORT || 3000;
@@ -2621,13 +2667,14 @@ app.post('/buy-vip', async (req, res) => {
       }
 
       const baseTime = (currentVip && currentVip.getTime() > now.getTime()) ? currentVip.getTime() : now.getTime();
-      newVipUntil = new Date(baseTime + DURATION_MS);
+      newVipUntil = new Date(baseTime + DURATION_MS + (amuletEffects(user).vipdays || 0) * oneDayMs);
+      const vipPrice = discounted(VIP_PRICE, amuletEffects(user).vip);
 
-      if ((user.balance || 0) < VIP_PRICE) {
+      if ((user.balance || 0) < vipPrice) {
         throw new Error('Not enough money');
       }
 
-      newBalance = (user.balance || 0) - VIP_PRICE;
+      newBalance = roundFooty((user.balance || 0) - vipPrice);
 
       transaction.update(userRef, {
         balance: newBalance,

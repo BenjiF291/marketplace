@@ -246,6 +246,19 @@ function logout() {
 }
 
 function showSection(section) {
+  document.getElementById('amuletSection').style.display = 'none';
+  document.getElementById('amuletTab').classList.remove('active');
+  if (section === 'amulets') {
+    showSection('inventory');
+    document.getElementById('inventorySection').style.display = 'none';
+    document.getElementById('inventoryTab').classList.remove('active');
+    document.getElementById('amuletSection').style.display = 'block';
+    document.getElementById('amuletTab').classList.add('active');
+    currentView = 'amulets';
+    loadAmulets();
+    return;
+  }
+
   currentView = section;
 
   const marketplaceSection = document.getElementById('marketplaceSection');
@@ -1011,8 +1024,8 @@ async function loadHistory() {
     } else {
       history.itemTrades.forEach(trade => {
         const description = trade.direction === 'bought'
-          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${trade.amount} Footy`
-          : `Sold ${trade.itemName} to ${trade.counterparty} for ${trade.amount} Footy`;
+          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${trade.amount} ${trade.currencyName || 'Footy'}`
+          : `Sold ${trade.itemName} to ${trade.counterparty} for ${trade.amount} ${trade.currencyName || 'Footy'}`;
         addHistoryEntry(itemList, description, trade.occurredAt);
       });
     }
@@ -1146,7 +1159,7 @@ async function spinWheel() {
     }
 
     const amount = data.amount;
-    let targetIndex = getWheelIndexForReward(amount);
+    let targetIndex = getWheelIndexForReward(data.baseReward ?? amount);
     if (targetIndex < 0) {
       targetIndex = Math.floor(Math.random() * wheelSegments.length);
     }
@@ -1191,6 +1204,7 @@ function clearVipCountdown() {
 }
 
 async function loadVipInfo() {
+  loadAmuletVipPrice();
   const statusText = document.getElementById('vipStatusText');
   const countdownEl = document.getElementById('vipCountdown');
   const buyBtn = document.getElementById('buyVipButton');
@@ -1508,7 +1522,6 @@ async function viewAdminAccount() {
   if (!selectedUserId || !details || !inventoryList) return;
 
   details.hidden = false;
-  loadAdminGemOptions();
   document.getElementById('adminAccountBalance').textContent = 'Loading...';
   document.getElementById('adminAccountLastOnline').textContent = 'Loading...';
   document.getElementById('adminAccountVip').textContent = 'Loading...';
@@ -1705,7 +1718,7 @@ async function createDirectMarketplaceListing() {
     const res = await fetch(`${API_URL}/admin/market-listings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ itemType, productId, price, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
+      body: JSON.stringify({ itemType, productId, price, currency: document.getElementById('marketListingCurrency').value, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
     });
     if (!res.ok) return alert(await res.text());
     document.getElementById('marketListingPrice').value = '';
@@ -2048,6 +2061,7 @@ async function openPack(itemId) {
     const result = await res.json();
     showPackOpeningAnimation(result);
     loadInventory();
+    updateBalance();
   } catch (error) {
     console.error('Error opening pack:', error);
     alert('Could not open pack');
@@ -2067,7 +2081,7 @@ function showPackOpeningAnimation(result) {
   name.className = 'opened-card-name';
   card.src = result.imageUrl;
   card.alt = result.cardId;
-  name.textContent = `${result.cardId} — click to continue`;
+  name.textContent = `${result.packBonus ? `+${result.packBonus} Footy / ` : ''}${result.cardId} — click to continue`;
   pack.style.setProperty('--pack-color', result.packColor || '#667eea');
 
   requestAnimationFrame(() => {
@@ -2227,7 +2241,7 @@ async function loadItems() {
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
-      itemPrice.textContent = `${item.price} Footy${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
+      itemPrice.textContent = `${item.price} ${item.currencyName || 'Footy'}${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
 
       const isOwner = String(item.sellerId) === String(currentUserId);
 
@@ -2241,7 +2255,7 @@ async function loadItems() {
           try {
             const res = await fetch(`${API_URL}/delete-item`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
               body: JSON.stringify({
                 itemId: item.id,
                 userId: currentUserId
@@ -2272,7 +2286,7 @@ async function loadItems() {
           try {
             const res = await fetch(`${API_URL}/buy`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
               body: JSON.stringify({
                 itemId: item.id,
                 buyerId: currentUserId
@@ -2534,9 +2548,10 @@ async function listSelectedItem() {
     const res = await fetch(`${API_URL}/items`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json', 'X-User-Id': currentUserId
       },
       body: JSON.stringify({
+        currency: document.getElementById('itemCurrency').value,
         name: selectedItemForListing.name,
         price,
         sellerId: currentUserId,
@@ -2551,7 +2566,7 @@ async function listSelectedItem() {
     } else {
       alert("✅ Item listed!");
       document.getElementById('itemPrice').value = '';
-      document.getElementById('limitOnePerUser').checked = false;
+      if (document.getElementById('limitOnePerUser')) document.getElementById('limitOnePerUser').checked = false;
       document.getElementById('selectedItemDisplay').style.display = 'none';
       selectedItemForListing = null;
     }
@@ -2875,7 +2890,7 @@ async function loadAdminGemOptions() {
 
 async function grantGemsToPlayer() {
   if (adminGemGrantBusy) return;
-  const userSelect = document.getElementById('adminAccountSelect');
+  const userSelect = document.getElementById('grantResourceUser');
   const userId = userSelect.value;
   const playerName = userSelect.selectedOptions[0]?.textContent || 'player';
   const tierId = document.getElementById('adminGrantGem').value;

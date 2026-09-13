@@ -23,6 +23,7 @@
   <div class="tab-group">
     <button id="marketTab" class="tab-button active" onclick="showSection('marketplace')">Marketplace</button>
     <button id="inventoryTab" class="tab-button" onclick="showSection('inventory')">My Inventory</button>
+    <button id="amuletTab" class="tab-button" onclick="showSection('amulets')">Amulets</button>
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
@@ -63,6 +64,7 @@
           <p style="margin: 0; font-size: 0.9em; color: #666;">Selected Item:</p>
           <p id="selectedItemName" style="margin: 5px 0 0 0; font-weight: bold; color: #333;"></p>
         </div>
+        <label for="itemCurrency">Payment currency</label><select id="itemCurrency" class="input-field"><option value="footy">Footy</option></select>
         <input id="itemPrice" placeholder="Price" type="number" class="input-field">
         <button onclick="listSelectedItem()" class="btn btn-primary">List Item</button>
       </div>
@@ -73,7 +75,7 @@
       <h2>🔧 Admin Controls</h2>
 
       <details class="admin-foldable">
-        <summary>Grant cards to a user</summary>
+        <summary onclick="loadGrantHub()">Grant items &amp; currency to players</summary>
         <div class="form-group admin-panel-body">
           <label class="input-label">Grant cards to a user</label>
           <select id="grantUserSelect" class="input-field"></select>
@@ -85,6 +87,33 @@
           </div>
           <input id="grantQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
           <button onclick="grantItemToUser()" class="btn btn-primary">Grant Card</button>
+        </div>
+        <div class="form-group admin-panel-body">
+          <label class="input-label" for="grantPackSelect">Saved pack</label>
+          <select id="grantPackSelect" class="input-field"></select>
+          <label class="input-label" for="grantPackUserSelect">Give pack to</label>
+          <select id="grantPackUserSelect" class="input-field"></select>
+          <input id="grantPackQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
+          <button onclick="grantPackToUser()" class="btn btn-primary">Grant Pack</button>
+          <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
+        </div>
+        <div class="form-group admin-panel-body">
+          <h3>Footy, gems &amp; amulets</h3>
+          <label for="grantResourceUser">Player</label><select id="grantResourceUser" class="input-field"></select>
+          <label for="grantFootyQuantity">Footy amount</label><input id="grantFootyQuantity" type="number" min="1" step="1" value="50" class="input-field">
+          <button class="btn btn-primary" onclick="grantResource('footy', this)">Grant Footy</button>
+          <div class="form-group">
+            <label class="input-label" for="adminGrantGem">Gem type</label>
+            <select id="adminGrantGem" class="input-field"></select>
+            <label class="input-label" for="adminGrantGemQuantity">Gem quantity</label>
+            <input id="adminGrantGemQuantity" class="input-field" type="number" min="1" step="1" value="50">
+            <button id="adminGrantGemButton" class="btn btn-primary" onclick="grantGemsToPlayer()" disabled>Grant Gems</button>
+            <p id="adminGrantGemStatus" role="status"></p>
+          </div>
+          <label for="grantAmuletSelect">Amulet</label><select id="grantAmuletSelect" class="input-field"></select>
+          <label for="grantAmuletQuantity">Amulet quantity</label><input id="grantAmuletQuantity" type="number" min="1" step="1" value="1" class="input-field">
+          <button class="btn btn-primary" onclick="grantResource('amulet', this)">Grant Amulet</button>
+          <p id="grantResourceStatus" role="status"></p>
         </div>
       </details>
 
@@ -103,15 +132,6 @@
           <p class="pack-help">Choose the pool of possible cards. Opening a pack awards one random card from this selection.</p>
           <div id="packCardPicker" class="pack-card-picker"></div>
           <button id="savePackButton" onclick="savePack()" class="btn btn-primary">Save New Pack</button>
-        </div>
-        <div class="form-group admin-panel-body">
-          <label class="input-label" for="grantPackSelect">Saved pack</label>
-          <select id="grantPackSelect" class="input-field"></select>
-          <label class="input-label" for="grantPackUserSelect">Give pack to</label>
-          <select id="grantPackUserSelect" class="input-field"></select>
-          <input id="grantPackQuantity" placeholder="Quantity" type="number" class="input-field" min="1" max="20" value="1">
-          <button onclick="grantPackToUser()" class="btn btn-primary">Grant Pack</button>
-          <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
         </div>
         <ul id="savedPacks" class="saved-packs"></ul>
       </details>
@@ -140,6 +160,7 @@
           </select>
           <label class="input-label" for="marketListingProduct">Card or pack</label>
           <select id="marketListingProduct" class="input-field"></select>
+          <label for="marketListingCurrency">Payment currency</label><select id="marketListingCurrency" class="input-field"><option value="footy">Footy</option></select>
           <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
           <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
           <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
@@ -156,6 +177,10 @@
         </div>
       </details>
 
+      <details class="admin-foldable" ontoggle="if(this.open) loadAmuletViewer()">
+        <summary>Amulet Viewer - all tiers &amp; powers</summary>
+        <div id="adminAmuletViewer" class="amulet-grid admin-panel-body"></div>
+      </details>
       <details class="admin-foldable">
         <summary>Account Viewer</summary>
         <div class="form-group admin-panel-body">
@@ -169,14 +194,6 @@
             <div><strong>Balance:</strong> <span id="adminAccountBalance"></span></div>
             <div><strong>Last online:</strong> <span id="adminAccountLastOnline"></span></div>
             <div><strong>VIP:</strong> <span id="adminAccountVip"></span></div>
-          </div>
-          <div class="form-group">
-            <label class="input-label" for="adminGrantGem">Grant gems to this player</label>
-            <select id="adminGrantGem" class="input-field"></select>
-            <label class="input-label" for="adminGrantGemQuantity">Gem quantity</label>
-            <input id="adminGrantGemQuantity" class="input-field" type="number" min="1" step="1" value="50">
-            <button id="adminGrantGemButton" class="btn btn-primary" onclick="grantGemsToPlayer()" disabled>Grant Gems</button>
-            <p id="adminGrantGemStatus" role="status"></p>
           </div>
           <strong>Inventory</strong>
           <ul id="adminAccountInventory" class="admin-account-inventory"></ul>
@@ -195,6 +212,17 @@
         </div>
         <p class="pack-help admin-panel-body">Admin only: grant cards to users or set item images manually.</p>
       </details>
+    </section>
+
+    <section id="amuletSection" class="card" style="display:none">
+      <h2>Amulet sanctuary</h2>
+      <p>Equip your powers. Amulets stay active until removed, and can be removed after five days. Only the strongest of each power applies.</p>
+      <h3>Your equipped amulets</h3><div id="amuletSlots" class="amulet-grid"></div>
+      <button id="unlockAmuletSlot" class="btn btn-primary" onclick="amuletAction('unlock', {expectedCount: amuletState.slotCount})">Unlock slot</button>
+      <h3>Your amulet inventory</h3><div id="amuletOwned" class="amulet-grid"></div>
+      <h3>Amulet shop</h3><label for="amuletTier">Pay with</label><select id="amuletTier" class="input-field" onchange="renderAmulets()"></select>
+      <p id="amuletWallet"></p><div id="amuletShop" class="amulet-grid"></div>
+      <p id="amuletStatus" role="status"></p>
     </section>
 
     <!-- Marketplace Section -->
@@ -404,6 +432,7 @@
       <p>Purchase VIP to receive double rewards from the daily spin for 30 days.</p>
       <div style="margin: 12px 0;">
         <strong>Price:</strong> <span id="vipPrice">300</span> Footy
+        <p id="vipAmuletNote"></p>
       </div>
       <div style="margin-bottom: 12px;">
         <button id="buyVipButton" onclick="buyVip()" class="btn btn-primary">Buy VIP</button>
@@ -442,5 +471,6 @@
 </div>
 
 <script src="app.js"></script>
+<script src="amulets.js"></script>
 </body>
 </html>
