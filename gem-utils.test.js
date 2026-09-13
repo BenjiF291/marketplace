@@ -3,6 +3,32 @@ const assert = require('node:assert/strict');
 const { gemRecipe, validateGemCards } = require('./gem-utils');
 const tier = { id: 'bronze-id', name: 'Bronze', sellPrice: 25, cards: ['bronze.png'] };
 const card = { buyerId: 'player', sold: true, itemType: 'card', imageUrl: '/images/bronze.png' };
+const { converterProgress, upgradeConverter, requireUnlockedTier } = require('./gem-utils');
+const tiers = [tier, { id: 'rare', name: 'Rare Bronze' }, { id: 'silver', name: 'Silver' }];
+test('existing and new accounts start with only the first tier unlocked', () => {
+  assert.equal(converterProgress(tiers, {}).level, 0);
+  requireUnlockedTier(tiers, {}, tier.id);
+  assert.throws(() => requireUnlockedTier(tiers, {}, 'rare'));
+  assert.throws(() => requireUnlockedTier(tiers, {}, 'missing'));
+});
+test('upgrades spend exactly 50 previous-tier gems and preserve other balances', () => {
+  const user = { gems: { bronze: 62, 'rare-bronze': 50, gold: 9 }, balance: 300 };
+  const first = upgradeConverter(tiers, user, 'rare');
+  assert.deepEqual(first, { gemConverterLevel: 1, gems: { bronze: 12, 'rare-bronze': 50, gold: 9 } });
+  assert.equal(user.gems.bronze, 62);
+  requireUnlockedTier(tiers, first, 'rare');
+  assert.throws(() => requireUnlockedTier(tiers, first, 'silver'));
+  const second = upgradeConverter(tiers, first, 'silver');
+  assert.equal(second.gems['rare-bronze'], 0);
+  assert.equal(converterProgress(tiers, second).nextUpgrade, null);
+  assert.throws(() => upgradeConverter(tiers, second, 'silver'));
+});
+test('insufficient gems, skipped tiers and stale duplicate upgrades are rejected', () => {
+  assert.throws(() => upgradeConverter(tiers, { gems: { bronze: 49 } }, 'rare'));
+  assert.throws(() => upgradeConverter(tiers, { gems: { bronze: 500 } }, 'silver'));
+  const upgraded = upgradeConverter(tiers, { gems: { bronze: 100 } }, 'rare');
+  assert.throws(() => upgradeConverter(tiers, upgraded, 'rare'));
+});
 test('rewards and fractional Footy costs for all supported batch sizes', () => {
   assert.deepEqual([1, 2, 3].map(count => { const r = gemRecipe(tier, count); return [r.reward, r.cost]; }), [[3, 37.5], [7, 75], [12, 112.5]]);
   for (const count of [0, 4, 1.5]) assert.throws(() => gemRecipe(tier, count));

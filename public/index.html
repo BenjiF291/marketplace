@@ -321,7 +321,18 @@
         <p>Choose a gem, then load up to 3 cards of its tier. Cards are consumed when you start the machine.</p>
         <p>1 card → 3 gems · 2 cards → 7 gems · 3 cards → 12 gems</p>
         <p>Startup cost: tier sell price × 1.5 per card.</p>
+        <h3 class="gem-wallet-title">Your gem collection</h3>
         <div id="gemBalances" aria-label="Your gems"></div>
+        <div class="gem-upgrade-panel">
+          <div><span class="gem-eyebrow">CONVERTER LEVEL</span><h3 id="gemLevel">Level 1</h3><p id="gemUpgradeInfo"></p></div>
+          <button id="gemUpgrade" class="btn btn-primary" onclick="upgradeGemConverter()" disabled>Upgrade</button>
+        </div>
+        <div id="gemMachine" class="gem-machine" aria-label="Conversion chamber">
+          <div id="gemSlots" class="gem-slots"></div>
+          <div class="gem-energy-track"><span></span><span></span><span></span></div>
+          <div id="gemMachineOutput" class="gem-machine-output"></div>
+          <p id="gemMachineLabel">Load cards to power the converter</p>
+        </div>
         <label for="gemRecipe">Gem to make</label>
         <select id="gemRecipe" onchange="selectGemRecipe()"></select>
         <div id="gemCards" class="gem-cards"></div>

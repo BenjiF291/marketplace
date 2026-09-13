@@ -4,6 +4,36 @@ const GEM_NAMES = {
   platinum: 'Sapphire', lightning: 'Amethyst', ultra: 'Diamond'
 };
 
+function gemIdentity(tier) {
+  const key = String(tier.name).trim().toLowerCase().replace(/\s+/g, '-');
+  return { tierId: tier.id, tierName: tier.name,
+    gemName: GEM_NAMES[key] || `${tier.name} Crystal`,
+    gemKey: GEM_NAMES[key] ? key : `tier-${tier.id}` };
+}
+
+function converterProgress(tiers, user) {
+  const level = Math.min(Math.max(0, Math.trunc(Number(user.gemConverterLevel) || 0)), Math.max(0, tiers.length - 1));
+  const next = tiers[level + 1];
+  return { level, nextUpgrade: next ? {
+    ...gemIdentity(next), cost: 50, payment: gemIdentity(tiers[level])
+  } : null };
+}
+
+function upgradeConverter(tiers, user, targetTierId) {
+  const { level, nextUpgrade } = converterProgress(tiers, user);
+  if (!nextUpgrade || nextUpgrade.tierId !== targetTierId) throw new Error('That upgrade is no longer available. Refresh the converter.');
+  const gems = { ...(user.gems || {}) };
+  const available = Number(gems[nextUpgrade.payment.gemKey] || 0);
+  if (!Number.isFinite(available) || available < 50) throw new Error(`You need 50 ${nextUpgrade.payment.gemName} gems`);
+  gems[nextUpgrade.payment.gemKey] = available - 50;
+  return { gemConverterLevel: level + 1, gems };
+}
+
+function requireUnlockedTier(tiers, user, tierId) {
+  const index = tiers.findIndex(tier => tier.id === tierId);
+  if (index < 0 || index > converterProgress(tiers, user).level) throw new Error('Upgrade your gem converter to unlock this tier');
+}
+
 function gemRecipe(tier, count = 1) {
   if (!Number.isInteger(count) || count < 1 || count > 3) throw new Error('Select one to three cards');
   const price = Number(tier.sellPrice);
@@ -30,4 +60,4 @@ function validateGemCards(items, ids, tier, userId) {
   }
 }
 
-module.exports = { gemRecipe, validateGemCards };
+module.exports = { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards };

@@ -8,7 +8,7 @@ require('dotenv').config();
 const app = express();
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
 const { validateBattleCard } = require('./battle-utils');
-const { gemRecipe, validateGemCards } = require('./gem-utils');
+const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
 
 /* ------------------ CORS ------------------ */
 // Must be first
@@ -2393,14 +2393,36 @@ app.get('/gem-converter', async (req, res) => {
   try {
     const [user, tiers] = await Promise.all([db.collection('users').doc(userId).get(), getAscendTierConfig()]);
     if (!user.exists) return res.status(404).send('User not found');
-    const recipes = tiers.filter(tier => Number(tier.sellPrice) > 0).map(tier => ({
-      ...gemRecipe(tier), cards: tier.cards || [],
-      costs: [1, 2, 3].map(count => gemRecipe(tier, count).cost)
+    const progress = converterProgress(tiers, user.data());
+    const recipes = tiers.map((tier, index) => ({
+      ...gemIdentity(tier), cards: tier.cards || [], unlocked: index <= progress.level,
+      costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => gemRecipe(tier, count).cost) : null
     }));
-    res.json({ recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
+    res.json({ ...progress, recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
   } catch (error) {
     console.error('Error loading gem converter:', error);
     res.status(500).send('Could not load gem converter');
+  }
+});
+
+app.post('/gem-converter/upgrade', async (req, res) => {
+  const userId = req.header('X-User-Id');
+  if (!userId) return res.status(401).send('Missing X-User-Id header');
+  if (typeof req.body.tierId !== 'string') return res.status(400).send('Choose the next upgrade');
+  try {
+    const result = await db.runTransaction(async transaction => {
+      const userRef = db.collection('users').doc(userId);
+      const user = await transaction.get(userRef);
+      const tierSnapshot = await transaction.get(db.collection('ascendTiers').orderBy('order', 'asc'));
+      if (!user.exists) throw new Error('User not found');
+      const tiers = tierSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      const update = upgradeConverter(tiers, user.data(), req.body.tierId);
+      transaction.update(userRef, update);
+      return update;
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(400).send(error.message || 'Could not upgrade converter');
   }
 });
 
@@ -2419,6 +2441,8 @@ app.post('/gem-converter', async (req, res) => {
       const refs = itemIds.map(id => db.collection('items').doc(id));
       const [user, tierDoc, ...cards] = await transaction.getAll(userRef, db.collection('ascendTiers').doc(tierId), ...refs);
       if (!user.exists || !tierDoc.exists) throw new Error('User or tier no longer exists');
+      const tierSnapshot = await transaction.get(db.collection('ascendTiers').orderBy('order', 'asc'));
+      requireUnlockedTier(tierSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })), user.data(), tierId);
       const tier = { ...tierDoc.data(), id: tierDoc.id };
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
       const recipe = gemRecipe(tier, itemIds.length);

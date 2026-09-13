@@ -1578,14 +1578,55 @@ body {
   }
 }
 
-.gem-converter { margin: 18px 0; padding: 20px; border: 1px solid #9985cf; border-radius: 14px; background: #f7f3ff; color: #272035; }
-.gem-converter summary { cursor: pointer; font-size: 1.2rem; font-weight: 700; }
-.gem-converter select { display: block; width: 100%; max-width: 400px; padding: 10px; margin: 10px 0; }
-#gemBalances { padding: 12px 0; font-weight: 600; }
+
+.gem-converter { margin: 20px 0; padding: 24px; border: 1px solid #d8d4ef; border-radius: 22px; background: linear-gradient(145deg, #f9f8ff, #eef4ff); color: #292442; box-shadow: 0 12px 32px #2924420c; }
+.gem-converter summary { cursor: pointer; font-size: 1.35rem; font-weight: 800; }
+.gem-converter > p { color: #625c79; line-height: 1.6; }
+.gem-wallet-title { margin-top: 24px; }
+.gem-converter select { display: block; width: 100%; max-width: 440px; padding: 12px; margin: 10px 0 18px; border: 1px solid #c8c2df; border-radius: 10px; background: white; color: #292442; }
+#gemBalances { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin: 14px 0 24px; }
+.gem-balance-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px; border-radius: 15px; border: 1px solid #dcd7ec; background: #fff; box-shadow: 0 4px 12px #33275408; }
+.gem-balance-tile strong { font-size: 1.65rem; font-variant-numeric: tabular-nums; color: #292442; }
+.gem-balance-tile > span:not(.gem-icon) { font-weight: 650; }
+.gem-balance-tile small { font-size: .7rem; color: #736b89; text-align: center; }
+.gem-balance-tile.is-locked { background: #f0eef7; border-style: dashed; }
+.gem-icon { display: inline-block; width: 46px; height: 46px; color: var(--gem-color); filter: drop-shadow(0 4px 5px #29244225); }
+.gem-icon svg { width: 100%; height: 100%; }
+.gem-upgrade-panel { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; background: #292442; color: white; border-radius: 16px; padding: 20px; }
+.gem-eyebrow { color: #c8b9fb; font-size: .65rem; letter-spacing: .15em; font-weight: 800; }
+.gem-upgrade-panel h3 { color: white; margin: 5px 0; }
+.gem-upgrade-panel p { margin: 0; color: #d5cee7; font-size: .9rem; }
+.gem-converter button:disabled { opacity: .5; cursor: not-allowed; }
+.gem-machine { position: relative; overflow: hidden; margin: 20px 0; padding: 26px 16px 18px; border-radius: 18px; background: radial-gradient(ellipse at 50% 70%, #43346e, #1d1930 75%); color: #ded4ff; text-align: center; border: 1px solid #605384; }
+.gem-slots { display: flex; justify-content: center; gap: 14px; }
+.gem-slot { width: 64px; height: 82px; border: 1px dashed #a395c7; border-radius: 9px; display: grid; place-items: center; background: #ffffff0a; font-size: 24px; }
+.gem-slot img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+.gem-energy-track { display: flex; justify-content: center; gap: 7px; height: 28px; align-items: center; }
+.gem-energy-track span { width: 5px; height: 5px; border-radius: 50%; background: #9783bf; }
+.gem-machine-output { display: grid; place-items: center; width: 84px; height: 84px; margin: auto; border-radius: 50%; background: #ffffff09; border: 1px solid #b7a0ed40; }
+.gem-machine-output .gem-icon { width: 62px; height: 62px; }
+#gemMachineLabel { margin: 12px 0 0; font-size: .85rem; font-weight: 600; }
+.is-converting .gem-slot { animation: gem-card-charge .65s ease-in-out infinite alternate; }
+.is-converting .gem-slot:nth-child(2) { animation-delay: .15s; }
+.is-converting .gem-slot:nth-child(3) { animation-delay: .3s; }
+.is-converting .gem-energy-track span { animation: gem-energy .7s infinite; }
+.is-converting .gem-energy-track span:nth-child(2) { animation-delay: .2s; }
+.is-converting .gem-energy-track span:nth-child(3) { animation-delay: .4s; }
+.is-converting .gem-machine-output { animation: gem-charge .8s ease-in-out infinite alternate; }
+.is-complete .gem-machine-output { animation: gem-reveal .8s ease-out both; }
+.is-complete #gemMachineLabel { color: #91ffd1; }
 .gem-cards { display: flex; flex-wrap: wrap; gap: 12px; max-height: 360px; overflow: auto; padding: 8px; }
-.gem-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 120px; padding: 10px; border: 2px solid #ddd; border-radius: 10px; background: white; cursor: pointer; overflow-wrap: anywhere; }
+.gem-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 120px; padding: 10px; border: 2px solid #ddd8eb; border-radius: 12px; background: white; cursor: pointer; overflow-wrap: anywhere; font-size: .8rem; transition: border-color .2s, background .2s; }
 .gem-card:has(input:checked) { border-color: #7651c9; background: #eee5ff; }
+.gem-card:has(input:focus-visible) { outline: 3px solid #4487ff; outline-offset: 2px; }
 .gem-card:has(input:disabled:not(:checked)) { opacity: .5; }
 .gem-card img { width: 95px; height: 120px; object-fit: contain; }
-.gem-card input { width: 20px; height: 20px; }
+.gem-card input { width: 20px; height: 20px; accent-color: #7651c9; }
+#gemQuote { padding: 14px; border-radius: 10px; background: #e8e2f7; font-weight: 600; font-size: .9rem; }
 #gemStatus { margin-top: 12px; }
+@keyframes gem-card-charge { to { transform: translateY(4px); box-shadow: 0 0 18px #b893ff88; border-color: #d6baff; } }
+@keyframes gem-energy { 50% { background: #e3caff; box-shadow: 0 0 10px #c997ff; transform: translateY(5px); } }
+@keyframes gem-charge { to { transform: scale(1.08); box-shadow: 0 0 35px #b183ff70; } }
+@keyframes gem-reveal { 0% { transform: scale(.6); } 45% { transform: scale(1.2); box-shadow: 0 0 0 25px #aa89ff22, 0 0 70px #b98cff; } 100% { transform: scale(1); box-shadow: 0 0 28px #b98cff66; } }
+@media (max-width: 520px) { .gem-converter { padding: 14px; } #gemBalances { grid-template-columns: repeat(3, minmax(0, 1fr)); } .gem-upgrade-panel { padding: 16px; } .gem-upgrade-panel button { width: 100%; } .gem-card { width: 104px; } }
+@media (prefers-reduced-motion: reduce) { .gem-converter *, .gem-converter *::before, .gem-converter *::after { animation: none !important; transition: none !important; } }
