@@ -36,6 +36,25 @@ function workshopAction(user, tiers, action, body) {
     gems[body.gemKey] -= 1; dyes[body.gemKey] = total;
     return { gems, gemDyes: dyes };
   }
+  if (action === 'confirm-dyes') {
+    if (!body.changes || typeof body.changes !== 'object' || Array.isArray(body.changes) || Object.keys(body.changes).length > Object.keys(DYE_AREAS).length) throw new Error('Invalid dye changes');
+    const theme = { ...(user.gemTheme || {}) };
+    const costs = {};
+    for (const [area, key] of Object.entries(body.changes)) {
+      if (!Object.hasOwn(DYE_AREAS, area) || typeof key !== 'string' || (key && !identities.some(gem => gem.gemKey === key))) throw new Error('Invalid dye target or color');
+      if ((theme[area] || '') === key) continue;
+      if ((body.originalTheme?.[area] || '') !== (theme[area] || '')) throw new Error('Your saved colors changed in another session. Cancel and reopen dye mode.');
+      if (key) costs[key] = (costs[key] || 0) + 1;
+    }
+    for (const [key, cost] of Object.entries(costs)) {
+      if (!(dyes[key] >= cost)) throw new Error('Not enough dye to confirm all changes');
+      dyes[key] -= cost;
+    }
+    for (const [area, key] of Object.entries(body.changes)) {
+      if (key) theme[area] = key; else delete theme[area];
+    }
+    return { gemTheme: theme, gemDyes: dyes };
+  }
   if (action === 'dye') {
     const theme = { ...(user.gemTheme || {}) };
     if (body.area !== 'all' && !Object.hasOwn(DYE_AREAS, body.area)) throw new Error('Unknown interface area');

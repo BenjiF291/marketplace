@@ -53,3 +53,22 @@ test('special gems have stable distinct colors', () => {
   assert.equal(color(keys[0]), color(keys[0]));
   assert.equal(color('bronze'), '#ef4266');
 });
+
+test('batch confirmation charges final changed areas only and replay does not charge twice', () => {
+  const user = { gemDyes: { bronze: 3, gold: 1 }, gemTheme: { header: 'bronze' } };
+  const body = { originalTheme: user.gemTheme, changes: { header: 'bronze', buttons: 'bronze', background: 'gold' } };
+  const update = workshopAction(user, tiers, 'confirm-dyes', body);
+  assert.deepEqual(update.gemDyes, { bronze: 2, gold: 0 });
+  assert.equal(update.gemTheme.buttons, 'bronze');
+  assert.deepEqual(workshopAction(update, tiers, 'confirm-dyes', body), update);
+  assert.equal(user.gemDyes.gold, 1);
+});
+test('batch rejects insufficient dyes, invalid areas and conflicting saved changes atomically', () => {
+  const user = { gemDyes: { bronze: 1 }, gemTheme: { header: 'gold' } };
+  assert.throws(() => workshopAction(user, tiers, 'confirm-dyes', { changes: { buttons: 'bronze', background: 'bronze' } }));
+  assert.throws(() => workshopAction(user, tiers, 'confirm-dyes', { changes: { cards: 'bronze' } }));
+  assert.throws(() => workshopAction(user, tiers, 'confirm-dyes', { originalTheme: {}, changes: { header: 'bronze' } }));
+  assert.deepEqual(user, { gemDyes: { bronze: 1 }, gemTheme: { header: 'gold' } });
+  const reset = workshopAction(user, tiers, 'confirm-dyes', { originalTheme: user.gemTheme, changes: { header: '' } });
+  assert.deepEqual(reset.gemTheme, {}); assert.equal(reset.gemDyes.bronze, 1);
+});

@@ -3,7 +3,7 @@ let workshopBusy = false;
 async function loadGemWorkshop() {
   try {
     workshopState = await resourceRequest('/gem-workshop');
-    applyGemTheme(workshopState.theme);
+    if (!document.body.classList.contains('dye-mode')) applyGemTheme(workshopState.theme);
     renderGemWorkshop();
   } catch (error) { document.getElementById('gemWorkshopStatus').textContent = error.message; }
 }
@@ -19,8 +19,6 @@ function renderGemWorkshop() {
   craft.textContent = data.compressor ? 'Compressor crafted' : 'Craft compressor';
   craft.disabled = workshopBusy || data.compressor || (data.gems['rare-silver'] || 0) < 10 || (data.gems.gold || 0) < 5 || (data.gems['rare-gold'] || 0) < 2;
   workshopOptions('compressGem', data.tiers.slice(0, -1).filter(gem => data.gems[gem.gemKey] > 0).map(gem => [gem.gemKey, `${gem.gemName} (${data.gems[gem.gemKey]})`]));
-  workshopOptions('dyeArea', [['all', 'Entire interface'], ...Object.entries(data.areas)]);
-  workshopOptions('dyeColor', [['', 'Default / remove dye'], ...data.tiers.filter(gem => (data.dyes[gem.gemKey] || 0) > 0).map(gem => [gem.gemKey, `${gem.gemName} (${data.dyes[gem.gemKey]} dyes)`])]);
   const palette = document.getElementById('gemDyePalette'); palette.replaceChildren();
   for (const gem of data.tiers.filter(gem => data.gems[gem.gemKey] > 0 || (data.dyes[gem.gemKey] || 0) > 0)) {
     const tile = amuletNode('div', undefined, 'gem-balance-tile');
@@ -32,7 +30,6 @@ function renderGemWorkshop() {
     tile.appendChild(button); palette.appendChild(tile);
   }
   if (!palette.children.length) palette.textContent = 'Collect gems to craft dyes.';
-  document.getElementById('applyGemDye').disabled = workshopBusy;
   updateCompressionQuote();
 }
 function maxCompression() {

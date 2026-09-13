@@ -17,7 +17,11 @@
         <h1>🏪 Marketplace & Bank</h1>
         <p class="subtitle">Buy, sell, and transfer Footy</p>
       </div>
+      <div id="dyeHeaderControls" style="display:flex; gap:8px; align-items:center;">
+      <button id="dyeModeButton" class="btn btn-primary" onclick="toggleDyeMode()">Dye</button>
+      <button id="cancelDyeButton" class="btn" onclick="cancelDyeMode()" hidden>Cancel</button>
       <button onclick="logout()" style="background: #f5576c; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Logout</button>
+      </div>
     </div>
   </header>
 
@@ -385,12 +389,9 @@
         <label for="compressQuantity">Gems to produce</label><input id="compressQuantity" type="number" min="1" step="1" value="1" oninput="updateCompressionQuote()">
         <button class="btn" onclick="maxCompression()">Use maximum</button><p id="compressionQuote"></p>
         <button id="compressGems" class="btn btn-primary" onclick="workshopAction('compress', {gemKey: document.getElementById('compressGem').value, quantity: Number(document.getElementById('compressQuantity').value)})" disabled>Compress gems</button>
-        <h3>Gem dyes</h3><p>Craft 5 dyes from 1 gem. Each application uses 1 dye, including Entire interface. Applied colors stay until changed. Resetting is free. Cards, battle cards and pack artwork keep their original colors.</p>
+        <h3>Gem dyes</h3><p>Craft 5 dyes from 1 gem. Each changed area uses 1 dye on confirmation. Applied colors stay until changed. Resetting is free. Cards, battle cards and pack artwork keep their original colors.</p>
         <div id="gemDyePalette" class="gem-dye-palette"></div>
-        <label for="dyeArea">Area to dye</label><select id="dyeArea"></select>
-        <label for="dyeColor">Dye inventory</label><select id="dyeColor"></select>
-        <button id="applyGemDye" class="btn btn-primary" onclick="workshopAction('dye', {area: document.getElementById('dyeArea').value, gemKey: document.getElementById('dyeColor').value})">Apply color - 1 dye (reset free)</button>
-        <button class="btn" onclick="workshopAction('dye', {area:'all', gemKey:''})">Reset all colors</button>
+        <p>Use the Dye button beside Logout to preview colors anywhere on the site. Each changed area costs one dye when you confirm.</p>
         <p id="gemWorkshopStatus" role="status"></p>
       </details>
       <ul id="inventoryItems" class="items-list"></ul>
@@ -490,5 +491,14 @@
 <script src="app.js"></script>
 <script src="amulets.js"></script>
 <script src="gem-workshop.js"></script>
+<div id="dyeTray" hidden aria-label="Dye palette">
+  <strong>Dye mode</strong><p>Select a dye, then click an interface area. Tabs still switch pages. Only final changes cost dye.</p>
+  <div id="dyeTrayColors"></div>
+  <button class="btn" onclick="selectDyeColor('')">Eraser (free)</button>
+  <button class="btn" onclick="previewDyeArea('navigation')">Dye navigation tabs</button>
+  <button class="btn" onclick="resetDyePreview()">Preview reset all</button>
+  <p id="dyeModeStatus" role="status" aria-live="polite"></p>
+</div>
+<script src="dye-mode.js"></script>
 </body>
 </html>

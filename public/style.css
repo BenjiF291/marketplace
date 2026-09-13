@@ -1674,3 +1674,14 @@ body[data-dye-machine] .gem-machine { background: radial-gradient(ellipse, color
 body[data-dye-amulets] #amuletSection { background: color-mix(in srgb, var(--dye-amulets), white 92%); }
 body[data-dye-slots] .amulet-empty { background: color-mix(in srgb, var(--dye-slots), white 85%); border-color: var(--dye-slots); }
 body[data-dye-notices] #gemStatus, body[data-dye-notices] #amuletStatus, body[data-dye-notices] #gemWorkshopStatus, body[data-dye-notices] #spinResult { background: color-mix(in srgb, var(--dye-notices), white 85%); color: #20182d; border-radius: 8px; padding: 10px; }
+
+#dyeTray[hidden], #cancelDyeButton[hidden] { display: none; }
+#dyeTray { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; padding: 14px 20px; background: #211b33; color: white; box-shadow: 0 -5px 25px #0004; max-height: 40vh; overflow: auto; }
+#dyeTray p { margin: 6px 0; font-size: .85rem; }
+#dyeTrayColors { display: flex; gap: 8px; overflow-x: auto; padding: 6px 0; }
+.dye-swatch { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border: 2px solid transparent; background: #fff; color: #211b33; border-radius: 10px; flex-shrink: 0; cursor: pointer; }
+.dye-swatch[aria-pressed="true"] { border-color: #dcb4ff; box-shadow: 0 0 0 2px #a45ae2; }
+.dye-swatch .gem-icon { width: 28px; height: 28px; }
+body.dye-mode { padding-bottom: 42vh; }
+.dye-hover { outline: 3px dashed #9b4ad7 !important; outline-offset: 3px; cursor: crosshair; }
+body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-index: 10001; padding: 8px; border-radius: 12px; background: #211b33; box-shadow: 0 3px 15px #0004; }
