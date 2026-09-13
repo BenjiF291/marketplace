@@ -869,7 +869,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
           const loserRef = db.collection('users').doc(loserId);
           const winnerDoc = winnerId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
           const loserDoc = loserId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
-          const battleBonus = roundFooty(Math.min(5, prize * (amuletEffects(winnerDoc.data()).battle || 0) / 100));
+          const battleBonus = roundFooty(Math.min(50, prize * (amuletEffects(winnerDoc.data()).battle || 0) / 100));
           transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize + battleBonus });
           transaction.update(loserRef, { balance: Number(loserDoc.data().balance || 0) - prize });
         }
@@ -1243,6 +1243,8 @@ app.get('/items', async (req, res) => {
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
           imageUrl: data.imageUrl || null,
+          itemType: data.itemType || (data.packId ? 'pack' : 'card'),
+          packColor: data.packColor || '#667eea',
           limitOnePerUser: data.limitOnePerUser === true,
           listingGroupId: data.listingGroupId || null,
           perUserLimit: data.perUserLimit || null,

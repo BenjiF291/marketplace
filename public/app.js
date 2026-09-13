@@ -2227,7 +2227,14 @@ async function loadItems() {
 
       const li = document.createElement('li');
 
-      if (item.imageUrl) {
+      if (item.itemType === 'pack') {
+        const packIcon = document.createElement('div');
+        packIcon.className = 'opening-pack marketplace-pack-icon';
+        packIcon.textContent = 'PACK';
+        packIcon.setAttribute('aria-hidden', 'true');
+        packIcon.style.setProperty('--pack-color', /^#[0-9a-f]{6}$/i.test(item.packColor || '') ? item.packColor : '#667eea');
+        li.appendChild(packIcon);
+      } else if (item.imageUrl) {
         const image = document.createElement('img');
         image.className = 'item-image';
         image.src = item.imageUrl;

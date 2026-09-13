@@ -56,3 +56,17 @@ test('strongest power only; unequipped amulets and locked slots give no effects'
   assert.equal(effects({ amuletSlotCount: 3, amuletSlots: [{ power: 'wheel', value: 2 }, { power: 'wheel', value: 5 }, { power: 'wheel', value: 3 }] }).wheel, 5);
   assert.equal(effects({ amuletSlots: [null, { power: 'wheel', value: 10 }] }).wheel, undefined);
 });
+
+test('rebalanced rewards match activity frequency and update existing equipment', () => {
+  const { rebalanceAmulet } = require('./amulet-utils');
+  assert.equal(entries.find(e => e.gemKey === 'bronze' && e.power === 'wheel').value, 3);
+  assert.equal(entries.find(e => e.gemKey === 'bronze' && e.power === 'pack').value, 10);
+  assert.equal(entries.find(e => e.gemKey === 'ultra' && e.power === 'ascend').value, 50);
+  const old = { id: '8:ascend', gemKey: 'ultra', power: 'ascend', value: 5, equippedAt: 123, removableAt: 456 };
+  const updated = rebalanceAmulet(old);
+  assert.equal(updated.value, 50);
+  assert.equal(updated.removableAt, 456);
+  assert.equal(updated.equippedAt, 123);
+  assert.equal(effects({ amuletSlots: [old] }).ascend, 50);
+  assert.equal(old.value, 5);
+});

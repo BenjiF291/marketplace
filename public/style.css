@@ -1644,3 +1644,15 @@ body {
 #adminAmuletViewer { max-height: 650px; overflow: auto; }
 #amuletSection button:disabled { opacity: .5; cursor: not-allowed; }
 @media(max-width: 520px) { .amulet-grid { grid-template-columns: 1fr; } }
+
+/* Shared opening-pack artwork, scaled down for marketplace listings. */
+.opening-pack.marketplace-pack-icon {
+  width: 76px;
+  height: 104px;
+  flex: 0 0 76px;
+  box-sizing: border-box;
+  border-width: 3px;
+  border-radius: 9px;
+  font-size: .85rem;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, .2);
+}
