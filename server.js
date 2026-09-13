@@ -2405,6 +2405,36 @@ app.get('/gem-converter', async (req, res) => {
   }
 });
 
+app.post('/grant-gems', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  const { userId, tierId, quantity } = req.body;
+  if (!requesterId) return res.status(401).send('Missing X-User-Id header');
+  if (typeof userId !== 'string' || !userId || userId.includes('/') ||
+      typeof tierId !== 'string' || !tierId || tierId.includes('/') ||
+      !Number.isSafeInteger(quantity) || quantity <= 0) return res.status(400).send('Choose a player, gem and positive whole quantity');
+  try {
+    const result = await db.runTransaction(async transaction => {
+      const targetRef = db.collection('users').doc(userId);
+      const [requester, target, tier] = await transaction.getAll(
+        db.collection('users').doc(requesterId), targetRef, db.collection('ascendTiers').doc(tierId));
+      if (!requester.exists || requester.data().isAdmin !== true) {
+        const error = new Error('Forbidden'); error.status = 403; throw error;
+      }
+      if (!target.exists || !tier.exists) throw new Error('Player or gem tier not found');
+      const gem = gemIdentity({ ...tier.data(), id: tier.id });
+      const gems = { ...(target.data().gems || {}) };
+      const total = Number(gems[gem.gemKey] || 0) + quantity;
+      if (!Number.isSafeInteger(total) || total < 0) throw new Error('Gem balance exceeds the supported amount');
+      gems[gem.gemKey] = total;
+      transaction.update(targetRef, { gems });
+      return { gemName: gem.gemName, quantity, total };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 400).send(error.message || 'Could not grant gems');
+  }
+});
+
 app.post('/gem-converter/upgrade', async (req, res) => {
   const userId = req.header('X-User-Id');
   if (!userId) return res.status(401).send('Missing X-User-Id header');

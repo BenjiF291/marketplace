@@ -170,6 +170,14 @@
             <div><strong>Last online:</strong> <span id="adminAccountLastOnline"></span></div>
             <div><strong>VIP:</strong> <span id="adminAccountVip"></span></div>
           </div>
+          <div class="form-group">
+            <label class="input-label" for="adminGrantGem">Grant gems to this player</label>
+            <select id="adminGrantGem" class="input-field"></select>
+            <label class="input-label" for="adminGrantGemQuantity">Gem quantity</label>
+            <input id="adminGrantGemQuantity" class="input-field" type="number" min="1" step="1" value="50">
+            <button id="adminGrantGemButton" class="btn btn-primary" onclick="grantGemsToPlayer()" disabled>Grant Gems</button>
+            <p id="adminGrantGemStatus" role="status"></p>
+          </div>
           <strong>Inventory</strong>
           <ul id="adminAccountInventory" class="admin-account-inventory"></ul>
         </div>

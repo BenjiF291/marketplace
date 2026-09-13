@@ -1508,6 +1508,7 @@ async function viewAdminAccount() {
   if (!selectedUserId || !details || !inventoryList) return;
 
   details.hidden = false;
+  loadAdminGemOptions();
   document.getElementById('adminAccountBalance').textContent = 'Loading...';
   document.getElementById('adminAccountLastOnline').textContent = 'Loading...';
   document.getElementById('adminAccountVip').textContent = 'Loading...';
@@ -2850,6 +2851,60 @@ let gemSelection = new Set();
 let gemBusy = false;
 let gemLoading = false;
 
+let adminGemGrantBusy = false;
+async function loadAdminGemOptions() {
+  const button = document.getElementById('adminGrantGemButton');
+  const select = document.getElementById('adminGrantGem');
+  button.disabled = true;
+  try {
+    const response = await fetch(`${API_URL}/gem-converter`, { headers: { 'X-User-Id': currentUserId } });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    select.replaceChildren();
+    for (const recipe of data.recipes) {
+      const option = document.createElement('option');
+      option.value = recipe.tierId;
+      option.textContent = `${recipe.gemName} - ${recipe.tierName}`;
+      select.appendChild(option);
+    }
+    button.disabled = adminGemGrantBusy || !data.recipes.length;
+  } catch (error) {
+    document.getElementById('adminGrantGemStatus').textContent = error.message;
+  }
+}
+
+async function grantGemsToPlayer() {
+  if (adminGemGrantBusy) return;
+  const userSelect = document.getElementById('adminAccountSelect');
+  const userId = userSelect.value;
+  const playerName = userSelect.selectedOptions[0]?.textContent || 'player';
+  const tierId = document.getElementById('adminGrantGem').value;
+  const quantity = Number(document.getElementById('adminGrantGemQuantity').value);
+  const status = document.getElementById('adminGrantGemStatus');
+  if (!userId || !tierId || !Number.isSafeInteger(quantity) || quantity <= 0) {
+    status.textContent = 'Choose a player, gem and positive whole quantity.';
+    return;
+  }
+  adminGemGrantBusy = true;
+  document.getElementById('adminGrantGemButton').disabled = true;
+  status.textContent = 'Granting gems...';
+  try {
+    const response = await fetch(`${API_URL}/grant-gems`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      body: JSON.stringify({ userId, tierId, quantity })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const result = await response.json();
+    status.textContent = `Granted ${result.quantity} ${result.gemName} to ${playerName}. New total: ${result.total}.`;
+    if (userId === currentUserId && document.getElementById('gemConverter').open) await loadGemConverter();
+  } catch (error) {
+    status.textContent = error.message || 'Could not grant gems';
+  } finally {
+    adminGemGrantBusy = false;
+    document.getElementById('adminGrantGemButton').disabled = false;
+  }
+}
+
 function gemIcon(key) {
   const colors = { bronze: '#ef4266', 'rare-bronze': '#ab3457', silver: '#adcdea', 'rare-silver': '#71e3d1', gold: '#ffbe35', 'rare-gold': '#28cb8d', platinum: '#4487ff', lightning: '#bb75ff', ultra: '#d2f6ff' };
   const icon = document.createElement('span');
@@ -2879,6 +2934,7 @@ async function loadGemConverter() {
     const previous = select.value;
     select.replaceChildren();
     for (const recipe of gemConverterData.recipes) {
+      if (!recipe.unlocked) continue;
       const option = document.createElement('option');
       option.value = recipe.tierId;
       option.textContent = `${recipe.gemName} - ${recipe.tierName}${recipe.unlocked ? '' : ' (Locked)'}${recipe.costs ? '' : ' (Unavailable)'}`;
@@ -2903,10 +2959,7 @@ async function loadGemConverter() {
 function renderGemWallet() {
   const wallet = document.getElementById('gemBalances');
   wallet.replaceChildren();
-  const recipes = [...gemConverterData.recipes];
-  for (const key of Object.keys(gemConverterData.gems)) {
-    if (!recipes.some(recipe => recipe.gemKey === key)) recipes.push({ gemKey: key, gemName: key, unlocked: false });
-  }
+  const recipes = gemConverterData.recipes.filter(recipe => recipe.unlocked);
   for (const recipe of recipes) {
     const tile = document.createElement('div');
     tile.className = `gem-balance-tile${recipe.unlocked ? '' : ' is-locked'}`;
@@ -2927,7 +2980,7 @@ function renderGemUpgrade() {
   const button = document.getElementById('gemUpgrade');
   const available = upgrade ? Number(gemConverterData.gems[upgrade.payment.gemKey] || 0) : 0;
   document.getElementById('gemUpgradeInfo').textContent = upgrade
-    ? `Unlock ${upgrade.tierName} / ${upgrade.gemName}. Costs 50 ${upgrade.payment.gemName} (you have ${available}).`
+    ? `Unlock ${upgrade.unlockAll ? 'all remaining gem tiers' : `${upgrade.tierName} / ${upgrade.gemName}`}. Costs 50 ${upgrade.payment.gemName} (you have ${available}).`
     : 'Maximum level reached. All gem tiers unlocked.';
   button.textContent = upgrade ? `Upgrade - 50 ${upgrade.payment.gemName}` : 'Fully upgraded';
   button.disabled = gemBusy || gemLoading || !upgrade || available < 50;
@@ -3046,7 +3099,7 @@ async function upgradeGemConverter() {
       body: JSON.stringify({ tierId: upgrade.tierId })
     });
     if (!response.ok) throw new Error(await response.text());
-    message = `${upgrade.gemName} unlocked! Your converter can now use ${upgrade.tierName} cards.`;
+    message = upgrade.unlockAll ? 'All remaining gem tiers unlocked!' : `${upgrade.gemName} unlocked! Your converter can now use ${upgrade.tierName} cards.`;
   } catch (error) {
     message = error.message || 'Could not upgrade converter';
   } finally {

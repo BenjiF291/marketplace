@@ -12,10 +12,13 @@ function gemIdentity(tier) {
 }
 
 function converterProgress(tiers, user) {
-  const level = Math.min(Math.max(0, Math.trunc(Number(user.gemConverterLevel) || 0)), Math.max(0, tiers.length - 1));
+  const allUnlocked = user.isAdmin === true || user.gemConverterAllUnlocked === true;
+  const level = allUnlocked ? Math.max(0, tiers.length - 1) : Math.min(Math.max(0, Math.trunc(Number(user.gemConverterLevel) || 0)), Math.max(0, tiers.length - 1));
   const next = tiers[level + 1];
+  const diamondIndex = tiers.findIndex(tier => gemIdentity(tier).gemKey === 'ultra');
+  const unlockAll = diamondIndex >= 0 && level >= diamondIndex;
   return { level, nextUpgrade: next ? {
-    ...gemIdentity(next), cost: 50, payment: gemIdentity(tiers[level])
+    ...gemIdentity(next), unlockAll, cost: 50, payment: gemIdentity(tiers[unlockAll ? diamondIndex : level])
   } : null };
 }
 
@@ -26,7 +29,9 @@ function upgradeConverter(tiers, user, targetTierId) {
   const available = Number(gems[nextUpgrade.payment.gemKey] || 0);
   if (!Number.isFinite(available) || available < 50) throw new Error(`You need 50 ${nextUpgrade.payment.gemName} gems`);
   gems[nextUpgrade.payment.gemKey] = available - 50;
-  return { gemConverterLevel: level + 1, gems };
+  return nextUpgrade.unlockAll
+    ? { gemConverterLevel: tiers.length - 1, gemConverterAllUnlocked: true, gems }
+    : { gemConverterLevel: level + 1, gems };
 }
 
 function requireUnlockedTier(tiers, user, tierId) {

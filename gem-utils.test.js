@@ -11,6 +11,23 @@ test('existing and new accounts start with only the first tier unlocked', () => 
   assert.throws(() => requireUnlockedTier(tiers, {}, 'rare'));
   assert.throws(() => requireUnlockedTier(tiers, {}, 'missing'));
 });
+test('admins can convert every tier without paying upgrades', () => {
+  const user = { isAdmin: true };
+  for (const tier of tiers) requireUnlockedTier(tiers, user, tier.id);
+  assert.equal(converterProgress(tiers, user).nextUpgrade, null);
+  assert.throws(() => requireUnlockedTier(tiers, { isAdmin: 'true' }, 'silver'));
+});
+test('upgrade after Diamond costs 50 Diamonds and unlocks all remaining and future tiers', () => {
+  const extended = [...tiers, { id: 'diamond', name: 'Ultra' }, { id: 'a', name: 'Cosmic' }, { id: 'b', name: 'Mystic' }];
+  const user = { gemConverterLevel: 3, gems: { ultra: 55 } };
+  assert.equal(converterProgress(extended, user).nextUpgrade.unlockAll, true);
+  const upgraded = upgradeConverter(extended, user, 'a');
+  assert.equal(upgraded.gems.ultra, 5);
+  assert.equal(upgraded.gemConverterAllUnlocked, true);
+  requireUnlockedTier(extended, upgraded, 'b');
+  assert.equal(converterProgress([...extended, { id: 'c', name: 'Future' }], upgraded).nextUpgrade, null);
+  assert.throws(() => upgradeConverter(extended, { ...user, gems: { ultra: 49 } }, 'a'));
+});
 test('upgrades spend exactly 50 previous-tier gems and preserve other balances', () => {
   const user = { gems: { bronze: 62, 'rare-bronze': 50, gold: 9 }, balance: 300 };
   const first = upgradeConverter(tiers, user, 'rare');
