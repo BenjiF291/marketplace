@@ -2592,6 +2592,7 @@ app.get('/inventory', async (req, res) => {
 });
 
 require('./amulet-routes')(app, db, getAscendTierConfig);
+require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 
 /* ------------------ START SERVER ------------------ */
 const PORT = process.env.PORT || 3000;

@@ -8,6 +8,7 @@
 </head>
 <body>
 <script src="ascend-utils.js"></script>
+<script src="gem-colors.js"></script>
 
 <div class="container">
   <header class="header">
@@ -376,6 +377,22 @@
         <button id="gemStart" class="btn btn-primary" onclick="startGemConverter()" disabled>Start converter</button>
         <p id="gemStatus" role="status" aria-live="polite"></p>
       </details>
+      <details class="gem-converter" ontoggle="if(this.open) loadGemWorkshop()">
+        <summary>Gem Workshop - Compressor &amp; Dyes</summary>
+        <h3>Gem compressor</h3><p>Craft once with 10 Opals, 5 Citrine and 2 Emeralds. Compress 4 gems into 1 gem of the next tier.</p>
+        <button id="craftCompressor" class="btn btn-primary" onclick="workshopAction('craft', {})" disabled>Craft compressor</button>
+        <label for="compressGem">Source gem</label><select id="compressGem" onchange="updateCompressionQuote()"></select>
+        <label for="compressQuantity">Gems to produce</label><input id="compressQuantity" type="number" min="1" step="1" value="1" oninput="updateCompressionQuote()">
+        <button class="btn" onclick="maxCompression()">Use maximum</button><p id="compressionQuote"></p>
+        <button id="compressGems" class="btn btn-primary" onclick="workshopAction('compress', {gemKey: document.getElementById('compressGem').value, quantity: Number(document.getElementById('compressQuantity').value)})" disabled>Compress gems</button>
+        <h3>Gem dyes</h3><p>Craft 5 dyes from 1 gem. Each application uses 1 dye, including Entire interface. Applied colors stay until changed. Resetting is free. Cards, battle cards and pack artwork keep their original colors.</p>
+        <div id="gemDyePalette" class="gem-dye-palette"></div>
+        <label for="dyeArea">Area to dye</label><select id="dyeArea"></select>
+        <label for="dyeColor">Dye inventory</label><select id="dyeColor"></select>
+        <button id="applyGemDye" class="btn btn-primary" onclick="workshopAction('dye', {area: document.getElementById('dyeArea').value, gemKey: document.getElementById('dyeColor').value})">Apply color - 1 dye (reset free)</button>
+        <button class="btn" onclick="workshopAction('dye', {area:'all', gemKey:''})">Reset all colors</button>
+        <p id="gemWorkshopStatus" role="status"></p>
+      </details>
       <ul id="inventoryItems" class="items-list"></ul>
     </section>
 
@@ -472,5 +489,6 @@
 
 <script src="app.js"></script>
 <script src="amulets.js"></script>
+<script src="gem-workshop.js"></script>
 </body>
 </html>

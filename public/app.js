@@ -2931,7 +2931,7 @@ function gemIcon(key) {
   const colors = { bronze: '#ef4266', 'rare-bronze': '#ab3457', silver: '#adcdea', 'rare-silver': '#71e3d1', gold: '#ffbe35', 'rare-gold': '#28cb8d', platinum: '#4487ff', lightning: '#bb75ff', ultra: '#d2f6ff' };
   const icon = document.createElement('span');
   icon.className = 'gem-icon';
-  icon.style.setProperty('--gem-color', colors[key] || '#c294ed');
+  icon.style.setProperty('--gem-color', window.GemColors.color(key));
   icon.setAttribute('aria-hidden', 'true');
   icon.innerHTML = '<svg viewBox="0 0 64 64" fill="none"><path d="M18 7h28l13 19-27 33L5 26Z" fill="currentColor"/><path d="m18 7 6 19H5Zm28 0-6 19h19Z" fill="#fff" opacity=".35"/><path d="M18 7h28L32 26Z" fill="#fff" opacity=".65"/><path d="M5 26h19l8 33Z" fill="#000" opacity=".2"/><path d="M24 26h16l-8 33Z" fill="#fff" opacity=".25"/><path d="m46 7 13 19-27 33 8-33Z" fill="#000" opacity=".1"/><path d="M18 7h28l13 19-27 33L5 26Z" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/></svg>';
   return icon;

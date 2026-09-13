@@ -1656,3 +1656,21 @@ body {
   font-size: .85rem;
   box-shadow: 0 5px 12px rgba(0, 0, 0, .2);
 }
+
+.gem-dye-palette { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; margin: 16px 0; }
+body[data-dye-background] { background: linear-gradient(135deg, color-mix(in srgb, var(--dye-background), #fff 30%), color-mix(in srgb, var(--dye-background), #151322 40%)); }
+body[data-dye-header] .header { background: color-mix(in srgb, var(--dye-header), #101020 65%); color: white; padding: 20px; border-radius: 16px; }
+body[data-dye-panels] .main-grid > section.card { background: color-mix(in srgb, var(--dye-panels), white 93%); }
+body[data-dye-navigation] .tab-group .tab-button { background: color-mix(in srgb, var(--dye-navigation), white 85%); color: #20182d; }
+body[data-dye-navigation] .tab-group .tab-button.active { background: color-mix(in srgb, var(--dye-navigation), #101020 60%); color: white; }
+body[data-dye-buttons] .btn-primary { background: color-mix(in srgb, var(--dye-buttons), #101020 65%); color: white; }
+body[data-dye-success] .btn-success { background: color-mix(in srgb, var(--dye-success), #101020 65%); color: white; }
+body[data-dye-borders] .main-grid > section.card { border: 2px solid var(--dye-borders); }
+body[data-dye-inputs] .input-field { background: color-mix(in srgb, var(--dye-inputs), white 92%); border-color: var(--dye-inputs); color: #20182d; }
+body[data-dye-balance] .balance-display { background: color-mix(in srgb, var(--dye-balance), #101020 65%); color: white; }
+body[data-dye-balance] #balance { color: white; }
+body[data-dye-converter] .gem-converter { background: color-mix(in srgb, var(--dye-converter), white 92%); }
+body[data-dye-machine] .gem-machine { background: radial-gradient(ellipse, color-mix(in srgb, var(--dye-machine), #101020 65%), #151322); }
+body[data-dye-amulets] #amuletSection { background: color-mix(in srgb, var(--dye-amulets), white 92%); }
+body[data-dye-slots] .amulet-empty { background: color-mix(in srgb, var(--dye-slots), white 85%); border-color: var(--dye-slots); }
+body[data-dye-notices] #gemStatus, body[data-dye-notices] #amuletStatus, body[data-dye-notices] #gemWorkshopStatus, body[data-dye-notices] #spinResult { background: color-mix(in srgb, var(--dye-notices), white 85%); color: #20182d; border-radius: 8px; padding: 10px; }
