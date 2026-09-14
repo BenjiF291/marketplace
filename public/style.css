@@ -1685,3 +1685,9 @@ body[data-dye-notices] #gemStatus, body[data-dye-notices] #amuletStatus, body[da
 body.dye-mode { padding-bottom: 42vh; }
 .dye-hover { outline: 3px dashed #9b4ad7 !important; outline-offset: 3px; cursor: crosshair; }
 body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-index: 10001; padding: 8px; border-radius: 12px; background: #211b33; box-shadow: 0 3px 15px #0004; }
+
+#practiceBattle .battle-hand { max-height: 360px; overflow: auto; padding: 12px 4px; }
+#practiceStatus { margin: 16px 0; font-weight: 700; }
+#practiceArena[hidden], #practiceSetup[hidden] { display: none; }
+#practicePicker button.is-active, #practiceHand button.is-active { outline: 3px solid #2878d0; outline-offset: 2px; }
+#practiceBoard .battle-board-cell:disabled { opacity: 1; }

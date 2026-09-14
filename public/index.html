@@ -32,7 +32,7 @@
     <button id="historyTab" class="tab-button" onclick="showSection('history')">History</button>
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
-    <button id="battleTab" class="tab-button" onclick="showSection('battle')" style="display: none;">Battle</button>
+    <button id="battleTab" class="tab-button" onclick="showSection('battle')">Battle</button>
     <button id="battleManagerTab" class="tab-button" onclick="showSection('battle-manager')" style="display: none;">BCM</button>
   </div>
 
@@ -238,6 +238,22 @@
 
     <section id="battleGameSection" class="card battle-game-section" style="display: none;">
       <h2>⚔️ Battle</h2>
+      <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
+        <summary>Offline practice vs Computer</summary>
+        <p>Strategic practice with no stakes, rewards, or time limit. Blue is you; red is the computer. Both sides use the same six cards. After one online visit, this page can load offline too.</p>
+        <div id="practiceSetup">
+          <p id="practiceNote"></p><p id="practiceCount"></p>
+          <div id="practicePicker" class="battle-hand"></div>
+          <label for="practiceFirst">Who starts?</label><select id="practiceFirst"><option value="player">You</option><option value="computer">Computer</option></select>
+          <button id="practiceStart" class="btn btn-primary" onclick="startPracticeBattle()">Start practice</button>
+        </div>
+        <div id="practiceArena" hidden>
+          <p id="practiceStatus" role="status" aria-live="polite"></p>
+          <div id="practiceBoard" class="battle-board" aria-label="Offline practice board"></div>
+          <h3>Your remaining cards</h3><div id="practiceHand" class="battle-hand"></div>
+          <button class="btn btn-primary" onclick="stopPracticeBattle()">New practice game</button>
+        </div>
+      </details>
       <div id="battleMatchLobby" class="battle-match-lobby">
         <label class="input-label" for="battleAverageLimit">Maximum average card score</label>
         <input id="battleAverageLimit" class="input-field" type="number" min="1" max="99" step="1" placeholder="1 to 99">
@@ -500,5 +516,7 @@
   <p id="dyeModeStatus" role="status" aria-live="polite"></p>
 </div>
 <script src="dye-mode.js"></script>
+<script src="practice-engine.js"></script>
+<script src="practice-battle.js"></script>
 </body>
 </html>

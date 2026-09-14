@@ -15,3 +15,20 @@ test('planned listing deletion requires admin, deletes scheduled plans and refus
  admin=true;status='published';await invoke();assert.equal(responseStatus,409);assert.equal(deleted,false);
  status='scheduled';await invoke();assert.equal(responseStatus,200);assert.equal(deleted,true);
 });
+test('dismissing notices preserves publication status and expiry and requires admin', async () => {
+ const source = fs.readFileSync('server.js', 'utf8');
+ const start = source.indexOf("app.post('/admin/market-listings/planned/:planId/dismiss'");
+ const code = source.slice(start, source.indexOf('\n});', start) + 5);
+ let handler, admin = true, responseStatus;
+ let plan = { status: 'published', expiresAt: '2030-01-01', listingGroupId: 'stock' };
+ const db = { collection: () => ({ doc: () => ({}) }), runTransaction: fn => fn({
+   get: async () => ({ exists: true, data: () => plan }),
+   update: (ref, update) => { plan = { ...plan, ...update }; }
+ }) };
+ vm.runInNewContext(code, { app: { post: (path, fn) => handler = fn }, db, userIsAdmin: async () => admin });
+ const invoke = async () => { responseStatus = 200; await handler({ header: () => 'admin', params: { planId: 'plan' } }, { status(code) { responseStatus = code; return this; }, send() {}, json() {} }); };
+ admin = false; await invoke(); assert.equal(responseStatus, 403); assert.equal(plan.dismissed, undefined);
+ admin = true; await invoke(); assert.equal(plan.dismissed, true); assert.equal(plan.status, 'published'); assert.equal(plan.expiresAt, '2030-01-01'); assert.equal(plan.listingGroupId, 'stock');
+ plan = { status: 'expired' }; await invoke(); assert.equal(plan.dismissed, true);
+ plan = { status: 'scheduled' }; await invoke(); assert.equal(responseStatus, 409); assert.equal(plan.dismissed, undefined);
+});

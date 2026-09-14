@@ -508,6 +508,10 @@ async function loadBattleInventory() {
     if (!res.ok) throw new Error('Could not load battle inventory');
     const battleItems = await res.json();
     battleInventoryCache = Array.isArray(battleItems) ? battleItems : [];
+    if (typeof rememberPracticeCards === 'function') {
+      rememberPracticeCards(battleInventoryCache);
+      if (document.getElementById('practiceBattle')?.open) loadPracticeSetup();
+    }
 
     if (battleItems.length === 0) {
       list.innerHTML = '<li>No battle cards in your inventory.</li>';
@@ -1380,7 +1384,7 @@ async function loadPlannedMarketplaceListings() {
     list.innerHTML = '';
 
     if (!Array.isArray(listings) || listings.length === 0) {
-      list.innerHTML = '<li>No planned listings yet.</li>';
+      list.innerHTML = '<li>No planned listings or notices.</li>';
       return;
     }
 
@@ -1389,21 +1393,22 @@ async function loadPlannedMarketplaceListings() {
       const scheduledText = entry.scheduledAt ? new Date(entry.scheduledAt).toLocaleString() : 'No scheduled time';
       const expiresText = entry.expiresAt ? ` · expires ${new Date(entry.expiresAt).toLocaleString()}` : '';
       item.textContent = `${entry.itemType.toUpperCase()} · ${entry.productName || entry.productId} · ${entry.status} · ${scheduledText}${expiresText}`;
-      if (entry.status === 'scheduled') {
+      if (['scheduled', 'published', 'expired'].includes(entry.status)) {
+        const dismiss = entry.status !== 'scheduled';
         const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger';
-        deleteButton.textContent = 'Delete planned listing';
+        deleteButton.className = dismiss ? 'btn btn-primary' : 'btn btn-danger';
+        deleteButton.textContent = dismiss ? 'Dismiss' : 'Delete planned listing';
         deleteButton.style.marginLeft = '12px';
         deleteButton.onclick = async () => {
           deleteButton.disabled = true;
           try {
-            const response = await fetch(`${API_URL}/admin/market-listings/planned/${encodeURIComponent(entry.id)}`, {
-              method: 'DELETE', headers: { 'X-User-Id': currentUserId }
+            const response = await fetch(`${API_URL}/admin/market-listings/planned/${encodeURIComponent(entry.id)}${dismiss ? '/dismiss' : ''}`, {
+              method: dismiss ? 'POST' : 'DELETE', headers: { 'X-User-Id': currentUserId }
             });
             if (!response.ok) throw new Error(await response.text());
             await loadPlannedMarketplaceListings();
           } catch (error) {
-            alert(error.message || 'Could not delete planned listing');
+            alert(error.message || 'Could not remove this entry');
             deleteButton.disabled = false;
           }
         };

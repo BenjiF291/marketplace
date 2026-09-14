@@ -1768,13 +1768,35 @@ app.delete('/admin/market-listings/planned/:planId', async (req, res) => {
   }
 });
 
+app.post('/admin/market-listings/planned/:planId/dismiss', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+  const { planId } = req.params;
+  if (!planId || planId.includes('/')) return res.status(400).send('Invalid planned listing');
+  try {
+    await db.runTransaction(async transaction => {
+      const ref = db.collection('marketListingPlans').doc(planId);
+      const doc = await transaction.get(ref);
+      if (!doc.exists) return;
+      if (!['published', 'expired'].includes(doc.data().status)) {
+        const error = new Error('Only published or expired notices can be dismissed');
+        error.status = 409; throw error;
+      }
+      transaction.update(ref, { dismissed: true, dismissedAt: new Date() });
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(error.status || 500).send(error.message || 'Could not dismiss notice');
+  }
+});
+
 app.get('/admin/market-listings/planned', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
 
   try {
     const snapshot = await db.collection('marketListingPlans').orderBy('scheduledAt', 'asc').get();
-    const plans = snapshot.docs.map(doc => {
+    const plans = snapshot.docs.filter(doc => doc.data().dismissed !== true).map(doc => {
       const data = doc.data();
       const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate().toISOString() : new Date(data.scheduledAt).toISOString()) : null;
       const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate().toISOString() : new Date(data.expiresAt).toISOString()) : null;
