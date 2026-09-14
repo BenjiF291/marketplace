@@ -30,10 +30,10 @@ function harness(seed) {
   const source = fs.readFileSync('server.js', 'utf8');
   const start = source.indexOf("app.post('/buy',"); const end = source.indexOf('/* ------------------ HISTORY', start);
   vm.runInNewContext(source.slice(start, end), { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round });
-  for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter']) {
+  for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
-    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./gem-utils') });
+    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, crypto: require('node:crypto'), ...require('./gem-utils') });
   }
   const invoke = async (url, body, user = 'buyer', action) => {
     let status = 200, payload;
@@ -122,4 +122,31 @@ test('admin can grant an amulet, player can equip it, and early removal is rejec
   assert.equal((await h.invoke('/amulets/:action', { slot: 0, amuletId: 'bronze:wheel' }, 'buyer', 'equip')).status, 200);
   assert.equal(h.data()['users/buyer'].amulets['bronze:wheel'], 0);
   assert.equal((await h.invoke('/amulets/:action', { slot: 0 }, 'buyer', 'remove')).status, 400);
+});
+
+test('buying a linked card awards only the purchased inventory record', async () => {
+  const data = seed(); data['items/card'].imageUrl = '/images/bronze.png';
+  data['battleCards/linked'] = { linkedCardImage: 'bronze.png' };
+  const h = harness(data);
+  assert.equal((await h.invoke('/buy', {itemId:'card',buyerId:'buyer'})).status,200);
+  assert.equal(Object.keys(h.data()).filter(key => key.startsWith('items/')).length,1);
+});
+test('retrying a grouped listing cannot buy another stock item', async () => {
+  const data = seed(); data['items/card'].listingGroupId = 'g';
+  data['items/second'] = {...data['items/card']}; data['marketListingGroups/g'] = {purchaseCounts:{}};
+  const h = harness(data);
+  assert.equal((await h.invoke('/buy',{itemId:'card',buyerId:'buyer'})).status,200);
+  assert.equal((await h.invoke('/buy',{itemId:'card',buyerId:'buyer'})).status,400);
+  assert.equal(h.data()['items/second'].sold,false);
+  assert.equal(h.data()['users/buyer'].gems.bronze,13);
+});
+test('opening a pack consumes it once and creates only one normal card', async () => {
+  const data = seed(); delete data['items/card'];
+  data['items/pack'] = {itemType:'pack',packId:'p',buyerId:'buyer',sold:true,sellerId:'seller'};
+  data['packs/p'] = {cardIds:['bronze.png']};
+  const h = harness(data);
+  assert.equal((await h.invoke('/open-pack',{itemId:'pack'})).status,200);
+  assert.equal((await h.invoke('/open-pack',{itemId:'pack'})).status,400);
+  const cards = Object.entries(h.data()).filter(([key])=>key.startsWith('items/'));
+  assert.equal(cards.length,1); assert.equal(cards[0][1].itemType,'card');
 });

@@ -11,6 +11,7 @@ const { effects: amuletEffects, discounted, round: roundFooty } = require('./amu
 const battleTimeouts = require('./battle-timeout').createTimeoutService(db, amuletEffects, roundFooty);
 setInterval(() => battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error)), 15000).unref();
 battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error));
+const { sortCardsByTier } = require('./card-order');
 const { validateBattleCard } = require('./battle-utils');
 const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
 
@@ -85,59 +86,6 @@ function serializeDate(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-async function awardLinkedBattleCard(userId, normalCardImage) {
-  if (!userId || typeof userId !== 'string' || !normalCardImage || typeof normalCardImage !== 'string') {
-    return null;
-  }
-
-  try {
-    const battleCardsRef = db.collection('battleCards');
-    const snapshot = await battleCardsRef.where('linkedCardImage', '==', normalCardImage).limit(1).get();
-    if (snapshot.empty) return null;
-
-    const battleCard = snapshot.docs[0].data();
-    const battleCardId = snapshot.docs[0].id;
-
-    const existingSnapshot = await db.collection('items')
-      .where('buyerId', '==', userId)
-      .where('battleCardId', '==', battleCardId)
-      .limit(1)
-      .get();
-
-    if (!existingSnapshot.empty) {
-      return existingSnapshot.docs[0].id;
-    }
-
-    const battleItem = {
-      name: battleCard.name,
-      itemType: 'battle-card',
-      battleCardId,
-      linkedCardImage: normalCardImage,
-      imageUrl: `/images/${normalCardImage}`,
-      price: 0,
-      sellerId: 'system',
-      sold: true,
-      buyerId: userId,
-      purchasedAt: new Date(),
-      sourceItemId: null,
-      createdAt: new Date(),
-      averageScore: Number(battleCard.averageScore) || 0,
-      top: Number(battleCard.top) || 0,
-      right: Number(battleCard.right) || 0,
-      bottom: Number(battleCard.bottom) || 0,
-      left: Number(battleCard.left) || 0,
-      isBattleCard: true
-    };
-
-    const battleRef = db.collection('items').doc();
-    await battleRef.set(battleItem);
-    return battleRef.id;
-  } catch (error) {
-    console.error('Error awarding linked battle card:', error);
-    return null;
-  }
-}
-
 const DEFAULT_ASCEND_TIERS = [
   'Bronze',
   'Rare Bronze',
@@ -210,7 +158,7 @@ async function listingCurrency(key = 'footy') {
   return { currency: gem.gemKey, currencyName: gem.gemName };
 }
 
-async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', listingGroupIdOverride = null }) {
+async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', listingGroupIdOverride = null, planRef = null }) {
   const money = await listingCurrency(currency);
   if (money.currency !== 'footy' && !Number.isSafeInteger(price)) throw new Error('Gem prices must be whole numbers');
   let itemName;
@@ -237,7 +185,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
   }
 
   const groupRef = listingGroupIdOverride ? db.collection('marketListingGroups').doc(listingGroupIdOverride) : db.collection('marketListingGroups').doc();
-  const batch = db.batch();
+  const writeListing = batch => {
   batch.set(groupRef, {
     sellerId,
     name: itemName,
@@ -278,6 +226,18 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
     });
   }
 
+    if (planRef) batch.update(planRef, { status: 'published', publishedAt: new Date(), listingGroupId: groupRef.id });
+  };
+  if (planRef) {
+    return db.runTransaction(async transaction => {
+      const plan = await transaction.get(planRef);
+      if (!plan.exists || plan.data().status !== 'scheduled') return null;
+      writeListing(transaction);
+      return groupRef.id;
+    });
+  }
+  const batch = db.batch();
+  writeListing(batch);
   await batch.commit();
   return groupRef.id;
 }
@@ -302,14 +262,10 @@ async function syncPlannedMarketplaceListings() {
         perUserLimit: Number(data.perUserLimit) || 0,
         scheduledAt: scheduledAt.toISOString(),
         expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)).toISOString() : null,
-        listingGroupIdOverride: data.listingGroupId || null
+        listingGroupIdOverride: data.listingGroupId || null,
+        planRef: doc.ref
       });
 
-      await doc.ref.update({
-        status: 'published',
-        publishedAt: now,
-        listingGroupId: groupId
-      });
     } catch (error) {
       console.error('Error publishing scheduled listing:', error);
     }
@@ -415,7 +371,7 @@ app.get('/battle-cards', async (req, res) => {
         createdAt: serializeDate(data.createdAt)
       };
     });
-    res.json(cards);
+    res.json(sortCardsByTier(cards, tiers));
   } catch (error) {
     console.error('Error loading battle cards:', error);
     res.status(500).send('Could not load battle cards');
@@ -461,7 +417,7 @@ app.get('/battle-inventory', async (req, res) => {
         });
       }
     });
-    res.json(battleItems);
+    res.json(sortCardsByTier(battleItems, tiers));
   } catch (error) {
     console.error('Error loading battle inventory:', error);
     res.status(500).send('Could not load battle inventory');
@@ -1241,7 +1197,7 @@ app.get('/items', async (req, res) => {
     const groupedListings = new Map();
     snapshot.forEach(doc => {
       const data = doc.data();
-      if (data.sold !== true) {
+      if (data.sold !== true && data.itemType !== 'battle-card') {
         const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate() : new Date(data.scheduledAt)) : null;
         const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null;
 
@@ -1258,6 +1214,7 @@ app.get('/items', async (req, res) => {
           imageUrl: data.imageUrl || null,
           itemType: data.itemType || (data.packId ? 'pack' : 'card'),
           packColor: data.packColor || '#667eea',
+          packId: data.packId || null,
           limitOnePerUser: data.limitOnePerUser === true,
           listingGroupId: data.listingGroupId || null,
           perUserLimit: data.perUserLimit || null,
@@ -1276,12 +1233,7 @@ app.get('/items', async (req, res) => {
     });
     items.push(...groupedListings.values());
 
-    // Sort by creation date (newest first)
-    items.sort((a, b) => {
-      const aTime = a.createdAt?._seconds || 0;
-      const bTime = b.createdAt?._seconds || 0;
-      return bTime - aTime;
-    });
+    sortCardsByTier(items, await getAscendTierConfig());
 
     res.json(items);
   } catch (error) {
@@ -1343,7 +1295,7 @@ app.get('/card-images', async (req, res) => {
       .filter(file => ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(file).toLowerCase()))
       .sort();
 
-    res.json(files);
+    res.json(sortCardsByTier(files.map(name => ({ name })), await getAscendTierConfig()).map(card => card.name));
   } catch (error) {
     console.error('Error reading card images:', error);
     res.status(500).send('Error reading card images');
@@ -1705,7 +1657,6 @@ app.post('/open-pack', async (req, res) => {
       transaction.delete(packItemRef);
       return { cardId, packBonus, packColor: packItem.packColor || pack.color || '#667eea' };
     });
-    await awardLinkedBattleCard(requesterId, result.cardId);
     res.json({ success: true, packBonus: result.packBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
@@ -1786,9 +1737,6 @@ app.post('/grant-item', async (req, res) => {
       await batch.commit();
     }
 
-    for (const write of writes) {
-      await awardLinkedBattleCard(write.buyerId, path.basename(write.imageUrl));
-    }
 
     res.json({ success: true, granted: writes.length });
   } catch (error) {
@@ -1798,6 +1746,28 @@ app.post('/grant-item', async (req, res) => {
 });
 
 /* ------------------ ADMIN DIRECT MARKETPLACE LISTINGS ------------------ */
+app.delete('/admin/market-listings/planned/:planId', async (req, res) => {
+  const requesterId = req.header('X-User-Id');
+  if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+  const { planId } = req.params;
+  if (!planId || planId.includes('/')) return res.status(400).send('Invalid planned listing');
+  try {
+    await db.runTransaction(async transaction => {
+      const ref = db.collection('marketListingPlans').doc(planId);
+      const doc = await transaction.get(ref);
+      if (!doc.exists) return;
+      if (doc.data().status !== 'scheduled') {
+        const error = new Error('This listing is no longer planned. Remove live stock from the marketplace instead.');
+        error.status = 409; throw error;
+      }
+      transaction.delete(ref);
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(error.status || 500).send(error.message || 'Could not delete planned listing');
+  }
+});
+
 app.get('/admin/market-listings/planned', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
@@ -1943,7 +1913,7 @@ app.post('/items', async (req, res) => {
     if (sourceItemId) {
       const sourceItemRef = db.collection('items').doc(sourceItemId);
       const sourceItemDoc = await transaction.get(sourceItemRef);
-      if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true) {
+      if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true || sourceItemDoc.data().itemType === 'battle-card') {
         throw new Error('Selected inventory item is unavailable');
       }
       sourceItem = sourceItemDoc.data();
@@ -2064,15 +2034,11 @@ app.post('/buy', async (req, res) => {
       }
 
       let item = itemDoc.data();
+      if (item.sold || item.itemType === 'battle-card') throw new Error('Item unavailable');
 
       let listingGroupRef = null;
       let listingGroup = null;
       if (item.listingGroupId) {
-        const listingItems = await transaction.get(itemsRef.where('listingGroupId', '==', item.listingGroupId));
-        const availableItemDoc = listingItems.docs.find(doc => doc.data().sold !== true);
-        if (!availableItemDoc) throw new Error('Item unavailable');
-        itemRef = availableItemDoc.ref;
-        item = availableItemDoc.data();
         listingGroupRef = db.collection('marketListingGroups').doc(item.listingGroupId);
         const listingGroupDoc = await transaction.get(listingGroupRef);
         if (!listingGroupDoc.exists) throw new Error('Item unavailable');
@@ -2084,7 +2050,7 @@ app.post('/buy', async (req, res) => {
       }
 
       const saleTime = value => value?.toDate ? value.toDate().getTime() : new Date(value).getTime();
-      if (item.sold || (item.scheduledAt && saleTime(item.scheduledAt) > Date.now()) || (item.expiresAt && saleTime(item.expiresAt) <= Date.now())) {
+      if (item.itemType === 'battle-card' || item.sold || (item.scheduledAt && saleTime(item.scheduledAt) > Date.now()) || (item.expiresAt && saleTime(item.expiresAt) <= Date.now())) {
         throw new Error('Item unavailable');
       }
 
@@ -2162,33 +2128,6 @@ app.post('/buy', async (req, res) => {
         sellerPayment,
         purchasedViaMarketplace: true
       });
-
-      if (item.imageUrl) {
-        const linkedBattleCard = await db.collection('battleCards').where('linkedCardImage', '==', path.basename(item.imageUrl)).limit(1).get();
-        if (!linkedBattleCard.empty) {
-          const battleCard = linkedBattleCard.docs[0];
-          transaction.set(db.collection('items').doc(), {
-            name: battleCard.data().name,
-            itemType: 'battle-card',
-            battleCardId: battleCard.id,
-            linkedCardImage: path.basename(item.imageUrl),
-            imageUrl: item.imageUrl,
-            price: 0,
-            sellerId: 'system',
-            sold: true,
-            buyerId: buyerId,
-            purchasedAt: new Date(),
-            sourceItemId: itemRef.id,
-            createdAt: new Date(),
-            isBattleCard: true,
-            averageScore: Number(battleCard.data().averageScore) || 0,
-            top: Number(battleCard.data().top) || 0,
-            right: Number(battleCard.data().right) || 0,
-            bottom: Number(battleCard.data().bottom) || 0,
-            left: Number(battleCard.data().left) || 0
-          });
-        }
-      }
 
       if (listingGroupRef) {
         const purchaseCounts = { ...(listingGroup.purchaseCounts || {}) };
@@ -2345,7 +2284,7 @@ app.post('/ascend', async (req, res) => {
 
     const matchingCards = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(item => item.itemType !== 'pack' && item.listedForSale !== true)
+      .filter(item => item.itemType !== 'pack' && item.itemType !== 'battle-card' && item.listedForSale !== true)
       .filter(item => item.imageUrl && path.basename(item.imageUrl) === cleanedCardKey);
 
     if (matchingCards.length < 3) {
@@ -2413,7 +2352,7 @@ app.post('/sell-tier-card', async (req, res) => {
     if (!itemDoc.exists) return res.status(404).send('Inventory item not found');
 
     const item = itemDoc.data();
-    if (item.buyerId !== requesterId || item.sold !== true || item.listedForSale === true || item.itemType === 'pack') {
+    if (item.buyerId !== requesterId || item.sold !== true || item.listedForSale === true || (item.itemType === 'pack' || item.itemType === 'battle-card')) {
       return res.status(400).send('This item cannot be sold');
     }
 
@@ -2571,8 +2510,6 @@ app.get('/inventory', async (req, res) => {
 
   try {
     const itemsRef = db.collection('items');
-    const battleCardsSnapshot = await db.collection('battleCards').get();
-    const activeBattleCardIds = new Set(battleCardsSnapshot.docs.map(doc => doc.id));
     const snapshot = await itemsRef
       .where('buyerId', '==', userId)
       .where('sold', '==', true)
@@ -2582,8 +2519,7 @@ app.get('/inventory', async (req, res) => {
     snapshot.forEach(doc => {
       const data = doc.data();
       // Filter out items that are currently listed for sale
-      const isActiveBattleCard = data.itemType !== 'battle-card' || activeBattleCardIds.has(data.battleCardId);
-      if (data.listedForSale !== true && isActiveBattleCard) {
+      if (data.listedForSale !== true && data.itemType !== 'battle-card') {
         inventoryItems.push({
           id: doc.id,
           ...data
@@ -2591,11 +2527,7 @@ app.get('/inventory', async (req, res) => {
       }
     });
 
-    inventoryItems.sort((a, b) => {
-      const left = String(a.name || '').toLocaleLowerCase();
-      const right = String(b.name || '').toLocaleLowerCase();
-      return left.localeCompare(right);
-    });
+    sortCardsByTier(inventoryItems, await getAscendTierConfig());
 
     res.json(inventoryItems);
   } catch (error) {

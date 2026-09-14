@@ -1389,6 +1389,26 @@ async function loadPlannedMarketplaceListings() {
       const scheduledText = entry.scheduledAt ? new Date(entry.scheduledAt).toLocaleString() : 'No scheduled time';
       const expiresText = entry.expiresAt ? ` · expires ${new Date(entry.expiresAt).toLocaleString()}` : '';
       item.textContent = `${entry.itemType.toUpperCase()} · ${entry.productName || entry.productId} · ${entry.status} · ${scheduledText}${expiresText}`;
+      if (entry.status === 'scheduled') {
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger';
+        deleteButton.textContent = 'Delete planned listing';
+        deleteButton.style.marginLeft = '12px';
+        deleteButton.onclick = async () => {
+          deleteButton.disabled = true;
+          try {
+            const response = await fetch(`${API_URL}/admin/market-listings/planned/${encodeURIComponent(entry.id)}`, {
+              method: 'DELETE', headers: { 'X-User-Id': currentUserId }
+            });
+            if (!response.ok) throw new Error(await response.text());
+            await loadPlannedMarketplaceListings();
+          } catch (error) {
+            alert(error.message || 'Could not delete planned listing');
+            deleteButton.disabled = false;
+          }
+        };
+        item.appendChild(deleteButton);
+      }
       list.appendChild(item);
     });
   } catch (error) {
@@ -1580,7 +1600,6 @@ async function viewAdminAccount() {
     });
     if (!inventoryResponse.ok) throw new Error('Could not load inventory');
     const inventory = await inventoryResponse.json();
-    inventory.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
 
     inventoryList.innerHTML = '';
     if (inventory.length === 0) {
@@ -2085,7 +2104,10 @@ async function grantPackToUser() {
   }
 }
 
+const openingPackIds = new Set();
 async function openPack(itemId) {
+  if (openingPackIds.has(itemId)) return;
+  openingPackIds.add(itemId);
   try {
     const res = await fetch(`${API_URL}/open-pack`, {
       method: 'POST',
@@ -2100,6 +2122,8 @@ async function openPack(itemId) {
   } catch (error) {
     console.error('Error opening pack:', error);
     alert('Could not open pack');
+  } finally {
+    openingPackIds.delete(itemId);
   }
 }
 
@@ -2246,6 +2270,7 @@ async function transfer() {
 }
 
 /* ------------------ MARKETPLACE ------------------ */
+const pendingPurchases = new Set();
 async function loadItems() {
   if (!isServerOnline) return;
   
@@ -2325,6 +2350,9 @@ async function loadItems() {
         btn.className = "btn btn-success";
 
         btn.onclick = async () => {
+          if (pendingPurchases.has(item.id)) return;
+          pendingPurchases.add(item.id);
+          btn.disabled = true;
           try {
             const res = await fetch(`${API_URL}/buy`, {
               method: 'POST',
@@ -2350,6 +2378,9 @@ async function loadItems() {
             alert("🔒 Market is closed. The marketplace server is currently offline.");
             isServerOnline = false;
             showMarketClosed();
+          } finally {
+            pendingPurchases.delete(item.id);
+            btn.disabled = false;
           }
         };
       }
@@ -2666,7 +2697,6 @@ async function loadInventory() {
       });
     });
 
-    inventoryItems.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' }));
     const list = document.getElementById('inventoryItems');
     list.innerHTML = '';
 
@@ -2819,7 +2849,7 @@ async function openAscendMenu() {
         };
       })
       .filter(Boolean)
-      .sort((a, b) => a.key.localeCompare(b.key));
+      ;
 
     const list = document.getElementById('ascendOptions');
     if (!list) return;
