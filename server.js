@@ -8,6 +8,9 @@ require('dotenv').config();
 const app = express();
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
 const { effects: amuletEffects, discounted, round: roundFooty } = require('./amulet-utils');
+const battleTimeouts = require('./battle-timeout').createTimeoutService(db, amuletEffects, roundFooty);
+setInterval(() => battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error)), 15000).unref();
+battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error));
 const { validateBattleCard } = require('./battle-utils');
 const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
 
@@ -470,8 +473,8 @@ app.get('/battle-decks', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   try {
-    const snapshot = await db.collection('battleDecks').where('userId', '==', requesterId).orderBy('createdAt', 'desc').get();
-    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const snapshot = await db.collection('battleDecks').where('userId', '==', requesterId).get();
+    res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => new Date(serializeDate(b.createdAt) || 0) - new Date(serializeDate(a.createdAt) || 0)));
   } catch (error) {
     console.error('Error loading battle decks:', error);
     res.status(500).send('Could not load battle decks');
@@ -520,6 +523,7 @@ app.delete('/battle-decks/:deckId', async (req, res) => {
 });
 
 function battleMatchView(id, data) {
+  battleTimeouts.schedule(id, data);
   return {
     id,
     status: data.status,
@@ -533,6 +537,9 @@ function battleMatchView(id, data) {
     starterCard: data.starterCard || null,
     prize: Number(data.prize) || 0,
     prizePaid: data.prizePaid === true,
+    endReason: data.endReason || null,
+    serverNow: Date.now(),
+    paidPrize: data.paidPrize ?? data.prize,
     timeControlSeconds: Number(data.timeControlSeconds) || 90,
     clocks: data.clocks || {},
     turnStartedAt: serializeDate(data.turnStartedAt),
@@ -661,7 +668,7 @@ app.get('/battle-matches/:matchId', async (req, res) => {
   try {
     const matchDoc = await db.collection('battleMatches').doc(req.params.matchId).get();
     if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
-    res.json(battleMatchView(matchDoc.id, matchDoc.data()));
+    res.json(battleMatchView(matchDoc.id, await battleTimeouts.expire(matchDoc.id) || matchDoc.data()));
   } catch (error) {
     console.error('Load battle match error:', error);
     res.status(500).send('Could not load match');
@@ -673,9 +680,12 @@ app.post('/battle-matches/:matchId/cancel', async (req, res) => {
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   try {
     const matchRef = db.collection('battleMatches').doc(req.params.matchId);
-    const matchDoc = await matchRef.get();
-    if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
-    if (['setup', 'board'].includes(matchDoc.data().status)) await matchRef.update({ status: 'cancelled', updatedAt: new Date() });
+    await db.runTransaction(async tx => {
+      const doc = await tx.get(matchRef);
+      if (!doc.exists || !doc.data().participantIds.includes(requesterId)) throw new Error('Match not found');
+      if (await battleTimeouts.settle(tx, matchRef, doc.data())) return;
+      if (['setup', 'board'].includes(doc.data().status)) tx.update(matchRef, { status: 'cancelled', updatedAt: new Date() });
+    });
     res.json({ success: true });
   } catch (error) {
     console.error('Cancel battle match error:', error);
@@ -798,6 +808,9 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const matchDoc = await transaction.get(matchRef);
       if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) throw new Error('Match not found');
       const match = matchDoc.data();
+      const expired = await battleTimeouts.settle(transaction, matchRef, match);
+      if (expired) return expired;
+      const moveTime = new Date();
       if (match.status !== 'board') throw new Error('The board is not active');
       if (match.turnPlayerId !== requesterId) throw new Error('It is not your turn');
       const deck = match.decks?.[requesterId] || [];
@@ -836,7 +849,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       board[cell] = placed;
 
       // Decrement the current player's clock by the time taken for this turn
-      const now = new Date();
+      const now = moveTime;
       const turnStarted = match.turnStartedAt ? (match.turnStartedAt.toDate ? match.turnStartedAt.toDate() : new Date(match.turnStartedAt)) : now;
       const elapsedMs = Math.max(0, now.getTime() - turnStarted.getTime());
       const clocks = { ...(match.clocks || {}) };
@@ -849,7 +862,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const ownedCounts = match.participantIds.map(id => ({ id, count: board.filter(entry => entry?.ownerId === id).length }));
       const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
       const winners = ownedCounts.filter(entry => entry.count === highestCount);
-      const winnerId = isFinished && winners.length === 1 ? winners[0].id : null;
+      const winnerId = timeOut ? opponentId : isFinished && winners.length === 1 ? winners[0].id : null;
       const nextTurn = isFinished ? null : match.participantIds.find(id => id !== requesterId);
       const status = isFinished ? 'finished' : 'board';
       const turnStartedAtValue = isFinished ? null : now;

@@ -536,7 +536,8 @@ function renderBattleInventory() {
       li.querySelector('button').onclick = () => {
         if (battleMatch && battleMatch.status === 'setup' && battleReady) return;
         if (selectedBattleCards.has(item.battleCardId)) selectedBattleCards.delete(item.battleCardId);
-        else selectedBattleCards.add(item.battleCardId);
+        else if (selectedBattleCards.size < 6) selectedBattleCards.add(item.battleCardId);
+        else return;
         updateBattleBudget();
         renderBattleInventory();
         saveBattleDeck();
@@ -640,7 +641,10 @@ function prepareBattleDeck({ syncSelection = true } = {}) {
     return;
   }
   document.getElementById('battleDeckPanel').hidden = false;
-  if (syncSelection) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+  if (syncSelection) {
+    selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
+    renderBattleInventory();
+  }
   battleReady = battleMatch.ready?.[currentUserId] === true;
   const readyButton = document.getElementById('battleReadyButton');
   if (readyButton) readyButton.textContent = battleReady ? 'Ready' : 'Ready';
@@ -672,34 +676,46 @@ async function cancelBattleMatch() {
   }
 }
 
+let battleDeckSaveTask = null;
+let battleDeckRevision = 0;
 async function saveBattleDeck() {
-  if (!battleMatchId || selectedBattleCards.size > 6) return;
+  if (!battleMatchId || selectedBattleCards.size > 6 || battleMatch?.status !== 'setup') return false;
+  battleDeckRevision += 1;
+  if (battleDeckSaveTask) return battleDeckSaveTask;
+  const matchId = battleMatchId;
   battleDeckSavePending = true;
-  try {
-    const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/deck`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({
-        cardIds: [...selectedBattleCards],
-        color: document.getElementById('battlePlayerColor')?.value || '#2878d0'
-      })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    battleMatch = await response.json();
-    updateBattleBudget();
-  } catch (error) {
-    console.error('Save battle deck error:', error);
-    alert(error.message || 'Could not save deck');
-  } finally {
-    battleDeckSavePending = false;
-  }
+  battleDeckSaveTask = (async () => {
+    try {
+      let revision;
+      do {
+        revision = battleDeckRevision;
+        const response = await fetch(`${API_URL}/battle-matches/${matchId}/deck`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+          body: JSON.stringify({ cardIds: [...selectedBattleCards], color: document.getElementById('battlePlayerColor')?.value || '#2878d0' })
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const saved = await response.json();
+        if (matchId !== battleMatchId) return false;
+        if (revision === battleDeckRevision) battleMatch = saved;
+      } while (revision !== battleDeckRevision);
+      updateBattleBudget();
+      return true;
+    } catch (error) {
+      alert(error.message || 'Could not save deck');
+      return false;
+    } finally {
+      battleDeckSavePending = false;
+      battleDeckSaveTask = null;
+    }
+  })();
+  return battleDeckSaveTask;
 }
 
 /* ------------------ SAVED BATTLE DECKS ------------------ */
 async function loadSavedBattleDecks() {
   try {
     const res = await fetch(`${API_URL}/battle-decks`, { headers: { 'X-User-Id': currentUserId } });
-    if (!res.ok) return;
+    if (!res.ok) throw new Error(await res.text());
     savedBattleDecks = await res.json();
     const select = document.getElementById('battleSavedDeckSelect');
     if (!select) return;
@@ -712,6 +728,8 @@ async function loadSavedBattleDecks() {
     });
   } catch (error) {
     console.error('Error loading saved battle decks:', error);
+    const select = document.getElementById('battleSavedDeckSelect');
+    if (select) select.innerHTML = '<option value="">Could not load saved decks. Reopen Battle to retry.</option>';
   }
 }
 
@@ -746,9 +764,14 @@ async function loadSavedBattleDeck() {
   if (!deckId) return alert('Select a saved deck first.');
   const deck = savedBattleDecks.find(d => d.id === deckId);
   if (!deck) return alert('Deck not found.');
+  if (battleMatch && (battleMatch.status !== 'setup' || battleReady)) return alert('Deck changes are closed for this match.');
+  await loadBattleInventory();
+  const owned = new Set(battleInventoryCache.map(card => card.battleCardId));
+  if (deck.cardIds.some(id => !owned.has(id))) return alert('This saved deck contains cards you no longer own.');
   selectedBattleCards = new Set(deck.cardIds);
   const colorInput = document.getElementById('battlePlayerColor');
-  if (colorInput && deck.color) colorInput.value = deck.color;
+  const opponent = battleMatch?.participantIds.find(id => id !== currentUserId);
+  if (colorInput && deck.color && deck.color !== battleMatch?.colors?.[opponent]) colorInput.value = deck.color;
   updateBattleBudget();
   renderBattleInventory();
   saveBattleDeck();
@@ -782,6 +805,8 @@ function formatClockTime(ms) {
   return `${minutes}:${seconds}`;
 }
 
+let battleClockOffset = 0;
+let battleTimeoutRefresh = false;
 function updateBattleClocks() {
   if (!battleMatch || !battleMatch.clocks) return;
   const meEl = document.getElementById('battleClockMyTime');
@@ -798,13 +823,17 @@ function updateBattleClocks() {
   let myDisplay = myClock;
   let oppDisplay = oppClock;
   if (battleMatch.status === 'board' && battleMatch.turnPlayerId === myId && battleMatch.turnStartedAt) {
-    const elapsed = Date.now() - new Date(battleMatch.turnStartedAt).getTime();
+    const elapsed = Math.max(0, Date.now() + battleClockOffset - new Date(battleMatch.turnStartedAt).getTime());
     myDisplay = Math.max(0, myClock - elapsed);
   } else if (battleMatch.status === 'board' && battleMatch.turnPlayerId === opponentId && battleMatch.turnStartedAt) {
-    const elapsed = Date.now() - new Date(battleMatch.turnStartedAt).getTime();
+    const elapsed = Math.max(0, Date.now() + battleClockOffset - new Date(battleMatch.turnStartedAt).getTime());
     oppDisplay = Math.max(0, oppClock - elapsed);
   }
 
+  if (battleMatch.status === 'board' && ((battleMatch.turnPlayerId === myId && myDisplay <= 0) || (battleMatch.turnPlayerId === opponentId && oppDisplay <= 0)) && !battleTimeoutRefresh) {
+    battleTimeoutRefresh = true;
+    loadBattleMatch().finally(() => { setTimeout(() => { battleTimeoutRefresh = false; }, 500); });
+  }
   meEl.textContent = formatClockTime(myDisplay);
   oppEl.textContent = formatClockTime(oppDisplay);
   meClockEl.classList.toggle('is-active', battleMatch.turnPlayerId === myId && battleMatch.status === 'board');
@@ -836,11 +865,11 @@ function renderBattleBoard() {
   const starterName = battleMatch.participants?.[battleMatch.starterId]?.username || 'player';
   if (battleMatch.status === 'finished') {
     const result = battleMatch.winnerId ? `${battleMatch.participants?.[battleMatch.winnerId]?.username || 'A player'} wins the battle!` : 'The battle is a draw.';
-    turnStatus.textContent = result;
+    turnStatus.textContent = result + (battleMatch.endReason === 'timeout' ? ' Time ran out.' : '');
     const resultEl = document.getElementById('battleResult');
     if (resultEl) {
       resultEl.textContent = battleMatch.winnerId === currentUserId
-        ? `You won: ${battleMatch.prize || 0} Footy`
+        ? `You won: ${battleMatch.paidPrize ?? battleMatch.prize ?? 0} Footy`
         : battleMatch.winnerId ? 'You lost.' : 'Draw: no prize was awarded.';
     }
   } else {
@@ -856,7 +885,7 @@ function renderBattleBoard() {
     const cell = document.createElement('button');
     cell.type = 'button';
     cell.className = 'battle-board-cell';
-    cell.disabled = !!entry || !isMyTurn || !battleSelectedPlacementCard;
+    cell.disabled = battleMatch.status !== 'board' || !!entry || !isMyTurn || !battleSelectedPlacementCard;
     if (entry) {
       cell.innerHTML = `<div class="battle-board-card">${buildBattleCardMarkup(entry, { small: true })}</div>`;
       cell.style.setProperty('--battle-card-color', entry.color || '#eeeeee');
@@ -884,7 +913,7 @@ function renderBattleBoard() {
 }
 
 async function placeBattleCard(position) {
-  if (!battleMatchId || !battleSelectedPlacementCard || battleMatch.turnPlayerId !== currentUserId) return;
+  if (!battleMatchId || !battleSelectedPlacementCard || battleMatch.status !== 'board' || battleMatch.turnPlayerId !== currentUserId) return;
   try {
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/place`, {
       method: 'POST',
@@ -907,10 +936,16 @@ function startBattleMatchPolling() {
 
 async function loadBattleMatch() {
   if (!battleMatchId) return;
+  const matchId = battleMatchId;
+  const revision = battleDeckRevision;
+  const savingAtStart = battleDeckSavePending;
   try {
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}`, { headers: { 'X-User-Id': currentUserId } });
     if (!response.ok) return;
-    battleMatch = await response.json();
+    const latest = await response.json();
+    if (matchId !== battleMatchId || savingAtStart || battleDeckSavePending || revision !== battleDeckRevision) return;
+    battleMatch = latest;
+    battleClockOffset = Number(latest.serverNow || Date.now()) - Date.now();
     if (!battleDeckSavePending) selectedBattleCards = new Set(battleMatch.decks?.[currentUserId] || []);
     battleReady = battleMatch.ready?.[currentUserId] === true;
     prepareBattleDeck({ syncSelection: !battleDeckSavePending });
@@ -926,7 +961,7 @@ async function loadBattleMatch() {
 async function toggleBattleReady() {
   if (!battleMatchId || battleReady) return;
   try {
-    await saveBattleDeck();
+    if (!(await saveBattleDeck())) return;
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/ready`, {
       method: 'POST',
       headers: { 'X-User-Id': currentUserId }
