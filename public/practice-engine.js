@@ -29,8 +29,8 @@
     });
     return value;
   }
-  function chooseMove(board, hand, opponentHand) {
-    let best = null;
+  function chooseMove(board, hand, opponentHand, difficulty = 'hard', random = Math.random) {
+    const choices = [];
     for (let cardIndex = 0; cardIndex < hand.length; cardIndex++) {
       for (let cell = 0; cell < 16; cell++) {
         if (board[cell]) continue;
@@ -46,11 +46,44 @@
         }
         if (worst === Infinity) worst = evaluate(next, 'computer');
         const value = worst + evaluate(next, 'computer') * .01;
-        if (!best || value > best.value) best = {cardIndex, cell, value};
+        choices.push({cardIndex, cell, value});
       }
     }
-    return best;
+    choices.sort((a,b)=>b.value-a.value);
+    if (!choices.length) return null;
+    if (difficulty === 'easy') return choices[Math.min(choices.length-1, 1 + Math.floor(random() * Math.max(1, Math.ceil(choices.length * .3))))];
+    if (difficulty === 'medium') {
+      const near = choices.filter(move => move.value >= choices[0].value - 110).slice(0, 5);
+      return near.length > 1 ? near[1 + Math.floor(random() * (near.length-1))] : choices[0];
+    }
+    return choices[0];
   }
-  const api = {play, score, chooseMove};
+  const difficulties = {easy:{offset:20,win:10,loss:5},medium:{offset:10,win:25,loss:10},hard:{offset:0,win:40,loss:15}};
+  function seeded(seed) { let state=seed>>>0; return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;}; }
+  function computerDeck(pool, player, difficulty, random=Math.random) {
+    if (!difficulties[difficulty] || pool.length < 6) throw new Error('Need six available battle cards');
+    const average = cards=>cards.reduce((sum,card)=>sum+Number(card.averageScore||0),0)/cards.length;
+    const target = Math.max(0,average(player)-difficulties[difficulty].offset);
+    const ids = new Set(player.map(card=>card.battleCardId||card.id));
+    const different=pool.filter(card=>!ids.has(card.battleCardId||card.id));
+    const candidates=different.length>=6?different:pool;
+    let best=null, gap=Infinity;
+    for(let attempt=0;attempt<400;attempt++) {
+      const remaining=[...candidates],chosen=[];let total=0;
+      for(let i=0;i<6;i++){
+        const desired=(target*6-total)/(6-i);
+        remaining.sort((a,b)=>Math.abs(Number(a.averageScore||0)-desired)-Math.abs(Number(b.averageScore||0)-desired));
+        const index=Math.floor(random()*Math.min(10,remaining.length));
+        const card=remaining.splice(index,1)[0];chosen.push(card);total+=Number(card.averageScore||0);
+      }
+      const shuffled=chosen;
+      const deck=shuffled.slice(0,6), difference=Math.abs(average(deck)-target);
+      if(difference<gap){best=deck;gap=difference;}
+      if(gap<.25)break;
+    }
+    return {deck:best.map(card=>({...card})),target,average:average(best),playerAverage:average(player)};
+  }
+  function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
+  const api = {play, score, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);

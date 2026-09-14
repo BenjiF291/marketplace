@@ -2559,6 +2559,7 @@ app.get('/inventory', async (req, res) => {
 });
 
 require('./amulet-routes')(app, db, getAscendTierConfig);
+require('./trophy-routes')(app, db, getBattleCardsForUser);
 require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 
 /* ------------------ START SERVER ------------------ */
