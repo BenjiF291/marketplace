@@ -27,7 +27,7 @@ function loadPracticeSetup() {
   const valid = new Set(practiceCards.map(card => card.battleCardId));
   practiceSelection = new Set([...practiceSelection].filter(id => valid.has(id)));
   if (!practiceSelection.size) practiceSelection = new Set(practiceCards.slice(0,6).map(card=>card.battleCardId));
-  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards. The computer gets a randomized deck matched to the selected difficulty.' : 'Using six free training cards. Load six owned battle cards online to practice with your own deck.';
+  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards. Bob gets a randomized deck matched to the selected difficulty.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
   renderPracticePicker();
 }
 function safePracticeMarkup(card) {
@@ -68,7 +68,7 @@ async function startPracticeBattle() {
     practiceGame={...initial,selected:null,finished:false,difficulty,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
     persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
     renderPracticeBattle();loadTrophyPath();if(turn==='computer')runPracticeComputer();
-  } catch(error){document.getElementById('practiceNote').textContent=error.message+' Trophy battles need a connection to start. Uncheck Earn trophies for local practice.';}
+  } catch(error){document.getElementById('practiceNote').textContent=error.message+' Trophy battles need a connection to start. Uncheck Earn trophies to play without trophies.';}
   finally {button.disabled=false;}
 }
 function stopPracticeBattle() {
@@ -83,15 +83,15 @@ function renderPracticeBattle() {
   game.board.forEach((card,cell)=>{
     const button=document.createElement('button');button.type='button';button.className='battle-board-cell';
     button.disabled=game.finished || game.turn!=='player' || game.selected===null || !!card;
-    if(card){button.innerHTML=safePracticeMarkup({...card,tierColors:{backgroundColor:card.color}});button.setAttribute('aria-label',`${card.name}, ${card.ownerId}`);}else button.textContent='+';
+    if(card){const frame=document.createElement('div');frame.className='battle-board-card';frame.innerHTML=safePracticeMarkup({...card,tierColors:{backgroundColor:card.color}});button.appendChild(frame);button.setAttribute('aria-label',`${card.name}, ${card.ownerId==='computer'?'Bob':card.ownerId==='player'?'You':'Starter'}`);}else button.textContent='+';
     button.onclick=()=>practicePlace(cell);board.appendChild(button);
   });
   const hand=document.getElementById('practiceHand');hand.replaceChildren();
   game.player.forEach((card,index)=>{const button=document.createElement('button');button.type='button';button.className='battle-hand-card';button.innerHTML=safePracticeMarkup(card);button.disabled=game.finished||game.turn!=='player';button.classList.toggle('is-active',game.selected===index);button.onclick=()=>{game.selected=index;renderPracticeBattle();};hand.appendChild(button);});
   const mine=game.board.filter(card=>card?.ownerId==='player').length;
   const theirs=game.board.filter(card=>card?.ownerId==='computer').length;
-  const status=game.finished ? (mine>theirs?'You win!':mine<theirs?'Computer wins.':'Draw!') : game.turn==='computer'?'Computer is considering your best reply...':'Your turn: select a card and an empty space.';
-  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Computer: ${theirs}. ${game.difficulty.toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, computer ${Number(game.strength.average).toFixed(1)} (target ${Number(game.strength.target).toFixed(1)}). ${game.trophyMessage||''}`;
+  const status=game.finished ? (mine>theirs?'You win!':mine<theirs?'Bob wins.':'Draw!') : game.turn==='computer'?'Bob is thinking...':'Your turn: select a card and an empty space.';
+  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.difficulty.toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} (target ${Number(game.strength.target).toFixed(1)}). ${game.trophyMessage||''}`;
 }
 function practicePlace(cell) {
   const game=practiceGame;if(!game||game.finished||game.turn!=='player'||game.selected===null||game.board[cell])return;

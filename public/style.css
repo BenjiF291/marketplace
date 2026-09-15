@@ -1691,3 +1691,66 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 #practiceArena[hidden], #practiceSetup[hidden] { display: none; }
 #practicePicker button.is-active, #practiceHand button.is-active { outline: 3px solid #2878d0; outline-offset: 2px; }
 #practiceBoard .battle-board-cell:disabled { opacity: 1; }
+
+/* Keep the card, its teeth and side scores inside each board square. */
+#battleGameSection, #practiceBattle, #practiceArena { min-width: 0; }
+#practiceBoard {
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  width: min(100%, 520px);
+}
+#practiceBoard .battle-board-cell {
+  container-type: inline-size;
+  min-height: 0;
+  overflow: hidden;
+}
+#practiceBoard .battle-board-card {
+  position: absolute;
+  inset: 16%;
+  width: auto;
+  height: auto;
+}
+#practiceBoard .battle-card-display-small { border-width: 2px; }
+#practiceBoard .battle-card-inner { inset: 2px; }
+#practiceBoard .battle-card-average { font-size: clamp(10px, 18cqw, 22px); }
+#practiceBoard .battle-card-name {
+  font-size: clamp(6px, 8cqw, 10px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  bottom: 8%;
+}
+#practiceBoard .battle-side-number {
+  font-size: clamp(7px, 10cqw, 12px);
+  line-height: 1;
+  color: #113744;
+  background: #ffffffed;
+  border-radius: 2px;
+}
+#practiceBoard .battle-side-number-top { top: -14cqw; }
+#practiceBoard .battle-side-number-bottom { bottom: -14cqw; }
+#practiceBoard .battle-side-number-left { left: -14cqw; }
+#practiceBoard .battle-side-number-right { right: -14cqw; }
+#practiceBoard .battle-teeth { gap: 0; }
+#practiceBoard .battle-teeth-top { top: -8cqw; height: 8cqw; }
+#practiceBoard .battle-teeth-bottom { bottom: -8cqw; height: 8cqw; }
+#practiceBoard .battle-teeth-left { left: -8cqw; width: 8cqw; }
+#practiceBoard .battle-teeth-right { right: -8cqw; width: 8cqw; }
+#practiceBoard .battle-tooth {
+  flex-shrink: 0;
+  border-left-width: 2cqw;
+  border-right-width: 2cqw;
+  border-bottom-width: 4cqw;
+}
+#practiceBoard .battle-teeth-bottom .battle-tooth { border-bottom-width: 0; border-top-width: 4cqw; }
+#practiceBattle .battle-hand {
+  grid-template-columns: repeat(auto-fit, minmax(146px, 1fr));
+  gap: 8px;
+}
+#practiceBattle .battle-hand-card { padding: 18px; min-width: 0; }
+#practiceBattle .battle-hand-card .battle-card-display { margin: auto; }
+@media (max-width: 520px) {
+  #battleGameSection { padding: 10px; }
+  #practiceBattle { padding: 8px; }
+  #practiceBattle .battle-hand { display: flex; }
+  #practiceBattle .battle-hand-card { flex: 0 0 150px; }
+}

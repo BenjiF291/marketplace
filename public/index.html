@@ -239,20 +239,20 @@
     <section id="battleGameSection" class="card battle-game-section" style="display: none;">
       <h2>⚔️ Battle</h2>
       <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
-        <summary>Computer battles &amp; Trophy path</summary>
-        <p>Blue is you; red is the computer. Opponents use randomized decks. Trophy battles need a connection to start and sync results; an ongoing battle can be played offline. Local practice remains free.</p>
+        <summary>Play against Bob</summary>
+        <p>Blue is you; red is Bob. Bob uses a randomized deck matched to your chosen difficulty. Trophy battles need a connection to start and sync results; an ongoing battle can be played offline. You can also play without trophies.</p>
         <div id="practiceSetup">
           <p id="practiceNote"></p><p id="practiceCount"></p>
           <div id="practicePicker" class="battle-hand"></div>
           <label for="practiceDifficulty">Difficulty</label><select id="practiceDifficulty"><option value="easy">Easy: average -20 / +10 win, -5 loss</option><option value="medium">Medium: average -10 / +25 win, -10 loss</option><option value="hard">Hard: equal average / +40 win, -15 loss</option></select>
           <label><input id="practiceRanked" type="checkbox" checked> Earn trophies (connect to start)</label>
           <p>Deck strength is matched as closely as the available cards allow. Abandoning a trophy battle counts as a loss when starting the next one.</p>
-          <label for="practiceFirst">Who starts?</label><select id="practiceFirst"><option value="player">You</option><option value="computer">Computer</option></select>
-          <button id="practiceStart" class="btn btn-primary" onclick="startPracticeBattle()">Start computer battle</button>
+          <label for="practiceFirst">Who starts?</label><select id="practiceFirst"><option value="player">You</option><option value="computer">Bob</option></select>
+          <button id="practiceStart" class="btn btn-primary" onclick="startPracticeBattle()">Play against Bob</button>
         </div>
         <div id="practiceArena" hidden>
           <p id="practiceStatus" role="status" aria-live="polite"></p>
-          <div id="practiceBoard" class="battle-board" aria-label="Offline practice board"></div>
+          <div id="practiceBoard" class="battle-board" aria-label="Battle board against Bob"></div>
           <h3>Your remaining cards</h3><div id="practiceHand" class="battle-hand"></div>
           <button class="btn btn-primary" onclick="stopPracticeBattle()">New game</button>
           <button class="btn" onclick="finishPracticeTrophies()">Sync trophy result</button>
