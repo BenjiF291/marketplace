@@ -240,22 +240,30 @@
       <h2>⚔️ Battle</h2>
       <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
         <summary>Play against Bob</summary>
-        <p>Blue is you; red is Bob. Bob uses a randomized deck matched to your chosen difficulty. Trophy battles need a connection to start and sync results; an ongoing battle can be played offline. You can also play without trophies.</p>
+        <p>Blue is you; red is Bob. Bob adapts to your Skill Level with a randomized deck of similar strength. Ranked Brawls need a connection to start and sync results; an ongoing Brawl can be played offline.</p>
+        <section class="brawl-skill-panel" aria-label="Brawl Skill Level">
+          <h3 id="brawlSkillLevel">Skill Level: connect to load</h3>
+          <progress id="brawlSkillProgress" max="1000" value="0" aria-label="Progress to next skill milestone"></progress>
+          <p id="brawlSkillNext"></p>
+          <p id="brawlSkillBooster"></p>
+          <details><summary>Skill boosters</summary><p>Your strongest unlocked booster replaces the previous one. It is active only while your current Skill Level meets its requirement. Bonuses apply to ranked wins and never change card strength.</p><div id="brawlMilestones"></div></details>
+        </section>
         <div id="practiceSetup">
           <p id="practiceNote"></p><p id="practiceCount"></p>
           <div id="practicePicker" class="battle-hand"></div>
-          <label for="practiceDifficulty">Difficulty</label><select id="practiceDifficulty"><option value="easy">Easy: average -20 / +10 win, -5 loss</option><option value="medium">Medium: average -10 / +25 win, -10 loss</option><option value="hard">Hard: equal average / +40 win, -15 loss</option></select>
-          <label><input id="practiceRanked" type="checkbox" checked> Earn trophies (connect to start)</label>
-          <p>Deck strength is matched as closely as the available cards allow. Abandoning a trophy battle counts as a loss when starting the next one.</p>
+          <label for="practiceMode">Brawl mode</label>
+          <select id="practiceMode" onchange="updateBrawlMode()"><option value="skill">Ranked &mdash; adaptive Skill Level</option><option value="training">Training &mdash; no skill changes or rewards</option></select>
+          <div id="practiceTraining" hidden><label for="practiceDifficulty">Training difficulty</label><select id="practiceDifficulty"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+          <p>Leaving an unfinished ranked Brawl counts as a loss when you start another. Training never changes your Skill Level.</p>
           <label for="practiceFirst">Who starts?</label><select id="practiceFirst"><option value="player">You</option><option value="computer">Bob</option></select>
           <button id="practiceStart" class="btn btn-primary" onclick="startPracticeBattle()">Play against Bob</button>
         </div>
         <div id="practiceArena" hidden>
-          <p id="practiceStatus" role="status" aria-live="polite"></p>
+          <p id="practiceStatus" role="status" aria-live="polite"></p><p id="brawlSkillResult" class="brawl-skill-result" role="status" aria-live="polite"></p>
           <div id="practiceBoard" class="battle-board" aria-label="Battle board against Bob"></div>
           <h3>Your remaining cards</h3><div id="practiceHand" class="battle-hand"></div>
           <button class="btn btn-primary" onclick="stopPracticeBattle()">New game</button>
-          <button class="btn" onclick="finishPracticeTrophies()">Sync trophy result</button>
+          <button id="brawlSyncResult" class="btn" onclick="finishPracticeTrophies()">Sync Brawl result</button>
         </div>
       </details>
       <details class="gem-converter" ontoggle="if(this.open) loadTrophyPath()"><summary>Trophy path</summary><p id="trophyTotal"></p><p>Rewards unlock at your highest trophy total and can be claimed once. Draws award no trophies.</p><div id="trophyPath" class="amulet-grid"></div></details>

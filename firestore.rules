@@ -2,14 +2,19 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to users and items collections
+    // Account credentials and balances are accessed through the server only.
     match /users/{userId} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
 
     match /items/{itemId} {
       allow read, write: if true;
     }
+
+    // Server Admin SDK owns ranked progression and login sessions.
+    match /brawlProfiles/{id} { allow read, write: if false; }
+    match /computerBattles/{id} { allow read, write: if false; }
+    match /loginSessions/{id} { allow read, write: if false; }
 
     // Allow access to test collection for debugging
     match /test/{testId} {

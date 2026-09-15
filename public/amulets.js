@@ -1,7 +1,7 @@
 let amuletState = null;
 let amuletPending = false;
 let amuletUnlockTimer = null;
-const resourceHeaders = () => ({ 'Content-Type': 'application/json', 'X-User-Id': currentUserId });
+const resourceHeaders = () => ({ 'Content-Type': 'application/json', 'X-User-Id': currentUserId, 'Authorization': `Bearer ${localStorage.getItem('sessionToken') || ''}` });
 function amuletNode(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;

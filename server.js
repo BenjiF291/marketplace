@@ -6,6 +6,7 @@ const { admin, db } = require('./firebase-server');
 require('dotenv').config();
 
 const app = express();
+const brawlAuth = require('./brawl-auth')(db);
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
 const { effects: amuletEffects, discounted, round: roundFooty } = require('./amulet-utils');
 const battleTimeouts = require('./battle-timeout').createTimeoutService(db, amuletEffects, roundFooty);
@@ -944,7 +945,7 @@ app.post('/signup', async (req, res) => {
       createdAt: new Date()
     });
 
-    res.json({ id: newUser.id, username: cleanUsername, isAdmin: false });
+    res.json({ id: newUser.id, username: cleanUsername, isAdmin: false, sessionToken: await brawlAuth.issue(newUser.id) });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).send('Signup failed');
@@ -981,7 +982,7 @@ app.post('/login', async (req, res) => {
     }
 
     await userDoc.ref.update({ lastOnline: new Date() });
-    res.json({ id: userDoc.id, username: user.username, isAdmin: user.isAdmin === true });
+    res.json({ id: userDoc.id, username: user.username, isAdmin: user.isAdmin === true, sessionToken: await brawlAuth.issue(userDoc.id) });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).send('Login failed');
@@ -2559,7 +2560,7 @@ app.get('/inventory', async (req, res) => {
 });
 
 require('./amulet-routes')(app, db, getAscendTierConfig);
-require('./trophy-routes')(app, db, getBattleCardsForUser);
+require('./trophy-routes')(app, db, getBattleCardsForUser, brawlAuth.authenticate);
 require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 
 /* ------------------ START SERVER ------------------ */

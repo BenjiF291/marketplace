@@ -15,7 +15,7 @@ async function loadPracticePool() {
   try { practicePool=await resourceRequest('/battle-cards');localStorage.setItem(`computer-pool:${currentUserId}`,JSON.stringify(practicePool)); }catch(_){try{practicePool=JSON.parse(localStorage.getItem(`computer-pool:${currentUserId}`)||'[]');}catch(_){} }
 }
 function loadPracticeSetup() {
-  loadTrophyPath(); loadPracticePool();
+  loadTrophyPath(); loadPracticePool(); loadBrawlSkill();
   if (practiceGame) return;
   try { const saved=JSON.parse(localStorage.getItem(practiceSaveKey)||'null');
     if(saved && Array.isArray(saved.board) && Array.isArray(saved.moves)) {practiceGame=saved;document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;renderPracticeBattle();if(saved.finished)finishPracticeTrophies();else if(saved.turn==='computer')runPracticeComputer();return;}
@@ -27,7 +27,7 @@ function loadPracticeSetup() {
   const valid = new Set(practiceCards.map(card => card.battleCardId));
   practiceSelection = new Set([...practiceSelection].filter(id => valid.has(id)));
   if (!practiceSelection.size) practiceSelection = new Set(practiceCards.slice(0,6).map(card=>card.battleCardId));
-  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards. Bob gets a randomized deck matched to the selected difficulty.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
+  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards. Bob gets a randomized deck matched to your strength. Ranked Brawl adapts to your Skill Level.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
   renderPracticePicker();
 }
 function safePracticeMarkup(card) {
@@ -50,13 +50,13 @@ function renderPracticePicker() {
 async function startPracticeBattle() {
   if (practiceSelection.size !== 6) return;
   const button=document.getElementById('practiceStart');button.disabled=true;
-  const difficulty=document.getElementById('practiceDifficulty').value;
+  let difficulty=document.getElementById('practiceDifficulty').value;
   const turn=document.getElementById('practiceFirst').value;
   try {
     let session=null,generated,initial;
-    const ranked=document.getElementById('practiceRanked').checked;
+    const ranked=document.getElementById('practiceMode').value==='skill';
     if(ranked){
-      session=await resourceRequest('/computer-battles/start',{cardIds:[...practiceSelection],difficulty,first:turn});initial=session.initial;
+      session=await resourceRequest('/computer-battles/start',{cardIds:[...practiceSelection],mode:'skill',first:turn});initial=session.initial;difficulty=session.difficulty;loadBrawlSkill();
       generated=session;
     } else {
       const deck=practiceCards.filter(card=>practiceSelection.has(card.battleCardId)).map(card=>({...card}));
@@ -65,15 +65,15 @@ async function startPracticeBattle() {
       initial={board,player:deck,computer:generated.deck,turn};
     }
     if(practiceWorker)practiceWorker.terminate();practiceGeneration++;
-    practiceGame={...initial,selected:null,finished:false,difficulty,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
+    practiceGame={...initial,selected:null,finished:false,difficulty,mode:ranked?'skill':'training',skillResult:null,forfeitedSkill:session?.forfeitedSkill||null,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
     persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
     renderPracticeBattle();loadTrophyPath();if(turn==='computer')runPracticeComputer();
-  } catch(error){document.getElementById('practiceNote').textContent=error.message+' Trophy battles need a connection to start. Uncheck Earn trophies to play without trophies.';}
+  } catch(error){document.getElementById('practiceNote').textContent=error.message+' Ranked Brawl needs a connection and a current login. Choose Training to play without progression.';}
   finally {button.disabled=false;}
 }
 function stopPracticeBattle() {
   if(practiceGame?.sessionId && practiceGame.finished && !practiceGame.trophiesSaved) {finishPracticeTrophies();return;}
-  if(practiceGame?.sessionId && !practiceGame.finished && !confirm('Leave this trophy battle? Starting your next trophy battle counts this one as a loss.')) return;
+  if(practiceGame?.sessionId && !practiceGame.finished && !confirm('Leave this ranked Brawl? Starting your next ranked Brawl counts this one as a loss and lowers your Skill Level.')) return;
   practiceGeneration++; if(practiceWorker)practiceWorker.terminate(); practiceWorker=null;practiceGame=null;persistPractice();
   document.getElementById('practiceSetup').hidden=false;document.getElementById('practiceArena').hidden=true;loadPracticeSetup();
 }
@@ -91,7 +91,10 @@ function renderPracticeBattle() {
   const mine=game.board.filter(card=>card?.ownerId==='player').length;
   const theirs=game.board.filter(card=>card?.ownerId==='computer').length;
   const status=game.finished ? (mine>theirs?'You win!':mine<theirs?'Bob wins.':'Draw!') : game.turn==='computer'?'Bob is thinking...':'Your turn: select a card and an empty space.';
-  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.difficulty.toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} (target ${Number(game.strength.target).toFixed(1)}). ${game.trophyMessage||''}`;
+  document.getElementById('brawlSyncResult').hidden=!game.sessionId||!game.finished||game.trophiesSaved;
+  const skillResult=document.getElementById('brawlSkillResult');
+  skillResult.textContent=game.skillResult?`Skill Level: ${game.skillResult.before} \u2192 ${game.skillResult.after} (${game.skillResult.delta>=0?'+':''}${game.skillResult.delta}). ${game.skillResult.explanation}`:game.mode==='training'?'Training: Skill Level and rewards are unchanged.':game.forfeitedSkill?`Previous Brawl forfeited. Skill Level: ${game.forfeitedSkill.before} \u2192 ${game.forfeitedSkill.after} (${game.forfeitedSkill.delta}).`:'';
+  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.mode==='skill'?'RANKED':game.mode==='training'?'TRAINING':String(game.difficulty).toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} (target ${Number(game.strength.target).toFixed(1)}). ${game.trophyMessage||''}`;
 }
 function practicePlace(cell) {
   const game=practiceGame;if(!game||game.finished||game.turn!=='player'||game.selected===null||game.board[cell])return;
@@ -125,8 +128,8 @@ async function finishPracticeTrophies(){
  trophySaving=true;game.trophyMessage='Saving trophy result...';renderPracticeBattle();
  try {
   const result=await resourceRequest('/computer-battles/finish',{id:game.sessionId,moves:game.moves});
-  game.trophiesSaved=true;game.trophyMessage=`${result.delta>=0?'+':''}${result.delta} trophies. Total: ${result.trophies}.`;loadTrophyPath();
- }catch(error){game.trophyMessage='Result saved locally. Reconnect and click Sync trophy result.';}
+  game.trophiesSaved=true;game.skillResult=result.skill||null;if(result.profile)renderBrawlSkill(result.profile);game.trophyMessage=`${result.delta>=0?'+':''}${result.delta} trophies. Total: ${result.trophies}.${result.footy?` Booster: +${result.footy} Footy.`:''}`;loadTrophyPath();updateBalance();
+ }catch(error){game.trophyMessage=`Result saved locally. ${error.message} Reconnect and click Sync Brawl result.`;}
  finally{trophySaving=false;persistPractice();renderPracticeBattle();}
 }
 async function loadTrophyPath(){
@@ -145,3 +148,23 @@ async function loadTrophyPath(){
  }catch(error){document.getElementById('trophyTotal').textContent='Connect to view trophies and claim rewards.';}
 }
 window.addEventListener('online',()=>{finishPracticeTrophies();loadTrophyPath();});
+
+function updateBrawlMode() {
+  document.getElementById('practiceTraining').hidden=document.getElementById('practiceMode').value!=='training';
+}
+function renderBrawlSkill(data) {
+  document.getElementById('brawlSkillLevel').textContent=`Skill Level: ${data.skillLevel} / 1000`;
+  const previous=data.booster.at;
+  const progress=document.getElementById('brawlSkillProgress');
+  progress.max=data.next?data.next.at-previous:1000;
+  progress.value=data.next?data.skillLevel-previous:1000;
+  const describe=entry=>`${entry.name}: +${entry.footy} Footy and +${entry.trophyPercent}% trophies per ranked win`;
+  document.getElementById('brawlSkillNext').textContent=data.next?`${data.next.at-data.skillLevel} skill to ${describe(data.next)} (level ${data.next.at}).`:'Maximum Skill Level reached!';
+  document.getElementById('brawlSkillBooster').textContent=`Active booster: ${describe(data.booster)}.`;
+  const list=document.getElementById('brawlMilestones');list.replaceChildren();
+  for(const entry of data.milestones)list.appendChild(amuletNode('p',`${entry.at} - ${describe(entry)}${entry.at===data.booster.at?' - Active':entry.at>data.skillLevel?' - Locked':' - Replaced by your stronger booster'}`));
+}
+async function loadBrawlSkill() {
+  try { renderBrawlSkill(await resourceRequest('/brawl/skill')); }
+  catch(error) { document.getElementById('brawlSkillLevel').textContent=error.message; }
+}

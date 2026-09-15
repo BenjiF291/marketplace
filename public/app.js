@@ -241,6 +241,7 @@ async function loadBattleCards() {
 
 function logout() {
   localStorage.removeItem('userId');
+  localStorage.removeItem('sessionToken');
   localStorage.removeItem('username');
   window.location.href = 'login.html';
 }
