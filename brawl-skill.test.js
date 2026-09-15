@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const skill=require('./brawl-skill');
 const engine=require('./public/practice-engine');
 test('skill stays bounded, defaults sensibly and decision quality matters independently of result',()=>{
-  assert.equal(skill.level(undefined),300);assert.equal(skill.level(NaN),300);
+  assert.equal(skill.level(undefined),500);assert.equal(skill.level(NaN),500);
   assert.equal(skill.skillChange(1000,1,1).after,1000);
   assert.equal(skill.skillChange(0,-1,0).after,0);
   assert.ok(skill.skillChange(400,1,1).delta>skill.skillChange(400,1,0).delta);
@@ -28,4 +28,21 @@ test('adaptive AI is deterministic, legal and improves smoothly with skill',()=>
     assert.deepEqual(move,engine.chooseMove(board,hand,opponent,policy(level),engine.seeded(42)));
     assert.equal(board[move.cell],null);assert.ok(hand[move.cardIndex]);
   }
+});
+
+test('placements depend on decisions and result, stay hidden until fifth, and reward thresholds are reversible',()=>{
+ let strong={},weak={};
+ for(let i=0;i<5;i++){
+  strong=skill.settle(strong,1,.98,500).state;
+  weak=skill.settle(weak,-1,.6,500).state;
+  assert.equal(skill.profile(strong).skillLevel===null,i<4);
+  assert.equal(skill.profile(strong).placed,i===4);
+ }
+ assert.ok(strong.skillLevel>weak.skillLevel);
+ assert.equal(skill.booster(599).footy,0);assert.equal(skill.booster(600).footy,10);
+ assert.equal(skill.booster(799).ruby,0);assert.equal(skill.booster(800).ruby,1);
+ assert.equal(skill.booster(799).ruby,0);assert.equal(skill.booster(800).ruby,1);
+ assert.equal(skill.skillChange(350,1,.72).decisionPoints,1);
+ assert.equal(skill.skillChange(350,1,.98).decisionPoints,9);
+ assert.equal(skill.skillChange(350,1,null).decisionPoints,0);
 });

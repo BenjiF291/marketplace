@@ -51,23 +51,22 @@ async function startPracticeBattle() {
   if (practiceSelection.size !== 6) return;
   const button=document.getElementById('practiceStart');button.disabled=true;
   let difficulty=document.getElementById('practiceDifficulty').value;
-  const turn=document.getElementById('practiceFirst').value;
   try {
     let session=null,generated,initial;
     const ranked=document.getElementById('practiceMode').value==='skill';
     if(ranked){
-      session=await resourceRequest('/computer-battles/start',{cardIds:[...practiceSelection],mode:'skill',first:turn});initial=session.initial;difficulty=session.difficulty;loadBrawlSkill();
+      session=await resourceRequest('/computer-battles/start',{cardIds:[...practiceSelection],mode:'skill'});initial=session.initial;difficulty=session.difficulty;if(session.profile)renderBrawlSkill(session.profile);else await loadBrawlSkill();
       generated=session;
     } else {
       const deck=practiceCards.filter(card=>practiceSelection.has(card.battleCardId)).map(card=>({...card}));
       generated=PracticeEngine.computerDeck(practicePool.length>=6?practicePool:practiceCards,deck,difficulty);
       const board=Array(16).fill(null);board[5]={name:'Starter',top:5,right:5,bottom:5,left:5,averageScore:5,ownerId:'starter',color:'#8a8f98'};
-      initial={board,player:deck,computer:generated.deck,turn};
+      initial={board,player:deck,computer:generated.deck,turn:PracticeEngine.startingPlayer(deck,generated.deck)};
     }
     if(practiceWorker)practiceWorker.terminate();practiceGeneration++;
-    practiceGame={...initial,selected:null,finished:false,difficulty,mode:ranked?'skill':'training',skillResult:null,forfeitedSkill:session?.forfeitedSkill||null,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
+    practiceGame={...initial,first:initial.turn,selected:null,finished:false,difficulty,mode:ranked?'skill':'training',skillResult:null,forfeitedSkill:session?.forfeitedSkill||null,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
     persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
-    renderPracticeBattle();loadTrophyPath();if(turn==='computer')runPracticeComputer();
+    renderPracticeBattle();loadTrophyPath();if(initial.turn==='computer')runPracticeComputer();
   } catch(error){document.getElementById('practiceNote').textContent=error.message+' Ranked Brawl needs a connection and a current login. Choose Training to play without progression.';}
   finally {button.disabled=false;}
 }
@@ -93,8 +92,9 @@ function renderPracticeBattle() {
   const status=game.finished ? (mine>theirs?'You win!':mine<theirs?'Bob wins.':'Draw!') : game.turn==='computer'?'Bob is thinking...':'Your turn: select a card and an empty space.';
   document.getElementById('brawlSyncResult').hidden=!game.sessionId||!game.finished||game.trophiesSaved;
   const skillResult=document.getElementById('brawlSkillResult');
-  skillResult.textContent=game.skillResult?`Skill Level: ${game.skillResult.before} \u2192 ${game.skillResult.after} (${game.skillResult.delta>=0?'+':''}${game.skillResult.delta}). ${game.skillResult.explanation}`:game.mode==='training'?'Training: Skill Level and rewards are unchanged.':game.forfeitedSkill?`Previous Brawl forfeited. Skill Level: ${game.forfeitedSkill.before} \u2192 ${game.forfeitedSkill.after} (${game.forfeitedSkill.delta}).`:'';
-  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.mode==='skill'?'RANKED':game.mode==='training'?'TRAINING':String(game.difficulty).toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} (target ${Number(game.strength.target).toFixed(1)}). ${game.trophyMessage||''}`;
+  skillResult.textContent=game.skillResult?formatBrawlSkillResult(game.skillResult):game.mode==='training'?'Training: Skill Level and rewards are unchanged.':game.forfeitedSkill?`Previous Brawl: ${formatBrawlSkillResult(game.forfeitedSkill)}`:'';
+  renderBrawlMoveReviews(game.moveReviews||[]);
+  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.mode==='skill'?'RANKED':game.mode==='training'?'TRAINING':String(game.difficulty).toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} ${game.first?`- ${game.first==='player'?'You':'Bob'} started.`:'.'} ${game.trophyMessage||''}`;
 }
 function practicePlace(cell) {
   const game=practiceGame;if(!game||game.finished||game.turn!=='player'||game.selected===null||game.board[cell])return;
@@ -128,7 +128,7 @@ async function finishPracticeTrophies(){
  trophySaving=true;game.trophyMessage='Saving trophy result...';renderPracticeBattle();
  try {
   const result=await resourceRequest('/computer-battles/finish',{id:game.sessionId,moves:game.moves});
-  game.trophiesSaved=true;game.skillResult=result.skill||null;if(result.profile)renderBrawlSkill(result.profile);game.trophyMessage=`${result.delta>=0?'+':''}${result.delta} trophies. Total: ${result.trophies}.${result.footy?` Booster: +${result.footy} Footy.`:''}`;loadTrophyPath();updateBalance();
+  game.trophiesSaved=true;game.skillResult=result.skill||null;game.moveReviews=result.moveReviews||[];if(result.profile)renderBrawlSkill(result.profile);game.trophyMessage=`${result.delta>=0?'+':''}${result.delta} trophies. Total: ${result.trophies}.${result.footy?` Booster: +${result.footy} Footy.`:''}${result.ruby?` +${result.ruby} Ruby.`:''}`;loadTrophyPath();updateBalance();
  }catch(error){game.trophyMessage=`Result saved locally. ${error.message} Reconnect and click Sync Brawl result.`;}
  finally{trophySaving=false;persistPractice();renderPracticeBattle();}
 }
@@ -152,17 +152,32 @@ window.addEventListener('online',()=>{finishPracticeTrophies();loadTrophyPath();
 function updateBrawlMode() {
   document.getElementById('practiceTraining').hidden=document.getElementById('practiceMode').value!=='training';
 }
+function formatBrawlSkillResult(result) {
+  return result.placement?result.explanation:`Skill Level: ${result.before} \u2192 ${result.after} (${result.delta>=0?'+':''}${result.delta}). ${result.explanation}`;
+}
+function renderBrawlMoveReviews(reviews) {
+  document.getElementById('brawlMoveReview').hidden=!reviews.length;
+  const list=document.getElementById('brawlMoveReviews');list.replaceChildren();
+  const square=cell=>`row ${Math.floor(cell/4)+1}, column ${cell%4+1}`;
+  for(const move of reviews){
+    const row=amuletNode('article',undefined,'amulet-tile');
+    row.appendChild(amuletNode('h4',`Move ${move.turn}: ${move.card} at ${square(move.cell)}`));
+    row.appendChild(amuletNode('p',move.quality===null?'Equivalent choices; excluded from the quality average.':`Estimated quality: ${move.quality}%. ${move.quality===100?'One of the best assessed moves.':`Best assessed alternative: ${move.bestCard} at ${square(move.bestCell)}.`}`));
+    if(move.reply)row.appendChild(amuletNode('p',`Possible reply: ${move.reply.card} at ${square(move.reply.cell)}.${move.followup?` Your follow-up: ${move.followup.card} at ${square(move.followup.cell)}.`:''}`));
+    list.appendChild(row);
+  }
+}
 function renderBrawlSkill(data) {
-  document.getElementById('brawlSkillLevel').textContent=`Skill Level: ${data.skillLevel} / 1000`;
-  const previous=data.booster.at;
+  const describe=entry=>`${entry.name}: ${[entry.footy?`+${entry.footy} Footy`:null,entry.ruby?`+${entry.ruby} Ruby`:null,entry.trophyPercent?`+${entry.trophyPercent}% trophies`:null].filter(Boolean).join(', ')||'no bonuses'} per ranked win`;
+  document.getElementById('brawlSkillLevel').textContent=data.placed?`Skill Level: ${data.skillLevel} / 1000`:`Placement games: ${data.placementsCompleted} / ${data.placementsRequired}`;
   const progress=document.getElementById('brawlSkillProgress');
-  progress.max=data.next?data.next.at-previous:1000;
-  progress.value=data.next?data.skillLevel-previous:1000;
-  const describe=entry=>`${entry.name}: +${entry.footy} Footy and +${entry.trophyPercent}% trophies per ranked win`;
-  document.getElementById('brawlSkillNext').textContent=data.next?`${data.next.at-data.skillLevel} skill to ${describe(data.next)} (level ${data.next.at}).`:'Maximum Skill Level reached!';
-  document.getElementById('brawlSkillBooster').textContent=`Active booster: ${describe(data.booster)}.`;
+  progress.setAttribute('aria-label',data.placed?'Progress to next skill milestone':'Placement games completed');
+  progress.max=data.placed?(data.next?data.next.at-data.booster.at:1000):data.placementsRequired;
+  progress.value=data.placed?(data.next?data.skillLevel-data.booster.at:1000):data.placementsCompleted;
+  document.getElementById('brawlSkillNext').textContent=!data.placed?'Finish five ranked games to establish your starting Skill Level.':data.next?`${data.next.at-data.skillLevel} skill to ${describe(data.next)} (level ${data.next.at}).`:'Maximum Skill Level reached!';
+  document.getElementById('brawlSkillBooster').textContent=data.placed?`Active booster: ${describe(data.booster)}.`:'Skill boosters become available after placement. Base trophies still apply.';
   const list=document.getElementById('brawlMilestones');list.replaceChildren();
-  for(const entry of data.milestones)list.appendChild(amuletNode('p',`${entry.at} - ${describe(entry)}${entry.at===data.booster.at?' - Active':entry.at>data.skillLevel?' - Locked':' - Replaced by your stronger booster'}`));
+  for(const entry of data.milestones)list.appendChild(amuletNode('p',`${entry.at} - ${describe(entry)}${!data.placed?' - After placement':entry.at===data.booster.at?' - Active':entry.at>data.skillLevel?' - Locked':' - Replaced by your stronger booster'}`));
 }
 async function loadBrawlSkill() {
   try { renderBrawlSkill(await resourceRequest('/brawl/skill')); }

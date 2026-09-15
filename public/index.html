@@ -246,6 +246,7 @@
           <progress id="brawlSkillProgress" max="1000" value="0" aria-label="Progress to next skill milestone"></progress>
           <p id="brawlSkillNext"></p>
           <p id="brawlSkillBooster"></p>
+          <details><summary>How Skill Level is assessed</summary><p>Complete five ranked placement games to receive a starting rating. Placement uses decision quality (80%) and results relative to the opponent level (20%). An abandoned ranked game counts as a placement loss.</p><p>After placement: a win adds 12, a loss subtracts 12, and a draw adds 0. Decision adjustment = round(32 &times; (quality &minus; expected quality)). Expected quality = 55% + 0.04 &times; Skill Level, in percentage points. At level 350, 72% quality adds 1 and 98% adds 9; poor decisions can subtract points.</p><p>Quality is a tactical estimate, not a win probability or a capture percentage. We compare your move, the strongest replies, and your possible follow-up, including cards kept in hand. Small evaluation differences count as equally good. This limited search cannot prove the best long-term plan.</p></details>
           <details><summary>Skill boosters</summary><p>Your strongest unlocked booster replaces the previous one. It is active only while your current Skill Level meets its requirement. Bonuses apply to ranked wins and never change card strength.</p><div id="brawlMilestones"></div></details>
         </section>
         <div id="practiceSetup">
@@ -255,11 +256,12 @@
           <select id="practiceMode" onchange="updateBrawlMode()"><option value="skill">Ranked &mdash; adaptive Skill Level</option><option value="training">Training &mdash; no skill changes or rewards</option></select>
           <div id="practiceTraining" hidden><label for="practiceDifficulty">Training difficulty</label><select id="practiceDifficulty"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
           <p>Leaving an unfinished ranked Brawl counts as a loss when you start another. Training never changes your Skill Level.</p>
-          <label for="practiceFirst">Who starts?</label><select id="practiceFirst"><option value="player">You</option><option value="computer">Bob</option></select>
+          <p>The stronger deck starts (total card score). Equal totals use a coin toss. Bob's deck can be slightly stronger or weaker than yours.</p>
           <button id="practiceStart" class="btn btn-primary" onclick="startPracticeBattle()">Play against Bob</button>
         </div>
         <div id="practiceArena" hidden>
           <p id="practiceStatus" role="status" aria-live="polite"></p><p id="brawlSkillResult" class="brawl-skill-result" role="status" aria-live="polite"></p>
+          <details id="brawlMoveReview" hidden><summary>Review your moves</summary><p>Estimated quality considers defence and possible recaptures. The reply and follow-up shown are a searched possibility, not necessarily what happened.</p><div id="brawlMoveReviews"></div></details>
           <div id="practiceBoard" class="battle-board" aria-label="Battle board against Bob"></div>
           <h3>Your remaining cards</h3><div id="practiceHand" class="battle-hand"></div>
           <button class="btn btn-primary" onclick="stopPracticeBattle()">New game</button>

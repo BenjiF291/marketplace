@@ -53,6 +53,73 @@
     choices.sort((a,b)=>b.value-a.value);
     return choices;
   }
+  // Assessment only: preserve Bob's versioned move policy for saved replays.
+  // Value exposed edges against the remaining hands, rather than a fixed stat.
+  function positionValue(board, hand, opponentHand, player) {
+    let value = score(board, player) * 100;
+    if (!hand.length && !opponentHand.length) return value;
+    board.forEach((card, cell) => {
+      if (!card || card.ownerId === 'starter') return;
+      const mine = card.ownerId === player;
+      const attackers = mine ? opponentHand : hand;
+      let risk = 0;
+      for (const [index, defend, attack] of neighbors(cell)) {
+        if (board[index] || !attackers.length) continue;
+        const threats = attackers.filter(candidate => candidate[attack] > card[defend]).length;
+        risk = Math.max(risk, threats / attackers.length);
+      }
+      // Do not reward huge stats for their own sake, or count one vulnerable
+      // card four times. A wall or defended flank has value through safety.
+      value += (mine ? -1 : 1) * risk * 55;
+    });
+    return value;
+  }
+  function tacticalMoves(board, hand, otherHand, player) {
+    const other = player === 'player' ? 'computer' : 'player';
+    const moves = [];
+    hand.forEach((card, cardIndex) => {
+      const remaining = hand.filter((_, index) => index !== cardIndex);
+      for (let cell = 0; cell < 16; cell++) {
+        if (board[cell]) continue;
+        const next = play(board, card, cell, player);
+        moves.push({cardIndex, cell, board:next, remaining,
+          value:positionValue(next, remaining, otherHand, player), other});
+      }
+    });
+    return moves.sort((a,b) => b.value-a.value);
+  }
+  function assessMoves(board, hand, opponentHand, player = 'player') {
+    const opponent = player === 'player' ? 'computer' : 'player';
+    const choices = tacticalMoves(board, hand, opponentHand, player);
+    return choices.map(move => {
+      // Consider all root placements and the eight strongest immediate replies.
+      // Search ALL available follow-ups, so held cards can recapture a sacrifice.
+      const replies = tacticalMoves(move.board, opponentHand, move.remaining, opponent).slice(0, 8);
+      let value = Infinity;
+      let line = null;
+      for (const reply of replies) {
+        const followups = tacticalMoves(reply.board, move.remaining, reply.remaining, player);
+        const nextValue = followups.length ? followups[0].value : positionValue(reply.board, [], reply.remaining, player);
+        if (nextValue < value) {
+          value = nextValue;
+          line = {reply:{cardIndex:reply.cardIndex,cell:reply.cell},
+            followup:followups.length?{cardIndex:followups[0].cardIndex,cell:followups[0].cell}:null};
+        }
+      }
+      if (!replies.length) value = move.value;
+      return {cardIndex:move.cardIndex,cell:move.cell,value,line};
+    }).sort((a,b) => b.value-a.value);
+  }
+  function moveAssessment(choices, cardIndex, cell) {
+    const selected = choices.find(move => move.cardIndex === cardIndex && move.cell === cell);
+    if (!selected) throw new Error('Invalid placement');
+    const regret = Math.max(0, choices[0].value - selected.value);
+    const informative = choices[0].value - choices.at(-1).value > 25;
+    // Small heuristic differences are equivalent; percentages are estimates,
+    // not capture rates or probabilities of winning.
+    return {quality:informative?Math.exp(-Math.max(0,regret-25)/200):null,
+      regret, best:{cardIndex:choices[0].cardIndex,cell:choices[0].cell}, line:selected.line};
+  }
   function chooseMove(board, hand, opponentHand, difficulty = 'hard', random = Math.random) {
     const choices = rankMoves(board, hand, opponentHand);
     if (!choices.length) return null;
@@ -79,10 +146,10 @@
   }
   const difficulties = {easy:{offset:20,win:10,loss:5},medium:{offset:10,win:25,loss:10},hard:{offset:0,win:40,loss:15}};
   function seeded(seed) { let state=seed>>>0; return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;}; }
-  function computerDeck(pool, player, difficulty, random=Math.random) {
+  function computerDeck(pool, player, difficulty, random=Math.random, variation=false) {
     if (!difficulties[difficulty] || pool.length < 6) throw new Error('Need six available battle cards');
     const average = cards=>cards.reduce((sum,card)=>sum+Number(card.averageScore||0),0)/cards.length;
-    const target = Math.max(0,average(player)-difficulties[difficulty].offset);
+    const target = Math.max(0,average(player)-difficulties[difficulty].offset + (variation ? (random()*2-1)*Math.min(1,average(player)*.04) : 0));
     const ids = new Set(player.map(card=>card.battleCardId||card.id));
     const different=pool.filter(card=>!ids.has(card.battleCardId||card.id));
     const candidates=different.length>=6?different:pool;
@@ -102,7 +169,12 @@
     }
     return {deck:best.map(card=>({...card})),target,average:average(best),playerAverage:average(player)};
   }
+  function startingPlayer(player, computer, random=Math.random) {
+    const total = hand => hand.reduce((sum,card) => sum+Number(card.averageScore||0),0);
+    const difference = total(player)-total(computer);
+    return difference === 0 ? (random()<.5?'player':'computer') : difference>0?'player':'computer';
+  }
   function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
-  const api = {play, score, rankMoves, chooseMove, difficulties, seeded, computerDeck, trainingCards};
+  const api = {play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);
