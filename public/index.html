@@ -168,6 +168,9 @@
           <select id="marketListingProduct" class="input-field"></select>
           <label for="marketListingCurrency">Payment currency</label><select id="marketListingCurrency" class="input-field"><option value="footy">Footy</option></select>
           <input id="marketListingPrice" placeholder="Price" type="number" min="1" class="input-field">
+          <label class="input-label" for="marketListingVipDiscount">VIP discount (%)</label>
+          <input id="marketListingVipDiscount" class="input-field" type="number" min="0" max="99" step="1" value="0">
+          <p class="pack-help">Optional: 0 means no VIP discount. Everyone sees the VIP price; only active VIP members pay it. Gem prices round up to whole gems.</p>
           <input id="marketListingQuantity" placeholder="Stock quantity" type="number" min="1" max="100" value="1" class="input-field">
           <input id="marketListingPerUserLimit" placeholder="Maximum per user (leave 0 for no limit)" type="number" min="0" max="100" value="0" class="input-field">
           <label class="input-label" for="marketListingScheduledAt">Schedule date/time (optional)</label>
@@ -483,7 +486,7 @@
     <!-- VIP Section -->
     <section id="vipSection" class="card vip-section" style="display: none;">
       <h2>💎 VIP Membership</h2>
-      <p>Purchase VIP to receive double rewards from the daily spin for 30 days.</p>
+      <p>Enjoy 30 days of double daily spin rewards and VIP prices on marketplace listings marked with a VIP discount.</p>
       <div style="margin: 12px 0;">
         <strong>Price:</strong> <span id="vipPrice">300</span> Footy
         <p id="vipAmuletNote"></p>

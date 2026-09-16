@@ -1,4 +1,4 @@
-const CACHE = 'battle-practice-shell-v10';
+const CACHE = 'battle-practice-shell-v11';
 const FILES = ['index.html', 'style.css', 'studio.css', 'studio.js', 'app.js', 'ascend-utils.js', 'gem-colors.js', 'amulets.js', 'gem-workshop.js', 'dye-mode.js', 'practice-engine.js', 'battle-effects.js', 'brawl-turns.js', 'practice-battle.js', 'practice-worker.js'];
 const urls = FILES.map(file => new URL(file, self.registration.scope).href);
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(urls)).then(() => self.skipWaiting())); });

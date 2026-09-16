@@ -1432,6 +1432,7 @@ async function loadPlannedMarketplaceListings() {
       const scheduledText = entry.scheduledAt ? new Date(entry.scheduledAt).toLocaleString() : 'No scheduled time';
       const expiresText = entry.expiresAt ? ` · expires ${new Date(entry.expiresAt).toLocaleString()}` : '';
       item.textContent = `${entry.itemType.toUpperCase()} · ${entry.productName || entry.productId} · ${entry.status} · ${scheduledText}${expiresText}`;
+      if(entry.vipDiscountPercent)item.append(document.createTextNode(` | VIP ${entry.vipDiscountPercent}% off`));
       if (['scheduled', 'published', 'expired'].includes(entry.status)) {
         const dismiss = entry.status !== 'scheduled';
         const deleteButton = document.createElement('button');
@@ -1800,6 +1801,8 @@ async function createDirectMarketplaceListing() {
   const itemType = document.getElementById('marketListingType').value;
   const productId = document.getElementById('marketListingProduct').value;
   const price = Number(document.getElementById('marketListingPrice').value);
+  const vipDiscountPercent=Number(document.getElementById('marketListingVipDiscount').value);
+  if(!Number.isInteger(vipDiscountPercent)||vipDiscountPercent<0||vipDiscountPercent>99)return alert('VIP discount must be a whole percentage from 0 to 99');
   const quantity = Number(document.getElementById('marketListingQuantity').value);
   const perUserLimit = Number(document.getElementById('marketListingPerUserLimit').value);
   const scheduledAt = document.getElementById('marketListingScheduledAt').value;
@@ -1817,10 +1820,11 @@ async function createDirectMarketplaceListing() {
     const res = await fetch(`${API_URL}/admin/market-listings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ itemType, productId, price, currency: document.getElementById('marketListingCurrency').value, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
+      body: JSON.stringify({ itemType, productId, price, vipDiscountPercent, currency: document.getElementById('marketListingCurrency').value, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
     });
     if (!res.ok) return alert(await res.text());
     document.getElementById('marketListingPrice').value = '';
+    document.getElementById('marketListingVipDiscount').value='0';
     document.getElementById('marketListingQuantity').value = '1';
     document.getElementById('marketListingPerUserLimit').value = '0';
     document.getElementById('marketListingScheduledAt').value = '';
@@ -2320,7 +2324,7 @@ async function loadItems() {
   if (!isServerOnline) return;
   
   try {
-    const res = await fetch(`${API_URL}/items`);
+    const res = await fetch(`${API_URL}/items`, {headers:{'X-User-Id':currentUserId}});
     if (!res.ok) throw new Error('Server offline');
     const items = await res.json();
 
@@ -2355,6 +2359,14 @@ async function loadItems() {
       itemPrice.className = 'item-price';
       itemPrice.textContent = `${item.price} ${item.currencyName || 'Footy'}${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
 
+      if(item.vipDiscountPercent>0) {
+        const deal=document.createElement('span');deal.className='market-vip-deal';
+        deal.textContent=`VIP ${item.vipDiscountPercent}% off: ${item.vipPrice} ${item.currencyName||'Footy'}${item.vipDiscountApplied?' - applied to your purchase':' - with active VIP'}`;
+        itemPrice.prepend(document.createTextNode('Regular price: '));itemPrice.append(document.createElement('br'),deal);
+      }
+      if(Number.isFinite(item.payablePrice)&&item.payablePrice<item.price){
+        const payable=document.createElement('strong');payable.className='market-payable';payable.textContent=`You pay ${item.payablePrice} ${item.currencyName||'Footy'}`;itemPrice.append(document.createElement('br'),payable);
+      }
       const isOwner = String(item.sellerId) === String(currentUserId);
 
       const btn = document.createElement('button');
@@ -2404,7 +2416,8 @@ async function loadItems() {
               headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
               body: JSON.stringify({
                 itemId: item.id,
-                buyerId: currentUserId
+                buyerId: currentUserId,
+                expectedPrice: item.payablePrice
               })
             });
 

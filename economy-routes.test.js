@@ -29,7 +29,7 @@ function harness(seed) {
   require('./amulet-routes')(app, db, async () => []);
   const source = fs.readFileSync('server.js', 'utf8');
   const start = source.indexOf("app.post('/buy',"); const end = source.indexOf('/* ------------------ HISTORY', start);
-  vm.runInNewContext(source.slice(start, end), { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round });
+  vm.runInNewContext(source.slice(start, end), { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./marketplace-utils') });
   for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
@@ -149,4 +149,21 @@ test('opening a pack consumes it once and creates only one normal card', async (
   assert.equal((await h.invoke('/open-pack',{itemId:'pack'})).status,400);
   const cards = Object.entries(h.data()).filter(([key])=>key.startsWith('items/'));
   assert.equal(cards.length,1); assert.equal(cards[0][1].itemType,'card');
+});
+
+test('configured VIP sale charges members only, supports gems and ignores buyer-supplied discounts',async()=>{
+ for(const currency of ['footy','bronze'])for(const active of [false,true]) {
+  const data=seed(currency);data['users/seller'].isAdmin=true;data['items/card'].price=10;data['items/card'].vipDiscountPercent=25;
+  data['users/buyer'].vipUntil=new Date(Date.now()+(active?86400000:-86400000)).toISOString();
+  const h=harness(data),result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer',vipDiscountPercent:99});
+  assert.equal(result.status,200);assert.equal(result.payload.purchasePrice,active?(currency==='footy'?7.5:8):10);assert.equal(result.payload.discountApplied,active);
+ }
+});
+test('VIP discounts are opt-in and admin-only; stale displayed prices cannot charge more',async()=>{
+ for(const admin of [false,true]) {
+  const data=seed('footy');data['users/buyer'].vipUntil=new Date(Date.now()+86400000).toISOString();data['users/seller'].isAdmin=admin;
+  if(!admin)data['items/card'].vipDiscountPercent=50;
+  const h=harness(data),result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer'});assert.equal(result.payload.purchasePrice,7);
+ }
+ const h=harness(seed('footy'));const result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer',expectedPrice:5});assert.equal(result.status,400);assert.equal(h.data()['items/card'].sold,false);assert.equal(h.data()['users/buyer'].balance,100);
 });

@@ -1784,3 +1784,9 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 .battle-card-item-actions select,.battle-card-item-actions input { min-width:0;width:100%;max-width:100%;box-sizing:border-box; }
 .battle-card-meta { min-width:0;overflow-wrap:anywhere;flex:1 1 150px; }
 .studio-ui #practiceBoard .battle-board-cell:disabled,.studio-ui #battleBoard .battle-board-cell:disabled { opacity:1; }
+
+.market-vip-deal { display:inline-block;margin-top:6px;padding:5px 8px;border-radius:6px;background:#fff0b8;color:#594209;font-weight:700; }
+.market-payable { display:inline-block;margin-top:6px;color:#20543e; }
+
+#items .item-price { white-space:normal;min-width:0;max-width:100%; }
+.market-vip-deal,.market-payable { white-space:normal;overflow-wrap:anywhere;max-width:100%;box-sizing:border-box; }

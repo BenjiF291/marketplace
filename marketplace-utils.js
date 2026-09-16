@@ -24,7 +24,17 @@ function getListingStatus(listing, now = new Date()) {
   return 'active';
 }
 
+function vipPercent(value) {
+  const percent=Number(value||0);
+  return Number.isInteger(percent)&&percent>=0&&percent<=99?percent:0;
+}
+function vipPrice(price,percent,currency='footy') {
+  const amount=Number(price)*(100-vipPercent(percent))/100;
+  return Math.min(Number(price),currency==='footy'?Math.max(.01,Math.round(amount*100)/100):Math.max(1,Math.ceil(amount)));
+}
+
 module.exports = {
+  vipPercent, vipPrice,
   normalizeSellPrice,
   normalizeScheduleDate,
   getListingStatus

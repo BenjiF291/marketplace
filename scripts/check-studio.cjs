@@ -3,6 +3,8 @@ const root=path.resolve('public');
 const images=fs.readdirSync(path.join(root,'images')).filter(n=>/\.(png|jpe?g|webp)$/i.test(n)).slice(0,8);
 const cards=images.map((name,i)=>({id:`i${i}`,name:name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '),imageUrl:'/images/'+encodeURIComponent(name),price:75+i*50,sold:false,sellerId:'other',itemType:'card',quantity:2}));
 const items=[...cards.slice(0,6),{id:'pack',itemType:'pack',name:'Gold discovery pack',packColor:'#bca264',price:150,sellerId:'other',stock:3}];
+items[0]={...items[0],vipDiscountPercent:25,vipPrice:56.25,vipDiscountApplied:true,payablePrice:56.25};
+items[1]={...items[1],vipDiscountPercent:20,vipPrice:100,vipDiscountApplied:false,payablePrice:125};
 const user={id:'ui-preview',username:'Club captain',isAdmin:true,balance:2450};
 const battle=require('../public/practice-engine').trainingCards();battle[0]={...battle[0],name:'Mirror tester',linkedCardImage:'Mirror_test.png',mirrorPower:'focus'};
 const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
@@ -39,6 +41,9 @@ const fixture=(url)=>{
  // Exercise controls, not only route rendering.
  await page.setViewportSize({width:1440,height:1000});await page.waitForTimeout(250);
  await page.evaluate(()=>footyStudio.navigate('marketplace'));await page.waitForTimeout(150);
+ assert.match(await page.locator('#items').innerText(),/VIP 25% off: 56.25 Footy - applied/);
+ assert.match(await page.locator('#items').innerText(),/VIP 20% off: 100 Footy - with active VIP/);
+ assert.match(await page.locator('#items').innerText(),/You pay 56.25 Footy/);
  await page.locator('#studioFilter-items').fill('nonexistent-card');assert.equal(await page.locator('#items > li:visible').count(),0);
  await page.locator('#studioFilter-items').fill('');assert.ok(await page.locator('#items > li:visible').count()>0);
  await page.keyboard.press('Control+k');await page.locator('#studioSearchInput').fill('gems');await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'workshop');

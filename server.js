@@ -1,3 +1,4 @@
+const { vipPercent, vipPrice } = require('./marketplace-utils');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -160,7 +161,7 @@ async function listingCurrency(key = 'footy') {
   return { currency: gem.gemKey, currencyName: gem.gemName };
 }
 
-async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', listingGroupIdOverride = null, planRef = null }) {
+async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', vipDiscountPercent = 0, listingGroupIdOverride = null, planRef = null }) {
   const money = await listingCurrency(currency);
   if (money.currency !== 'footy' && !Number.isSafeInteger(price)) throw new Error('Gem prices must be whole numbers');
   let itemName;
@@ -197,6 +198,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
     imageUrl,
     price,
     ...money,
+    vipDiscountPercent,
     stock,
     soldCount: 0,
     perUserLimit: maxPerUser || null,
@@ -215,6 +217,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
       imageUrl,
       price,
     ...money,
+    vipDiscountPercent,
       sellerId,
       sold: false,
       buyerId: null,
@@ -261,6 +264,7 @@ async function syncPlannedMarketplaceListings() {
         price: Number(data.price),
         currency: data.currency || 'footy',
         quantity: Number(data.quantity),
+        vipDiscountPercent: vipPercent(data.vipDiscountPercent),
         perUserLimit: Number(data.perUserLimit) || 0,
         scheduledAt: scheduledAt.toISOString(),
         expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)).toISOString() : null,
@@ -1214,6 +1218,9 @@ app.get('/items', async (req, res) => {
       if (doc.data().isAdmin === true) hostIds.add(doc.id);
     });
 
+    const viewer=usersSnapshot.docs.find(doc=>doc.id===req.header('X-User-Id'))?.data()||{};
+    const vipExpiry=viewer.vipUntil?.toDate ? viewer.vipUntil.toDate() : new Date(viewer.vipUntil||0);
+    const viewerHasVip=vipExpiry.getTime()>Date.now();
     const now = Date.now();
     const items = [];
     const groupedListings = new Map();
@@ -1244,6 +1251,11 @@ app.get('/items', async (req, res) => {
           sold: data.sold || false,
           createdAt: data.createdAt
         };
+        item.vipDiscountPercent=item.isHostListing?vipPercent(data.vipDiscountPercent):0;
+        item.vipPrice=vipPrice(item.price,item.vipDiscountPercent,item.currency);
+        item.vipDiscountApplied=viewerHasVip&&item.vipDiscountPercent>0;
+        const memberPrice=item.vipDiscountApplied?item.vipPrice:item.price;
+        item.payablePrice=item.isHostListing&&item.currency==='footy'?discounted(memberPrice,amuletEffects(viewer).market):memberPrice;
         if (item.listingGroupId) {
           const existing = groupedListings.get(item.listingGroupId);
           if (existing) existing.stock += 1;
@@ -1830,6 +1842,7 @@ app.get('/admin/market-listings/planned', async (req, res) => {
         productName: data.productName || data.productId,
         price: Number(data.price) || 0,
         quantity: Number(data.quantity) || 0,
+        vipDiscountPercent: vipPercent(data.vipDiscountPercent),
         perUserLimit: Number(data.perUserLimit) || 0,
         scheduledAt,
         expiresAt,
@@ -1847,13 +1860,14 @@ app.get('/admin/market-listings/planned', async (req, res) => {
 
 app.post('/admin/market-listings', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy' } = req.body;
+  const { itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', vipDiscountPercent = 0 } = req.body;
   const stock = Number(quantity);
   const maxPerUser = Number(perUserLimit) || 0;
   const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
   const expirationDate = expiresAt ? new Date(expiresAt) : null;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) return res.status(403).send('Forbidden');
+  if (!Number.isInteger(vipDiscountPercent) || vipDiscountPercent < 0 || vipDiscountPercent > 99) return res.status(400).send('VIP discount must be a whole percentage from 0 to 99');
   if (!['card', 'pack'].includes(itemType)) return res.status(400).send('Invalid item type');
   if (!isValidPositiveNumber(price)) return res.status(400).send('Invalid price');
   if (!Number.isInteger(stock) || stock < 1 || stock > 100) return res.status(400).send('Stock must be between 1 and 100');
@@ -1878,6 +1892,7 @@ app.post('/admin/market-listings', async (req, res) => {
         productName: productId,
         ...money,
         price,
+        vipDiscountPercent,
         quantity: stock,
         perUserLimit: maxPerUser || null,
         scheduledAt: scheduledDate,
@@ -1895,6 +1910,7 @@ app.post('/admin/market-listings', async (req, res) => {
       itemType,
       productId,
       price,
+      vipDiscountPercent,
       quantity: stock,
       perUserLimit: maxPerUser,
       scheduledAt: null,
@@ -2122,9 +2138,10 @@ app.post('/buy', async (req, res) => {
       const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
       const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
       const currency = item.currency || 'footy';
-      const hasHostDiscount = currency === 'footy' && hasActiveVip && seller.isAdmin === true;
-      const sellerPayment = hasHostDiscount ? Math.ceil(item.price * 0.9) : item.price;
+      const hasHostDiscount = hasActiveVip && seller.isAdmin === true && vipPercent(item.vipDiscountPercent)>0;
+      const sellerPayment = hasHostDiscount ? vipPrice(item.price,item.vipDiscountPercent,item.currency) : item.price;
       const purchasePrice = currency === 'footy' && seller.isAdmin === true ? discounted(sellerPayment, amuletEffects(buyer).market) : sellerPayment;
+      if(req.body.expectedPrice!==undefined && req.body.expectedPrice!==purchasePrice)throw new Error('Price changed. Refresh the marketplace before buying.');
       const buyerFunds = currency === 'footy' ? Number(buyer.balance || 0) : Number((buyer.gems || {})[currency] || 0);
       if (!Number.isFinite(purchasePrice) || purchasePrice <= 0 || (currency !== 'footy' && !Number.isSafeInteger(purchasePrice))) throw new Error('Invalid listing price');
       if (buyerFunds < purchasePrice) {
@@ -2200,6 +2217,7 @@ app.post('/buy', async (req, res) => {
     console.error('Error buying item:', error);
 
     if (
+      error.message === 'Price changed. Refresh the marketplace before buying.' ||
       error.message === 'Item unavailable' ||
       error.message === 'Buyer not found' ||
       error.message === 'Seller not found' ||
