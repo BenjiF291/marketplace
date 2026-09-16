@@ -3,17 +3,39 @@
   function neighbors(cell) {
     return [[cell - 4,'top','bottom',cell >= 4],[cell + 4,'bottom','top',cell < 12],[cell - 1,'left','right',cell % 4 !== 0],[cell + 1,'right','left',cell % 4 !== 3]].filter(entry => entry[3]);
   }
-  function play(board, card, cell, player) {
+  function ability(card) {
+    const text = String(card?.linkedCardImage || card?.tierName || card?.name || '').toLowerCase().replace(/_/g,' ');
+    if (/\bfighter\b/.test(text)) return 'fighter';
+    if (/\bmini\b/.test(text)) return 'mini';
+    if (/\blow(?:[ -]*pointer)?\b/.test(text)) return 'low-pointer';
+    if (/\b(genious|genius)\b/.test(text)) return 'genius';
+    return '';
+  }
+  function play(board, card, cell, player, palette = colors) {
     if (!Number.isInteger(cell) || cell < 0 || cell > 15 || board[cell]) throw new Error('Choose an empty space');
     const next = board.map(entry => entry ? {...entry} : null);
-    const placed = {...card, ownerId: player, playedBy: player, color: colors[player]};
+    const placed = {...card, ownerId: player, playedBy: player, color: palette[player]};
+    const breaks = board.map((entry,index) => entry?.breakAfterOpponentOf && entry.breakAfterOpponentOf !== player ? index : -1).filter(index => index >= 0);
+    const penalties = [];
     for (const [index, attack, defend] of neighbors(cell)) {
       const other = next[index];
       if (!other || other.ownerId === player) continue;
-      if (placed[attack] > other[defend]) { other.ownerId = player; other.color = colors[player]; }
-      else if (placed[attack] < other[defend] && other.ownerId !== 'starter') { placed.ownerId = other.ownerId; placed.color = other.color; }
+      const tie = placed[attack] === other[defend];
+      const wins = placed[attack] > other[defend] || (tie && ability(placed)==='genius' && ability(other)!=='genius');
+      const loses = placed[attack] < other[defend] || (tie && ability(other)==='genius' && ability(placed)!=='genius');
+      if (wins) {
+        if (ability(other)==='low-pointer') penalties.push(placed);
+        other.ownerId = player; other.color = palette[player];
+        if (ability(placed)==='fighter') other.breakAfterOpponentOf = player;
+      } else if (loses && other.ownerId !== 'starter' && ability(placed)!=='mini') {
+        placed.ownerId = other.ownerId; placed.color = other.color;
+        if (ability(placed)==='low-pointer') penalties.push(other);
+      }
     }
     next[cell] = placed;
+    // Simultaneous comparisons: debuffs affect subsequent turns, never neighbor order.
+    for (const target of penalties) for (const side of ['top','right','bottom','left']) target[side] = Math.max(0,target[side]-1);
+    for (const index of breaks) next[index] = null;
     return next;
   }
   function score(board, player) {
@@ -175,6 +197,6 @@
     return difference === 0 ? (random()<.5?'player':'computer') : difference>0?'player':'computer';
   }
   function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
-  const api = {play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
+  const api = {ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);

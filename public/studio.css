@@ -261,7 +261,11 @@ body.studio-ui[data-dye-background] { background:color-mix(in srgb,var(--dye-bac
  .studio-ui #items .item-info { font-size:12px; }
  .studio-ui #items .item-price { font-size:10px; }
  .studio-ui #items .btn { min-height:37px;padding:8px;font-size:11px; }
- .studio-ui #inventoryItems { grid-template-columns:minmax(0,1fr); }
+ .studio-ui #inventoryItems { grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+ .studio-ui #inventoryItems > li { padding:5px;border-radius:9px; }
+ .studio-ui #inventoryItems .item-image { width:100%;max-width:100%;height:auto;max-height:none;cursor:zoom-in; }
+ .studio-ui #inventoryItems .btn { padding:8px 3px;font-size:11px;white-space:normal; }
+ .studio-ui #inventoryItems .pack-inventory-icon { max-width:100%; }
  .studio-ui .inventory-header-row { align-items:flex-start; }
  .studio-ui .inventory-header-row .btn { padding:8px 11px;font-size:11px; }
  .studio-ui .gem-converter { padding:15px; }
@@ -327,3 +331,9 @@ body.studio-ui[data-dye-background] { background:color-mix(in srgb,var(--dye-bac
 .studio-ui[data-dye-machine] .gem-machine { background:radial-gradient(ellipse,color-mix(in srgb,var(--dye-machine),#101020 65%),#151322); }
 .studio-ui[data-dye-amulets] #amuletSection { background:color-mix(in srgb,var(--dye-amulets),white 94%); }
 @media(max-width:800px) { .studio-ui .studio-mobile-search { display:flex;align-items:center;gap:12px;width:100%;border:1px solid #dbe3d1;border-radius:8px;background:#f0f4e8;padding:10px 12px;margin:0 0 20px;color:#71865d;font-size:12px; } }
+
+.studio-card-preview { border:0;border-radius:18px;padding:18px;background:#f6f7f0;max-width:92vw;max-height:92dvh; }
+.studio-card-preview::backdrop { background:#102b23cc; }
+.studio-card-preview img { display:block;max-width:80vw;max-height:75dvh;object-fit:contain;margin:12px auto; }
+.studio-card-preview button { float:right; }
+.studio-ui #inventoryItems .item-image { cursor:zoom-in; }

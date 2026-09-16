@@ -54,6 +54,11 @@ const fixture=(url)=>{
  await page.evaluate(()=>{currentUserIsAdmin=false;dispatchEvent(new Event('footy-role-changed'));footyStudio.navigate('admin');});assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'home');assert.equal(await page.locator('[data-admin-nav]').isVisible(),false);
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);await page.locator('.studio-menu-button').click();assert.equal(await page.evaluate(()=>document.querySelector('#studioSidebar').inert),false);await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>document.querySelector('#studioSidebar').inert),true);
  for(const width of [320,375,768]){await page.setViewportSize({width,height:844});await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`home overflow at ${width}`);}
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>footyStudio.navigate('inventory'));await page.waitForTimeout(300);
+ const thumbs=page.locator('#inventoryItems img.item-image');
+ const boxes=await Promise.all([0,1,2].map(i=>thumbs.nth(i).boundingBox()));assert.equal(Math.round(boxes[0].y),Math.round(boxes[2].y));assert.ok(boxes[2].x>boxes[1].x);
+ await thumbs.first().click();assert.equal(await page.locator('.studio-card-preview').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('.studio-card-preview').isVisible(),false);
+ await page.screenshot({path:'.ui-tools/inventory-three-columns.png',fullPage:true});
  assert.ok(restored);assert.deepEqual(errors,[]);assert.ok(report.every(r=>!r.overflow));
  await page.goto('http://127.0.0.1:4173/login.html');await page.waitForTimeout(200);await page.screenshot({path:'.ui-tools/login-mobile.png',fullPage:true});assert.equal(await page.locator('.auth-container').isVisible(),true);
  console.log(JSON.stringify({restored,errors,report,checks:'Search, route isolation, battle preservation, dye navigation, saved preference, admin visibility, mobile drawer and 320-1440px sizing passed.'},null,2));await browser.close();await new Promise(r=>server.close(r));

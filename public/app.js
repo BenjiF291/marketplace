@@ -42,6 +42,9 @@ function clampBattleToothCount(value) {
 
 function buildBattleCardMarkup(card, { small = false } = {}) {
   const name = String(card?.name || 'Card preview');
+  const power = typeof PracticeEngine !== 'undefined' ? PracticeEngine.ability(card) : '';
+  const descriptions = {fighter:'Fighter: captured cards break after the opponent turn.',mini:'Mini: dodges losing comparisons only when placed.','low-pointer':'Low Pointer: each victor loses 1 on all four sides.',genius:'Genius: wins ties, except against another Genius.'};
+  const powerDescription = card?.breakAfterOpponentOf ? 'Breaks after the opponent turn.' : descriptions[power] || '';
   const average = Number(card?.averageScore ?? 0);
   const top = clampBattleToothCount(card?.top ?? 0);
   const right = clampBattleToothCount(card?.right ?? 0);
@@ -62,7 +65,7 @@ function buildBattleCardMarkup(card, { small = false } = {}) {
   const scoreColor = /^#[0-9a-fA-F]{6}$/.test(String(tierColors.scoreColor || '')) ? tierColors.scoreColor : '#0a7385';
 
   return `
-    <div class="battle-card-display ${small ? 'battle-card-display-small' : ''}" style="--battle-card-color: ${color}; --battle-card-name-color: ${nameColor}; --battle-card-score-color: ${scoreColor}">
+    <div title="${powerDescription}" class="battle-card-display ${small ? 'battle-card-display-small' : ''}" style="--battle-card-color: ${color}; --battle-card-name-color: ${nameColor}; --battle-card-score-color: ${scoreColor}">
       <span class="battle-side-number battle-side-number-top">${top}</span>
       <div class="battle-teeth battle-teeth-top">${makeTeeth(top, 'top')}</div>
 
@@ -902,6 +905,7 @@ function renderBattleBoard() {
   });
 
   const playedIds = new Set(cells.filter(entry => entry && (entry.playedBy || entry.ownerId) === currentUserId).map(entry => entry.cardId));
+  (battleMatch.playedCards || []).filter(entry => entry.playerId === currentUserId).forEach(entry => playedIds.add(entry.cardId));
   const myDeck = new Set(battleMatch.decks?.[currentUserId] || []);
   hand.innerHTML = '';
   battleInventoryCache.filter(card => myDeck.has(card.battleCardId) && !playedIds.has(card.battleCardId)).forEach(card => {

@@ -186,4 +186,16 @@
   let preferred='studio';try{preferred=localStorage.getItem(preferenceKey)||localStorage.getItem('footy-ui-default')||'studio';}catch(_){}
   setMode(preferred!=='classic',true);
   window.footyStudio={navigate,setMode,get enabled(){return enabled;}};
+  const preview=document.createElement('dialog');
+  preview.className='studio-card-preview';
+  preview.setAttribute('aria-label','Enlarged card');
+  preview.innerHTML='<button type="button" class="btn">Close</button><img alt="">';
+  document.body.append(preview);
+  preview.querySelector('button').onclick=()=>preview.close();
+  preview.onclick=event=>{if(event.target===preview)preview.close();};
+  const showCard=image=>{if(!enabled||document.body.classList.contains('dye-mode'))return;const large=preview.querySelector('img');large.src=image.src;large.alt=image.alt;preview.showModal();};
+  $('inventoryItems').addEventListener('click',event=>{if(event.target.matches('img.item-image'))showCard(event.target);});
+  $('inventoryItems').addEventListener('keydown',event=>{if(event.target.matches('img.item-image')&&['Enter',' '].includes(event.key)){event.preventDefault();showCard(event.target);}});
+  const prepareImages=()=>{$('inventoryItems').querySelectorAll('img.item-image').forEach(image=>{image.tabIndex=0;image.setAttribute('role','button');image.setAttribute('aria-label',`Enlarge ${image.alt}`);});};
+  new MutationObserver(prepareImages).observe($('inventoryItems'),{childList:true});prepareImages();
 })();

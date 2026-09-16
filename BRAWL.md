@@ -81,3 +81,27 @@ firebase deploy --only "hosting,firestore:rules" --project fishy-20779
 ```
 
 These are deployment instructions, not actions performed by the coding agent.
+
+
+## Special cards
+
+Combat uses the same engine for Bob, Training, ranked replay and online battles.
+Powers are inferred from the linked card image (including existing `Low_` and
+`Genious_` filenames), with the tier/name as fallback.
+
+- Fighter: every enemy card beaten on placement is captured and marked to break.
+  It still occupies its cell during the opponent's next move, then disappears,
+  even if recaptured. Either player can subsequently use the empty cell. Removal
+  does not award a permanent score point. No next opponent turn means no removal.
+- Mini: ignores all losing comparisons on its own placement. It can still capture
+  weaker neighbors. Later attacks resolve normally.
+- Low Pointer: when beaten, each victor loses one on all four sides (minimum 0).
+  This works on placement and when defending. Comparisons resolve before penalties;
+  defeating multiple Low Pointers stacks their penalties.
+- Genius / Genious: wins tied comparisons on attack and defence. Two Geniuses tie.
+- Mirror: no power assigned yet. A reusable admin-assignable power catalogue is the
+  recommended next step once its powers are specified.
+
+Online matches retain a separate played-card ledger so broken cards cannot return
+into the hand or be played twice, and matches still end after all deck cards are used.
+Deploy frontend and backend together for these combat changes.

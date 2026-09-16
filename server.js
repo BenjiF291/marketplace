@@ -13,6 +13,7 @@ const battleTimeouts = require('./battle-timeout').createTimeoutService(db, amul
 setInterval(() => battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error)), 15000).unref();
 battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error));
 const { sortCardsByTier } = require('./card-order');
+const battleEngine = require('./public/practice-engine');
 const { validateBattleCard } = require('./battle-utils');
 const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
 
@@ -502,6 +503,7 @@ function battleMatchView(id, data) {
     turnStartedAt: serializeDate(data.turnStartedAt),
     turnPlayerId: data.turnPlayerId || null,
     board: data.board || Array(16).fill(null),
+    playedCards: data.playedCards || [],
     winnerId: data.winnerId || null,
     createdAt: serializeDate(data.createdAt),
     updatedAt: serializeDate(data.updatedAt)
@@ -523,6 +525,7 @@ async function getBattleCardsForUser(userId) {
     .map(doc => ({
       id: doc.id,
       name: doc.data().name,
+      linkedCardImage: doc.data().linkedCardImage || null,
       color: doc.data().color || '#eeeeee',
       averageScore: Number(doc.data().averageScore) || 0,
       top: Number(doc.data().top) || 0,
@@ -546,6 +549,7 @@ function battleCardForBoard(card, playerId, color) {
     ownerId: playerId,
     playedBy: playerId,
     name: card.name,
+    linkedCardImage: card.linkedCardImage || null,
     color,
     averageScore: card.averageScore,
     top: card.top,
@@ -726,6 +730,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
         const starterCandidates = allBattleCards.docs.map(doc => ({
           id: doc.id,
           name: doc.data().name,
+          linkedCardImage: doc.data().linkedCardImage || null,
           color: '#8a8f98',
           averageScore: Number(doc.data().averageScore) || 0,
           top: Number(doc.data().top) || 0,
@@ -772,38 +777,17 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       if (match.turnPlayerId !== requesterId) throw new Error('It is not your turn');
       const deck = match.decks?.[requesterId] || [];
       if (!deck.includes(cardId)) throw new Error('That card is not in your deck');
-      const board = Array.isArray(match.board) ? [...match.board] : Array(16).fill(null);
+      let board = Array.isArray(match.board) ? [...match.board] : Array(16).fill(null);
+      const playedCards = match.playedCards || board.filter(entry => entry && (entry.playedBy || entry.ownerId) !== 'starter').map(entry => ({playerId:entry.playedBy || entry.ownerId,cardId:entry.cardId}));
       if (board[cell]) throw new Error('That board space is occupied');
-      if (board.some(entry => (entry?.playedBy || entry?.ownerId) === requesterId && entry?.cardId === cardId)) throw new Error('That card has already been played');
+      if (playedCards.some(entry => entry.playerId === requesterId && entry.cardId === cardId)) throw new Error('That card has already been played');
       const playerCards = await getBattleCardsForUser(requesterId);
       const opponentId = otherBattlePlayer(match, requesterId);
       const card = playerCards.find(entry => entry.id === cardId);
       if (!card) throw new Error('That card is no longer available');
       const placed = battleCardForBoard(card, requesterId, match.colors[requesterId]);
-      let placedOwnerId = requesterId;
-      let placedColor = match.colors[requesterId];
-      const neighborDirections = [
-        { offset: -4, attack: 'top', defend: 'bottom', valid: cell >= 4 },
-        { offset: 4, attack: 'bottom', defend: 'top', valid: cell < 12 },
-        { offset: -1, attack: 'left', defend: 'right', valid: cell % 4 !== 0 },
-        { offset: 1, attack: 'right', defend: 'left', valid: cell % 4 !== 3 }
-      ];
-      neighborDirections.forEach(direction => {
-        if (!direction.valid) return;
-        const neighborCell = cell + direction.offset;
-        const neighbor = board[neighborCell];
-        if (!neighbor || neighbor.ownerId === requesterId) return;
-        if (placed[direction.attack] > neighbor[direction.defend]) {
-          neighbor.ownerId = requesterId;
-          neighbor.color = match.colors[requesterId];
-        } else if (placed[direction.attack] < neighbor[direction.defend] && neighbor.ownerId !== 'starter') {
-          placedOwnerId = neighbor.ownerId;
-          placedColor = neighbor.color;
-        }
-      });
-      placed.ownerId = placedOwnerId;
-      placed.color = placedColor;
-      board[cell] = placed;
+      board = battleEngine.play(board, placed, cell, requesterId, match.colors);
+      playedCards.push({playerId:requesterId,cardId});
 
       // Decrement the current player's clock by the time taken for this turn
       const now = moveTime;
@@ -815,7 +799,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const timeOut = currentClock <= 0;
 
       const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
-      const isFinished = timeOut || board.filter(Boolean).length >= totalCards + 1;
+      const isFinished = timeOut || playedCards.length >= totalCards;
       const ownedCounts = match.participantIds.map(id => ({ id, count: board.filter(entry => entry?.ownerId === id).length }));
       const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
       const winners = ownedCounts.filter(entry => entry.count === highestCount);
@@ -845,8 +829,8 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
         }
         prizePaid = true;
       }
-      transaction.update(matchRef, { board, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
-      return { ...match, board, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
+      transaction.update(matchRef, { board, playedCards, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
+      return { ...match, board, playedCards, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
