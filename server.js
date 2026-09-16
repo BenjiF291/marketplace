@@ -367,6 +367,8 @@ app.get('/battle-cards', async (req, res) => {
         right: Number(data.right) || 0,
         bottom: Number(data.bottom) || 0,
         left: Number(data.left) || 0,
+        familyName: data.familyName || null,
+        mirrorPower: data.mirrorPower || null,
         linkedCardImage: data.linkedCardImage || null,
         color: data.color || '#eeeeee',
         tierColors: tier ? normalizeTierColors(tier) : null,
@@ -408,6 +410,8 @@ app.get('/battle-inventory', async (req, res) => {
           battleCardId: doc.id,
           name: card.name,
           itemType: 'battle-card',
+          familyName: card.familyName || null,
+          mirrorPower: card.mirrorPower || null,
           linkedCardImage: card.linkedCardImage,
           color: card.color || '#eeeeee',
           tierColors: tier ? normalizeTierColors(tier) : null,
@@ -505,6 +509,7 @@ function battleMatchView(id, data) {
     turnPlayerId: data.turnPlayerId || null,
     board: data.board || Array(16).fill(null),
     playedCards: data.playedCards || [],
+    interruptsUsed: data.interruptsUsed || {},
     winnerId: data.winnerId || null,
     createdAt: serializeDate(data.createdAt),
     updatedAt: serializeDate(data.updatedAt)
@@ -526,6 +531,8 @@ async function getBattleCardsForUser(userId) {
     .map(doc => ({
       id: doc.id,
       name: doc.data().name,
+      familyName: doc.data().familyName || null,
+      mirrorPower: doc.data().mirrorPower || null,
       linkedCardImage: doc.data().linkedCardImage || null,
       color: doc.data().color || '#eeeeee',
       averageScore: Number(doc.data().averageScore) || 0,
@@ -550,6 +557,8 @@ function battleCardForBoard(card, playerId, color) {
     ownerId: playerId,
     playedBy: playerId,
     name: card.name,
+    familyName: card.familyName || null,
+    mirrorPower: card.mirrorPower || null,
     linkedCardImage: card.linkedCardImage || null,
     color,
     averageScore: card.averageScore,
@@ -673,7 +682,7 @@ app.post('/battle-matches/:matchId/deck', async (req, res) => {
       if (cardIds.some(id => !ownedById.has(id))) throw new Error('One or more selected cards are not in your inventory');
       if (!battleEngine.validSpecials(cardIds.map(id => ownedById.get(id)))) throw new Error('Only one special card is allowed per deck');
       const total = cardIds.reduce((sum, id) => sum + ownedById.get(id).averageScore, 0);
-      if (cardIds.length === 6 && total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
+      if (cardIds.length === 6 && total > match.averageLimit * 6 + battleEngine.budgetBonus(cardIds.map(id => ownedById.get(id)))) throw new Error('This deck is above the match average limit');
       const decks = { ...match.decks, [requesterId]: cardIds };
       const opponentId = otherBattlePlayer(match, requesterId);
       if (match.colors?.[opponentId] === color) throw new Error('Choose a color different from the other player');
@@ -710,7 +719,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
       if (!battleEngine.validSpecials(cards.filter(card => deck.includes(card.id)))) throw new Error('Only one special card is allowed per deck');
       const scoreById = new Map(cards.map(card => [card.id, card.averageScore]));
       const total = deck.reduce((sum, id) => sum + (scoreById.get(id) ?? Infinity), 0);
-      if (total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
+      if (total > match.averageLimit * 6 + battleEngine.budgetBonus(cards.filter(card => deck.includes(card.id)))) throw new Error('This deck is above the match average limit');
       const ready = { ...match.ready, [requesterId]: true };
       const bothReady = match.participantIds.every(id => ready[id] === true);
       let status = 'setup';
@@ -733,6 +742,8 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
         const starterCandidates = allBattleCards.docs.map(doc => ({
           id: doc.id,
           name: doc.data().name,
+          familyName: doc.data().familyName || null,
+          mirrorPower: doc.data().mirrorPower || null,
           linkedCardImage: doc.data().linkedCardImage || null,
           color: '#8a8f98',
           averageScore: Number(doc.data().averageScore) || 0,
@@ -741,9 +752,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
           bottom: Number(doc.data().bottom) || 0,
           left: Number(doc.data().left) || 0
         }));
-        starterCandidates.sort((left, right) => Math.abs(left.averageScore - match.averageLimit) - Math.abs(right.averageScore - match.averageLimit));
-        starterCard = starterCandidates[0] ? battleCardForBoard(starterCandidates[0], 'starter', '#8a8f98') : null;
-        if (starterCard) starterCard.cardId = `starter:${starterCard.cardId}`;
+        starterCard = battleEngine.starterCard(starterCandidates, [{averageScore:[...totals.values()].reduce((sum,n)=>sum+n,0)/12}]);
         board = Array(16).fill(null);
         board[5] = starterCard;
         status = 'board';
@@ -762,7 +771,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
 
 app.post('/battle-matches/:matchId/place', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { cardId, position } = req.body || {};
+  const { cardId, position, options = {} } = req.body || {};
   const cell = Number(position);
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   if (typeof cardId !== 'string' || !Number.isInteger(cell) || cell < 0 || cell > 15) return res.status(400).send('Choose a card and board space');
@@ -777,19 +786,24 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       if (expired) return expired;
       const moveTime = new Date();
       if (match.status !== 'board') throw new Error('The board is not active');
-      if (match.turnPlayerId !== requesterId) throw new Error('It is not your turn');
+      const interrupted = match.turnPlayerId !== requesterId;
       const deck = match.decks?.[requesterId] || [];
       if (!deck.includes(cardId)) throw new Error('That card is not in your deck');
       let board = Array.isArray(match.board) ? [...match.board] : Array(16).fill(null);
       const playedCards = match.playedCards || board.filter(entry => entry && (entry.playedBy || entry.ownerId) !== 'starter').map(entry => ({playerId:entry.playedBy || entry.ownerId,cardId:entry.cardId}));
-      if (board[cell]) throw new Error('That board space is occupied');
+
       if (playedCards.some(entry => entry.playerId === requesterId && entry.cardId === cardId)) throw new Error('That card has already been played');
       const playerCards = await getBattleCardsForUser(requesterId);
       const opponentId = otherBattlePlayer(match, requesterId);
       const card = playerCards.find(entry => entry.id === cardId);
       if (!card) throw new Error('That card is no longer available');
+      const interruptsUsed = {...(match.interruptsUsed || {})};
+      const started = match.turnStartedAt?.toDate ? match.turnStartedAt.toDate() : new Date(match.turnStartedAt);
+      if(interrupted && (battleEngine.ability(card)!=='mirror-interrupt' || interruptsUsed[requesterId] || moveTime-started<15000))throw new Error('It is not your turn');
+      if(interrupted)interruptsUsed[requesterId]=true;
+      if(!battleEngine.canPlace(board,card,cell,options))throw new Error('Choose a legal board space');
       const placed = battleCardForBoard(card, requesterId, match.colors[requesterId]);
-      board = battleEngine.play(board, placed, cell, requesterId, match.colors);
+      board = battleEngine.play(board, placed, cell, requesterId, match.colors, {...options,interrupt:interrupted});
       playedCards.push({playerId:requesterId,cardId});
 
       // Decrement the current player's clock by the time taken for this turn
@@ -797,9 +811,9 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const turnStarted = match.turnStartedAt ? (match.turnStartedAt.toDate ? match.turnStartedAt.toDate() : new Date(match.turnStartedAt)) : now;
       const elapsedMs = Math.max(0, now.getTime() - turnStarted.getTime());
       const clocks = { ...(match.clocks || {}) };
-      const currentClock = Math.max(0, (Number(clocks[requesterId]) || 0) - elapsedMs);
+      const currentClock = Math.max(0, (Number(clocks[requesterId]) || 0) - (interrupted ? 0 : elapsedMs));
       clocks[requesterId] = currentClock;
-      const timeOut = currentClock <= 0;
+      const timeOut = !interrupted && currentClock <= 0;
 
       const totalCards = match.participantIds.reduce((sum, id) => sum + (match.decks?.[id] || []).length, 0);
       const isFinished = timeOut || playedCards.length >= totalCards;
@@ -807,9 +821,11 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const highestCount = Math.max(...ownedCounts.map(entry => entry.count));
       const winners = ownedCounts.filter(entry => entry.count === highestCount);
       const winnerId = timeOut ? opponentId : isFinished && winners.length === 1 ? winners[0].id : null;
-      const nextTurn = isFinished ? null : match.participantIds.find(id => id !== requesterId);
+      const remaining = id => (match.decks[id] || []).length - playedCards.filter(entry=>entry.playerId===id).length;
+      const preferredTurn = interrupted ? match.turnPlayerId : opponentId;
+      const nextTurn = isFinished ? null : remaining(preferredTurn)>0 ? preferredTurn : requesterId;
       const status = isFinished ? 'finished' : 'board';
-      const turnStartedAtValue = isFinished ? null : now;
+      const turnStartedAtValue = isFinished ? null : interrupted ? match.turnStartedAt : now;
       let prizePaid = match.prizePaid === true;
       if (isFinished && !prizePaid && Number(match.prize || 0) > 0) {
         const firstUserRef = db.collection('users').doc(match.participantIds[0]);
@@ -832,16 +848,34 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
         }
         prizePaid = true;
       }
-      transaction.update(matchRef, { board, playedCards, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
-      return { ...match, board, playedCards, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
+      transaction.update(matchRef, { board, playedCards, interruptsUsed, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
+      return { ...match, board, playedCards, interruptsUsed, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() };
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    const expected = ['Match not found', 'The board is not active', 'It is not your turn', 'That card is not in your deck', 'That board space is occupied', 'That card has already been played', 'That card is no longer available', 'A player cannot cover the agreed prize'];
+    const expected = ['Choose a legal board space', 'Choose an attack side', 'Choose a special card to copy', 'Match not found', 'The board is not active', 'It is not your turn', 'That card is not in your deck', 'That board space is occupied', 'That card has already been played', 'That card is no longer available', 'A player cannot cover the agreed prize'];
     if (expected.includes(error.message)) return res.status(400).send(error.message);
     console.error('Place battle card error:', error);
     res.status(500).send('Could not place card');
   }
+});
+
+app.put('/admin/battle-cards/:cardId/power', async (req,res) => {
+  if (!(await userIsAdmin(req.header('X-User-Id')))) return res.status(403).send('Forbidden');
+  const mirrorPower=req.body?.mirrorPower;
+  const familyName=String(req.body?.familyName||'').trim();
+  if(familyName.length>80)return res.status(400).send('Family name is too long');
+  if(mirrorPower&&!battleEngine.MIRROR_POWERS[mirrorPower])return res.status(400).send('Choose a valid Mirror power');
+  try {
+    const ref=db.collection('battleCards').doc(req.params.cardId);
+    await db.runTransaction(async tx=>{
+      const doc=await tx.get(ref);
+      if(!doc.exists)throw new Error('Card not found');
+      if(mirrorPower&&!battleEngine.isMirror(doc.data()))throw new Error('Choose a Mirror card');
+      tx.update(ref,{...(mirrorPower?{mirrorPower}:{}),...(req.body?.familyName!==undefined?{familyName}:{})});
+    });
+    res.json({success:true,mirrorPower});
+  }catch(error){res.status(400).send(error.message);}
 });
 
 app.post('/admin/battle-cards', async (req, res) => {

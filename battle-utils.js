@@ -37,9 +37,14 @@ function validateBattleCard(card) {
     return { valid: false, error: 'Card color must be a valid hex color' };
   }
 
+  if(card.familyName && (typeof card.familyName!=='string'||card.familyName.length>80))return {valid:false,error:'Family name is too long'};
+  if (card.mirrorPower && (!require('./public/practice-engine').isMirror(card) || !require('./public/practice-engine').MIRROR_POWERS[card.mirrorPower])) return {valid:false,error:'Choose a valid Mirror power for a Mirror card'};
+
   return {
     valid: true,
     normalized: {
+      ...(card.familyName ? {familyName:card.familyName.trim()} : {}),
+      ...(card.mirrorPower ? {mirrorPower:card.mirrorPower} : {}),
       name: cleanName,
       averageScore,
       top: Math.trunc(sides.top),

@@ -4,7 +4,7 @@ const images=fs.readdirSync(path.join(root,'images')).filter(n=>/\.(png|jpe?g|we
 const cards=images.map((name,i)=>({id:`i${i}`,name:name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '),imageUrl:'/images/'+encodeURIComponent(name),price:75+i*50,sold:false,sellerId:'other',itemType:'card',quantity:2}));
 const items=[...cards.slice(0,6),{id:'pack',itemType:'pack',name:'Gold discovery pack',packColor:'#bca264',price:150,sellerId:'other',stock:3}];
 const user={id:'ui-preview',username:'Club captain',isAdmin:true,balance:2450};
-const battle=require('../public/practice-engine').trainingCards();
+const battle=require('../public/practice-engine').trainingCards();battle[0]={...battle[0],name:'Mirror tester',linkedCardImage:'Mirror_test.png',mirrorPower:'focus'};
 const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
 const fixture=(url)=>{
  if(url==='/users')return [user,{id:'other',username:'Alex',balance:400}];
@@ -48,6 +48,12 @@ const fixture=(url)=>{
  await page.locator('[data-ui-control="duel"]').click();assert.equal(await page.locator('#practiceBattle').isVisible(),false);assert.equal(await page.locator('#battleDeckPanel').isVisible(),true);
  await page.locator('[data-ui-control="bob"]').click();await page.locator('#practiceMode').selectOption('training');await page.locator('#practiceStart').click();
  assert.equal(await page.evaluate(()=>{const game=practiceGame;footyStudio.setMode(false);footyStudio.setMode(true);return game===practiceGame;}),true);
+ await page.evaluate(()=>{if(practiceWorker)practiceWorker.terminate();practiceGeneration++;practiceGame.turn='player';practiceGame.player=[{...PracticeEngine.trainingCards()[0],name:'Mirror tester',linkedCardImage:'Mirror_test.png',mirrorPower:'focus'}];practiceGame.computer=[];practiceGame.board=Array(16).fill(null);practiceGame.selected=0;renderPracticeBattle();});
+ await page.locator('#practiceBoard > button').first().click();assert.equal(await page.locator('.battle-power-dialog').isVisible(),true);
+ await page.locator('.battle-power-dialog select').selectOption('1');await page.locator('.battle-power-dialog button').first().click();
+ await page.waitForFunction(()=>practiceGame.board[0]!==null);assert.equal(await page.evaluate(()=>practiceGame.board[0].right),3);assert.equal(await page.evaluate(()=>practiceGame.board[0].top),0);
+ assert.equal(await page.locator('#practiceBoard .battle-special-badge').count(),1);
+ await page.waitForTimeout(500);await page.screenshot({path:'.ui-tools/mirror-battle.png',fullPage:true});
  await page.evaluate(()=>toggleDyeMode());await page.locator('#studioNav [data-ui-nav="inventory"]').click();assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'inventory');await page.evaluate(()=>cancelDyeMode());
  await page.locator('#uiVersionToggle').click();await page.reload();await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>footyStudio.enabled),false);
  await page.locator('#uiVersionToggle').click();await page.reload();await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>footyStudio.enabled),true);
@@ -59,7 +65,7 @@ const fixture=(url)=>{
  const boxes=await Promise.all([0,1,2].map(i=>thumbs.nth(i).boundingBox()));assert.equal(Math.round(boxes[0].y),Math.round(boxes[2].y));assert.ok(boxes[2].x>boxes[1].x);
  await thumbs.first().click();assert.equal(await page.locator('.studio-card-preview').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('.studio-card-preview').isVisible(),false);
  await page.screenshot({path:'.ui-tools/inventory-three-columns.png',fullPage:true});
- assert.ok(restored);assert.deepEqual(errors,[]);assert.ok(report.every(r=>!r.overflow));
+ assert.ok(restored);assert.deepEqual(errors,[]);assert.ok(report.every(r=>!r.overflow),JSON.stringify(report));
  await page.goto('http://127.0.0.1:4173/login.html');await page.waitForTimeout(200);await page.screenshot({path:'.ui-tools/login-mobile.png',fullPage:true});assert.equal(await page.locator('.auth-container').isVisible(),true);
  console.log(JSON.stringify({restored,errors,report,checks:'Search, route isolation, battle preservation, dye navigation, saved preference, admin visibility, mobile drawer and 320-1440px sizing passed.'},null,2));await browser.close();await new Promise(r=>server.close(r));
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -37,14 +37,16 @@ let savedBattleDecks = [];
 
 function clampBattleToothCount(value) {
   const numeric = Number(value) || 0;
-  return Math.min(10, Math.max(0, Math.trunc(numeric)));
+  return Math.min(99, Math.max(0, Math.trunc(numeric)));
 }
 
 function buildBattleCardMarkup(card, { small = false } = {}) {
   const name = String(card?.name || 'Card preview');
   const power = typeof PracticeEngine !== 'undefined' ? PracticeEngine.ability(card) : '';
   const descriptions = {fighter:'Fighter: captured cards break after the opponent turn.',mini:'Mini: dodges losing comparisons only when placed.','low-pointer':'Low Pointer: each victor loses 1 on all four sides.',genius:'Genius: wins ties, except against another Genius.'};
-  const powerDescription = card?.breakAfterOpponentOf ? 'Breaks after the opponent turn.' : descriptions[power] || '';
+  const powerDescription = card?.breakAfterOpponentOf ? 'Breaks after the opponent turn.' : descriptions[power] || (typeof PracticeEngine !== 'undefined' ? PracticeEngine.MIRROR_POWERS[power.replace('mirror-','')]?.description : '') || '';
+  const special = typeof PracticeEngine !== 'undefined' && !card?.neutralStarter && PracticeEngine.isSpecial(card);
+  const badge = special ? (PracticeEngine.MIRROR_POWERS[power.replace('mirror-','')]?.name || (PracticeEngine.isMirror(card)?'Mirror':power.replace('-',' '))) : '';
   const average = Number(card?.averageScore ?? 0);
   const top = clampBattleToothCount(card?.top ?? 0);
   const right = clampBattleToothCount(card?.right ?? 0);
@@ -53,7 +55,7 @@ function buildBattleCardMarkup(card, { small = false } = {}) {
 
   const makeTeeth = (count, side) => {
     const teeth = [];
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i < Math.min(10,count); i += 1) {
       teeth.push(`<span class="battle-tooth battle-tooth-${side}"></span>`);
     }
     return teeth.join('');
@@ -79,6 +81,7 @@ function buildBattleCardMarkup(card, { small = false } = {}) {
       <div class="battle-teeth battle-teeth-left">${makeTeeth(left, 'left')}</div>
 
       <div class="battle-card-inner">
+        ${special ? `<span class="battle-special-badge">&#10022; ${badge}</span>` : ''}
         <div class="battle-card-average">${Number.isFinite(average) ? average : 0}</div>
         <div class="battle-card-name">${name}</div>
       </div>
@@ -128,6 +131,8 @@ async function createBattleCard() {
     bottom: document.getElementById('battleCardBottom').value,
     left: document.getElementById('battleCardLeft').value,
     color: document.getElementById('battleCardColor').value,
+    familyName: document.getElementById('battleFamilyName')?.value || '',
+    mirrorPower: document.getElementById('battleMirrorPower')?.value || null,
     linkedCardImage: document.getElementById('battleLinkedCardSelect').value
   };
 
@@ -155,6 +160,7 @@ async function createBattleCard() {
     document.getElementById('battleCardBottom').value = '0';
     document.getElementById('battleCardLeft').value = '0';
     document.getElementById('battleCardColor').value = '#eeeeee';
+    document.getElementById('battleMirrorPower').value='';document.getElementById('battleFamilyName').value='';
     if (document.getElementById('battleLinkedCardSelect')) document.getElementById('battleLinkedCardSelect').value = '';
     updateBattleCardPreview();
     loadBattleCards();
@@ -231,7 +237,25 @@ async function loadBattleCards() {
       deleteBtn.textContent = 'Delete';
       deleteBtn.onclick = () => deleteBattleCard(card.id);
       actionWrap.appendChild(deleteBtn);
+      if(PracticeEngine.isMirror(card)) {
+        const select=document.createElement('select');select.className='input-field';select.setAttribute('aria-label',`Mirror power for ${card.name}`);
+        select.innerHTML='<option value="">Choose Mirror power</option>';
+        Object.entries(PracticeEngine.MIRROR_POWERS).forEach(([value,power],i)=>{const option=new Option(`${i+1}. ${power.name}`,value);select.add(option);});
+        select.value=card.mirrorPower||'';
+        const description=document.createElement('small');description.textContent=PracticeEngine.MIRROR_POWERS[select.value]?.description||'No power assigned yet.';
+        select.onchange=async()=>{
+          if(!select.value)return;select.disabled=true;
+          try {const res=await fetch(`${API_URL}/admin/battle-cards/${card.id}/power`,{method:'PUT',headers:{'Content-Type':'application/json','X-User-Id':currentUserId},body:JSON.stringify({mirrorPower:select.value})});if(!res.ok)throw new Error(await res.text());description.textContent=PracticeEngine.MIRROR_POWERS[select.value].description;card.mirrorPower=select.value;visualWrap.innerHTML=buildBattleCardMarkup(card,{small:true});loadBattleInventory();}
+          catch(error){alert(error.message);select.value=card.mirrorPower||'';}finally{select.disabled=false;}
+        };
+        actionWrap.prepend(select,description);
+      }
 
+
+      const family=document.createElement('input');family.className='input-field';family.placeholder='Family name (for Family ties)';family.value=card.familyName||'';family.maxLength=80;family.setAttribute('aria-label',`Family name for ${card.name}`);
+      const saveFamily=document.createElement('button');saveFamily.className='btn';saveFamily.textContent='Save family name';saveFamily.onclick=async()=>{
+        saveFamily.disabled=true;try {const res=await fetch(`${API_URL}/admin/battle-cards/${card.id}/power`,{method:'PUT',headers:{'Content-Type':'application/json','X-User-Id':currentUserId},body:JSON.stringify({familyName:family.value})});if(!res.ok)throw new Error(await res.text());card.familyName=family.value;saveFamily.textContent='Saved';}catch(error){alert(error.message);}finally{saveFamily.disabled=false;}
+      };actionWrap.append(family,saveFamily);
       item.appendChild(visualWrap);
       item.appendChild(meta);
       item.appendChild(actionWrap);
@@ -559,7 +583,7 @@ function renderBattleInventory() {
 
 function updateBattleBudget() {
   const limit = Number(battleMatch?.averageLimit || 0);
-  const totalBudget = limit * 6;
+  const totalBudget = limit * 6 + PracticeEngine.budgetBonus(battleInventoryCache.filter(card=>selectedBattleCards.has(card.battleCardId)));
   const currentDeckIds = selectedBattleCards;
   const used = battleInventoryCache
     .filter(item => currentDeckIds.has(item.battleCardId))
@@ -897,17 +921,21 @@ function renderBattleBoard() {
     const cell = document.createElement('button');
     cell.type = 'button';
     cell.className = 'battle-board-cell';
-    cell.disabled = battleMatch.status !== 'board' || !!entry || !isMyTurn || !battleSelectedPlacementCard;
+    const selected=battleInventoryCache.find(card=>card.battleCardId===battleSelectedPlacementCard);
+    const interrupt=selected&&PracticeEngine.ability(selected)==='mirror-interrupt'&&!battleMatch.interruptsUsed?.[currentUserId]&&Date.now()-new Date(battleMatch.turnStartedAt)>=15000;
+    cell.disabled = battleMatch.status !== 'board' || (!isMyTurn&&!interrupt) || !selected || !PracticeEngine.placementOptions(cells,selected).some(options=>PracticeEngine.canPlace(cells,selected,index,options));
     if (entry) {
       cell.innerHTML = `<div class="battle-board-card">${buildBattleCardMarkup(entry, { small: true })}</div>`;
       cell.style.setProperty('--battle-card-color', entry.color || '#eeeeee');
     } else {
       cell.textContent = '＋';
-      cell.onclick = () => placeBattleCard(index);
+
     }
+    cell.onclick = () => placeBattleCard(index);
     board.appendChild(cell);
   });
 
+  animateBattleBoard(board,cells,battleMatch.id);
   const playedIds = new Set(cells.filter(entry => entry && (entry.playedBy || entry.ownerId) === currentUserId).map(entry => entry.cardId));
   (battleMatch.playedCards || []).filter(entry => entry.playerId === currentUserId).forEach(entry => playedIds.add(entry.cardId));
   const myDeck = new Set(battleMatch.decks?.[currentUserId] || []);
@@ -926,12 +954,14 @@ function renderBattleBoard() {
 }
 
 async function placeBattleCard(position) {
-  if (!battleMatchId || !battleSelectedPlacementCard || battleMatch.status !== 'board' || battleMatch.turnPlayerId !== currentUserId) return;
+  if (!battleMatchId || !battleSelectedPlacementCard || battleMatch.status !== 'board') return;
   try {
+    const card=battleInventoryCache.find(card=>card.battleCardId===battleSelectedPlacementCard);
+    const options=await chooseBattleOptions(battleMatch.board,card);if(!options)return;
     const response = await fetch(`${API_URL}/battle-matches/${battleMatchId}/place`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ cardId: battleSelectedPlacementCard, position })
+      body: JSON.stringify({ cardId: battleSelectedPlacementCard, position, options })
     });
     if (!response.ok) throw new Error(await response.text());
     battleMatch = await response.json();

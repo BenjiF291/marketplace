@@ -1,4 +1,5 @@
 let practiceGame = null;
+let practiceTimedBusy=false;
 let practiceSelection = new Set();
 let practiceCards = [];
 let practiceWorker = null;
@@ -61,11 +62,13 @@ async function startPracticeBattle() {
     } else {
       const deck=practiceCards.filter(card=>practiceSelection.has(card.battleCardId)).map(card=>({...card}));
       generated=PracticeEngine.rankedDeck(practicePool,practiceCards,deck);
-      const board=Array(16).fill(null);board[5]={name:'Starter',top:5,right:5,bottom:5,left:5,averageScore:5,ownerId:'starter',color:'#8a8f98'};
+      const board=Array(16).fill(null);board[5]=PracticeEngine.starterCard(practicePool,[...deck,...generated.deck]);
       initial={board,player:deck,computer:generated.deck,turn:PracticeEngine.startingPlayer(deck,generated.deck)};
     }
     if(practiceWorker)practiceWorker.terminate();practiceGeneration++;
     practiceGame={...initial,first:initial.turn,selected:null,finished:false,difficulty,mode:ranked?'skill':'training',skillResult:null,forfeitedSkill:session?.forfeitedSkill||null,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
+    if(session?.live) {practiceGame.timed=true;practiceGame.live=session.live;Object.assign(practiceGame,session.live);}
+    else if(!ranked&&[...initial.player,...initial.computer].some(card=>PracticeEngine.ability(card)==='mirror-interrupt')){practiceGame.timed=true;practiceGame.live=BrawlTurns.create(initial,difficulty,practiceGame.seed);Object.assign(practiceGame,practiceGame.live);}
     persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
     renderPracticeBattle();loadTrophyPath();if(initial.turn==='computer')runPracticeComputer();
   } catch(error){document.getElementById('practiceNote').textContent=error.message+' Ranked Brawl needs a connection and a current login. Choose Training to play without progression.';}
@@ -82,12 +85,14 @@ function renderPracticeBattle() {
   const board=document.getElementById('practiceBoard');board.replaceChildren();
   game.board.forEach((card,cell)=>{
     const button=document.createElement('button');button.type='button';button.className='battle-board-cell';
-    button.disabled=game.finished || game.turn!=='player' || game.selected===null || !!card;
+    const canInterrupt=game.timed&&game.turn==='computer'&&Date.now()-game.turnStartedAt>=15000&&!game.interruptsUsed?.player&&game.selected!==null&&PracticeEngine.ability(game.player[game.selected])==='mirror-interrupt';
+    button.disabled=game.finished || (game.turn!=='player'&&!canInterrupt) || game.selected===null || !PracticeEngine.placementOptions(game.board,game.player[game.selected]).some(options=>PracticeEngine.canPlace(game.board,game.player[game.selected],cell,options));
     if(card){const frame=document.createElement('div');frame.className='battle-board-card';frame.innerHTML=safePracticeMarkup({...card,tierColors:{backgroundColor:card.color}});button.appendChild(frame);button.setAttribute('aria-label',`${card.name}, ${card.ownerId==='computer'?'Bob':card.ownerId==='player'?'You':'Starter'}`);}else button.textContent='+';
     button.onclick=()=>practicePlace(cell);board.appendChild(button);
   });
+  animateBattleBoard(board,game.board,game.sessionId||game.seed);
   const hand=document.getElementById('practiceHand');hand.replaceChildren();
-  game.player.forEach((card,index)=>{const button=document.createElement('button');button.type='button';button.className='battle-hand-card';button.innerHTML=safePracticeMarkup(card);button.disabled=game.finished||game.turn!=='player';button.classList.toggle('is-active',game.selected===index);button.onclick=()=>{game.selected=index;renderPracticeBattle();};hand.appendChild(button);});
+  game.player.forEach((card,index)=>{const button=document.createElement('button');button.type='button';button.className='battle-hand-card';button.innerHTML=safePracticeMarkup(card);button.disabled=game.finished||(game.turn!=='player'&&!(game.timed&&PracticeEngine.ability(card)==='mirror-interrupt'&&!game.interruptsUsed?.player));button.classList.toggle('is-active',game.selected===index);button.onclick=()=>{game.selected=index;renderPracticeBattle();};hand.appendChild(button);});
   const mine=game.board.filter(card=>card?.ownerId==='player').length;
   const theirs=game.board.filter(card=>card?.ownerId==='computer').length;
   const status=game.finished ? (mine>theirs?'You win!':mine<theirs?'Bob wins.':'Draw!') : game.turn==='computer'?'Bob is thinking...':'Your turn: select a card and an empty space.';
@@ -95,21 +100,27 @@ function renderPracticeBattle() {
   const skillResult=document.getElementById('brawlSkillResult');
   skillResult.textContent=game.skillResult?formatBrawlSkillResult(game.skillResult):game.mode==='training'?'Training: Skill Level and rewards are unchanged.':game.forfeitedSkill?`Previous Brawl: ${formatBrawlSkillResult(game.forfeitedSkill)}`:'';
   renderBrawlMoveReviews(game.moveReviews||[]);
-  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.mode==='skill'?'RANKED':game.mode==='training'?'TRAINING':String(game.difficulty).toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} ${game.first?`- ${game.first==='player'?'You':'Bob'} started.`:'.'} ${game.trophyMessage||''}`;
+  const timerHint=game.timed&&!game.finished?` Timed ability active: ${Math.max(0,15-Math.floor((Date.now()-game.turnStartedAt)/1000))}s until an interrupt can be used.`:'';
+  document.getElementById('practiceStatus').textContent=`${status} You: ${mine} / Bob: ${theirs}. ${game.mode==='skill'?'RANKED':game.mode==='training'?'TRAINING':String(game.difficulty).toUpperCase()} - deck averages: you ${Number(game.strength.playerAverage).toFixed(1)}, Bob ${Number(game.strength.average).toFixed(1)} ${game.first?`- ${game.first==='player'?'You':'Bob'} started.`:'.'} ${game.trophyMessage||''}${timerHint}`;
 }
-function practicePlace(cell) {
-  const game=practiceGame;if(!game||game.finished||game.turn!=='player'||game.selected===null||game.board[cell])return;
-  game.moves.push({cardIndex:game.selected,cell});
-  game.board=PracticeEngine.play(game.board,game.player[game.selected],cell,'player');game.player.splice(game.selected,1);game.selected=null;
+async function practicePlace(cell) {
+  const game=practiceGame;if(!game||game.finished||(!game.timed&&game.turn!=='player')||game.selected===null)return;
+  const selected=game.selected,revision=game.events?.length;
+  const options=await chooseBattleOptions(game.board,game.player[selected]);if(!options||practiceGame!==game||game.selected!==selected||game.events?.length!==revision||(!game.timed&&game.turn!=='player'))return;
+  if(!PracticeEngine.canPlace(game.board,game.player[selected],cell,options)){document.getElementById('practiceStatus').textContent='That ability cannot use this occupied space. Choose another space.';return;}
+  if(game.timed){await updateTimedPractice({type:'place',cardIndex:game.selected,cell,options,revision:game.events.length});return;}
+  game.moves.push({cardIndex:game.selected,cell,options});
+  game.board=PracticeEngine.play(game.board,game.player[game.selected],cell,'player',undefined,options);game.player.splice(game.selected,1);game.selected=null;
   game.finished=!game.player.length&&!game.computer.length;game.turn=game.computer.length?'computer':'player';persistPractice();renderPracticeBattle();if(game.finished)finishPracticeTrophies();if(!game.finished&&game.turn==='computer')runPracticeComputer();
 }
 function runPracticeComputer() {
+  if(practiceGame?.timed)return;
   const game=practiceGame;const generation=practiceGeneration;
   const visibleAt=Date.now()+3000+Math.floor(Math.random()*2001);
   const apply=move=>{if(generation!==practiceGeneration||practiceGame!==game||game.turn!=='computer')return;
     if(!move){game.finished=true;renderPracticeBattle();return;}
     game.computerTurn++;
-    game.board=PracticeEngine.play(game.board,game.computer[move.cardIndex],move.cell,'computer');game.computer.splice(move.cardIndex,1);
+    game.board=PracticeEngine.play(game.board,game.computer[move.cardIndex],move.cell,'computer',undefined,move.options);game.computer.splice(move.cardIndex,1);
     game.finished=!game.player.length&&!game.computer.length;game.turn=game.player.length?'player':'computer';persistPractice();renderPracticeBattle();if(game.finished)finishPracticeTrophies();if(!game.finished&&game.turn==='computer')runPracticeComputer();};
   const reveal=move=>setTimeout(()=>apply(move),Math.max(0,visibleAt-Date.now()));
   const fallback=()=>setTimeout(()=>{if(generation===practiceGeneration)reveal(PracticeEngine.chooseMove(game.board,game.computer,game.player,game.difficulty,PracticeEngine.seeded(game.seed+game.computerTurn)));},150);
@@ -184,3 +195,17 @@ async function loadBrawlSkill() {
   try { renderBrawlSkill(await resourceRequest('/brawl/skill')); }
   catch(error) { document.getElementById('brawlSkillLevel').textContent=error.message; }
 }
+
+async function updateTimedPractice(action={}) {
+  const game=practiceGame;if(!game?.timed||game.finished||practiceTimedBusy)return;
+  practiceTimedBusy=true;
+  try {
+    const result=game.sessionId?await resourceRequest('/computer-battles/turn',{id:game.sessionId,action}):{live:BrawlTurns.advance(game.live,action)};
+    if(practiceGame!==game)return;
+    const changed=game.events.length!==result.live.events.length;
+    game.live=result.live;Object.assign(game,result.live);if(changed)game.selected=null;
+    persistPractice();renderPracticeBattle();if(game.finished)finishPracticeTrophies();
+  }catch(error){if(practiceGame===game)document.getElementById('practiceStatus').textContent=error.message;}
+  finally{practiceTimedBusy=false;}
+}
+setInterval(()=>{if(practiceGame?.timed&&!practiceGame.finished)updateTimedPractice();},1000);

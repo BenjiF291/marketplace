@@ -8,7 +8,7 @@ function harness(){
   ids.forEach(id=>elements.set(id,node()));
   elements.get('practiceMode').value='skill';elements.get('practiceDifficulty').value='easy';
   const cards=engine.trainingCards(),requests=[];
-  const context=vm.createContext({currentUserId:'u',PracticeEngine:engine,battleInventoryCache:cards,console,
+  const context=vm.createContext({setInterval(){},animateBattleBoard(){},currentUserId:'u',PracticeEngine:engine,battleInventoryCache:cards,console,
     localStorage:{getItem(){return null;},setItem(){},removeItem(){}},navigator:{},window:{addEventListener(){}},
     document:{getElementById(id){assert.ok(elements.has(id),`Unknown UI element ${id}`);return elements.get(id);},createElement:node},
     buildBattleCardMarkup:card=>card.name,amuletNode:(tag,text)=>({...node(),textContent:text}),updateBalance(){},

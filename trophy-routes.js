@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const engine = require('./public/practice-engine');
+const liveTurns = require('./public/brawl-turns');
 const {PATH,replay,trophyUpdate} = require('./trophy-utils');
 const skill = require('./brawl-skill');
 module.exports=(app,db,getOwned,authenticate)=>{
@@ -29,8 +30,9 @@ module.exports=(app,db,getOwned,authenticate)=>{
   const snapshot=await db.collection('battleCards').get();
   const pool=snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
   const generated=engine.rankedDeck(pool,available,player);
-  const board=Array(16).fill(null);board[5]={name:'Starter',top:5,right:5,bottom:5,left:5,averageScore:5,ownerId:'starter',color:'#8a8f98'};
+  const board=Array(16).fill(null);board[5]=engine.starterCard(pool,[...player,...generated.deck]);
   const initial={board,player,computer:generated.deck,turn:engine.startingPlayer(player,generated.deck)};
+  const timed=[...player,...generated.deck].some(card=>engine.ability(card)==='mirror-interrupt');
   const ref=db.collection('computerBattles').doc();const seed=crypto.randomInt(2147483647);
   const session=await db.runTransaction(async tx=>{
     const userRef=db.collection('users').doc(id),user=await tx.get(userRef);if(!user.exists)throw new Error('User not found');
@@ -47,12 +49,22 @@ module.exports=(app,db,getOwned,authenticate)=>{
     }
     const skillLevel=rating.skillLevel;
     const difficulty={policy:'adaptive-v3',skill:skillLevel};
-    tx.set(ref,{userId:id,initial,seed,difficulty,mode:'skill',assessmentVersion:2,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
+    const live=timed?liveTurns.create(initial,difficulty,seed):null;
+    tx.set(ref,{userId:id,initial,seed,difficulty,live,mode:'skill',assessmentVersion:2,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
     tx.set(profileRef,{...progress,...rating,activeComputerBattle:ref.id});
     tx.update(userRef,changes);
-    return {difficulty,profile:skill.profile(rating),forfeitedSkill};
+    return {difficulty,live,profile:skill.profile(rating),forfeitedSkill};
   });
   return {id:ref.id,initial,seed,mode:'skill',assessmentVersion:2,...session,target:generated.target,average:generated.average,playerAverage:generated.playerAverage};
+ });
+ route('post','/computer-battles/turn',async(id,body)=>{
+  if(typeof body.id!=='string'||!body.id||body.id.includes('/'))throw new Error('Invalid battle');
+  return db.runTransaction(async tx=>{
+    const ref=db.collection('computerBattles').doc(body.id),doc=await tx.get(ref);
+    if(!doc.exists||doc.data().userId!==id||doc.data().status!=='active'||!doc.data().live)throw new Error('Timed battle unavailable');
+    const live=liveTurns.advance(doc.data().live,body.action||{},Date.now());
+    tx.update(ref,{live});return {live};
+  });
  });
  route('post','/computer-battles/finish',async(id,body)=>{
   if(typeof body.id!=='string'||!body.id||body.id.includes('/'))throw new Error('Invalid battle');

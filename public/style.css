@@ -1760,3 +1760,27 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 .brawl-skill-panel h3 { margin-top: 0; }
 .brawl-skill-result:not(:empty) { padding: 14px; border-left: 4px solid #2878d0; background: #edf4ff; line-height: 1.6; }
 #practiceTraining[hidden] { display: none; }
+
+/* Battle feedback works in both UI modes. */
+.battle-board-cell { position:relative; }
+.battle-special-badge { display:block;font-size:9px;line-height:1.2;background:#f4dc81;color:#24392c;border-radius:4px;padding:2px 3px;max-width:95%;margin:auto; }
+.battle-power-dialog { border:1px solid #bdccba;border-radius:16px;padding:24px;max-width:min(440px,90vw);background:#f7f8f2;color:#193e30; }
+.battle-power-dialog::backdrop { background:#102b23bb; }
+.battle-effect-label { position:absolute;inset:auto 2px 3px;background:#173f32ed;color:white;font:600 10px/1.2 sans-serif;padding:4px;border-radius:5px;z-index:4;pointer-events:none;animation:battle-label 1.3s both; }
+.battle-placed { animation:battle-place .4s ease-out; }
+.battle-captured { animation:battle-capture .6s ease-out; }
+.battle-powered { animation:battle-power .7s ease-out; }
+.battle-shattered { animation:battle-break .65s ease-out; }
+@keyframes battle-place { from { transform:translateY(-14px) scale(.85);opacity:.2; } to { transform:none;opacity:1; } }
+@keyframes battle-capture { 50% { transform:scale(.94);filter:brightness(1.6); } }
+@keyframes battle-power { 50% { box-shadow:0 0 0 4px #edc553,0 0 24px #edc553; } }
+@keyframes battle-break { 35% { transform:rotate(3deg);background:#e5bb72; } 65% { transform:rotate(-3deg); } }
+@keyframes battle-label { 0% { opacity:0;transform:translateY(5px); } 20%,75% { opacity:1;transform:none; } 100% { opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .battle-placed,.battle-captured,.battle-powered,.battle-shattered,.battle-effect-label { animation:none; } }
+
+.battle-special-badge { position:absolute;top:4%;left:4%;right:4%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:8px; }
+.battle-card-item { flex-wrap:wrap; }
+.battle-card-item-actions { min-width:0;max-width:100%;flex:1 1 200px; }
+.battle-card-item-actions select,.battle-card-item-actions input { min-width:0;width:100%;max-width:100%;box-sizing:border-box; }
+.battle-card-meta { min-width:0;overflow-wrap:anywhere;flex:1 1 150px; }
+.studio-ui #practiceBoard .battle-board-cell:disabled,.studio-ui #battleBoard .battle-board-cell:disabled { opacity:1; }

@@ -241,7 +241,7 @@
       <h2>⚔️ Battle</h2>
       <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
         <summary>Play against Bob</summary>
-        <p>Blue is you; red is Bob. Bob adapts to your Skill Level with a randomized deck of similar strength. Ranked Brawls need a connection to start and sync results; an ongoing Brawl can be played offline.</p>
+        <p>Blue is you; red is Bob. Bob adapts to your Skill Level with a randomized deck of similar strength. Ranked Brawls need a connection to start and sync results; an ongoing Brawl can be played offline unless a 15-second interrupt power is in play. Timed ranked battles stay connected.</p>
         <section class="brawl-skill-panel" aria-label="Brawl Skill Level">
           <h3 id="brawlSkillLevel">Skill Level: connect to load</h3>
           <progress id="brawlSkillProgress" max="1000" value="0" aria-label="Progress to next skill milestone"></progress>
@@ -334,6 +334,10 @@
         <label class="input-label" for="battleCardName">Card name</label>
         <input id="battleCardName" class="input-field" maxlength="80" placeholder="Example: Wolf Fang">
 
+        <label class="input-label" for="battleFamilyName">Family name (optional, for Family ties)</label>
+        <input id="battleFamilyName" class="input-field" maxlength="80" placeholder="Liesker / Heeren">
+        <label class="input-label" for="battleMirrorPower">Mirror power (Mirror cards only)</label>
+        <select id="battleMirrorPower" class="input-field"><option value="">No Mirror power</option></select>
         <label class="input-label" for="battleCardAverageScore">Average score</label>
         <input id="battleCardAverageScore" class="input-field" type="number" min="0" step="0.1" placeholder="7.5">
 
@@ -533,6 +537,8 @@
 </div>
 <script src="dye-mode.js"></script>
 <script src="practice-engine.js"></script>
+<script src="brawl-turns.js"></script>
+<script src="battle-effects.js"></script>
 <script src="practice-battle.js"></script>
 <script src="studio.js"></script>
 </body>

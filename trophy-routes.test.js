@@ -150,3 +150,27 @@ test('ranked start uses owned cards plus outsiders and caps Bob specials',async(
  assert.equal(result.status,200);const deck=result.payload.initial.computer;
  assert.ok([1,2].includes(deck.filter(c=>c.id.startsWith('outside-')).length));assert.ok(engine.validSpecials(deck));
 });
+
+test('timed ranked battles ignore client clock claims and reject premature settlement',async()=>{
+ const turns=require('./public/brawl-turns');
+ const player=[{...engine.trainingCards()[0],linkedCardImage:'Mirror_test.png',mirrorPower:'interrupt'}];
+ const initial={board:Array(16).fill(null),player,computer:engine.trainingCards().slice(0,1),turn:'computer'};
+ const live=turns.create(initial,'hard',1,Date.now());
+ const h=harness({'users/u':{},'computerBattles/m':{userId:'u',status:'active',mode:'skill',initial,live}});
+ const early=await h.invoke('/computer-battles/turn',{id:'m',now:Date.now()+999999,action:{type:'place',cardIndex:0,cell:0,revision:0}});
+ assert.equal(early.status,400);assert.match(early.payload,/not available/);
+ assert.equal((await h.invoke('/computer-battles/finish',{id:'m',moves:[]})).status,400);
+ assert.equal(h.records['computerBattles/m'].live.events.length,0);
+});
+
+test('completed timed ranked match settles from server events and awards only once',async()=>{
+ const turns=require('./public/brawl-turns');
+ const initial={board:Array(16).fill(null),player:[{...engine.trainingCards()[0],linkedCardImage:'Mirror_test.png',mirrorPower:'interrupt'}],computer:engine.trainingCards().slice(1,2),turn:'computer'};
+ let live=turns.create(initial,'hard',1,0);
+ live=turns.advance(live,{type:'place',cardIndex:0,cell:0,revision:0},15000);
+ live=turns.advance(live,{},15001);assert.equal(live.finished,true);
+ const h=harness({'users/u':{balance:0},'computerBattles/m':{userId:'u',status:'active',mode:'skill',skillAtStart:500,initial,live}});
+ const first=await h.invoke('/computer-battles/finish',{id:'m',moves:[{cardIndex:999,cell:999}]});assert.equal(first.status,200);
+ const saved=structuredClone(h.records['brawlProfiles/u']);
+ assert.equal((await h.invoke('/computer-battles/finish',{id:'m',moves:[]})).status,200);assert.deepEqual(h.records['brawlProfiles/u'],saved);
+});

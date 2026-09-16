@@ -3,7 +3,34 @@
   function neighbors(cell) {
     return [[cell - 4,'top','bottom',cell >= 4],[cell + 4,'bottom','top',cell < 12],[cell - 1,'left','right',cell % 4 !== 0],[cell + 1,'right','left',cell % 4 !== 3]].filter(entry => entry[3]);
   }
+  const MIRROR_POWERS = {
+    kinship:{name:'Family ties',description:'Gains 1 tooth on every side per adjacent Liesker or Heeren.'},
+    spoils:{name:'Spoils of victory',description:'Copies the four sides of a card defeated on placement.'},
+    focus:{name:'Focused strike',description:'Choose one attack side; the other three sides become zero.'},
+    reach:{name:'Long reach',description:'On placement attacks two cells away and ignores immediate neighbors.'},
+    budget:{name:'Extra allowance',description:'Adds 15 points to the six-card deck budget.'},
+    replace:{name:'Replacement',description:'May replace an occupied board card.'},
+    reversal:{name:'Reversal',description:'Reverses losing comparisons.'},
+    interrupt:{name:'Impatience',description:'Can interrupt an opponent who has spent 15 seconds thinking.'},
+    mimic:{name:'Mimic',description:'Copies a chosen special ability already on the board.'},
+    plain:{name:'Raw talent',description:'No triggered power; high teeth for its printed score.'}
+  };
+  function isMirror(card) { return /\bmirror\b/i.test(String(card?.linkedCardImage || card?.tierName || card?.name || '').replace(/_/g,' ')); }
+  function starterCard(pool, decks, random=Math.random) {
+    const target=decks.reduce((sum,card)=>sum+Number(card.averageScore||0),0)/Math.max(1,decks.length);
+    const available=pool.length?pool:decks;
+    if(!available.length)throw new Error('No starter cards available');
+    const distance=card=>Math.abs(Number(card.averageScore||0)-target);
+    const nearest=Math.min(...available.map(distance));
+    const choices=available.filter(card=>distance(card)<=nearest+Math.max(1,target*.1));
+    const card=choices[Math.floor(random()*choices.length)];
+    return {...card,cardId:`starter:${card.id||card.battleCardId||card.name}`,ownerId:'starter',playedBy:'starter',neutralStarter:true,color:colors.starter};
+  }
+  function budgetBonus(cards) { return cards.some(card=>ability(card)==='mirror-budget')?15:0; }
   function ability(card) {
+    if(card?.neutralStarter)return '';
+    if(card?.copiedAbility)return card.copiedAbility;
+    if(isMirror(card)&&MIRROR_POWERS[card.mirrorPower])return `mirror-${card.mirrorPower}`;
     const text = String(card?.linkedCardImage || card?.tierName || card?.name || '').toLowerCase().replace(/_/g,' ');
     if (/\bfighter\b/.test(text)) return 'fighter';
     if (/\bmini\b/.test(text)) return 'mini';
@@ -11,32 +38,97 @@
     if (/\b(genious|genius)\b/.test(text)) return 'genius';
     return '';
   }
-  function play(board, card, cell, player, palette = colors) {
-    if (!Number.isInteger(cell) || cell < 0 || cell > 15 || board[cell]) throw new Error('Choose an empty space');
-    const next = board.map(entry => entry ? {...entry} : null);
-    const placed = {...card, ownerId: player, playedBy: player, color: palette[player]};
-    const breaks = board.map((entry,index) => entry?.breakAfterOpponentOf && entry.breakAfterOpponentOf !== player ? index : -1).filter(index => index >= 0);
-    const penalties = [];
-    for (const [index, attack, defend] of neighbors(cell)) {
-      const other = next[index];
-      if (!other || other.ownerId === player) continue;
-      const tie = placed[attack] === other[defend];
-      const wins = placed[attack] > other[defend] || (tie && ability(placed)==='genius' && ability(other)!=='genius');
-      const loses = placed[attack] < other[defend] || (tie && ability(other)==='genius' && ability(placed)!=='genius');
-      if (wins) {
-        if (ability(other)==='low-pointer') penalties.push(placed);
-        other.ownerId = player; other.color = palette[player];
-        if (ability(placed)==='fighter') other.breakAfterOpponentOf = player;
-      } else if (loses && other.ownerId !== 'starter' && ability(placed)!=='mini') {
-        placed.ownerId = other.ownerId; placed.color = other.color;
-        if (ability(placed)==='low-pointer') penalties.push(other);
+  const sides = ['top','right','bottom','left'];
+  function refreshAuras(board) {
+    if(!board.some(card=>card?.mirrorPower==='kinship'||card?.copiedAbility==='mirror-kinship'))return board;
+    return board.map((card,cell)=>{
+      if(!card)return null;
+      const next={...card};
+      if(ability(card)==='mirror-kinship') {
+        const bonus=neighbors(cell).filter(([index])=> /\b(liesker|heeren)\b/i.test(String(board[index]?.name||'')+' '+String(board[index]?.familyName||''))).length;
+        const base=card.baseSides||Object.fromEntries(sides.map(side=>[side,Number(card[side])-Number(card.auraBonus||0)]));
+        next.baseSides={...base};next.auraBonus=bonus;
+        for(const side of sides)next[side]=Math.max(0,base[side]+bonus);
+      }
+      return next;
+    });
+  }
+  function placementOptions(board,card) {
+    const power=ability(card);
+    if(power==='mirror-focus')return sides.map(side=>({side}));
+    if(power==='mirror-mimic') {
+      const choices=board.map((other,copyCell)=>({other,copyCell})).filter(({other})=>other&&ability(other)&&ability(other)!=='mirror-mimic');
+      return choices.length?choices.flatMap(({other,copyCell})=>ability(other)==='mirror-focus'?sides.map(side=>({copyCell,side})):[{copyCell}]):[{}];
+    }
+    return [{}];
+  }
+  function effectivePower(board,card,options={}) {
+    return ability(card)==='mirror-mimic'&&Number.isInteger(options.copyCell)?ability(board[options.copyCell]):ability(card);
+  }
+  function canPlace(board,card,cell,options={}) { return Number.isInteger(cell)&&cell>=0&&cell<16&&(!board[cell]||effectivePower(board,card,options)==='mirror-replace'); }
+  function play(board, card, cell, player, palette = colors, options = {}) {
+    if (!canPlace(board,card,cell,options)) throw new Error('Choose a legal board space');
+    let next = board.map(entry => entry ? {...entry} : null);
+    let placed = {...card, ownerId: player, playedBy: player, color: palette[player]};
+    if(ability(placed)==='mirror-mimic') {
+      const source=board[options.copyCell];
+      if(placementOptions(board,card).some(option=>Number.isInteger(option.copyCell))) {
+        if(!source||!ability(source)||ability(source)==='mirror-mimic')throw new Error('Choose a special card to copy');
+        placed.copiedAbility=ability(source);
       }
     }
-    next[cell] = placed;
-    // Simultaneous comparisons: debuffs affect subsequent turns, never neighbor order.
-    for (const target of penalties) for (const side of ['top','right','bottom','left']) target[side] = Math.max(0,target[side]-1);
-    for (const index of breaks) next[index] = null;
-    return next;
+    const power=ability(placed);
+    if(power==='mirror-focus') {
+      if(!sides.includes(options.side))throw new Error('Choose an attack side');
+      for(const side of sides)if(side!==options.side)placed[side]=0;
+      placed.attackSide=options.side;
+    }
+    next[cell]=placed;
+    next=refreshAuras(next);placed=next[cell];
+    const breaks = board.map((entry,index) => entry?.breakAfterOpponentOf && entry.breakAfterOpponentOf !== player ? index : -1).filter(index => index >= 0 && index!==cell);
+    const penalties = [], defeated=[];
+    const directions=power==='mirror-reach'?[
+      [cell-8,'top','bottom',cell>=8],[cell+8,'bottom','top',cell<8],
+      [cell-2,'left','right',cell%4>=2],[cell+2,'right','left',cell%4<=1]
+    ].filter(entry=>entry[3]):neighbors(cell);
+    for (const [index, attack, defend] of directions) {
+      const other = next[index];
+      if (!other || other.ownerId === player) continue;
+      let comparison=Math.sign(placed[attack]-other[defend]);
+      // One reversal flips a comparison; two reversals cancel each other.
+      if((power==='mirror-reversal')!==(ability(other)==='mirror-reversal'))comparison=-comparison;
+      const wins=(power!=='mirror-focus'||attack===placed.attackSide)&&(comparison>0 || (comparison===0&&power==='genius'&&ability(other)!=='genius'));
+      const loses=comparison<0 || (comparison===0&&ability(other)==='genius'&&power!=='genius');
+      if (wins) {
+        defeated.push({...other});
+        if (ability(other)==='low-pointer') penalties.push(placed);
+        other.ownerId = player; other.color = palette[player];
+        if (power==='fighter') other.breakAfterOpponentOf = player;
+      } else if (loses && other.ownerId !== 'starter' && power!=='mini') {
+        placed.ownerId = other.ownerId; placed.color = other.color;
+        if (power==='low-pointer') penalties.push(other);
+      }
+    }
+    if(power==='mirror-spoils'&&defeated.length) {
+      defeated.sort((a,b)=>sides.reduce((sum,side)=>sum+Number(b[side])-Number(a[side]),0));
+      for(const side of sides)placed[side]=defeated[0][side];
+    }
+    // Simultaneous comparisons: debuffs affect later turns, never neighbor order.
+    for (const target of penalties) for (const side of sides) {
+      target[side] = Math.max(0,target[side]-1);
+      if(target.baseSides)target.baseSides={...target.baseSides,[side]:target.baseSides[side]-1};
+    }
+    if(!options.interrupt)for (const index of breaks) next[index] = null;
+    return refreshAuras(next);
+  }
+  function legalMoves(board,hand,player) {
+    const moves=[];
+    hand.forEach((card,cardIndex)=>{
+      for(const options of placementOptions(board,card))for(let cell=0;cell<16;cell++)if(canPlace(board,card,cell,options)) {
+        moves.push({cardIndex,cell,options,board:play(board,card,cell,player,colors,options)});
+      }
+    });
+    return moves;
   }
   function score(board, player) {
     const other = player === 'computer' ? 'player' : 'computer';
@@ -52,28 +144,12 @@
     return value;
   }
   function rankMoves(board, hand, opponentHand, player = 'computer') {
-    const opponent = player === 'computer' ? 'player' : 'computer';
-    const choices = [];
-    for (let cardIndex = 0; cardIndex < hand.length; cardIndex++) {
-      for (let cell = 0; cell < 16; cell++) {
-        if (board[cell]) continue;
-        const next = play(board, hand[cardIndex], cell, player);
-        let worst = Infinity;
-        for (const response of opponentHand) {
-          for (let reply = 0; reply < 16; reply++) {
-            if (next[reply]) continue;
-            const after = play(next, response, reply, opponent);
-            const value = hand.length === 1 && opponentHand.length === 1 ? score(after, player) * 100 : evaluate(after, player);
-            worst = Math.min(worst, value);
-          }
-        }
-        if (worst === Infinity) worst = evaluate(next, player);
-        const value = worst + evaluate(next, player) * .01;
-        choices.push({cardIndex, cell, value});
-      }
-    }
-    choices.sort((a,b)=>b.value-a.value);
-    return choices;
+    const opponent=player==='computer'?'player':'computer';
+    return legalMoves(board,hand,player).map(move=>{
+      const replies=legalMoves(move.board,opponentHand,opponent);
+      const worst=replies.length?Math.min(...replies.map(reply=>hand.length===1&&opponentHand.length===1?score(reply.board,player)*100:evaluate(reply.board,player))):evaluate(move.board,player);
+      return {cardIndex:move.cardIndex,cell:move.cell,options:move.options,value:worst+evaluate(move.board,player)*.01};
+    }).sort((a,b)=>b.value-a.value);
   }
   // Assessment only: preserve Bob's versioned move policy for saved replays.
   // Value exposed edges against the remaining hands, rather than a fixed stat.
@@ -97,18 +173,11 @@
     return value;
   }
   function tacticalMoves(board, hand, otherHand, player) {
-    const other = player === 'player' ? 'computer' : 'player';
-    const moves = [];
-    hand.forEach((card, cardIndex) => {
-      const remaining = hand.filter((_, index) => index !== cardIndex);
-      for (let cell = 0; cell < 16; cell++) {
-        if (board[cell]) continue;
-        const next = play(board, card, cell, player);
-        moves.push({cardIndex, cell, board:next, remaining,
-          value:positionValue(next, remaining, otherHand, player), other});
-      }
-    });
-    return moves.sort((a,b) => b.value-a.value);
+    const other=player==='player'?'computer':'player';
+    return legalMoves(board,hand,player).map(move=>{
+      const remaining=hand.filter((_,index)=>index!==move.cardIndex);
+      return {...move,remaining,value:positionValue(move.board,remaining,otherHand,player),other};
+    }).sort((a,b)=>b.value-a.value);
   }
   function assessMoves(board, hand, opponentHand, player = 'player') {
     const opponent = player === 'player' ? 'computer' : 'player';
@@ -129,11 +198,12 @@
         }
       }
       if (!replies.length) value = move.value;
-      return {cardIndex:move.cardIndex,cell:move.cell,value,line};
+      return {cardIndex:move.cardIndex,cell:move.cell,options:move.options,value,line};
     }).sort((a,b) => b.value-a.value);
   }
-  function moveAssessment(choices, cardIndex, cell) {
-    const selected = choices.find(move => move.cardIndex === cardIndex && move.cell === cell);
+  function sameOptions(a={},b={}) { return a.side===b.side && a.copyCell===b.copyCell; }
+  function moveAssessment(choices, cardIndex, cell, options={}) {
+    const selected = choices.find(move => move.cardIndex === cardIndex && move.cell === cell && sameOptions(move.options,options));
     if (!selected) throw new Error('Invalid placement');
     const regret = Math.max(0, choices[0].value - selected.value);
     const informative = choices[0].value - choices.at(-1).value > 25;
@@ -243,6 +313,6 @@
     return difference === 0 ? (random()<.5?'player':'computer') : difference>0?'player':'computer';
   }
   function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
-  const api = {isSpecial, validSpecials, cardPower, rankedDeck, ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
+  const api = {sameOptions, refreshAuras, placementOptions, effectivePower, canPlace, legalMoves, MIRROR_POWERS, isMirror, starterCard, budgetBonus, isSpecial, validSpecials, cardPower, rankedDeck, ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);

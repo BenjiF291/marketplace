@@ -83,7 +83,7 @@ Run `node --test` for the repository suite. Tactical regression cases cover defe
 
 Run `node brawl-balance.cjs 100` for realistic 0-10 side values and 100 games per
 scenario at Skill Level 535. With a synthetic inventory and the numeric decision
-policy modeling the player, the revised system produced:
+policy modeling the player, the pre-Mirror tuning produced:
 
 | Selected deck | Wins | Draws | Games within 3 cards |
 | --- | --- | --- | --- |
@@ -132,9 +132,50 @@ Powers are inferred from the linked card image (including existing `Low_` and
   This works on placement and when defending. Comparisons resolve before penalties;
   defeating multiple Low Pointers stacks their penalties.
 - Genius / Genious: wins tied comparisons on attack and defence. Two Geniuses tie.
-- Mirror: no power assigned yet. A reusable admin-assignable power catalogue is the
-  recommended next step once its powers are specified.
+- Mirror: choose one of the ten powers below in the admin Battle card editor.
 
 Online matches retain a separate played-card ledger so broken cards cannot return
 into the hand or be played twice, and matches still end after all deck cards are used.
 Deploy frontend and backend together for these combat changes.
+
+
+## Random starter and Mirror powers
+
+New games choose a real catalogue card at random within the nearest average-score
+band (closest distance plus max(1, 10% of the decks' average)). The fallback is the
+available deck cards if no catalogue is loaded. Its name and teeth are preserved;
+it is a neutral starter without special powers, even if its artwork tier is special.
+Online games use the actual selected decks' average rather than the maximum limit.
+
+The admin card viewer has a Mirror power selector for each Mirror card. Assignments
+are saved to the battle card. New-card creation also accepts a power. The optional
+family-name field is available on all cards; Family ties checks it and the card's
+name, case-insensitively. Existing ranked matches keep their snapshotted card data.
+
+| # | Power | Rules |
+| --- | --- | --- |
+| 1 | Family ties | +1 on every side for each orthogonally adjacent Liesker/Heeren, either owner. Recalculates as neighbors change; bonuses do not compound. |
+| 2 | Spoils of victory | After placement comparisons, copies the four sides of the defeated card with the highest total teeth. Ties use top/bottom/left/right comparison order. Does not copy its ability or printed score. |
+| 3 | Focused strike | Choose top/right/bottom/left. Keeps that side's teeth; other sides become 0. Attacks only the chosen side but can lose defending its other zero edges. Choice lasts while on board. |
+| 4 | Long reach | Placement comparisons are two cells away, without wrapping rows. Immediate neighbors neither attack nor defend against it on placement. It defends normally afterward. |
+| 5 | Extra allowance | Adds exactly 15 to the online six-card score budget, never 15 to the average. No extra slots; special limit remains one. Bob modes have no fixed deck-score budget to increase. |
+| 6 | Replacement | May use an empty cell or replace any occupied card, including the starter. Removed cards do not return to hands. Normal placement comparisons follow. |
+| 7 | Reversal | Reverses non-draw comparisons on attack and defence. Two Reversals cancel. Ties follow ordinary/Genius rules. |
+| 8 | Impatience | Once per player per match, place this card from hand after the opponent has spent 15 seconds on their turn. Their turn and clock continue. Bob uses it automatically against a slow player. |
+| 9 | Mimic | On placement, choose an existing board special's ability. Copies the ability, not teeth; copied ability persists even if source leaves. Can copy another Mimic only if it already copied a concrete ability. With no eligible source it behaves as an ordinary card. Deck-budget and hand-interrupt effects cannot apply retroactively after placement. |
+| 10 | Raw talent | No triggered ability. Its configured teeth and score define its strength. |
+
+The AI enumerates Focused strike and Mimic choices, as well as occupied Replacement
+spaces. Ranked replays include choices and validate them. Client data cannot enable
+interrupt timing or grant an extra deck budget.
+
+Ranked matches with Impatience in either hand use server-stored turn state and a
+server-checked 15-second boundary, accessed through the authenticated turn endpoint.
+They require a connection while playing and resume from server state. Other ranked
+matches retain local play and authoritative replay on settlement. Training uses the
+same turn state locally. Online PvP uses its existing transaction and clock system.
+
+Placement, captures, removals and stat/ability changes animate in both interfaces.
+Reduced-motion preference disables motion. Special badges and card tooltips identify
+powers. Deploy frontend and backend together; no new Firestore rules are needed for
+these fields, which are handled through the existing server-only battle collections.
