@@ -4,3 +4,4 @@ serviceAccountKey.json
 .env
 .env.local
 .DS_Store
+.ui-tools/

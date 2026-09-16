@@ -1,0 +1,16 @@
+﻿.auth-ui-toggle { position:fixed;top:20px;right:20px;z-index:3;border:1px solid #d4dbca;border-radius:8px;padding:10px 15px;background:#fbfcf6;color:#3d5b38;font:12px 'Segoe UI',sans-serif;cursor:pointer; }
+body.auth-studio { background:#eef1e5;color:#28422e;padding:80px 20px 30px; }
+.auth-studio:before { content:'footy.';position:fixed;top:25px;left:30px;font-size:28px;font-weight:850;letter-spacing:-1.5px;color:#245943; }
+.auth-studio .auth-container { max-width:440px;border:1px solid #d9e1cc;background:#fafcf5;border-radius:20px;box-shadow:0 18px 70px #3349230c;padding:42px;animation:none; }
+.auth-studio .auth-header h1 { color:#29482f;font-family:Georgia,serif;font-weight:400;font-size:31px;letter-spacing:-1px; }
+.auth-studio .auth-header p { color:#7a876b;font-size:12px;margin-top:10px; }
+.auth-studio .form-group label { color:#4d6640;font-size:12px; }
+.auth-studio .form-group input { border:1px solid #d5dfc8;border-radius:8px;background:#fff;color:#29482f;padding:13px;font-size:14px; }
+.auth-studio .form-group input:focus { border-color:#6b8c51;box-shadow:0 0 0 3px #6b8c5115; }
+.auth-studio .btn-submit { background:#245943;color:white;text-transform:none;letter-spacing:0;border-radius:8px;box-shadow:none;padding:13px;font-size:14px; }
+.auth-studio .btn-submit:hover { background:#193f2d;transform:none;box-shadow:none; }
+.auth-studio .auth-toggle { border-color:#dce5d0;font-size:12px;color:#7a8a6b; }
+.auth-studio .auth-toggle a { color:#315d3a; }
+.auth-studio .demo-users { border-color:#e0e7d7;color:#8b987b;background:#eff4e5;font-size:11px; }
+.auth-studio .demo-user { background:#f8fbf2;border-color:#94ad76;font-size:11px; }
+@media(max-width:480px) { .auth-studio .auth-container { padding:30px 24px; } .auth-studio .auth-header h1 { font-size:27px; } }

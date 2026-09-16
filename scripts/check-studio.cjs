@@ -1,0 +1,60 @@
+﻿const assert=require('node:assert/strict');const {chromium}=require(require.resolve('playwright',{paths:[require('node:path').resolve('.ui-tools')]}));const fs=require('fs');const path=require('path');const http=require('http');
+const root=path.resolve('public');
+const images=fs.readdirSync(path.join(root,'images')).filter(n=>/\.(png|jpe?g|webp)$/i.test(n)).slice(0,8);
+const cards=images.map((name,i)=>({id:`i${i}`,name:name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '),imageUrl:'/images/'+encodeURIComponent(name),price:75+i*50,sold:false,sellerId:'other',itemType:'card',quantity:2}));
+const items=[...cards.slice(0,6),{id:'pack',itemType:'pack',name:'Gold discovery pack',packColor:'#bca264',price:150,sellerId:'other',stock:3}];
+const user={id:'ui-preview',username:'Club captain',isAdmin:true,balance:2450};
+const battle=require('../public/practice-engine').trainingCards();
+const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
+const fixture=(url)=>{
+ if(url==='/users')return [user,{id:'other',username:'Alex',balance:400}];
+ if(url==='/items')return items;
+ if(url==='/inventory')return cards;
+ if(url==='/ascend-tier-config')return tiers;
+ if(url==='/battle-cards'||url==='/battle-inventory')return battle;
+ if(url==='/brawl/skill')return require('../brawl-skill').profile({ratingVersion:2,placementsCompleted:5,skillLevel:436});
+ if(url==='/trophies')return {trophies:250,peak:300,claimed:[25,75],path:require('../trophy-utils').PATH};
+ if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:[{id:'ruby-wheel',name:'Ruby Lucky Turn',gemKey:'bronze',gemName:'Ruby',price:15,description:'A little extra Footy from your daily spin.'},{id:'ruby-pack',name:'Ruby Unwrapper',gemKey:'bronze',gemName:'Ruby',price:20,description:'Earn extra Footy when opening a pack.'}],effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
+ if(url==='/gem-converter')return {recipes:[{tierId:'bronze',tierName:'Bronze',gemKey:'bronze',gemName:'Ruby',unlocked:true,sellPrice:25,cards:images,costs:{1:37.5,2:75,3:112.5},rewards:{1:3,2:7,3:12}}],gems:{bronze:18},level:1,nextUpgrade:null};
+ if(url==='/gem-workshop')return {theme:{},compressor:false,gems:{bronze:18},dyes:{bronze:5},tiers:[{gemKey:'bronze',gemName:'Ruby'}],areas:{buttons:'Buttons',navigation:'Navigation',background:'Background'}};
+ if(url.includes('history'))return {transfers:[],items:[]};
+ if(url==='/health')return {ok:true};return [];
+};
+(async()=>{
+ const server=http.createServer((req,res)=>{const target=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!target.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(target,(err,data)=>{if(err){res.writeHead(404).end();return;}res.setHeader('Content-Type',target.endsWith('.js')?'text/javascript':target.endsWith('.css')?'text/css':target.endsWith('.html')?'text/html':'image/png');res.end(data);});});await new Promise(r=>server.listen(4173,'127.0.0.1',r));
+ const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
+ const context=await browser.newContext({viewport:{width:1440,height:1050},serviceWorkers:'block'});
+ await context.addInitScript(()=>{localStorage.setItem('userId','ui-preview');localStorage.setItem('username','Club captain');localStorage.setItem('sessionToken','preview-only');});
+ await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
+ const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
+ await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
+ await page.screenshot({path:'.ui-tools/home-desktop.png',fullPage:true});
+ const routes=['marketplace','inventory','workshop','amulets','battle','wallet','spin','vip','sell','admin','battle-manager'];const report=[];
+ for(const r of routes){await page.evaluate(r=>footyStudio.navigate(r),r);await page.waitForTimeout(300);report.push({route:r,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),panels:await page.locator('.main-grid > section:visible').count()});if(['marketplace','battle','admin','workshop','amulets','inventory','spin','vip'].includes(r))await page.screenshot({path:'.ui-tools/'+r+'-desktop.png',fullPage:true});}
+ await page.evaluate(()=>footyStudio.navigate('workshop'));await page.locator('#uiVersionToggle').click();
+ const restored=await page.evaluate(()=>document.querySelector('#gemConverter').parentElement.id==='inventorySection'&&!document.body.classList.contains('studio-ui'));
+ await page.locator('#uiVersionToggle').click();await page.evaluate(()=>footyStudio.navigate('home'));
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);await page.screenshot({path:'.ui-tools/home-mobile.png',fullPage:true});
+ for(const r of ['marketplace','inventory','battle','admin','workshop','amulets','wallet','spin','vip','battle-manager']){await page.evaluate(r=>footyStudio.navigate(r),r);await page.waitForTimeout(200);report.push({mobile:r,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)});if(['battle','marketplace'].includes(r))await page.screenshot({path:'.ui-tools/'+r+'-mobile.png',fullPage:true});}
+ // Exercise controls, not only route rendering.
+ await page.setViewportSize({width:1440,height:1000});await page.waitForTimeout(250);
+ await page.evaluate(()=>footyStudio.navigate('marketplace'));await page.waitForTimeout(150);
+ await page.locator('#studioFilter-items').fill('nonexistent-card');assert.equal(await page.locator('#items > li:visible').count(),0);
+ await page.locator('#studioFilter-items').fill('');assert.ok(await page.locator('#items > li:visible').count()>0);
+ await page.keyboard.press('Control+k');await page.locator('#studioSearchInput').fill('gems');await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'workshop');
+ assert.equal(await page.locator('#studioSearch').isVisible(),false);
+ await page.evaluate(()=>footyStudio.navigate('battle'));await page.waitForTimeout(200);
+ assert.equal(await page.locator('#battleDeckPanel').isVisible(),false);
+ await page.locator('[data-ui-control="duel"]').click();assert.equal(await page.locator('#practiceBattle').isVisible(),false);assert.equal(await page.locator('#battleDeckPanel').isVisible(),true);
+ await page.locator('[data-ui-control="bob"]').click();await page.locator('#practiceMode').selectOption('training');await page.locator('#practiceStart').click();
+ assert.equal(await page.evaluate(()=>{const game=practiceGame;footyStudio.setMode(false);footyStudio.setMode(true);return game===practiceGame;}),true);
+ await page.evaluate(()=>toggleDyeMode());await page.locator('#studioNav [data-ui-nav="inventory"]').click();assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'inventory');await page.evaluate(()=>cancelDyeMode());
+ await page.locator('#uiVersionToggle').click();await page.reload();await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>footyStudio.enabled),false);
+ await page.locator('#uiVersionToggle').click();await page.reload();await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>footyStudio.enabled),true);
+ await page.evaluate(()=>{currentUserIsAdmin=false;dispatchEvent(new Event('footy-role-changed'));footyStudio.navigate('admin');});assert.equal(await page.evaluate(()=>document.body.dataset.studioPage),'home');assert.equal(await page.locator('[data-admin-nav]').isVisible(),false);
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);await page.locator('.studio-menu-button').click();assert.equal(await page.evaluate(()=>document.querySelector('#studioSidebar').inert),false);await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>document.querySelector('#studioSidebar').inert),true);
+ for(const width of [320,375,768]){await page.setViewportSize({width,height:844});await page.waitForTimeout(250);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`home overflow at ${width}`);}
+ assert.ok(restored);assert.deepEqual(errors,[]);assert.ok(report.every(r=>!r.overflow));
+ await page.goto('http://127.0.0.1:4173/login.html');await page.waitForTimeout(200);await page.screenshot({path:'.ui-tools/login-mobile.png',fullPage:true});assert.equal(await page.locator('.auth-container').isVisible(),true);
+ console.log(JSON.stringify({restored,errors,report,checks:'Search, route isolation, battle preservation, dye navigation, saved preference, admin visibility, mobile drawer and 320-1440px sizing passed.'},null,2));await browser.close();await new Promise(r=>server.close(r));
+})().catch(e=>{console.error(e);process.exit(1)});

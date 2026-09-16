@@ -1434,6 +1434,7 @@ async function loadUsers() {
     const user = users.find(u => u.id === currentUserId);
 
     currentUserIsAdmin = !!(user && user.isAdmin === true);
+    window.dispatchEvent(new Event('footy-role-changed'));
     const adminSection = document.getElementById('adminSection');
     if (adminSection) {
       adminSection.style.display = currentUserIsAdmin ? 'block' : 'none';

@@ -5,7 +5,7 @@ const dyeTargets = [
   ['#gemStatus, #amuletStatus, #gemWorkshopStatus, #spinResult', 'notices'],
   ['.amulet-empty', 'slots'], ['.gem-machine', 'machine'], ['.balance-display', 'balance'],
   ['.input-field', 'inputs'], ['.btn-primary', 'buttons'], ['.btn-success', 'success'],
-  ['.gem-converter', 'converter'], ['#amuletSection', 'amulets'], ['.tab-group', 'navigation'],
+  ['.gem-converter', 'converter'], ['#amuletSection', 'amulets'], ['.tab-group, .studio-sidebar', 'navigation'],
   ['.header', 'header'], ['.main-grid > section.card', 'panels']
 ];
 function dyeChanges() {
@@ -102,7 +102,7 @@ async function confirmDyeMode() {
   }
 }
 function findDyeTarget(target) {
-  if (target.closest('#dyeTray, #dyeHeaderControls, .tab-button, summary')) return null;
+  if (target.closest('#dyeTray, #dyeHeaderControls, [data-ui-nav], [data-ui-control], .tab-button, summary')) return null;
   if (target.closest('.battle-card-display, .item-image, .opening-pack, .pack-inventory-icon, .gem-icon, .battle-card, .battle-cell, .opened-card-image')) return null;
   for (const [selector, area] of dyeTargets) {
     const node = target.closest(selector);
@@ -118,7 +118,7 @@ function findDyeTarget(target) {
   return target === document.body || target.classList.contains('container') || target.classList.contains('main-grid') ? { node: document.body, area: 'background' } : null;
 }
 document.addEventListener('click', event => {
-  if (!dyeSession || event.target.closest('#dyeTray, #dyeHeaderControls, .tab-button, summary')) return;
+  if (!dyeSession || event.target.closest('#dyeTray, #dyeHeaderControls, [data-ui-nav], [data-ui-control], .tab-button, summary')) return;
   event.preventDefault(); event.stopImmediatePropagation();
   if (dyeSaving) return;
   const target = findDyeTarget(event.target);
