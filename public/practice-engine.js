@@ -145,11 +145,11 @@
   function chooseMove(board, hand, opponentHand, difficulty = 'hard', random = Math.random) {
     const choices = rankMoves(board, hand, opponentHand);
     if (!choices.length) return null;
-    if (typeof difficulty === 'number' || difficulty?.policy === 'adaptive-v2') {
+    if (typeof difficulty === 'number' || ['adaptive-v2','adaptive-v3'].includes(difficulty?.policy)) {
       const level = Math.max(0, Math.min(1000, typeof difficulty === 'number' ? difficulty : difficulty.skill));
       // Keep the numeric policy unchanged for saved matches. The versioned policy
       // gives Bob more fallible decisions while improving continuously with skill.
-      const gap = difficulty?.policy === 'adaptive-v2' ? 190 + 220 * (level / 1000) ** 3 : 0;
+      const gap = difficulty?.policy === 'adaptive-v3' ? 310 + 200 * (level / 1000) ** 3 : difficulty?.policy === 'adaptive-v2' ? 190 + 220 * (level / 1000) ** 3 : 0;
       const skill = (level - gap) / 1000;
       // Smooth mixture: stronger opponents increasingly choose the best move.
       if (random() < Math.max(0, .15 + .8 * skill)) return choices[0];
@@ -191,12 +191,58 @@
     }
     return {deck:best.map(card=>({...card})),target,average:average(best),playerAverage:average(player)};
   }
+  function isSpecial(card) {
+    return !!ability(card) || /\bmirror\b/i.test(String(card?.linkedCardImage || card?.tierName || card?.name || '').replace(/_/g,' '));
+  }
+  function validSpecials(cards) { return cards.filter(isSpecial).length <= 1; }
+  // Side strength and abilities matter independently of the printed deck score.
+  function cardPower(card) {
+    const sides=['top','right','bottom','left'].map(side=>Number(card[side])||0).sort((a,b)=>b-a);
+    return sides[0]*.35+sides[1]*.3+sides[2]*.2+sides[3]*.15+(isSpecial(card)?.65:0);
+  }
+  function rankedDeck(pool, inventory, player, random=Math.random) {
+    const key=card=>card.battleCardId||card.id;
+    const unique=cards=>[...new Map(cards.map(card=>[key(card),card])).values()];
+    const owned=unique([...inventory,...player]);
+    const ownedIds=new Set(owned.map(key));
+    const total=cards=>cards.reduce((sum,card)=>sum+cardPower(card),0);
+    const average=cards=>cards.reduce((sum,card)=>sum+Number(card.averageScore||0),0)/cards.length;
+    const playerPower=total(player);
+    const inventoryPower=total(owned)/owned.length*6;
+    const targetPower=Math.min(playerPower,playerPower*.85+inventoryPower*.15)*(.98+random()*.04);
+    const outside=unique(pool).filter(card=>!ownedIds.has(key(card)) && cardPower(card)<=Math.max(...player.map(cardPower))*1.05);
+    const wanted=outside.length ? 1+Math.floor(random()*Math.min(2,outside.length)) : 0;
+    let best=null,bestGap=Infinity;
+    // Prefer 4-5 familiar cards. Back off only when the catalogue cannot form a legal deck.
+    for(let external=wanted;external>=0;external--) {
+      for(let attempt=0;attempt<500;attempt++) {
+        const chosen=[];
+        for(const [source,count] of [[outside,external],[owned,6-external]]) {
+          const remaining=[...source];
+          for(let i=0;i<count;i++) {
+            const legal=remaining.filter(card=>!isSpecial(card)||!chosen.some(isSpecial));
+            if(!legal.length)break;
+            const card=legal[Math.floor(random()*legal.length)];chosen.push(card);remaining.splice(remaining.indexOf(card),1);
+          }
+        }
+        if(chosen.length!==6)continue;
+        const power=total(chosen);
+        // A near-identical printed score must never hide a much stronger set of sides.
+        if(power>playerPower*1.03+.1)continue;
+        const gap=Math.abs(power-targetPower)+Math.abs(average(chosen)-average(player))*.015;
+        if(gap<bestGap){best=chosen;bestGap=gap;}
+      }
+      if(best)break;
+    }
+    if(!best)best=[...player];
+    return {deck:best.map(card=>({...card})),target:average(best),average:average(best),playerAverage:average(player)};
+  }
   function startingPlayer(player, computer, random=Math.random) {
     const total = hand => hand.reduce((sum,card) => sum+Number(card.averageScore||0),0);
     const difference = total(player)-total(computer);
     return difference === 0 ? (random()<.5?'player':'computer') : difference>0?'player':'computer';
   }
   function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
-  const api = {ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
+  const api = {isSpecial, validSpecials, cardPower, rankedDeck, ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);

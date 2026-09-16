@@ -1,24 +1,26 @@
-// Reproducible varied-deck calibration; numeric policy models player decisions.
-// Usage: node brawl-balance.cjs 300
+// Synthetic calibration, not a promise of a human win rate. All sides use the real 0-10 range.
+// Usage: node brawl-balance.cjs 100
 const e=require('./public/practice-engine');
-const count=Number(process.argv[2]||300);
-if(!Number.isInteger(count)||count<1||count>10000)throw new Error('Choose 1 to 10000 games per skill level');
-for(const skill of [100,300,600,900]){
- let wins=0,close=0,totalMargin=0;
+const count=Number(process.argv[2]||100);
+if(!Number.isInteger(count)||count<1||count>10000)throw new Error('Choose 1 to 10000 games per scenario');
+const make=(id,n,i=0)=>({id,battleCardId:id,name:id,averageScore:20,top:n,right:Math.max(0,n-2),bottom:Math.min(10,n+1),left:Math.max(0,n-1)});
+const inventory=Array.from({length:12},(_,i)=>make(`owned-${i}`,3+Math.floor(i/3)));
+const pool=[...inventory,...Array.from({length:30},(_,i)=>make(`outside-${i}`,2+i%9))];
+for(const kind of ['weak','balanced','strong']){
+ const selected=kind==='weak'?inventory.slice(0,6):kind==='strong'?inventory.slice(6):inventory.filter((_,i)=>i%2===0);
+ const skill=535;let wins=0,draws=0,close=0,bobPower=0;
  for(let seed=1;seed<=count;seed++){
   let board=Array(16).fill(null);board[5]={top:5,right:5,bottom:5,left:5,ownerId:'starter'};
-  const player=e.trainingCards().map(c=>({...c,averageScore:50,top:c.top+45,right:c.right+45,bottom:c.bottom+45,left:c.left+45}));
-  const pool=Array.from({length:7},(_,i)=>e.trainingCards().map(c=>({...c,id:`pool-${i}-${c.id}`,battleCardId:`pool-${i}-${c.id}`,averageScore:47+i,top:c.top+42+i,right:c.right+42+i,bottom:c.bottom+42+i,left:c.left+42+i}))).flat();
-  const setupRandom=e.seeded(seed*18773);
-  const generated=e.computerDeck(pool,player,'hard',setupRandom,true);
-  const hands={player,computer:generated.deck};let side=e.startingPlayer(player,generated.deck,setupRandom),n=0;
+  const random=e.seeded(seed*18773),generated=e.rankedDeck(pool,inventory,selected,random);
+  bobPower+=generated.deck.reduce((n,c)=>n+e.cardPower(c),0);
+  const hands={player:[...selected],computer:generated.deck};let side=e.startingPlayer(hands.player,hands.computer,random),turn=0;
   while(hands.player.length||hands.computer.length){
-   const other=side==='player'?'computer':'player';const view=side==='player'?board.map(c=>c?{...c,ownerId:c.ownerId==='player'?'computer':c.ownerId==='computer'?'player':c.ownerId}:null):board;
-   const rng=e.seeded(seed*89239+n++*713);
-   const move=side==='player'?e.chooseMove(view,hands[side],hands[other],skill,rng):e.chooseMove(board,hands[side],hands[other],{policy:'adaptive-v2',skill},rng);
+   const other=side==='player'?'computer':'player';
+   const view=side==='player'?board.map(c=>c?{...c,ownerId:c.ownerId==='player'?'computer':c.ownerId==='computer'?'player':c.ownerId,breakAfterOpponentOf:c.breakAfterOpponentOf==='player'?'computer':c.breakAfterOpponentOf==='computer'?'player':c.breakAfterOpponentOf}:null):board;
+   const move=e.chooseMove(view,hands[side],hands[other],side==='player'?skill:{policy:'adaptive-v3',skill},e.seeded(seed*89239+turn++*713));
    board=e.play(board,hands[side][move.cardIndex],move.cell,side);hands[side].splice(move.cardIndex,1);side=hands[other].length?other:side;
   }
-  const score=e.score(board,'player');if(score>0)wins++;if(Math.abs(score)<=3)close++;totalMargin+=Math.abs(score);
+  const result=e.score(board,'player');if(result>0)wins++;if(result===0)draws++;if(Math.abs(result)<=3)close++;
  }
- console.log({skill,wins,count,close,meanMargin:totalMargin/count});
+ console.log({kind,skill,games:count,wins,draws,close,playerPower:selected.reduce((n,c)=>n+e.cardPower(c),0),bobPower:bobPower/count});
 }

@@ -544,7 +544,10 @@ function renderBattleInventory() {
       li.querySelector('button').onclick = () => {
         if (battleMatch && battleMatch.status === 'setup' && battleReady) return;
         if (selectedBattleCards.has(item.battleCardId)) selectedBattleCards.delete(item.battleCardId);
-        else if (selectedBattleCards.size < 6) selectedBattleCards.add(item.battleCardId);
+        else if (selectedBattleCards.size < 6) {
+          if(!PracticeEngine.validSpecials([...battleInventoryCache.filter(card=>selectedBattleCards.has(card.battleCardId)),item]))return alert('Only one special card is allowed per deck.');
+          selectedBattleCards.add(item.battleCardId);
+        }
         else return;
         updateBattleBudget();
         renderBattleInventory();
@@ -776,6 +779,7 @@ async function loadSavedBattleDeck() {
   await loadBattleInventory();
   const owned = new Set(battleInventoryCache.map(card => card.battleCardId));
   if (deck.cardIds.some(id => !owned.has(id))) return alert('This saved deck contains cards you no longer own.');
+  if(!PracticeEngine.validSpecials(battleInventoryCache.filter(card=>deck.cardIds.includes(card.battleCardId))))return alert('This saved deck has more than one special card. Choose a deck with at most one.');
   selectedBattleCards = new Set(deck.cardIds);
   const colorInput = document.getElementById('battlePlayerColor');
   const opponent = battleMatch?.participantIds.find(id => id !== currentUserId);

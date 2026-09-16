@@ -25,9 +25,10 @@ module.exports=(app,db,getOwned,authenticate)=>{
   const available=owned.length>=6?owned:engine.trainingCards();
   const player=body.cardIds.map(cardId=>available.find(card=>(card.battleCardId||card.id)===cardId));
   if(player.some(card=>!card))throw new Error('Selected cards are unavailable');
+  if(!engine.validSpecials(player))throw new Error('Only one special card is allowed per deck');
   const snapshot=await db.collection('battleCards').get();
   const pool=snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
-  const generated=engine.computerDeck(pool.length>=6?pool:engine.trainingCards(),player,'hard',Math.random,true);
+  const generated=engine.rankedDeck(pool,available,player);
   const board=Array(16).fill(null);board[5]={name:'Starter',top:5,right:5,bottom:5,left:5,averageScore:5,ownerId:'starter',color:'#8a8f98'};
   const initial={board,player,computer:generated.deck,turn:engine.startingPlayer(player,generated.deck)};
   const ref=db.collection('computerBattles').doc();const seed=crypto.randomInt(2147483647);
@@ -45,7 +46,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
       tx.update(previousRef,{status:'forfeit',finishedAt:new Date()});
     }
     const skillLevel=rating.skillLevel;
-    const difficulty={policy:'adaptive-v2',skill:skillLevel};
+    const difficulty={policy:'adaptive-v3',skill:skillLevel};
     tx.set(ref,{userId:id,initial,seed,difficulty,mode:'skill',assessmentVersion:2,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
     tx.set(profileRef,{...progress,...rating,activeComputerBattle:ref.id});
     tx.update(userRef,changes);

@@ -31,11 +31,30 @@ An abandoned post-placement ranked game costs 12 skill and 10 trophies when the 
 
 ## Decks and Bob
 
-Bob's target average varies by up to 4% of the player's average, capped at one rating point in either direction. The available catalog determines how closely it can match. **The deck with the higher total score always starts**; equal totals use a coin toss. The server determines this for ranked matches, ignoring any client-supplied starting-player choice. Saved matches retain their original starting order.
+**The deck with the higher printed total score always starts**; equal totals use a coin toss. The server determines this for ranked matches, ignoring any client-supplied starting-player choice. Saved matches retain their original starting order. New deck matching uses the side-strength rules below instead of matching only printed averages.
 
-Bob retains the versioned `adaptive-v2` policy and the 3-5 second thinking delay. For player skill fraction `r`, his decision handicap is `190 + 220*r^3`, and decision parameter `s = r - handicap/1000`. He takes the best scored move with probability `max(0, 0.15 + 0.8s)`; otherwise moves are sampled with weights `exp((value-bestValue)/(15+260*(1-s)^2))`. His move selection still uses the original one-reply search; the deeper assessment is used to review player decisions. These separate roles preserve existing saved replays and the previously tuned difficulty curve.
+New matches use `adaptive-v3` with the same 3-5 second delay. At skill fraction
+`r`, Bob's decision handicap is `310 + 200*r^3` (previously `190 + 220*r^3`).
+The best-move probability and weighted sampling formula are unchanged. Old saved
+matches keep their stored numeric or `adaptive-v2` policy for deterministic replay.
 
-New matches store `assessmentVersion: 2`; older in-progress matches retain their old assessment and AI policy. There are no forced winners, adjusted card stats, or score manipulation.
+Bob's deck now prefers 4-5 cards from the player's complete available battle
+inventory and 1-2 unowned catalogue cards. If there are no safe, legal outsiders,
+it falls back to more owned cards. It never invents cards or changes their stats.
+Matching uses actual sides: descending sides weighted 35/30/20/15%, plus 0.65 for
+a special. Bob's target total power is `min(playerPower, .85*playerPower +
+.15*inventoryPower) * random(.98, 1.02)`. Inventory power means the average card
+power times six. This gives good deck selection an advantage without giving weak
+decks an unrestricted catalogue opponent. Total power is capped at
+`playerPower*1.03 + .1`; outsiders are individually capped at 1.05 times the
+strongest selected card's estimated power. This is a heuristic, not a complete
+measure of directional synergy or abilities.
+
+All decks allow at most one special card, including Mirror. Ranked start, online
+setup, Ready, and saved-deck creation enforce the rule on the server; Training and
+pickers enforce it locally. Bob obeys the same limit. Existing saved decks with
+multiple specials must be edited before use. Higher printed total score still
+starts; equal totals use a coin toss. Skill ratings and boosters are unchanged.
 
 ## Current-level boosters
 
@@ -62,7 +81,21 @@ The browser saves ongoing matches for offline continuation. A connection is need
 
 Run `node --test` for the repository suite. Tactical regression cases cover defence beating immediate capture and retaining a card for a winning recapture. Placement tests cover five-game assignment, migration, forfeits, repeat requests, bounds, and automatic starting order. UI tests cover starting Bob's turn and placement result formatting.
 
-Run `node brawl-balance.cjs 100` to reproduce the latest simulation: 100 games each at levels 100/300/600/900, with varied decks around average 50 and the stronger deck starting. Player wins were 75/84/81/74: **314 of 400 (78.5%)** overall. **282 of 400 (70.5%)** finished within three board cards; the mean absolute margin was 3.04 cards. The numeric decision policy models the player. Approximately 75% remains the target, not a promised human win rate; decks, placement estimates, and player decisions affect the outcome.
+Run `node brawl-balance.cjs 100` for realistic 0-10 side values and 100 games per
+scenario at Skill Level 535. With a synthetic inventory and the numeric decision
+policy modeling the player, the revised system produced:
+
+| Selected deck | Wins | Draws | Games within 3 cards |
+| --- | --- | --- | --- |
+| Weak | 67/100 | 16/100 | 67/100 |
+| Balanced | 66/100 | 5/100 | 79/100 |
+| Strong | 81/100 | 0/100 | 60/100 |
+
+The earlier calibration used invalid side values above 10 and is superseded.
+These are synthetic checks, not measured human win rates or guarantees. Real
+results depend on card distributions, abilities, play quality and rating accuracy.
+The target remains roughly 60% or better for weaker decks and higher for good
+selections, with meaningful chances for Bob to win.
 
 ## Normal deployment workflow
 

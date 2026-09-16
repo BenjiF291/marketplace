@@ -450,6 +450,7 @@ app.post('/battle-decks', async (req, res) => {
     const ownedCards = await getBattleCardsForUser(requesterId);
     const ownedById = new Map(ownedCards.map(card => [card.id, card]));
     if (cardIds.some(id => !ownedById.has(id))) return res.status(400).send('One or more selected cards are not in your inventory');
+    if (!battleEngine.validSpecials(cardIds.map(id => ownedById.get(id)))) return res.status(400).send('Only one special card is allowed per deck');
     const deckRef = await db.collection('battleDecks').add({
       userId: requesterId,
       name: name.trim(),
@@ -670,6 +671,7 @@ app.post('/battle-matches/:matchId/deck', async (req, res) => {
       const ownedCards = await getBattleCardsForUser(requesterId);
       const ownedById = new Map(ownedCards.map(card => [card.id, card]));
       if (cardIds.some(id => !ownedById.has(id))) throw new Error('One or more selected cards are not in your inventory');
+      if (!battleEngine.validSpecials(cardIds.map(id => ownedById.get(id)))) throw new Error('Only one special card is allowed per deck');
       const total = cardIds.reduce((sum, id) => sum + ownedById.get(id).averageScore, 0);
       if (cardIds.length === 6 && total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
       const decks = { ...match.decks, [requesterId]: cardIds };
@@ -682,7 +684,7 @@ app.post('/battle-matches/:matchId/deck', async (req, res) => {
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    if (['Match not found', 'Deck setup is closed', 'One or more selected cards are not in your inventory', 'This deck is above the match average limit', 'Choose a valid player color', 'Choose a color different from the other player'].includes(error.message)) return res.status(400).send(error.message);
+    if (['Only one special card is allowed per deck', 'Match not found', 'Deck setup is closed', 'One or more selected cards are not in your inventory', 'This deck is above the match average limit', 'Choose a valid player color', 'Choose a color different from the other player'].includes(error.message)) return res.status(400).send(error.message);
     console.error('Save battle deck error:', error);
     res.status(500).send('Could not save deck');
   }
@@ -705,6 +707,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
       }
       if (deck.length !== 6) throw new Error('Choose exactly six cards before Ready');
       const cards = await getBattleCardsForUser(requesterId);
+      if (!battleEngine.validSpecials(cards.filter(card => deck.includes(card.id)))) throw new Error('Only one special card is allowed per deck');
       const scoreById = new Map(cards.map(card => [card.id, card.averageScore]));
       const total = deck.reduce((sum, id) => sum + (scoreById.get(id) ?? Infinity), 0);
       if (total > match.averageLimit * 6) throw new Error('This deck is above the match average limit');
@@ -751,7 +754,7 @@ app.post('/battle-matches/:matchId/ready', async (req, res) => {
     });
     res.json(battleMatchView(req.params.matchId, result));
   } catch (error) {
-    if (['Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit', 'You cannot cover the agreed prize'].includes(error.message)) return res.status(400).send(error.message);
+    if (['Only one special card is allowed per deck', 'Match not found', 'Match setup is closed', 'Choose exactly six cards before Ready', 'This deck is above the match average limit', 'You cannot cover the agreed prize'].includes(error.message)) return res.status(400).send(error.message);
     console.error('Ready battle match error:', error);
     res.status(500).send('Could not ready the match');
   }

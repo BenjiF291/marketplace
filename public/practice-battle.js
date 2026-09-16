@@ -26,8 +26,8 @@ function loadPracticeSetup() {
   practiceCards = cards.length >= 6 ? cards : practiceStarterCards();
   const valid = new Set(practiceCards.map(card => card.battleCardId));
   practiceSelection = new Set([...practiceSelection].filter(id => valid.has(id)));
-  if (!practiceSelection.size) practiceSelection = new Set(practiceCards.slice(0,6).map(card=>card.battleCardId));
-  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards. Bob gets a randomized deck matched to your strength. Ranked Brawl adapts to your Skill Level.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
+  if (!practiceSelection.size) { const initial=[];for(const card of practiceCards)if(initial.length<6&&PracticeEngine.validSpecials([...initial,card]))initial.push(card);practiceSelection=new Set(initial.map(card=>card.battleCardId)); }
+  document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards, at most one special. Bob uses mostly your inventory plus up to two outside cards, matched by side strength. Ranked Brawl adapts to your Skill Level.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
   renderPracticePicker();
 }
 function safePracticeMarkup(card) {
@@ -41,7 +41,7 @@ function renderPracticePicker() {
     button.classList.toggle('is-active', practiceSelection.has(card.battleCardId));
     button.setAttribute('aria-pressed', String(practiceSelection.has(card.battleCardId)));
     button.innerHTML = safePracticeMarkup(card);
-    button.onclick = () => { if(practiceSelection.has(card.battleCardId))practiceSelection.delete(card.battleCardId); else if(practiceSelection.size<6)practiceSelection.add(card.battleCardId);renderPracticePicker(); };
+    button.onclick = () => { if(practiceSelection.has(card.battleCardId))practiceSelection.delete(card.battleCardId); else if(practiceSelection.size<6){if(!PracticeEngine.validSpecials([...practiceCards.filter(c=>practiceSelection.has(c.battleCardId)),card])){document.getElementById('practiceNote').textContent='Only one special card is allowed per deck.';return;}practiceSelection.add(card.battleCardId);}renderPracticePicker(); };
     list.appendChild(button);
   }
   document.getElementById('practiceStart').disabled = practiceSelection.size !== 6;
@@ -49,6 +49,7 @@ function renderPracticePicker() {
 }
 async function startPracticeBattle() {
   if (practiceSelection.size !== 6) return;
+  if(!PracticeEngine.validSpecials(practiceCards.filter(card=>practiceSelection.has(card.battleCardId)))){document.getElementById('practiceNote').textContent='Only one special card is allowed per deck.';return;}
   const button=document.getElementById('practiceStart');button.disabled=true;
   let difficulty=document.getElementById('practiceDifficulty').value;
   try {
@@ -59,7 +60,7 @@ async function startPracticeBattle() {
       generated=session;
     } else {
       const deck=practiceCards.filter(card=>practiceSelection.has(card.battleCardId)).map(card=>({...card}));
-      generated=PracticeEngine.computerDeck(practicePool.length>=6?practicePool:practiceCards,deck,difficulty);
+      generated=PracticeEngine.rankedDeck(practicePool,practiceCards,deck);
       const board=Array(16).fill(null);board[5]={name:'Starter',top:5,right:5,bottom:5,left:5,averageScore:5,ownerId:'starter',color:'#8a8f98'};
       initial={board,player:deck,computer:generated.deck,turn:PracticeEngine.startingPlayer(deck,generated.deck)};
     }
