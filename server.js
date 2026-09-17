@@ -643,7 +643,9 @@ app.get('/battle-matches/:matchId', async (req, res) => {
   try {
     const matchDoc = await db.collection('battleMatches').doc(req.params.matchId).get();
     if (!matchDoc.exists || !matchDoc.data().participantIds.includes(requesterId)) return res.status(404).send('Match not found');
-    res.json(battleMatchView(matchDoc.id, await battleTimeouts.expire(matchDoc.id) || matchDoc.data()));
+    const match = matchDoc.data();
+    const expired = require('./battle-timeout').timeoutResult(match);
+    res.json(battleMatchView(matchDoc.id, expired ? await battleTimeouts.expire(matchDoc.id) || match : match));
   } catch (error) {
     console.error('Load battle match error:', error);
     res.status(500).send('Could not load match');
@@ -1019,10 +1021,16 @@ app.post('/login', async (req, res) => {
 app.get('/users', async (req, res) => {
   try {
     const usersRef = db.collection('users');
-    const snapshot = await usersRef.get();
+    const userId = req.query.userId;
+    if (userId !== undefined && (typeof userId !== 'string' || !userId || userId.includes('/'))) {
+      return res.status(400).send('Invalid userId');
+    }
+    // Self/account refreshes need one document; player pickers still need the directory.
+    const snapshot = userId ? await usersRef.doc(userId).get() : await usersRef.get();
+    const docs = userId ? (snapshot.exists ? [snapshot] : []) : snapshot.docs;
 
     const users = [];
-    snapshot.forEach(doc => {
+    docs.forEach(doc => {
       const data = doc.data();
       users.push({
         id: doc.id,
@@ -1212,16 +1220,19 @@ app.post('/transfer', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     const itemsRef = db.collection('items');
-    const [snapshot, usersSnapshot] = await Promise.all([
+    const viewerId = req.header('X-User-Id');
+    const [snapshot, usersSnapshot, viewerDoc] = await Promise.all([
       itemsRef.get(),
-      db.collection('users').get()
+      db.collection('users').where('isAdmin', '==', true).get(),
+      typeof viewerId === 'string' && viewerId && !viewerId.includes('/')
+        ? db.collection('users').doc(viewerId).get() : Promise.resolve(null)
     ]);
     const hostIds = new Set();
     usersSnapshot.forEach(doc => {
       if (doc.data().isAdmin === true) hostIds.add(doc.id);
     });
 
-    const viewer=usersSnapshot.docs.find(doc=>doc.id===req.header('X-User-Id'))?.data()||{};
+    const viewer=viewerDoc?.data()||{};
     const vipExpiry=viewer.vipUntil?.toDate ? viewer.vipUntil.toDate() : new Date(viewer.vipUntil||0);
     const viewerHasVip=vipExpiry.getTime()>Date.now();
     const now = Date.now();

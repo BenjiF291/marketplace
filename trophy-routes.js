@@ -66,7 +66,9 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const ref=db.collection('computerBattles').doc(body.id),doc=await tx.get(ref);
     if(!doc.exists||doc.data().userId!==id||doc.data().status!=='active'||!doc.data().live)throw new Error('Timed battle unavailable');
     const live=liveTurns.advance(doc.data().live,body.action||{},Date.now());
-    tx.update(ref,{live});return {live};
+    // Polling without a move must not rewrite the entire battle.
+    if(live.events.length!==doc.data().live.events.length)tx.update(ref,{live});
+    return {live};
   });
  });
  route('post','/computer-battles/finish',async(id,body)=>{

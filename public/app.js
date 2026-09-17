@@ -1148,7 +1148,7 @@ async function loadSpinInfo() {
   resultEl.textContent = '';
 
   try {
-    const res = await fetch(`${API_URL}/users`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
     if (!res.ok) throw new Error('Failed to retrieve user info');
 
     const users = await res.json();
@@ -1291,7 +1291,7 @@ async function loadVipInfo() {
   countdownEl.textContent = '';
 
   try {
-    const res = await fetch(`${API_URL}/users`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
     if (!res.ok) throw new Error('Failed to retrieve user info');
     const users = await res.json();
     const user = users.find(u => u.id === currentUserId);
@@ -1471,6 +1471,7 @@ async function loadUsers() {
     if (!res.ok) throw new Error('Server offline');
     const users = await res.json();
     const user = users.find(u => u.id === currentUserId);
+    if (user) document.getElementById('balance').textContent = `Balance: ${user.balance} Footy`;
 
     currentUserIsAdmin = !!(user && user.isAdmin === true);
     window.dispatchEvent(new Event('footy-role-changed'));
@@ -1509,7 +1510,6 @@ async function loadUsers() {
     console.error('Error loading user role:', error);
   }
 
-  updateBalance();
 }
 
 /* ------------------ BALANCE ------------------ */
@@ -1517,7 +1517,7 @@ async function updateBalance() {
   if (!isServerOnline) return;
   
   try {
-    const res = await fetch(`${API_URL}/users`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
     if (!res.ok) throw new Error('Server offline');
     const users = await res.json();
 
@@ -1629,7 +1629,7 @@ async function viewAdminAccount() {
   inventoryList.textContent = 'Loading inventory...';
 
   try {
-    const usersResponse = await fetch(`${API_URL}/users`);
+    const usersResponse = await fetch(`${API_URL}/users?userId=${encodeURIComponent(selectedUserId)}`);
     if (!usersResponse.ok) throw new Error('Could not load account');
     const users = await usersResponse.json();
     const account = users.find(user => user.id === selectedUserId);

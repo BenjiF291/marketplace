@@ -1,13 +1,13 @@
 ﻿const test=require('node:test');const assert=require('node:assert/strict');
 function harness(seed,owned=[]){
- const records=structuredClone(seed),handlers={};let serial=0;
+ const records=structuredClone(seed),handlers={};let serial=0,writeCount=0;
  const snap=key=>({exists:!!records[key],data:()=>structuredClone(records[key]),id:key.split('/').pop()});
  const ref=key=>({key,id:key.split('/').pop(),get:async()=>snap(key)});
  const db={collection:name=>({doc:id=>ref(`${name}/${id||`new${serial++}`}`),get:async()=>({docs:Object.keys(records).filter(key=>key.startsWith(name+'/')).map(snap)})}),
- runTransaction:async fn=>{const writes=[];const result=await fn({get:async ref=>{assert.equal(writes.length,0);return snap(ref.key);},update:(ref,value)=>writes.push(()=>records[ref.key]={...records[ref.key],...value}),set:(ref,value)=>writes.push(()=>records[ref.key]=value)});writes.forEach(fn=>fn());return result;}};
+ runTransaction:async fn=>{const writes=[];const result=await fn({get:async ref=>{assert.equal(writes.length,0);return snap(ref.key);},update:(ref,value)=>writes.push(()=>records[ref.key]={...records[ref.key],...value}),set:(ref,value)=>writes.push(()=>records[ref.key]=value)});writes.forEach(fn=>{writeCount++;fn();});return result;}};
  const app={get:(url,fn)=>handlers[url]=fn,post:(url,fn)=>handlers[url]=fn};
  require('./trophy-routes')(app,db,async()=>owned,async req=>req.header('X-User-Id'));
- return {records,invoke:async(url,body)=>{let status=200,payload;await handlers[url]({header:()=> 'u',body},{status(code){status=code;return this;},send(value){payload=value;},json(value){payload=value;}});return {status,payload};}};
+ return {records,get writeCount(){return writeCount;},invoke:async(url,body)=>{let status=200,payload;await handlers[url]({header:()=> 'u',body},{status(code){status=code;return this;},send(value){payload=value;},json(value){payload=value;}});return {status,payload};}};
 }
 test('milestone can only be claimed once and uses peak trophies',async()=>{
  const h=harness({'users/u':{trophies:0,trophyPeak:75,balance:10,gems:{bronze:2}}});
@@ -184,4 +184,16 @@ test('expanded road grants exclusive amulets, dyes, and real openable packs exac
  const packs=Object.entries(h.records).filter(([key])=>key.startsWith('items/'));assert.equal(packs.length,1);assert.equal(packs[0][1].buyerId,'u');assert.equal(packs[0][1].sold,true);
  assert.equal((await h.invoke('/trophies/claim',{at:200})).status,400);assert.equal(Object.keys(h.records).filter(key=>key.startsWith('items/')).length,1);
  assert.ok(h.records['users/u'].trophyClaims.includes(75));
+});
+
+
+test('timed battle polling only writes when a move happens',async()=>{
+ const turns=require('./public/brawl-turns');
+ const initial={board:Array(16).fill(null),player:engine.trainingCards(),computer:engine.trainingCards(),turn:'player'};
+ const live=turns.create(initial,'easy',1,Date.now());
+ const h=harness({'computerBattles/m':{userId:'u',status:'active',live}});
+ for(let i=0;i<5;i++)assert.equal((await h.invoke('/computer-battles/turn',{id:'m'})).status,200);
+ assert.equal(h.writeCount,0);
+ const result=await h.invoke('/computer-battles/turn',{id:'m',action:{type:'place',revision:0,cardIndex:0,cell:0}});
+ assert.equal(result.status,200);assert.equal(result.payload.live.events.length,1);assert.equal(h.writeCount,1);
 });
