@@ -229,7 +229,7 @@
       <h3>Your equipped amulets</h3><div id="amuletSlots" class="amulet-grid"></div>
       <button id="unlockAmuletSlot" class="btn btn-primary" onclick="amuletAction('unlock', {expectedCount: amuletState.slotCount})">Unlock slot</button>
       <h3>Your amulet inventory</h3><div id="amuletOwned" class="amulet-grid"></div>
-      <h3>Amulet shop</h3><label for="amuletTier">Pay with</label><select id="amuletTier" class="input-field" onchange="renderAmulets()"></select>
+      <h3>Amulet shop</h3><label for="amuletTier">Gem tier or trophy exclusives</label><select id="amuletTier" class="input-field" onchange="renderAmulets()"></select>
       <p id="amuletWallet"></p><div id="amuletShop" class="amulet-grid"></div>
       <p id="amuletStatus" role="status"></p>
     </section>
@@ -272,7 +272,7 @@
           <button id="brawlSyncResult" class="btn" onclick="finishPracticeTrophies()">Sync Brawl result</button>
         </div>
       </details>
-      <details class="gem-converter" ontoggle="if(this.open) loadTrophyPath()"><summary>Trophy path</summary><p id="trophyTotal"></p><p>Rewards unlock at your highest trophy total and can be claimed once. Draws award no trophies.</p><div id="trophyPath" class="amulet-grid"></div></details>
+      <details class="gem-converter" ontoggle="if(this.open) loadTrophyPath()"><summary>Trophy road</summary><p id="trophyTotal"></p><p>Rewards unlock at your highest trophy total and can be claimed once. Draws award no trophies.</p><div id="trophyPath" class="amulet-grid"></div></details>
       <div id="battleMatchLobby" class="battle-match-lobby">
         <label class="input-label" for="battleAverageLimit">Maximum average card score</label>
         <input id="battleAverageLimit" class="input-field" type="number" min="1" max="99" step="1" placeholder="1 to 99">
@@ -400,6 +400,7 @@
         <summary>💎 Gem Converter</summary>
         <p>Choose a gem, then load up to 3 cards of its tier. Cards are consumed when you start the machine.</p>
         <p>1 card → 3 gems · 2 cards → 7 gems · 3 cards → 12 gems</p>
+        <p>VIP: 20% chance of one extra gem per conversion. Full-batch amulets add their bonus when using three cards.</p>
         <p>Startup cost: tier sell price × 1.5 per card.</p>
         <h3 class="gem-wallet-title">Your gem collection</h3>
         <div id="gemBalances" aria-label="Your gems"></div>
@@ -428,7 +429,7 @@
         <label for="compressQuantity">Gems to produce</label><input id="compressQuantity" type="number" min="1" step="1" value="1" oninput="updateCompressionQuote()">
         <button class="btn" onclick="maxCompression()">Use maximum</button><p id="compressionQuote"></p>
         <button id="compressGems" class="btn btn-primary" onclick="workshopAction('compress', {gemKey: document.getElementById('compressGem').value, quantity: Number(document.getElementById('compressQuantity').value)})" disabled>Compress gems</button>
-        <h3>Gem dyes</h3><p>Craft 5 dyes from 1 gem. Each changed area uses 1 dye on confirmation. Applied colors stay until changed. Resetting is free. Cards, battle cards and pack artwork keep their original colors.</p>
+        <h3>Gem dyes</h3><p>Craft 5 dyes from 1 gem, plus any equipped Prism Brush or Chromatic Compass bonus. Each changed area uses 1 dye on confirmation. Applied colors stay until changed. Resetting is free. Cards, battle cards and pack artwork keep their original colors.</p>
         <div id="gemDyePalette" class="gem-dye-palette"></div>
         <p>Use the Dye button beside Logout to preview colors anywhere on the site. Each changed area costs one dye when you confirm.</p>
         <p id="gemWorkshopStatus" role="status"></p>
@@ -463,7 +464,7 @@
     <!-- Spin Wheel Section -->
     <section id="spinSection" class="card spin-section" style="display: none;">
       <h2>🎯 Spin the Wheel</h2>
-      <p id="spinStatus" class="spin-status">Spin once every 23 hours for a random coin reward.</p>
+      <p id="spinStatus" class="spin-status">Spin once every 7 hours for a random coin reward.</p>
       <div class="wheel-area">
         <div class="wheel-container">
           <div id="spinWheel" class="wheel">
@@ -486,7 +487,7 @@
     <!-- VIP Section -->
     <section id="vipSection" class="card vip-section" style="display: none;">
       <h2>💎 VIP Membership</h2>
-      <p>Enjoy 30 days of double daily spin rewards and VIP prices on marketplace listings marked with a VIP discount.</p>
+      <p>Enjoy 30 days of double wheel rewards (every 7 hours), VIP prices on marked marketplace listings, and a 20% chance of one extra gem per converter use.</p>
       <div style="margin: 12px 0;">
         <strong>Price:</strong> <span id="vipPrice">300</span> Footy
         <p id="vipAmuletNote"></p>

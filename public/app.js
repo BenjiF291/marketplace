@@ -1166,7 +1166,7 @@ async function loadSpinInfo() {
 
     if (user.lastSpin) {
       const lastSpinDate = parseTimestamp(user.lastSpin);
-      const nextSpin = new Date(lastSpinDate.getTime() + 23 * 60 * 60 * 1000);
+      const nextSpin = new Date(lastSpinDate.getTime() + 7 * 60 * 60 * 1000);
       const now = new Date();
 
       if (nextSpin > now) {
@@ -1205,7 +1205,7 @@ async function loadSpinInfo() {
   const vipNoteEl = document.getElementById('spinVipNote');
   if (vipNoteEl) {
     if (vipUntil && vipUntil.getTime() > new Date().getTime()) {
-      vipNoteEl.textContent = `VIP active — daily reward doubled until ${vipUntil.toLocaleString()}`;
+      vipNoteEl.textContent = `VIP active — wheel reward doubled until ${vipUntil.toLocaleString()}`;
     } else {
       vipNoteEl.textContent = '';
     }
@@ -2189,7 +2189,7 @@ function showPackOpeningAnimation(result) {
   name.className = 'opened-card-name';
   card.src = result.imageUrl;
   card.alt = result.cardId;
-  name.textContent = `${result.packBonus ? `+${result.packBonus} Footy / ` : ''}${result.cardId} — click to continue`;
+  name.textContent = `${result.packBonus ? `+${result.packBonus} Footy / ` : ''}${result.rubyBonus ? `+${result.rubyBonus} Ruby / ` : ""}${result.cardId} — click to continue`;
   pack.style.setProperty('--pack-color', result.packColor || '#667eea');
 
   requestAnimationFrame(() => {
@@ -3169,7 +3169,7 @@ function renderGemCards() {
   if (!eligible.length) container.textContent = 'No available cards for this gem.';
   const count = gemSelection.size;
   const cost = count && recipe?.costs ? recipe.costs[count - 1] : 0;
-  document.getElementById('gemQuote').textContent = `${count}/3 cards loaded / ${[0, 3, 7, 12][count]} gems / ${cost} Footy (balance: ${gemConverterData?.balance || 0})`;
+  document.getElementById('gemQuote').textContent = `${count}/3 cards loaded / ${count ? (recipe?.rewards?.[count-1] ?? [0,3,7,12][count]) : 0} gems / ${cost} Footy (balance: ${gemConverterData?.balance || 0})`;
   document.getElementById('gemStart').disabled = gemBusy || gemLoading || !count || !recipe?.unlocked || !recipe?.costs || cost > gemConverterData.balance;
   document.getElementById('gemStart').textContent = gemBusy ? 'Working...' : `Start converter - ${cost} Footy`;
   document.getElementById('gemRecipe').disabled = gemBusy || gemLoading;
@@ -3219,7 +3219,7 @@ async function startGemConverter() {
     machine.classList.add('is-complete');
     document.getElementById('gemMachineLabel').textContent = `+${result.reward} ${result.gemName}!`;
     await new Promise(resolve => setTimeout(resolve, 900));
-    message = `Created ${result.reward} ${result.gemName} gems for ${result.cost} Footy. ${itemIds.length} cards consumed.`;
+    message = `Created ${result.reward} ${result.gemName} gems for ${result.cost} Footy. ${itemIds.length} cards consumed.${result.vipBonus ? " VIP bonus: +1 gem!" : ""}${result.amuletBonus ? ` Amulet bonus: +${result.amuletBonus} gems!` : ""}`;
   } catch (error) {
     message = error.message || 'Conversion could not be confirmed. Refresh your inventory before trying again.';
   } finally {

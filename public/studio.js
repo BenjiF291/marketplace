@@ -31,7 +31,7 @@
   const routes = {
     home:{title:'Your club, your way.',label:'Overview',group:'Your club',icon:'home',description:'A little competition. A growing collection. What will you do today?'},
     battle:{title:'The arena',label:'Brawl & battles',group:'Play',icon:'play',legacy:'battle',description:'Take on Bob, climb your Skill Level, or challenge another player.'},
-    spin:{title:'A daily little bonus.',label:'Daily spin',group:'Play',icon:'sun',legacy:'spin',description:'Give the wheel a spin and put a little more Footy in your pocket.'},
+    spin:{title:'A little bonus, every 7 hours.',label:'Spin the wheel',group:'Play',icon:'sun',legacy:'spin',description:'Give the wheel a spin and put a little more Footy in your pocket.'},
     inventory:{title:'Your collection',label:'Cards & packs',group:'Collect',icon:'cards',legacy:'inventory',description:'Every card has a place. Browse, open packs, sell, or ascend your favourites.'},
     workshop:{title:'The gem workshop',label:'Gems & crafting',group:'Collect',icon:'gem',legacy:'inventory',description:'Turn cards into gems, compress your collection, and craft a new look.'},
     amulets:{title:'A little extra power.',label:'Amulets',group:'Collect',icon:'amulet',legacy:'amulets',description:'Find your combination. Equip amulets, explore powers, and unlock more slots.'},
@@ -77,7 +77,7 @@
     <div class="studio-launch-grid">${[
       ['inventory','Your collection','Cards, packs, and your next ascension.','View collection'],
       ['marketplace','The marketplace','Find a new favourite. Or list one of yours.','Browse the market'],
-      ['spin','Your daily spin','A moment of luck. A little extra Footy.','Visit the wheel'],
+      ['spin','Your next spin','A moment of luck. A little extra Footy.','Visit the wheel'],
       ['workshop','Make something new','Convert gems, craft dyes, and make it yours.','Open workshop']
     ].map(([r,t,d,a],i)=>`<button class="studio-launch studio-launch-${i}" data-ui-nav="${r}"><span class="studio-launch-icon">${icon(routes[r].icon)}</span><h3>${t}</h3><p>${d}</p><span class="studio-launch-link">${a} ${icon('arrow')}</span></button>`).join('')}</div>
     <div class="studio-bottom-note"><span class="studio-note-icon">${icon('amulet')}</span><div><h3>Small charms. Big possibilities.</h3><p>Explore amulets and find the powers that fit your play style.</p></div><button class="btn" data-ui-nav="amulets">Explore amulets ${icon('arrow')}</button></div>`;

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const { effects, discounted, round } = require('./amulet-utils');
-function harness(seed) {
+function harness(seed, randomInt) {
   let records = structuredClone(seed);
   const handlers = {};
   const app = { get: (url, fn) => handlers[url] = fn, post: (url, fn) => handlers[url] = fn };
@@ -33,7 +33,7 @@ function harness(seed) {
   for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
-    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, crypto: require('node:crypto'), ...require('./gem-utils') });
+    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
   }
   const invoke = async (url, body, user = 'buyer', action) => {
     let status = 200, payload;
@@ -166,4 +166,26 @@ test('VIP discounts are opt-in and admin-only; stale displayed prices cannot cha
   const h=harness(data),result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer'});assert.equal(result.payload.purchasePrice,7);
  }
  const h=harness(seed('footy'));const result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer',expectedPrice:5});assert.equal(result.status,400);assert.equal(h.data()['items/card'].sold,false);assert.equal(h.data()['users/buyer'].balance,100);
+});
+
+test('VIP converter rolls exactly one 20-percent bonus per batch, stacks full-batch effects, and cannot replay consumed cards',async()=>{
+ for(const [roll,active,expected] of [[19,true,1],[20,true,0],[0,false,0]]) {
+  const data=seed();data['users/buyer'].balance=200;data['users/buyer'].vipUntil=new Date(Date.now()+(active?86400000:-86400000)).toISOString();
+  data['users/buyer'].amuletSlots=[{id:'road:forge',power:'fullbatch',value:2}];
+  data['ascendTiers/bronze']={name:'Bronze',order:0,sellPrice:25,cards:['bronze.png']};
+  const ids=['one','two','three'];ids.forEach(id=>data[`items/${id}`]={buyerId:'buyer',sold:true,itemType:'card',imageUrl:'/images/bronze.png'});
+  const h=harness(data,()=>roll),result=await h.invoke('/gem-converter',{tierId:'bronze',itemIds:ids});
+  assert.equal(result.status,200);assert.equal(result.payload.vipBonus,expected);assert.equal(result.payload.amuletBonus,2);assert.equal(result.payload.reward,14+expected);
+  assert.equal((await h.invoke('/gem-converter',{tierId:'bronze',itemIds:ids})).status,400);
+ }
+});
+test('wheel permits a spin after seven hours and applies the third-spin amulet',async()=>{
+ const data=seed();data['users/buyer'].lastSpin=new Date(Date.now()-7*3600000-1000).toISOString();data['users/buyer'].wheelSpinCount=2;data['users/buyer'].amuletSlots=[{id:'road:trailblazer',power:'wheelstreak',value:9}];
+ const h=harness(data),result=await h.invoke('/spin-wheel',{userId:'buyer'});assert.equal(result.status,200);assert.equal(result.payload.amount,result.payload.baseReward+9);assert.equal(h.data()['users/buyer'].wheelSpinCount,3);
+ assert.ok(new Date(result.payload.nextSpinAt).getTime()-Date.now()<=7*3600000);assert.equal((await h.invoke('/spin-wheel',{userId:'buyer'})).status,400);
+});
+test('Hidden Geode awards one Ruby on a successful pack roll',async()=>{
+ const data=seed();data['users/buyer'].amuletSlots=[{power:'packgem',value:10}];
+ data['packs/p']={cardIds:['bronze.png']};data['items/p']={itemType:'pack',packId:'p',buyerId:'buyer',sold:true};
+ const h=harness(data,()=>0),result=await h.invoke('/open-pack',{itemId:'p'});assert.equal(result.status,200);assert.equal(result.payload.rubyBonus,1);assert.equal(h.data()['users/buyer'].gems.bronze,21);
 });

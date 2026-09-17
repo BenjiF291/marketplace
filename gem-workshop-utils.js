@@ -1,5 +1,6 @@
 const { gemIdentity } = require('./gem-utils');
 const DYE_AREAS = { background: 'Page background', header: 'Header', panels: 'Section panels', navigation: 'Navigation tabs', buttons: 'Primary buttons', success: 'Buy and success buttons', borders: 'Panel borders', inputs: 'Input fields', balance: 'Footy balance', converter: 'Gem converter', machine: 'Conversion chamber', amulets: 'Amulet shop background', slots: 'Empty amulet slots', notices: 'Status messages' };
+const { effects } = require('./amulet-utils');
 const CRAFT_COST = { 'rare-silver': 10, gold: 5, 'rare-gold': 2 };
 function dyeInventory(user) {
   // Convert each previously purchased permanent color into one batch of five dyes.
@@ -31,7 +32,7 @@ function workshopAction(user, tiers, action, body) {
   if (action === 'craft-dye') {
     if (!identities.some(gem => gem.gemKey === body.gemKey)) throw new Error('Unknown gem');
     if (!(gems[body.gemKey] >= 1)) throw new Error('You need one matching gem');
-    const total = Number(dyes[body.gemKey] || 0) + 5;
+    const total = Number(dyes[body.gemKey] || 0) + 5 + (effects(user).pigment || 0);
     if (!Number.isSafeInteger(total)) throw new Error('Dye balance too large');
     gems[body.gemKey] -= 1; dyes[body.gemKey] = total;
     return { gems, gemDyes: dyes };

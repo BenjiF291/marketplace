@@ -15,7 +15,8 @@ async function resourceRequest(url, body) {
 }
 function amuletTile(entry) {
   const tile = amuletNode('article', undefined, 'amulet-tile');
-  const icon = gemIcon(entry.gemKey);
+  const icon = gemIcon(entry.exclusive?'gold':entry.gemKey);
+  if(entry.exclusive){tile.classList.add('amulet-exclusive');tile.appendChild(amuletNode('small','TROPHY ROAD EXCLUSIVE'));}
   icon.classList.add('amulet-pendant');
   tile.append(icon, amuletNode('h4', entry.name), amuletNode('p', entry.description));
   return tile;
@@ -48,6 +49,7 @@ function renderAmulets() {
     const tile = slot ? amuletTile(slot) : amuletNode('article', undefined, 'amulet-tile amulet-empty');
     tile.prepend(amuletNode('small', `SLOT ${index + 1}`));
     if (slot) {
+      if(slot.power==='wheelstreak')tile.appendChild(amuletNode('p',`Next bonus in ${3-((amuletState.wheelSpinCount||0)%3)} spins`));
       const available = amuletState.isAdmin || amuletState.serverNow >= slot.removableAt;
       tile.appendChild(amuletNode('p', available ? 'Ready to remove' : `Removable ${new Date(slot.removableAt).toLocaleString()}`));
       const button = amuletNode('button', 'Remove to inventory', 'btn btn-primary');
@@ -77,9 +79,10 @@ function renderAmulets() {
   if (!owned.children.length) owned.textContent = 'Your unequipped amulets will appear here.';
   const key = document.getElementById('amuletTier').value;
   const entries = amuletState.catalog.filter(entry => entry.gemKey === key);
-  document.getElementById('amuletWallet').textContent = `${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${amuletState.balance} Footy`;
+  document.getElementById('amuletWallet').textContent = key==='trophy-road'?'Earn these amulets from trophy milestones. They cannot be bought.':`${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${amuletState.balance} Footy`;
   for (const entry of entries) {
     const tile = amuletTile(entry);
+    if(entry.exclusive){tile.appendChild(amuletNode('strong',`Trophy road exclusive - earn at ${entry.milestone} trophies`));shop.appendChild(tile);continue;}
     const price = Math.ceil(entry.price * (1 - (amuletState.effects.gemshop || 0) / 100));
     const button = amuletNode('button', `Buy - ${price} ${entry.gemName}`, 'btn btn-primary');
     button.disabled = amuletPending || (amuletState.gems[key] || 0) < price;
@@ -109,7 +112,7 @@ async function loadAmuletViewer() {
     container.replaceChildren();
     for (const entry of data.catalog) {
       const tile = amuletTile(entry);
-      tile.append(amuletNode('strong', `${entry.price} ${entry.gemName}`), amuletNode('small', `${entry.tierName} / ${entry.power}`));
+      tile.append(amuletNode('strong', entry.exclusive?`Trophy exclusive: ${entry.milestone} trophies`:`${entry.price} ${entry.gemName}`), amuletNode('small', `${entry.tierName} / ${entry.power}`));
       container.appendChild(tile);
     }
   } catch (error) { container.textContent = error.message; }

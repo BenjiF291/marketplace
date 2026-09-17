@@ -1,3 +1,6 @@
+const { effects: amuletEffects, EXCLUSIVES } = require('./amulet-utils');
+const { gemIdentity } = require('./gem-utils');
+const { dyeInventory } = require('./gem-workshop-utils');
 const crypto = require('crypto');
 const engine = require('./public/practice-engine');
 const liveTurns = require('./public/brawl-turns');
@@ -17,7 +20,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
  }));
  route('get','/trophies',async id=>{
   const user=await db.collection('users').doc(id).get();if(!user.exists)throw new Error('User not found');
-  return {trophies:user.data().trophies||0,peak:user.data().trophyPeak||0,claimed:user.data().trophyClaims||[],path:PATH};
+  return {trophies:user.data().trophies||0,peak:user.data().trophyPeak||0,claimed:user.data().trophyClaims||[],path:PATH.map(reward=>({...reward,amuletName:EXCLUSIVES.find(entry=>entry.id===reward.amulet)?.name||null}))};
  });
  route('post','/computer-battles/start',async(id,body)=>{
   if(body.mode && body.mode!=='skill')throw new Error('Training is local and cannot award progression');
@@ -83,7 +86,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const activeBooster=skill.profile(rating).booster;
     const update=trophyUpdate(user.data(),isSkill?'medium':current.data().difficulty,result.result);
     const footy=isSkill&&result.result>0?activeBooster.footy:0;
-    if(isSkill&&result.result>0){update.trophies+=Math.round(25*activeBooster.trophyPercent/100);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);}
+    if(isSkill&&result.result>0){update.trophies+=Math.round(25*activeBooster.trophyPercent/100)+(amuletEffects(user.data()).trophybonus||0);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);}
     const ruby=isSkill&&result.result>0?activeBooster.ruby:0;
     if(ruby)update.gems={...(user.data().gems||{}),bronze:(user.data().gems?.bronze||0)+ruby};
     if(footy)update.balance=(user.data().balance||0)+footy;
@@ -97,13 +100,22 @@ module.exports=(app,db,getOwned,authenticate)=>{
  });
  route('post','/trophies/claim',async(id,body)=>{
   const reward=PATH.find(entry=>entry.at===body.at);if(!reward)throw new Error('Unknown reward');
+  let rewardTier=null;
+  if(reward.pack){const tiers=await db.collection('ascendTiers').get();rewardTier=tiers.docs.map(doc=>({...doc.data(),id:doc.id})).find(tier=>gemIdentity(tier).gemKey===reward.pack);if(!rewardTier?.cards?.length)throw new Error('No cards configured for this reward pack yet');}
   return db.runTransaction(async tx=>{
     const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw new Error('User not found');
     const user=doc.data(),claims=user.trophyClaims||[];
     if((user.trophyPeak||0)<reward.at)throw new Error('Reach this trophy milestone first');
     if(claims.includes(reward.at))throw new Error('Reward already claimed');
     const gems={...(user.gems||{})};for(const [key,count] of Object.entries(reward.gems))gems[key]=(gems[key]||0)+count;
-    tx.update(ref,{gems,balance:(user.balance||0)+reward.footy,trophyClaims:[...claims,reward.at]});return {success:true};
+    const amulets={...(user.amulets||{})};if(reward.amulet)amulets[reward.amulet]=(amulets[reward.amulet]||0)+1;
+    const dyes=dyeInventory(user);for(const [key,count] of Object.entries(reward.dyes||{}))dyes[key]=(dyes[key]||0)+count;
+    if(reward.pack){
+      const packId=`trophy-${reward.pack}`;
+      tx.set(db.collection('packs').doc(packId),{name:reward.packName,cardIds:rewardTier.cards,color:rewardTier.backgroundColor||'#b79d4a',trophyReward:true});
+      for(let i=0;i<(reward.packCount||1);i++)tx.set(db.collection('items').doc(),{name:reward.packName,itemType:'pack',packId,packColor:rewardTier.backgroundColor||'#b79d4a',price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,sourceItemId:null,imageUrl:null,purchasedAt:new Date(),createdAt:new Date()});
+    }
+    tx.update(ref,{gems,amulets,gemDyes:dyes,balance:(user.balance||0)+reward.footy,trophyClaims:[...claims,reward.at]});return {success:true};
   });
  });
 };

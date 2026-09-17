@@ -1052,7 +1052,7 @@ app.post('/spin-wheel', async (req, res) => {
   }
 
   const rewards = [8, 10, 12, 16, 20, 24];
-  const cooldownMs = 23 * 60 * 60 * 1000;
+  const cooldownMs = 7 * 60 * 60 * 1000;
 
   let nextSpinAt;
   try {
@@ -1092,12 +1092,15 @@ app.post('/spin-wheel', async (req, res) => {
       }
 
       rewardAmount += amuletEffects(user).wheel || 0;
+      const wheelSpinCount=(Number(user.wheelSpinCount)||0)+1;
+      if(wheelSpinCount%3===0)rewardAmount+=amuletEffects(user).wheelstreak||0;
       newBalance = (user.balance || 0) + rewardAmount;
       nextSpinAt = new Date(now.getTime() + cooldownMs);
 
       transaction.update(userRef, {
         balance: newBalance,
         lastSpin: now,
+        wheelSpinCount,
         lastSpinAmount: rewardAmount
       });
     });
@@ -1111,7 +1114,7 @@ app.post('/spin-wheel', async (req, res) => {
     }
 
     if (error.message === 'Too soon') {
-      return res.status(400).json({ error: 'You can only spin once every 23 hours.', nextSpinAt: nextSpinAt?.toISOString() });
+      return res.status(400).json({ error: 'You can only spin once every 7 hours.', nextSpinAt: nextSpinAt?.toISOString() });
     }
 
     res.status(500).send('Could not spin the wheel');
@@ -1654,6 +1657,7 @@ app.post('/open-pack', async (req, res) => {
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
   if (!itemId || typeof itemId !== 'string') return res.status(400).send('Invalid pack item');
 
+  const packGemRoll=crypto.randomInt(100);
   try {
     const result = await db.runTransaction(async transaction => {
       const packItemRef = db.collection('items').doc(itemId);
@@ -1674,7 +1678,8 @@ app.post('/open-pack', async (req, res) => {
       const openerRef = db.collection('users').doc(requesterId);
       const opener = await transaction.get(openerRef);
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
-      if (packBonus) transaction.update(openerRef, { balance: roundFooty(Number(opener.data().balance || 0) + packBonus) });
+      const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
+      if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...(opener.data().gems||{}),bronze:Number(opener.data().gems?.bronze||0)+rubyBonus}});
       transaction.set(cardRef, {
         name: `Card ${cardId}`,
         itemType: 'card',
@@ -1689,9 +1694,9 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
-      return { cardId, packBonus, packColor: packItem.packColor || pack.color || '#667eea' };
+      return { cardId, packBonus, rubyBonus, packColor: packItem.packColor || pack.color || '#667eea' };
     });
-    res.json({ success: true, packBonus: result.packBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
+    res.json({ success: true, packBonus: result.packBonus, rubyBonus: result.rubyBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
@@ -2455,6 +2460,7 @@ app.get('/gem-converter', async (req, res) => {
     const progress = converterProgress(tiers, user.data());
     const recipes = tiers.map((tier, index) => ({
       ...gemIdentity(tier), cards: tier.cards || [], unlocked: index <= progress.level,
+      rewards:[3,7,12+(amuletEffects(user.data()).fullbatch||0)],
       costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter)) : null
     }));
     res.json({ ...progress, recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
@@ -2524,6 +2530,7 @@ app.post('/gem-converter', async (req, res) => {
     itemIds.some(id => typeof id !== 'string' || !id || id.includes('/'))) {
     return res.status(400).send('Choose a tier and one to three different cards');
   }
+  const converterRoll=crypto.randomInt(100);
   try {
     const result = await db.runTransaction(async transaction => {
       const userRef = db.collection('users').doc(userId);
@@ -2536,6 +2543,11 @@ app.post('/gem-converter', async (req, res) => {
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
       const recipe = gemRecipe(tier, itemIds.length);
       recipe.cost = discounted(recipe.cost, amuletEffects(user.data()).converter);
+      const vipDate=user.data().vipUntil;
+      const vipExpiry=vipDate?.toDate?vipDate.toDate():new Date(vipDate||0);
+      recipe.vipBonus=vipExpiry.getTime()>Date.now()&&converterRoll<20?1:0;
+      recipe.amuletBonus=itemIds.length===3?(amuletEffects(user.data()).fullbatch||0):0;
+      recipe.reward+=recipe.vipBonus+recipe.amuletBonus;
       const balance = Number(user.data().balance || 0);
       if (!Number.isFinite(balance) || balance < recipe.cost) throw new Error('Not enough Footy');
       const gems = { ...(user.data().gems || {}) };

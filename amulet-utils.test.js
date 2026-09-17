@@ -4,13 +4,13 @@ const { catalog, effects, changeAmulets, LOCK_MS, SLOT_PRICES } = require('./amu
 const tiers = ['Bronze', 'Rare Bronze', 'Silver', 'Rare Silver', 'Gold', 'Rare Gold', 'Platinum', 'Lightning', 'Ultra'].map((name, index) => ({ id: String(index), name }));
 const entries = catalog(tiers);
 const entry = entries[0];
-test('five distinct amulets per tier, unique IDs and ten working power families', () => {
-  assert.equal(entries.length, 45);
-  assert.equal(new Set(entries.map(e => e.id)).size, 45);
-  assert.equal(new Set(entries.map(e => e.power)).size, 10);
-  for (const tier of tiers) assert.equal(new Set(entries.filter(e => e.tierId === tier.id).map(e => e.power)).size, 5);
+test('seven distinct amulets per tier plus trophy exclusives and fifteen power families', () => {
+  assert.equal(entries.length, 67);
+  assert.equal(new Set(entries.map(e => e.id)).size, 67);
+  assert.equal(new Set(entries.map(e => e.power)).size, 15);
+  for (const tier of tiers) assert.equal(new Set(entries.filter(e => e.tierId === tier.id).map(e => e.power)).size, 7);
   for (const power of new Set(entries.map(e => e.power))) {
-    const versions = entries.filter(e => e.power === power);
+    const versions = entries.filter(e => e.power === power && !e.exclusive);
     for (let i = 1; i < versions.length; i++) assert.ok(versions[i].value >= versions[i - 1].value);
   }
 });
@@ -69,4 +69,16 @@ test('rebalanced rewards match activity frequency and update existing equipment'
   assert.equal(updated.equippedAt, 123);
   assert.equal(effects({ amuletSlots: [old] }).ascend, 50);
   assert.equal(old.value, 5);
+});
+
+test('trophy-exclusive amulets can be equipped but never purchased with gems',()=>{
+ const prize=entries.find(entry=>entry.id==='road:champion');assert.ok(prize.exclusive);
+ assert.throws(()=>changeAmulets({gems:{'trophy-road':999}},'buy',{amuletId:prize.id},entries),/trophy road/);
+ const update=changeAmulets({amulets:{[prize.id]:1}},'equip',{slot:0,amuletId:prize.id},entries,1000);
+ assert.equal(effects(update).trophybonus,3);
+});
+test('Prism Brush adds dye without altering the one-gem cost',()=>{
+ const {workshopAction}=require('./gem-workshop-utils');
+ const result=workshopAction({gems:{bronze:2},amuletSlots:[{id:'road:chromatic',power:'pigment',value:2}]},tiers,'craft-dye',{gemKey:'bronze'});
+ assert.equal(result.gemDyes.bronze,7);assert.equal(result.gems.bronze,1);
 });

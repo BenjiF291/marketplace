@@ -152,6 +152,9 @@ async function loadTrophyPath(){
   const names={bronze:'Ruby','rare-bronze':'Garnet',silver:'Moonstone','rare-silver':'Opal',gold:'Citrine','rare-gold':'Emerald',platinum:'Sapphire',lightning:'Amethyst',ultra:'Diamond'};
   for(const reward of data.path){
    const tile=amuletNode('article',undefined,'amulet-tile');tile.append(amuletNode('h4',`${reward.at} trophies`),amuletNode('p',`${reward.footy} Footy${Object.entries(reward.gems).map(([key,n])=>` + ${n} ${names[key]||key}`).join('')}`));
+   if(reward.dyes)tile.appendChild(amuletNode('p',Object.entries(reward.dyes).map(([key,n])=>`${n} ${names[key]||key} dyes`).join(' + ')));
+   if(reward.amulet)tile.appendChild(amuletNode('strong',`Exclusive: ${reward.amuletName||'Trophy amulet'}`));
+   if(reward.pack){const pack=amuletNode('div','PACK','opening-pack marketplace-pack-icon');pack.style.setProperty('--pack-color','#b79d4a');tile.append(pack,amuletNode('p',`${reward.packCount||1} x ${reward.packName}`));}
    const button=amuletNode('button',data.claimed.includes(reward.at)?'Claimed':data.peak>=reward.at?'Claim reward':`${reward.at-data.peak} to unlock`,'btn btn-primary');
    button.disabled=data.claimed.includes(reward.at)||data.peak<reward.at;
    button.onclick=async()=>{button.disabled=true;try{await resourceRequest('/trophies/claim',{at:reward.at});await loadTrophyPath();updateBalance();}catch(error){alert(error.message);button.disabled=false;}};

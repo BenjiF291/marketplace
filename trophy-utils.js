@@ -5,6 +5,23 @@ const PATH = [
  {at:850,footy:500,gems:{'rare-gold':5}}, {at:1150,footy:650,gems:{platinum:5}},
  {at:1500,footy:800,gems:{lightning:5}}, {at:2000,footy:1000,gems:{ultra:5}}
 ];
+PATH.push(
+ {at:50,footy:60,gems:{bronze:3},dyes:{bronze:5}},
+ {at:100,footy:100,gems:{},amulet:'road:trailblazer'},
+ {at:200,footy:125,gems:{},pack:'bronze',packName:'Ruby Victory Pack'},
+ {at:350,footy:200,gems:{silver:5},dyes:{silver:10}},
+ {at:500,footy:250,gems:{},amulet:'road:chromatic'},
+ {at:750,footy:350,gems:{},pack:'silver',packName:'Moonstone Victory Pack'},
+ {at:1000,footy:500,gems:{gold:10},dyes:{gold:15}},
+ {at:1250,footy:600,gems:{},pack:'gold',packName:'Citrine Victory Pack'},
+ {at:1750,footy:800,gems:{},amulet:'road:champion'},
+ {at:2250,footy:1000,gems:{},pack:'platinum',packName:'Sapphire Victory Pack'},
+ {at:2500,footy:1200,gems:{lightning:15},dyes:{lightning:20}},
+ {at:3000,footy:1500,gems:{ultra:10},amulet:'road:forge'},
+ {at:4000,footy:2000,gems:{ultra:15},pack:'ultra',packName:'Diamond Victory Pack'},
+ {at:5000,footy:2500,gems:{ultra:25},pack:'ultra',packName:'Diamond Victory Pack',packCount:2}
+);
+PATH.sort((a,b)=>a.at-b.at);
 function replay(session, moves, detailed = false) {
  if(session.live) {
    if(!session.live.finished)throw new Error('The timed battle is not finished');

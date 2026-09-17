@@ -24,7 +24,7 @@ function renderGemWorkshop() {
     const tile = amuletNode('div', undefined, 'gem-balance-tile');
 
     tile.append(gemIcon(gem.gemKey), amuletNode('strong', gem.gemName), amuletNode('small', `${data.gems[gem.gemKey] || 0} gems / ${data.dyes[gem.gemKey] || 0} dyes`));
-    const button = amuletNode('button', 'Craft 5 dyes - 1 gem', 'btn btn-primary');
+    const button = amuletNode('button', `Craft ${workshopState.dyeYield||5} dyes - 1 gem`, 'btn btn-primary');
     button.disabled = workshopBusy || !(data.gems[gem.gemKey] >= 1);
     button.onclick = () => workshopAction('craft-dye', { gemKey: gem.gemKey });
     tile.appendChild(button); palette.appendChild(tile);
@@ -52,7 +52,7 @@ async function workshopAction(action, body) {
   let message;
   try {
     await resourceRequest(`/gem-workshop/${action}`, body);
-    message = { craft: 'Gem compressor crafted!', compress: 'Gems compressed!', 'craft-dye': 'Crafted 5 dyes for 1 gem.', dye: 'Interface colors saved.' }[action];
+    message = { craft: 'Gem compressor crafted!', compress: 'Gems compressed!', 'craft-dye': 'Dyes crafted for 1 gem, including equipped amulet bonuses.', dye: 'Interface colors saved.' }[action];
   } catch (error) { message = error.message; }
   finally {
     workshopBusy = false;

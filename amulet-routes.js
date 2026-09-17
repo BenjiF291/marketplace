@@ -8,7 +8,7 @@ module.exports = function(app, db, getTiers) {
       if (!user.exists) return res.status(404).send('User not found');
       const data = user.data();
       const buffs = effects(data);
-      res.json({ catalog: catalog(tiers), owned: data.amulets || {}, slots: (data.amuletSlots || []).map(rebalanceAmulet),
+      res.json({ wheelSpinCount:Number(data.wheelSpinCount)||0, catalog: catalog(tiers), owned: data.amulets || {}, slots: (data.amuletSlots || []).map(rebalanceAmulet),
         slotCount: data.amuletSlotCount || 1, slotPrices: SLOT_PRICES,
         gems: data.gems || {}, balance: data.balance || 0, isAdmin: data.isAdmin === true, effects: buffs, vipPrice: discounted(300, buffs.vip), vipDays: 30 + (buffs.vipdays || 0), serverNow: Date.now() });
     } catch (error) { res.status(500).send('Could not load amulets'); }

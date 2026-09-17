@@ -15,8 +15,8 @@ const fixture=(url)=>{
  if(url==='/ascend-tier-config')return tiers;
  if(url==='/battle-cards'||url==='/battle-inventory')return battle;
  if(url==='/brawl/skill')return require('../brawl-skill').profile({ratingVersion:2,placementsCompleted:5,skillLevel:436});
- if(url==='/trophies')return {trophies:250,peak:300,claimed:[25,75],path:require('../trophy-utils').PATH};
- if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:[{id:'ruby-wheel',name:'Ruby Lucky Turn',gemKey:'bronze',gemName:'Ruby',price:15,description:'A little extra Footy from your daily spin.'},{id:'ruby-pack',name:'Ruby Unwrapper',gemKey:'bronze',gemName:'Ruby',price:20,description:'Earn extra Footy when opening a pack.'}],effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
+ if(url==='/trophies')return {trophies:250,peak:300,claimed:[25,75],path:require('../trophy-utils').PATH.map(reward=>({...reward,amuletName:require('../amulet-utils').EXCLUSIVES.find(entry=>entry.id===reward.amulet)?.name}))};
+ if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:require('../amulet-utils').catalog(tiers),effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
  if(url==='/gem-converter')return {recipes:[{tierId:'bronze',tierName:'Bronze',gemKey:'bronze',gemName:'Ruby',unlocked:true,sellPrice:25,cards:images,costs:{1:37.5,2:75,3:112.5},rewards:{1:3,2:7,3:12}}],gems:{bronze:18},level:1,nextUpgrade:null};
  if(url==='/gem-workshop')return {theme:{},compressor:false,gems:{bronze:18},dyes:{bronze:5},tiers:[{gemKey:'bronze',gemName:'Ruby'}],areas:{buttons:'Buttons',navigation:'Navigation',background:'Background'}};
  if(url.includes('history'))return {transfers:[],items:[]};
@@ -38,6 +38,14 @@ const fixture=(url)=>{
  await page.locator('#uiVersionToggle').click();await page.evaluate(()=>footyStudio.navigate('home'));
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);await page.screenshot({path:'.ui-tools/home-mobile.png',fullPage:true});
  for(const r of ['marketplace','inventory','battle','admin','workshop','amulets','wallet','spin','vip','battle-manager']){await page.evaluate(r=>footyStudio.navigate(r),r);await page.waitForTimeout(200);report.push({mobile:r,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)});if(['battle','marketplace'].includes(r))await page.screenshot({path:'.ui-tools/'+r+'-mobile.png',fullPage:true});}
+ await page.evaluate(()=>footyStudio.navigate('amulets'));await page.waitForTimeout(250);await page.locator('#amuletTier').selectOption('trophy-road');
+ assert.equal(await page.locator('#amuletShop .amulet-exclusive').count(),4);assert.equal(await page.locator('#amuletShop button').count(),0);
+ await page.screenshot({path:'.ui-tools/trophy-amulets-mobile.png',fullPage:true});
+ await page.evaluate(async()=>{footyStudio.navigate('battle');await loadTrophyPath();document.getElementById('trophyPath').closest('details').open=true;});
+ assert.equal(await page.locator('#trophyPath article').count(),24);assert.equal(await page.locator('#trophyPath .marketplace-pack-icon').count(),6);
+ assert.match(await page.locator('#trophyPath').innerText(),/Trailblazer Chime/);
+ await page.screenshot({path:'.ui-tools/trophy-road-mobile.png',fullPage:true});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  // Exercise controls, not only route rendering.
  await page.setViewportSize({width:1440,height:1000});await page.waitForTimeout(250);
  await page.evaluate(()=>footyStudio.navigate('marketplace'));await page.waitForTimeout(150);

@@ -1790,3 +1790,6 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 
 #items .item-price { white-space:normal;min-width:0;max-width:100%; }
 .market-vip-deal,.market-payable { white-space:normal;overflow-wrap:anywhere;max-width:100%;box-sizing:border-box; }
+
+.amulet-tile.amulet-exclusive { border:2px solid #c5a254;background:linear-gradient(135deg,#fffdf4,#f5f3e5); }
+.amulet-exclusive > small { color:#79581c;font-weight:700;letter-spacing:.06em; }

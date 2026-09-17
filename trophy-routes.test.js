@@ -174,3 +174,14 @@ test('completed timed ranked match settles from server events and awards only on
  const saved=structuredClone(h.records['brawlProfiles/u']);
  assert.equal((await h.invoke('/computer-battles/finish',{id:'m',moves:[]})).status,200);assert.deepEqual(h.records['brawlProfiles/u'],saved);
 });
+
+test('expanded road grants exclusive amulets, dyes, and real openable packs exactly once',async()=>{
+ const h=harness({'users/u':{trophyPeak:5000,trophyClaims:[75],balance:0},'ascendTiers/bronze':{name:'Bronze',cards:['bronze.png']}});
+ assert.equal((await h.invoke('/trophies/claim',{at:100})).status,200);assert.equal(h.records['users/u'].amulets['road:trailblazer'],1);
+ assert.equal((await h.invoke('/trophies/claim',{at:100})).status,400);
+ assert.equal((await h.invoke('/trophies/claim',{at:50})).status,200);assert.equal(h.records['users/u'].gemDyes.bronze,5);
+ assert.equal((await h.invoke('/trophies/claim',{at:200})).status,200);assert.deepEqual(h.records['packs/trophy-bronze'].cardIds,['bronze.png']);
+ const packs=Object.entries(h.records).filter(([key])=>key.startsWith('items/'));assert.equal(packs.length,1);assert.equal(packs[0][1].buyerId,'u');assert.equal(packs[0][1].sold,true);
+ assert.equal((await h.invoke('/trophies/claim',{at:200})).status,400);assert.equal(Object.keys(h.records).filter(key=>key.startsWith('items/')).length,1);
+ assert.ok(h.records['users/u'].trophyClaims.includes(75));
+});
