@@ -32,3 +32,13 @@ test('dismissing notices preserves publication status and expiry and requires ad
  plan = { status: 'expired' }; await invoke(); assert.equal(plan.dismissed, true);
  plan = { status: 'scheduled' }; await invoke(); assert.equal(responseStatus, 409); assert.equal(plan.dismissed, undefined);
 });
+
+test('expiration preserves purchased stock including a purchase racing cleanup',async()=>{
+ const source=fs.readFileSync('server.js','utf8');const deleted=[];
+ const item=(id,sold)=>({id,ref:{id},exists:true,data:()=>({sold})});
+ const plan={ref:{update:async()=>{}},data:()=>({listingGroupId:'g',expiresAt:new Date(0)})};
+ const db={collection:name=>({where:(field,op,value)=>({get:async()=>({docs:name==='items'?[item('owned',true),item('race',false),item('unsold',false)]:value==='scheduled'?[]:[plan]})}),doc:()=>({delete:async()=>{}})}),runTransaction:fn=>fn({getAll:async()=>[item('race',true),item('unsold',false)],delete:ref=>deleted.push(ref.id)})};
+ const context={db,console,Date};vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('async function syncPlannedMarketplaceListings'),source.indexOf('async function findTierForCard')),context);
+ await context.syncPlannedMarketplaceListings();assert.deepEqual(deleted,['unsold']);
+});

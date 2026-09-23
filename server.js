@@ -48,12 +48,24 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static('public'));
 
+const { createDailyPackService, dailyPrice } = require('./daily-packs');
+const ensureDailyPack = createDailyPackService({
+  db,
+  getTiers: getAscendTierConfig,
+  getSettings: async tier => {
+    const admins = await db.collection('users').where('isAdmin', '==', true).limit(1).get();
+    if (admins.empty) throw new Error('Daily pack: an admin seller is required');
+    return { sellerId: admins.docs[0].id, price: dailyPrice(tier.sellPrice), quantity: 20, perUserLimit: 1 };
+  }
+});
 let marketplaceSyncRunning = false;
 
 async function runMarketplaceSync() {
   if (marketplaceSyncRunning) return;
   marketplaceSyncRunning = true;
   try {
+    // A missing tier/pack must not stop other scheduled listings or expiry cleanup.
+    await ensureDailyPack().catch(error => console.error('Daily pack listing:', error));
     await syncPlannedMarketplaceListings();
   } catch (error) {
     console.error('Scheduled listing sync failed:', error);
@@ -286,9 +298,14 @@ async function syncPlannedMarketplaceListings() {
     const listingGroupId = data.listingGroupId;
     if (listingGroupId) {
       const itemsSnapshot = await db.collection('items').where('listingGroupId', '==', listingGroupId).get();
-      const batch = db.batch();
-      itemsSnapshot.docs.forEach(itemDoc => batch.delete(itemDoc.ref));
-      if (itemsSnapshot.docs.length > 0) await batch.commit();
+      const unsold = itemsSnapshot.docs.filter(itemDoc => itemDoc.data().sold !== true);
+      // Recheck transactionally: a purchase can finish while cleanup is reading stock.
+      if (unsold.length) await db.runTransaction(async transaction => {
+        const latest = await transaction.getAll(...unsold.map(itemDoc => itemDoc.ref));
+        latest.forEach(itemDoc => {
+          if (itemDoc.exists && itemDoc.data().sold !== true) transaction.delete(itemDoc.ref);
+        });
+      });
       await db.collection('marketListingGroups').doc(listingGroupId).delete().catch(() => {});
     }
 
@@ -2629,6 +2646,7 @@ require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  runMarketplaceSync();
 });
 
 /* ------------------ MAKE ADMIN (temporary, secured) ------------------ */
