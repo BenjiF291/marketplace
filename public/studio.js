@@ -81,7 +81,10 @@
       ['workshop','Make something new','Convert gems, craft dyes, and make it yours.','Open workshop']
     ].map(([r,t,d,a],i)=>`<button class="studio-launch studio-launch-${i}" data-ui-nav="${r}"><span class="studio-launch-icon">${icon(routes[r].icon)}</span><h3>${t}</h3><p>${d}</p><span class="studio-launch-link">${a} ${icon('arrow')}</span></button>`).join('')}</div>
     <div class="studio-bottom-note"><span class="studio-note-icon">${icon('amulet')}</span><div><h3>Small charms. Big possibilities.</h3><p>Explore amulets and find the powers that fit your play style.</p></div><button class="btn" data-ui-nav="amulets">Explore amulets ${icon('arrow')}</button></div>`;
+  const dailyFeature=document.createElement('section');dailyFeature.id='dailyPackFeature';dailyFeature.className='daily-pack-feature';
+  home.querySelector('.studio-hero').after(dailyFeature);
   grid.prepend(home);
+  renderDailyPackFeature(window.dailyMarketplaceItems||[]);
   const workshop=document.createElement('section');workshop.id='studioWorkshop';workshop.className='card studio-only';grid.append(workshop);
   const gemNodes=Array.from($('inventorySection').querySelectorAll(':scope > details.gem-converter'));
   const gemHomes=gemNodes.map(node=>{const marker=document.createComment('Original crafting position');node.before(marker);return marker;});

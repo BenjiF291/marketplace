@@ -173,7 +173,7 @@ async function listingCurrency(key = 'footy') {
   return { currency: gem.gemKey, currencyName: gem.gemName };
 }
 
-async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', vipDiscountPercent = 0, listingGroupIdOverride = null, planRef = null }) {
+async function createMarketplaceListingEntries({ sellerId, itemType, productId, price, quantity, perUserLimit, scheduledAt, expiresAt, currency = 'footy', vipDiscountPercent = 0, listingGroupIdOverride = null, planRef = null, dailyPackDate = null }) {
   const money = await listingCurrency(currency);
   if (money.currency !== 'footy' && !Number.isSafeInteger(price)) throw new Error('Gem prices must be whole numbers');
   let itemName;
@@ -213,6 +213,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
     vipDiscountPercent,
     stock,
     soldCount: 0,
+    dailyPackDate,
     perUserLimit: maxPerUser || null,
     purchaseCounts: {},
     scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
@@ -236,6 +237,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
       purchasedAt: null,
       sourceItemId: null,
       listingGroupId: groupRef.id,
+      dailyPackDate,
       perUserLimit: maxPerUser || null,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
@@ -281,6 +283,7 @@ async function syncPlannedMarketplaceListings() {
         scheduledAt: scheduledAt.toISOString(),
         expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)).toISOString() : null,
         listingGroupIdOverride: data.listingGroupId || null,
+        dailyPackDate: data.dailyPack ? doc.id.replace(/^daily-/, '') : null,
         planRef: doc.ref
       });
 
@@ -1277,6 +1280,8 @@ app.get('/items', async (req, res) => {
           packId: data.packId || null,
           limitOnePerUser: data.limitOnePerUser === true,
           listingGroupId: data.listingGroupId || null,
+          dailyPackDate: data.dailyPackDate || null,
+          expiresAt: serializeDate(data.expiresAt),
           perUserLimit: data.perUserLimit || null,
           stock: 1,
           sold: data.sold || false,

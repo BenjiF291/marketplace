@@ -1793,3 +1793,12 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 
 .amulet-tile.amulet-exclusive { border:2px solid #c5a254;background:linear-gradient(135deg,#fffdf4,#f5f3e5); }
 .amulet-exclusive > small { color:#79581c;font-weight:700;letter-spacing:.06em; }
+
+/* Daily marketplace spotlight, shared by Classic and Studio. */
+.daily-pack-badge { display:inline-block; padding:6px 10px; border-radius:20px; background:#f6d578; color:#332706; font-size:11px; font-weight:800; letter-spacing:.06em; }
+#items li.daily-pack-listing { border:2px solid #b79439; position:relative; }
+.daily-pack-feature { margin:24px 0; padding:24px; border:1px solid #b79439; border-radius:20px; background:linear-gradient(120deg,#fff9e8,#f5eedb); color:#302d23; }
+.daily-pack-feature h2 { margin-top:0; }
+.daily-pack-feature p { line-height:1.6; overflow-wrap:anywhere; }
+.daily-pack-feature .marketplace-pack-icon { margin:12px 0; }
+.daily-pack-feature .btn { max-width:100%; white-space:normal; }

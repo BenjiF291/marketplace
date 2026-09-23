@@ -5,6 +5,8 @@ const cards=images.map((name,i)=>({id:`i${i}`,name:name.replace(/\.[^.]+$/,'').r
 const items=[...cards.slice(0,6),{id:'pack',itemType:'pack',name:'Gold discovery pack',packColor:'#bca264',price:150,sellerId:'other',stock:3}];
 items[0]={...items[0],vipDiscountPercent:25,vipPrice:56.25,vipDiscountApplied:true,payablePrice:56.25};
 items[1]={...items[1],vipDiscountPercent:20,vipPrice:100,vipDiscountApplied:false,payablePrice:125};
+items[items.length-1].dailyPackDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+items[items.length-1].expiresAt=new Date(Date.now()+432000000).toISOString();
 const user={id:'ui-preview',username:'Club captain',isAdmin:true,balance:2450};
 const battle=require('../public/practice-engine').trainingCards();battle[0]={...battle[0],name:'Mirror tester',linkedCardImage:'Mirror_test.png',mirrorPower:'focus'};
 const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
@@ -30,6 +32,8 @@ const fixture=(url)=>{
  await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
+ assert.equal(await page.locator('#dailyPackFeature h3').textContent(),'Gold discovery pack');
+ assert.equal(await page.locator('[data-todays-pack] .daily-pack-badge').textContent(),"TODAY'S DAILY PACK");
  await page.screenshot({path:'.ui-tools/home-desktop.png',fullPage:true});
  const routes=['marketplace','inventory','workshop','amulets','battle','wallet','spin','vip','sell','admin','battle-manager'];const report=[];
  for(const r of routes){await page.evaluate(r=>footyStudio.navigate(r),r);await page.waitForTimeout(300);report.push({route:r,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),panels:await page.locator('.main-grid > section:visible').count()});if(['marketplace','battle','admin','workshop','amulets','inventory','spin','vip'].includes(r))await page.screenshot({path:'.ui-tools/'+r+'-desktop.png',fullPage:true});}

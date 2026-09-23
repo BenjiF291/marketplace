@@ -2320,6 +2320,29 @@ async function transfer() {
 
 /* ------------------ MARKETPLACE ------------------ */
 const pendingPurchases = new Set();
+function dailyPackToday() {
+  return new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+function renderDailyPackFeature(items) {
+  window.dailyMarketplaceItems = items;
+  const host=document.getElementById('dailyPackFeature');
+  if(!host)return;
+  host.replaceChildren();
+  const item=items.find(item=>item.dailyPackDate===dailyPackToday()&&!item.sold);
+  const heading=document.createElement('h2');heading.textContent="Today's daily pack";
+  host.append(heading);
+  if(!item){const empty=document.createElement('p');empty.textContent="Today's pack is sold out or not available yet. A new daily pick arrives each day.";host.append(empty);return;}
+  const art=document.createElement('div');art.className='opening-pack marketplace-pack-icon';art.textContent='PACK';art.setAttribute('aria-hidden','true');
+  art.style.setProperty('--pack-color',/^#[0-9a-f]{6}$/i.test(item.packColor||'')?item.packColor:'#667eea');
+  const name=document.createElement('h3');name.textContent=item.name;
+  const detail=document.createElement('p');detail.textContent=`${item.payablePrice ?? item.price} ${item.currencyName||'Footy'} - ${item.stock} left${item.expiresAt?' - Available until '+new Date(item.expiresAt).toLocaleString():''}`;
+  const button=document.createElement('button');button.className='btn btn-primary';button.dataset.uiNav='marketplace';button.textContent='View daily pack in marketplace';
+  button.addEventListener('click',()=>requestAnimationFrame(()=>{
+    const row=document.querySelector('[data-todays-pack]');if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.focus({preventScroll:true});}
+  }));
+  host.append(art,name,detail,button);
+}
+
 async function loadItems() {
   if (!isServerOnline) return;
   
@@ -2331,10 +2354,20 @@ async function loadItems() {
     const list = document.getElementById('items');
     list.innerHTML = "";
 
+    renderDailyPackFeature(items);
+    items.sort((a,b)=>Number(b.dailyPackDate===dailyPackToday())-Number(a.dailyPackDate===dailyPackToday()));
     items.forEach(item => {
       if (item.sold) return;
 
       const li = document.createElement('li');
+      if(item.dailyPackDate){
+        const today=item.dailyPackDate===dailyPackToday();
+        li.classList.add('daily-pack-listing');
+        if(today){li.dataset.todaysPack='true';li.tabIndex=-1;}
+        const badge=document.createElement('strong');badge.className='daily-pack-badge';
+        badge.textContent=today?"TODAY'S DAILY PACK":`Daily pick - ${item.dailyPackDate}`;
+        li.append(badge);
+      }
 
       if (item.itemType === 'pack') {
         const packIcon = document.createElement('div');
