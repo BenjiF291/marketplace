@@ -118,9 +118,9 @@ test('admin can grant an amulet, player can equip it, and early removal is rejec
   const data = seed(); data['users/seller'].isAdmin = true;
   data['ascendTiers/bronze'] = { name: 'Bronze', order: 0 };
   const h = harness(data);
-  assert.equal((await h.invoke('/admin/grant-resource', { userId: 'buyer', kind: 'amulet', quantity: 1, amuletId: 'bronze:wheel' }, 'seller')).status, 200);
-  assert.equal((await h.invoke('/amulets/:action', { slot: 0, amuletId: 'bronze:wheel' }, 'buyer', 'equip')).status, 200);
-  assert.equal(h.data()['users/buyer'].amulets['bronze:wheel'], 0);
+  assert.equal((await h.invoke('/admin/grant-resource', { userId: 'buyer', kind: 'amulet', quantity: 1, amuletId: 'bronze:v2:0:fortune' }, 'seller')).status, 200);
+  assert.equal((await h.invoke('/amulets/:action', { slot: 0, amuletId: 'bronze:v2:0:fortune' }, 'buyer', 'equip')).status, 200);
+  assert.equal(h.data()['users/buyer'].amulets['bronze:v2:0:fortune'], 0);
   assert.equal((await h.invoke('/amulets/:action', { slot: 0 }, 'buyer', 'remove')).status, 400);
 });
 

@@ -96,7 +96,7 @@ async function amuletAction(action, body) {
   let message;
   try {
     await resourceRequest(`/amulets/${action}`, body);
-    message = { buy: 'Amulet added to your inventory.', equip: 'Amulet equipped. Its power is now active.', remove: 'Amulet returned to your inventory.', unlock: 'New amulet slot unlocked.' }[action];
+    message = { buy: 'Amulet added to your inventory.', equip: 'Amulet equipped. Any listed conditions must be met for its power to apply.', remove: 'Amulet returned to your inventory.', unlock: 'New amulet slot unlocked.' }[action];
   } catch (error) { message = error.message; }
   finally {
     amuletPending = false;

@@ -27,54 +27,55 @@ const EXCLUSIVES = [
  {id:'road:forge',name:'Eternal Furnace',power:'fullbatch',value:2,description:'+2 gems when converting exactly three cards',milestone:3000}
 ].map(entry=>({...entry,gemKey:'trophy-road',gemName:'Trophy road',tierName:'Trophy exclusive',exclusive:true,price:0}));
 const ALL_POWERS=[...POWERS,...EXTRA_POWERS];
-const STANDARD_GEMS = ['bronze', 'rare-bronze', 'silver', 'rare-silver', 'gold', 'rare-gold', 'platinum', 'lightning', 'ultra'];
-const OLD_CURVES = { wheel: [2, 1], converter: [3, 1], salvage: [2, 1], pack: [1, .5], vip: [2, 1], market: [1, .5], ascend: [1, .5], battle: [1, .5], gemshop: [2, 1], vipdays: [.5, .25] };
+const { SETS, CONDITIONS, active } = require('./amulet-designs');
+function designs(rank) {
+  if(SETS[rank])return SETS[rank];
+  // Special tiers use mixed roles rather than rescaled standard-tier items.
+  return Array.from({length:5},(_,i)=>{
+    const a=ALL_POWERS[(rank+i*3)%ALL_POWERS.length],b=ALL_POWERS[(rank*2+i*3+1)%ALL_POWERS.length];
+    return [`special-${i}`,`${a[1]} & ${b[1]}`,{[a[0]]:a[2],[b[0]]:b[2]},['diverse','pair','rubystash','vip','full'][i]];
+  });
+}
+function designFields(design) {
+ const [key,name,bonuses,condition]=design;
+ const description=Object.entries(bonuses).map(([power,value])=>`${value} ${ALL_POWERS.find(rule=>rule[0]===power)[5]}`).join('; ');
+ return {name,bonuses,condition:condition||null,power:Object.keys(bonuses)[0],value:Object.values(bonuses)[0],description:(condition?CONDITIONS[condition]+': ':'')+description};
+}
 function rebalanceAmulet(slot) {
-  if (!slot) return slot;
-  const exclusive=EXCLUSIVES.find(entry=>entry.id===slot.id);if(exclusive)return {...slot,...exclusive};
-  const rule = ALL_POWERS.find(rule => rule[0] === slot.power);
-  if (!rule) return slot;
-  let rank = Number.isInteger(slot.tierRank) ? slot.tierRank : STANDARD_GEMS.indexOf(slot.gemKey);
-  // Older equipped snapshots lack a rank. Recover custom tiers from their original curve.
-  if (rank < 0 && slot.id && OLD_CURVES[slot.power]) {
-    const [base, step] = OLD_CURVES[slot.power];
-    rank = Math.max(0, Math.round((Number(slot.value) - base) / step));
-  }
-  if (!Number.isFinite(rank) || rank < 0) return slot;
-  const rawValue = Math.min(rule[4], rule[2] + rank * rule[3]);
-  const value=EXTRA_POWERS.some(entry=>entry[0]===slot.power)?Math.floor(rawValue):rawValue;
-  return { ...slot, tierRank: rank, value, description: `${['converter', 'vip', 'market', 'gemshop'].includes(slot.power) ? '' : '+'}${value} ${rule[5]}` };
+ if(!slot)return null;
+ const exclusive=EXCLUSIVES.find(entry=>entry.id===slot.id);if(exclusive)return {...slot,...exclusive};
+ const match=String(slot.id||'').match(/:v2:(\d+):([^:]+)$/);
+ if(!match)return slot.id?null:slot;
+ const design=designs(Number(match[1])).find(entry=>entry[0]===match[2]);
+ return design?{...slot,...designFields(design)}:null;
 }
 function catalog(tiers) {
-  return tiers.flatMap((tier, index) => {
-    const gem = gemIdentity(tier);
-    const standard = Array.from({ length: 5 }, (_, offset) => {
-      const [power, name, base, step, cap, description] = POWERS[(index * 3 + offset) % POWERS.length];
-      const value = Math.min(cap, base + index * step);
-      return { id: `${tier.id}:${power}`, ...gem, tierRank: index, name: `${gem.gemName} ${name}`, power, value,
-        description: `+${value} ${description}`.replace('+', ['converter', 'vip', 'market', 'gemshop'].includes(power) ? '' : '+'),
-        price: 18 + offset * 3 + Math.min(index, 12) * 2 };
-    });
-    const extra=Array.from({length:2},(_,offset)=>{
-      const [power,name,base,step,cap,description]=EXTRA_POWERS[(index+offset)%4];
-      const value=Math.floor(Math.min(cap,base+index*step));
-      return {id:`${tier.id}:${power}`,...gem,tierRank:index,name:`${gem.gemName} ${name}`,power,value,description:`${value} ${description}`,price:35+offset*7+Math.min(index,12)*3};
-    });
-    return [...standard,...extra];
-  }).concat(EXCLUSIVES);
+ return tiers.flatMap((tier,index)=>{
+  const gem=gemIdentity(tier);
+  return designs(index).map((design,offset)=>({id:`${tier.id}:v2:${index}:${design[0]}`,...gem,tierRank:index,...designFields(design),price:22+offset*5+Math.min(index,12)*3}));
+ }).concat(EXCLUSIVES);
+}
+function cleanAmulets(user,entries) {
+ const valid=new Set(entries.map(entry=>entry.id));
+ return {amulets:Object.fromEntries(Object.entries(user.amulets||{}).filter(([id])=>valid.has(id))),
+  amuletSlots:(user.amuletSlots||[]).map(slot=>slot&&valid.has(slot.id)?rebalanceAmulet(slot):null)};
 }
 function effects(user) {
-  const result = {};
-  for (const slot of (user.amuletSlots || []).slice(0, Math.max(1, Math.min(5, user.amuletSlotCount || 1)))) {
-    if (!slot) continue;
-    const rule = ALL_POWERS.find(rule => rule[0] === slot.power);
-    if (rule) result[slot.power] = Math.max(result[slot.power] || 0, Math.min(slot.id==='road:forge'?2:rule[4], Number(rebalanceAmulet(slot).value) || 0));
+ const result={};
+ const slots=(user.amuletSlots||[]).slice(0,Math.max(1,Math.min(5,user.amuletSlotCount||1))).map(rebalanceAmulet).filter(Boolean);
+ for(const slot of slots){
+  if(!active(slot.condition,user,slots))continue;
+  for(const [power,value] of Object.entries(slot.bonuses||{[slot.power]:slot.value})){
+   const rule=ALL_POWERS.find(rule=>rule[0]===power);
+   if(rule)result[power]=Math.max(result[power]||0,Math.min(slot.id==='road:forge'?2:rule[4],Number(value)||0));
   }
-  return result;
+ }
+ return result;
 }
 const round = value => Math.round(value * 100) / 100;
 const discounted = (price, percent) => round(price * (1 - (percent || 0) / 100));
 function changeAmulets(user, action, body, entries, now = Date.now()) {
+  user={...user,...cleanAmulets(user,entries)};
   const owned = { ...(user.amulets || {}) };
   const slots = Array.from({ length: 5 }, (_, index) => (user.amuletSlots || [])[index] || null);
   const count = Math.max(1, Math.min(5, Number(user.amuletSlotCount) || 1));
@@ -114,4 +115,4 @@ function changeAmulets(user, action, body, entries, now = Date.now()) {
   } else throw new Error('Unknown amulet action');
   return { amulets: owned, amuletSlots: slots };
 }
-module.exports = { EXCLUSIVES, catalog, effects, discounted, round, changeAmulets, rebalanceAmulet, SLOT_PRICES, LOCK_MS };
+module.exports = { EXCLUSIVES, catalog, cleanAmulets, effects, discounted, round, changeAmulets, rebalanceAmulet, SLOT_PRICES, LOCK_MS };

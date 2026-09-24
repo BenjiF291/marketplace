@@ -4,16 +4,13 @@ const { catalog, effects, changeAmulets, LOCK_MS, SLOT_PRICES } = require('./amu
 const tiers = ['Bronze', 'Rare Bronze', 'Silver', 'Rare Silver', 'Gold', 'Rare Gold', 'Platinum', 'Lightning', 'Ultra'].map((name, index) => ({ id: String(index), name }));
 const entries = catalog(tiers);
 const entry = entries[0];
-test('seven distinct amulets per tier plus trophy exclusives and fifteen power families', () => {
-  assert.equal(entries.length, 67);
-  assert.equal(new Set(entries.map(e => e.id)).size, 67);
-  assert.equal(new Set(entries.map(e => e.power)).size, 15);
-  for (const tier of tiers) assert.equal(new Set(entries.filter(e => e.tierId === tier.id).map(e => e.power)).size, 7);
-  for (const power of new Set(entries.map(e => e.power))) {
-    const versions = entries.filter(e => e.power === power && !e.exclusive);
-    for (let i = 1; i < versions.length; i++) assert.ok(versions[i].value >= versions[i - 1].value);
-  }
+test('five curated amulets per tier with unique designs and preserved trophy exclusives', () => {
+ assert.equal(entries.length,49);assert.equal(new Set(entries.map(e=>e.id)).size,49);
+ for(const tier of tiers)assert.equal(entries.filter(e=>e.tierId===tier.id).length,5);
+ assert.equal(new Set(entries.filter(e=>!e.exclusive).map(e=>JSON.stringify([e.bonuses,e.condition]))).size,45);
+ assert.equal(entries.filter(e=>e.exclusive).length,4);
 });
+
 test('shop charges matching gems, rejects insufficient and wrong-tier gems', () => {
   assert.throws(() => changeAmulets({ gems: { gold: 1000 } }, 'buy', { amuletId: entry.id }, entries));
   const user = { gems: { bronze: entry.price, gold: 30 } };
@@ -57,18 +54,34 @@ test('strongest power only; unequipped amulets and locked slots give no effects'
   assert.equal(effects({ amuletSlots: [null, { power: 'wheel', value: 10 }] }).wheel, undefined);
 });
 
-test('rebalanced rewards match activity frequency and update existing equipment', () => {
-  const { rebalanceAmulet } = require('./amulet-utils');
-  assert.equal(entries.find(e => e.gemKey === 'bronze' && e.power === 'wheel').value, 3);
-  assert.equal(entries.find(e => e.gemKey === 'bronze' && e.power === 'pack').value, 10);
-  assert.equal(entries.find(e => e.gemKey === 'ultra' && e.power === 'ascend').value, 50);
-  const old = { id: '8:ascend', gemKey: 'ultra', power: 'ascend', value: 5, equippedAt: 123, removableAt: 456 };
-  const updated = rebalanceAmulet(old);
-  assert.equal(updated.value, 50);
-  assert.equal(updated.removableAt, 456);
-  assert.equal(updated.equippedAt, 123);
-  assert.equal(effects({ amuletSlots: [old] }).ascend, 50);
-  assert.equal(old.value, 5);
+test('retired inventory and equipped effects are removed, while new equipment retains its lock',()=>{
+ const {cleanAmulets,rebalanceAmulet}=require('./amulet-utils');
+ const old={id:'8:ascend',gemKey:'ultra',power:'ascend',value:50};
+ assert.deepEqual(effects({amuletSlots:[old]}),{});
+ const newSlot={...entry,equippedAt:123,removableAt:456};
+ const clean=cleanAmulets({amulets:{[old.id]:2,[entry.id]:1},amuletSlots:[old,newSlot]},entries);
+ assert.deepEqual(clean.amulets,{[entry.id]:1});assert.equal(clean.amuletSlots[0],null);
+ assert.equal(rebalanceAmulet(newSlot).removableAt,456);
+ assert.throws(()=>changeAmulets({amulets:{[old.id]:1}},'equip',{slot:0,amuletId:old.id},entries));
+});
+test('situational bonuses turn on and off with current account and loadout',()=>{
+ const find=key=>entries.find(e=>e.id.endsWith(':'+key));
+ const lifeline=find('lifeline');assert.equal(effects({balance:99,amuletSlots:[lifeline]}).wheel,6);
+ assert.equal(effects({balance:100,amuletSlots:[lifeline]}).wheel,undefined);
+ const solo=find('minimalist');assert.equal(effects({amuletSlots:[solo]}).pigment,3);
+ assert.equal(effects({amuletSlotCount:2,amuletSlots:[solo,entry]}).pigment,undefined);
+ const treasury=find('treasury');assert.equal(effects({gems:{bronze:100},amuletSlots:[treasury]}).pack,25);
+ assert.equal(effects({gems:{bronze:99},amuletSlots:[treasury]}).pack,undefined);
+ const diverse=find('palette');assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('reclaimer')]}).pigment,2);
+ assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('unsealer')]}).pigment,undefined);
+ const royal=find('patronage');assert.equal(effects({vipUntil:new Date(Date.now()+60000),amuletSlots:[royal]}).pack,35);
+ assert.equal(effects({amuletSlots:[royal]}).pack,undefined);
+});
+test('compound effects work together without adding duplicate bonuses',()=>{
+ const crown=entries.find(e=>e.id.endsWith(':crown'));
+ const unsealer=entries.find(e=>e.id.endsWith(':unsealer'));
+ const buffs=effects({amuletSlotCount:2,amuletSlots:[crown,unsealer]});
+ assert.equal(buffs.pack,45);assert.equal(buffs.packgem,20);
 });
 
 test('trophy-exclusive amulets can be equipped but never purchased with gems',()=>{

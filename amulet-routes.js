@@ -1,4 +1,4 @@
-const { catalog, effects, changeAmulets, SLOT_PRICES, discounted, rebalanceAmulet } = require('./amulet-utils');
+const { catalog, effects, changeAmulets, SLOT_PRICES, discounted, rebalanceAmulet, cleanAmulets } = require('./amulet-utils');
 module.exports = function(app, db, getTiers) {
   app.get('/amulets', async (req, res) => {
     const id = req.header('X-User-Id');
@@ -6,9 +6,19 @@ module.exports = function(app, db, getTiers) {
     try {
       const [user, tiers] = await Promise.all([db.collection('users').doc(id).get(), getTiers()]);
       if (!user.exists) return res.status(404).send('User not found');
-      const data = user.data();
+      const entries=catalog(tiers);
+      let data = user.data();
+      const clean=cleanAmulets(data,entries);
+      if(JSON.stringify(clean.amulets)!==JSON.stringify(data.amulets||{})||JSON.stringify(clean.amuletSlots)!==JSON.stringify(data.amuletSlots||[])){
+        data=await db.runTransaction(async tx=>{
+          const ref=db.collection('users').doc(id),latest=await tx.get(ref);
+          if(!latest.exists)throw new Error('User not found');
+          const cleaned=cleanAmulets(latest.data(),entries);tx.update(ref,cleaned);
+          return {...latest.data(),...cleaned};
+        });
+      }
       const buffs = effects(data);
-      res.json({ wheelSpinCount:Number(data.wheelSpinCount)||0, catalog: catalog(tiers), owned: data.amulets || {}, slots: (data.amuletSlots || []).map(rebalanceAmulet),
+      res.json({ wheelSpinCount:Number(data.wheelSpinCount)||0, catalog: entries, owned: data.amulets || {}, slots: (data.amuletSlots || []).map(rebalanceAmulet),
         slotCount: data.amuletSlotCount || 1, slotPrices: SLOT_PRICES,
         gems: data.gems || {}, balance: data.balance || 0, isAdmin: data.isAdmin === true, effects: buffs, vipPrice: discounted(300, buffs.vip), vipDays: 30 + (buffs.vipdays || 0), serverNow: Date.now() });
     } catch (error) { res.status(500).send('Could not load amulets'); }

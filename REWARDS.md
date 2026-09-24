@@ -13,31 +13,12 @@
 
 ## Amulet variety
 
-The original five amulets per gem tier keep their IDs and powers. Two additional
-amulets per tier rotate through four new power families, giving seven per tier.
-Only the strongest equipped amulet of each family applies. Existing slot prices
-and the five-day removal lock are unchanged.
-
-| New family | Effect | Scaling by tier rank, starting at zero |
-| --- | --- | --- |
-| Prism Brush | Extra dyes from each gem crafted into dye | floor(min(3, 1 + rank × 0.15)) |
-| Hidden Geode | Chance of one Ruby from an opened pack | min(25, 10 + rank)% |
-| Third Chime | Extra Footy on every third wheel spin | min(18, 6 + rank) |
-| Perfect Furnace | Extra matching gem for a three-card conversion | 1 |
-
-New shop prices are 35 or 42 matching gems, plus 3 per tier rank (rank capped at
-12 for pricing). Third Chime follows the player's successful spin count; the amulet
-must be equipped on the third spin to receive its bonus. Its slot shows spins left.
-
-Four exclusive amulets come from the trophy road. They cannot be bought in the
-gem shop; administrators can grant them for testing using the existing grant hub.
-
-| Trophies | Exclusive amulet | Effect |
-| --- | --- | --- |
-| 100 | Trailblazer Chime | +9 Footy on every third wheel spin |
-| 500 | Chromatic Compass | +2 dyes per gem crafted into dye |
-| 1,750 | Champion's Laurel | +3 trophies per ranked win; no effect on Skill Level |
-| 3,000 | Eternal Furnace | +2 matching gems for a three-card conversion |
+The shop now has five amulets per tier, with curated roles, combinations, and
+loadout conditions. This replaces the old seven-per-tier catalog. See
+[AMULETS.md](AMULETS.md) for the full current catalog and retirement behavior.
+The strongest active bonus per family applies; duplicate effects do not add.
+Slot prices and the five-day removal lock are unchanged. Trophy-road exclusives
+are retained. Conditional rewards are checked against current account state.
 
 ## Trophy road
 
