@@ -30,3 +30,9 @@ Deploy backend and frontend together. No new Firestore composite indexes or rule
 ## Companion presentation upgrade
 
 Companions now use layered local SVG illustrations instead of emoji. Desktop art is 350px wide, mobile art 285px. A prominent nook beneath the Home hero offers Sunlit Ledge, Crystal Hollow, and Cozy Corner perches. Breathing, blinking, ears/feelers, tails, shells, and wings animate separately. Idle peeks hide behind the foreground ledge; clicking produces a hop with hearts, and feeding adds a nibble reaction. Animations pause offscreen and respect reduced motion. Prices, ownership, and feeding costs are unchanged, and animation never writes to Firestore.
+
+## Roaming and hide-and-seek
+
+Companions start at home. The three home controls are Call back / stay home, Roam, and Play hide and seek. Leaving plays a full dive below the ledge. Roam picks an available corner on the current page; hide-and-seek picks and keeps one of twelve named spots until the player clicks the pet. Spots cover the home banner, daily pack, collection shelf, market, inventory, amulets, workshop, wheel, VIP, wallet, selling desk, and Brawl lobby. Some hiding spots require scrolling. A persistent Call back control returns the pet from any tab. Finding a pet gives a local celebration, not currency. Feeding recalls it before the eating reaction.
+
+Peeks are intermittent, clipped to show only part of the creature, responsive to scrolling/resizing, paused in background tabs, and suppressed during dialogs/dye mode. Reduced motion removes travel animation. Mode and hide-and-seek rounds are local to the page, reset on reload, and add no Firestore reads or writes.

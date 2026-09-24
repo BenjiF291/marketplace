@@ -34,6 +34,7 @@
   petMessage.textContent=mood==='snack'?'Crunch, crunch! That earned you a very happy wiggle.':['Oh, hello you!','A little head scratch? Yes please.','Your companion is delighted to see you.'][Math.floor(Math.random()*3)];
   reactionTimer=setTimeout(()=>{delete stage.dataset.mood;},2600);
  }
+ const explorer=window.createCompanionExplorer({stage,pet,copy,message:petMessage,react});
  pet.onclick=()=>react();
  const observe=new IntersectionObserver(entries=>{stage.classList.toggle('is-visible',entries[0].isIntersecting&&!document.hidden);});observe.observe(stage);
  document.addEventListener('visibilitychange',()=>{stage.classList.toggle('is-paused',document.hidden);});
@@ -43,7 +44,7 @@
 
  function paintHome(){
   if(!state)return;
-  const id=state.equipped.pet;stage.hidden=!id;
+  const id=state.equipped.pet;stage.hidden=!id;explorer.update(id);
   if(pet.dataset.pet!==(id||'')){pet.dataset.pet=id||'';pet.innerHTML=window.companionArt(id);stage.dataset.mood='';}
   petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';
   pet.setAttribute('aria-label',`Play with ${petName.textContent}`);pet.title='Click for a head scratch';
@@ -74,7 +75,7 @@
   }
   list.append(tile);
  }}
- async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){react('snack');status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();}catch(e){status.textContent=e.message;}finally{busy=false;const message=status.textContent;render();status.textContent=message;}}
+ async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){explorer.home();react('snack');status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();}catch(e){status.textContent=e.message;}finally{busy=false;const message=status.textContent;render();status.textContent=message;}}
  async function open(){if(!dialog.open)dialog.showModal();status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
  filter.onchange=render;
  window.pickRubyCompass=async()=>{
@@ -88,7 +89,7 @@
  window.chooseRubyPackCard=cards=>choose('Choose your card - the other cards are not awarded',cards.map(id=>({id,name:id.replace(/\.[^.]+$/,'')})),true);
  // A peek from behind the ledge, never a trip across the page or its controls.
  setInterval(()=>{
-  if(stage.hidden||document.hidden||!stage.classList.contains('is-visible')||stage.dataset.mood||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  if(stage.dataset.explore!=='home'||stage.hidden||document.hidden||!stage.classList.contains('is-visible')||stage.dataset.mood||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   stage.classList.add('is-peeking');clearTimeout(peekTimer);
   peekTimer=setTimeout(()=>stage.classList.remove('is-peeking'),2200);
  },18000);

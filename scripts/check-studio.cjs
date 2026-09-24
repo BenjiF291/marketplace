@@ -36,6 +36,29 @@ const fixture=(url)=>{
  await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);assert.equal(await page.locator('#rubyShopDialog').isVisible(),true);assert.ok(await page.locator('.ruby-tile').count()>15);await page.screenshot({path:'.ui-tools/ruby-shop.png',fullPage:true});await page.keyboard.press('Escape');
  assert.equal(await page.locator('#dailyPackFeature h3').textContent(),'Gold discovery pack');
  const companion=page.locator('.companion-stage');assert.equal(await companion.isVisible(),true);
+ await page.locator('[data-companion-mode="roam"]').click();await page.waitForTimeout(1400);
+ assert.equal(await companion.getAttribute('data-explore'),'roam');
+ assert.equal(await page.locator('.ruby-pet').isVisible(),false);
+ await page.evaluate(()=>footyStudio.navigate('marketplace'));await page.waitForTimeout(1200);
+ assert.equal(await page.locator('.companion-world-peek').isVisible(),true);
+ assert.equal(await page.locator('.companion-world-peek').getAttribute('data-spot'),'market');
+ await page.waitForTimeout(900);await page.screenshot({path:'.ui-tools/companion-roaming.png'});
+ await page.locator('.companion-remote button').click();assert.equal(await companion.getAttribute('data-explore'),'home');
+ assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
+ await page.evaluate(()=>footyStudio.navigate('home'));
+ await page.locator('[data-companion-mode="hide"]').click();await page.waitForTimeout(1200);
+ let found=false;
+ for(const route of ['home','marketplace','inventory','amulets','workshop','spin','vip','wallet','sell','battle']){
+  await page.evaluate(route=>footyStudio.navigate(route),route);await page.waitForTimeout(1100);
+  for(let y=0;y<await page.evaluate(()=>document.documentElement.scrollHeight);y+=450){await page.evaluate(y=>scrollTo(0,y),y);await page.waitForTimeout(100);if(await page.locator('.companion-world-peek').isVisible())break;}
+  if(await page.locator('.companion-world-peek').isVisible()){
+   await page.locator('.companion-world-peek button').evaluate(button=>button.click());found=true;break;
+  }
+ }
+ assert.equal(found,true,'a hiding pet is discoverable in the twelve registered spots');
+ assert.equal(await companion.getAttribute('data-explore'),'home');
+ await page.evaluate(()=>footyStudio.navigate('home'));
+
  assert.ok((await page.locator('.ruby-pet').boundingBox()).width>=300);
  assert.ok((await page.locator('.ruby-pet svg').boundingBox()).width>=300);
  await page.locator('.ruby-pet').click();assert.equal(await companion.getAttribute('data-mood'),'hello');
@@ -47,6 +70,23 @@ const fixture=(url)=>{
  await page.setViewportSize({width:1440,height:1050});await page.evaluate(()=>scrollTo(0,0));
 
  assert.equal(await page.locator('[data-todays-pack] .daily-pack-badge').textContent(),"TODAY'S DAILY PACK");
+ if(process.env.COMPANION_CHECK_ONLY==='1'){
+  await page.setViewportSize({width:375,height:844});
+  await page.locator('[data-companion-mode="roam"]').click();
+  await page.evaluate(()=>{footyStudio.navigate('inventory');scrollTo(0,0);});await page.waitForTimeout(1900);
+  assert.equal(await page.locator('.companion-world-peek').isVisible(),true);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.screenshot({path:'.ui-tools/companion-roaming-mobile.png',animations:'disabled'});
+  await page.locator('.companion-remote button').click();await page.waitForTimeout(1400);
+  assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
+  assert.equal(await companion.getAttribute('data-explore'),'home');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>footyStudio.navigate('home'));
+  await page.locator('[data-companion-mode="hide"]').click();
+  assert.equal(await page.locator('.ruby-pet').evaluate(node=>getComputedStyle(node).transitionDuration),'0s');
+  await page.locator('.companion-remote button').click();
+  assert.deepEqual(errors,[]);console.log('Companion checks passed: dive, cross-tab roaming, hide-and-seek, recall, mobile layout, and reduced motion.');
+  await browser.close();await new Promise(r=>server.close(r));return;
+ }
  await page.screenshot({path:'.ui-tools/home-desktop.png',fullPage:true});
  const routes=['marketplace','inventory','workshop','amulets','battle','wallet','spin','vip','sell','admin','battle-manager'];const report=[];
  for(const r of routes){await page.evaluate(r=>footyStudio.navigate(r),r);await page.waitForTimeout(300);report.push({route:r,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),panels:await page.locator('.main-grid > section:visible').count()});if(['marketplace','battle','admin','workshop','amulets','inventory','spin','vip'].includes(r))await page.screenshot({path:'.ui-tools/'+r+'-desktop.png',fullPage:true});}
