@@ -16,15 +16,37 @@
  grantBtn.onclick=async()=>{if(grantBtn.disabled)return;grantBtn.disabled=true;try{await call('/admin/grant-resource',{userId:document.getElementById('grantResourceUser').value,kind:'ruby-item',rubyItemId:grantSelect.value,quantity:Number(grantQty.value)});document.getElementById('grantResourceStatus').textContent='Ruby shop item granted.';}catch(e){document.getElementById('grantResourceStatus').textContent=e.message;}finally{grantBtn.disabled=false;}};
  const habitat=el('section',undefined,'ruby-habitat');habitat.id='rubyHabitat';
  (document.getElementById('studioHome')||document.querySelector('.user-section')).append(habitat);
- const pet=el('button',undefined,'ruby-pet');pet.hidden=true;pet.setAttribute('aria-label','Play with your companion');const petHome=document.getElementById('studioHome')||habitat;petHome.style.position='relative';petHome.append(pet);
+ const stage=el('section',undefined,'companion-stage');stage.hidden=true;stage.dataset.perch='sun';
+ const copy=el('div',undefined,'companion-copy');copy.append(el('p','A LITTLE COMPANY','companion-eyebrow'));
+ const petName=el('h3');const petMessage=el('p','Click your companion for a little hello. Treats are just for fun.');petMessage.setAttribute('aria-live','polite');
+ const perches=el('div',undefined,'companion-perches');perches.setAttribute('aria-label','Companion perches');
+ const perchNames={sun:'Sunlit ledge',crystal:'Crystal hollow',cozy:'Cozy corner'};
+ function setPerch(key){stage.dataset.perch=key;perches.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.perch===key)));}
+ for(const [key,name] of Object.entries(perchNames)){const b=el('button',name);b.type='button';b.dataset.perch=key;b.onclick=()=>{setPerch(key);react('hello');};perches.append(b);}
+ const nook=el('div',undefined,'companion-nook');
+ const pet=el('button',undefined,'ruby-pet');pet.type='button';
+ const ledge=el('div',undefined,'companion-ledge');ledge.setAttribute('aria-hidden','true');ledge.append(el('span','YOUR LITTLE SIDEKICK'));
+ nook.append(pet,ledge);copy.append(petName,petMessage,perches);stage.append(copy,nook);const hero=document.querySelector('#studioHome .studio-hero');if(hero)hero.after(stage);else habitat.before(stage);setPerch('sun');
+ let reactionTimer,peekTimer;
+ function react(mood='hello'){
+  clearTimeout(reactionTimer);clearTimeout(peekTimer);stage.classList.remove('is-peeking');
+  stage.dataset.mood='';void pet.offsetWidth;stage.dataset.mood=mood;
+  petMessage.textContent=mood==='snack'?'Crunch, crunch! That earned you a very happy wiggle.':['Oh, hello you!','A little head scratch? Yes please.','Your companion is delighted to see you.'][Math.floor(Math.random()*3)];
+  reactionTimer=setTimeout(()=>{delete stage.dataset.mood;},2600);
+ }
+ pet.onclick=()=>react();
+ const observe=new IntersectionObserver(entries=>{stage.classList.toggle('is-visible',entries[0].isIntersecting&&!document.hidden);});observe.observe(stage);
+ document.addEventListener('visibilitychange',()=>{stage.classList.toggle('is-paused',document.hidden);});
  const shelf=el('div',undefined,'ruby-shelf');habitat.append(shelf);
  const profile=el('span',undefined,'ruby-profile');document.getElementById('currentUsername').after(profile);
  const emoji={'pet:fox':'🦊','pet:snail':'🐌','pet:dragon':'🐉','relic:rose':'🌹','relic:moon':'🌙','relic:crown':'👑'};
 
- pet.onclick=()=>{pet.classList.remove('ruby-bounce');void pet.offsetWidth;pet.classList.add('ruby-bounce');pet.title='Happy to see you!';};
  function paintHome(){
   if(!state)return;
-  const id=state.equipped.pet;pet.hidden=!id;pet.textContent=emoji[id]||'◇';pet.title='Click to play - feeding is optional';
+  const id=state.equipped.pet;stage.hidden=!id;
+  if(pet.dataset.pet!==(id||'')){pet.dataset.pet=id||'';pet.innerHTML=window.companionArt(id);stage.dataset.mood='';}
+  petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';
+  pet.setAttribute('aria-label',`Play with ${petName.textContent}`);pet.title='Click for a head scratch';
   shelf.replaceChildren();
   const heading=el('h3','Your Ruby collection');shelf.append(heading);
   if(state.equipped.profile){const style=state.catalog.find(x=>x.id===state.equipped.profile);profile.textContent=style?.name||'';profile.dataset.style=state.equipped.profile;}
@@ -41,6 +63,7 @@
  function render(){if(!state)return;status.textContent=`${state.rubies} Rubies • ${state.fuelArmed?'Fuel armed for next conversion':'Choose something special'}`;list.replaceChildren();
  for(const item of state.catalog.filter(x=>filter.value==='all'||x.kind===filter.value)){
   const tile=el('article',undefined,'ruby-tile');tile.append(el('div',emoji[item.id]||({'opening':'✦','profile':'♛','supply':'◇'}[item.kind]||'◆'),'ruby-art'),el('h3',item.name),el('p',item.description),el('strong',`${item.price} Rubies`),el('small',`Owned: ${state.owned[item.id]||0}`));
+  if(item.kind==='pet'){const portrait=tile.querySelector('.ruby-art');portrait.classList.add('companion-portrait');portrait.innerHTML=window.companionArt(item.id);}
   const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||state.rubies<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);tile.append(buy);
   if(state.owned[item.id]>0&&item.kind!=='relic'&&!item.id.startsWith('compass:')){
    const use=el('button',item.id==='retry'?'Replace latest spin':item.id==='recall'?'Recall from slot':item.id==='fuel'?'Arm next conversion':item.id==='food'?'Feed companion':'Equip','btn');use.disabled=busy;tile.append(use);
@@ -51,7 +74,7 @@
   }
   list.append(tile);
  }}
- async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){pet.click();status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();}catch(e){status.textContent=e.message;}finally{busy=false;const message=status.textContent;render();status.textContent=message;}}
+ async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){react('snack');status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();}catch(e){status.textContent=e.message;}finally{busy=false;const message=status.textContent;render();status.textContent=message;}}
  async function open(){if(!dialog.open)dialog.showModal();status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
  filter.onchange=render;
  window.pickRubyCompass=async()=>{
@@ -63,7 +86,11 @@
  for(const o of options){const b=el('button',undefined,'btn ruby-choice');if(images){const img=el('img');img.src='/images/'+encodeURIComponent(o.id);img.alt=o.name;b.append(img);}b.append(el('span',o.name));b.onclick=()=>{selected=o.id;d.close();};grid.append(b);}
  const cancel=el('button','Close - choose later','btn');cancel.onclick=()=>d.close();d.append(cancel);d.addEventListener('close',()=>{d.remove();resolve(selected);},{once:true});document.body.append(d);d.showModal();});}
  window.chooseRubyPackCard=cards=>choose('Choose your card - the other cards are not awarded',cards.map(id=>({id,name:id.replace(/\.[^.]+$/,'')})),true);
- // Roaming is local-only and pauses away from Home. No database writes per interaction.
- setInterval(()=>{if(pet.hidden||document.hidden||document.body.classList.contains('studio-ui')&&document.body.dataset.studioPage!=='home'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;pet.style.left=`${Math.round(Math.random()*Math.max(0,petHome.clientWidth-85))}px`;pet.style.top=`${Math.round(Math.random()*Math.max(0,petHome.clientHeight-85))}px`;pet.classList.toggle('ruby-peeking',Math.random()<.25);},6500);
+ // A peek from behind the ledge, never a trip across the page or its controls.
+ setInterval(()=>{
+  if(stage.hidden||document.hidden||!stage.classList.contains('is-visible')||stage.dataset.mood||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  stage.classList.add('is-peeking');clearTimeout(peekTimer);
+  peekTimer=setTimeout(()=>stage.classList.remove('is-peeking'),2200);
+ },18000);
  refresh().catch(()=>{shelf.textContent='Open the Ruby shop to load your collection.';});
 })();

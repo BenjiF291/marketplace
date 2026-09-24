@@ -4,13 +4,10 @@
 .ruby-tile {padding:18px;border:1px solid #ead3ce;border-radius:16px;background:white;display:flex;flex-direction:column;gap:10px}
 .ruby-tile h3,.ruby-tile p {margin:0}.ruby-tile p {line-height:1.5}.ruby-art {font-size:38px;color:#a72743}.ruby-tile select{max-width:100%}
 .ruby-habitat {position:relative;overflow:hidden;padding:20px;margin-top:24px;border:1px solid #e7cdca;border-radius:20px;background:#fff7f1;color:#392e29;min-height:140px}
-.ruby-pet {position:absolute;left:15%;top:20px;background:none;border:0;font-size:48px;cursor:pointer;transition:left 3s ease,top 3s ease,transform 1s;z-index:1}
-.ruby-pet.ruby-peeking {transform:translateY(-28px) rotate(15deg)}
 .ruby-shelf {display:flex;flex-wrap:wrap;gap:16px;align-items:center}.ruby-shelf h3,.ruby-shelf small{width:100%}.ruby-shelf figure{margin:0;text-align:center;max-width:140px}.ruby-relic{font-size:48px;display:block}
 .ruby-profile:not(:empty) {display:inline-block;margin:8px 0;padding:6px 12px;border:2px solid #b83753;border-radius:20px;background:#fff1ee;color:#8b2942;font-weight:700}
 .ruby-profile[data-style="profile:royal"] {border-color:#aa841f;background:#fff6cf;color:#664e13}
 .ruby-choice img {width:100%;max-height:260px;object-fit:contain}.ruby-choice span{display:block;white-space:normal;overflow-wrap:anywhere}
-.ruby-bounce {animation:ruby-bounce .7s ease} @keyframes ruby-bounce {30%{transform:translateY(-20px) rotate(-12deg)}70%{transform:translateY(-8px) rotate(12deg)}}
 body[data-ruby-opening="embers"] #packOpeningOverlay {background:radial-gradient(ellipse,#a23a0daa,#100707f5)}
 body[data-ruby-opening="embers"] #openingPack.is-opening {animation:ruby-embers .75s ease forwards}
 body[data-ruby-opening="aurora"] #packOpeningOverlay {background:conic-gradient(from 45deg,#162839ee,#5b247aee,#146054ee,#162839ee)}
@@ -20,8 +17,54 @@ body[data-ruby-opening="aurora"] #openingPack.is-opening {animation:ruby-aurora 
 @media(max-width:600px){#dyeHeaderControls{flex-wrap:wrap}.ruby-dialog{padding:16px}.ruby-habitat{padding-left:12px;padding-right:12px}.ruby-shelf figure{max-width:100px}}
 @media(prefers-reduced-motion:reduce){.ruby-pet{transition:none}.ruby-bounce,body[data-ruby-opening] #openingPack.is-opening{animation:none}}
 
-.ruby-pet::after {content:'?';position:absolute;font-size:18px;right:2px;top:5px;color:#df4164;text-shadow:0 1px white,0 0 9px #ffbdcf;pointer-events:none}
 body[data-ruby-profile="ember"] #currentUsername {padding:12px;border:2px solid #c34b60;border-radius:14px;background:linear-gradient(120deg,#fff0e6,#ffe3ee)}
 body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double #ac861f;border-radius:14px;background:linear-gradient(120deg,#fff6d3,#fffaf0)}
 .ruby-dialog { margin:auto; }
-.ruby-dialog > select {padding:9px 12px;border:1px solid #d8b7b0;border-radius:9px;background:white;color:#362928;max-width:100%;font:inherit}
+.ruby-dialog > select {padding:9px 12px;border:1px solid #d8b7b0;border-radius:9px;background:white;color:#362928;max-width:100%;font:inherit}/* Illustrated companions: a large, contained stage, with no floating hit targets. */
+.companion-stage {display:grid;grid-template-columns:1fr 380px;align-items:center;position:relative;isolation:isolate;overflow:hidden;margin-top:28px;border:1px solid #e8c7a9;border-radius:24px;background:linear-gradient(125deg,#fff7e8,#ffe0ba);color:#49372f;min-height:310px;padding:24px 32px;gap:16px}
+.companion-stage[hidden]{display:none}
+.companion-stage[data-perch=crystal]{background:linear-gradient(125deg,#f4efff,#d8d2ff);border-color:#bba7dc;color:#47345c}
+.companion-stage[data-perch=cozy]{background:linear-gradient(125deg,#e7f8ef,#badfd0);border-color:#a1c8b4;color:#2d5043}
+.companion-copy{position:relative;z-index:2}.companion-copy h3{font-size:clamp(24px,3vw,36px);letter-spacing:-.04em;margin:8px 0 12px}.companion-copy p{max-width:350px;line-height:1.6;font-size:14px}.companion-copy .companion-eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;opacity:.7}
+.companion-perches{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}.companion-perches button{font:inherit;font-size:11px;cursor:pointer;border:1px solid #ffffffaa;padding:8px 12px;border-radius:20px;background:#ffffff70;color:inherit}.companion-perches button[aria-pressed=true]{background:#fff;box-shadow:0 3px 10px #45362612;font-weight:700}.companion-perches button:focus-visible,.ruby-pet:focus-visible{outline:3px solid #b33569;outline-offset:3px}
+.companion-nook{height:280px;position:relative;overflow:hidden;border-radius:120px 120px 18px 18px;background:radial-gradient(ellipse at 50% 42%,#fff9 0%,#fff0 68%)}
+.companion-nook:before{content:'';position:absolute;width:200px;height:200px;border:1px solid #ffffffa0;border-radius:50%;top:20px;left:calc(50% - 100px);box-shadow:0 0 0 22px #ffffff20,0 0 0 44px #ffffff10}
+.ruby-pet{display:block;position:absolute;bottom:0;left:calc(50% - 175px);width:350px;height:286px;max-width:none;padding:0;border:0;background:none;cursor:pointer;z-index:1;transition:transform .9s cubic-bezier(.4,0,.2,1);-webkit-tap-highlight-color:transparent}
+.companion-illustration{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 9px 6px #62456816)}
+.companion-ledge{position:absolute;bottom:-1px;left:0;right:0;height:38px;border-radius:40% 40% 0 0;background:linear-gradient(#b88869,#8a5e51);box-shadow:0 -3px 0 #fce3bb;z-index:2;pointer-events:none;text-align:center}
+.companion-ledge span{font-size:8px;font-weight:800;letter-spacing:.24em;color:#ffecd8;line-height:38px}
+[data-perch=crystal] .companion-ledge{background:linear-gradient(#ad8acb,#765393);box-shadow:0 -3px 0 #e8caff;clip-path:polygon(0 35%,8% 0,18% 25%,30% 3%,42% 30%,58% 0,70% 30%,83% 5%,100% 35%,100% 100%,0 100%)}
+[data-perch=cozy] .companion-ledge{background:linear-gradient(#70a491,#427765);box-shadow:0 -3px 0 #c3edca}
+.is-peeking .ruby-pet{transform:translateY(82px) rotate(-5deg)}
+.companion-body{transform-origin:150px 210px;animation:companion-breathe 3.8s ease-in-out infinite}
+.companion-head{transform-origin:150px 150px;animation:companion-look 7s ease-in-out infinite}
+.companion-tail{transform-origin:185px 180px;animation:companion-tail 3s ease-in-out infinite}
+.companion-ear{transform-box:fill-box;transform-origin:50% 100%;animation:companion-twitch 6s ease-in-out infinite}.companion-ear-right{animation-delay:-2.3s}
+.companion-eyes{transform-box:fill-box;transform-origin:center;animation:companion-blink 5.3s infinite}
+.companion-wing{transform-box:fill-box;animation:companion-flap 2.7s ease-in-out infinite;transform-origin:100% 100%}.wing-right{transform-origin:0 100%;animation-direction:reverse;animation-delay:-.4s}
+.companion-shell{transform-origin:130px 180px;animation:companion-shell 4s ease-in-out infinite}
+.companion-sparkles{animation:companion-shimmer 3s ease-in-out infinite}.companion-hearts{opacity:0;pointer-events:none}
+.companion-stage[data-mood] .companion-character{transform-origin:150px 220px;animation:companion-hop .65s ease-in-out 3}
+.companion-stage[data-mood] .companion-hearts{animation:companion-love 2.4s ease-out both}
+.companion-stage[data-mood=snack] .companion-head{animation:companion-nibble .28s ease-in-out 8}
+.companion-portrait{height:185px;font-size:initial;overflow:hidden;border-radius:14px;background:radial-gradient(ellipse,#fff1d5,#f4e9ff);text-align:center}
+.companion-portrait .companion-illustration{max-width:240px}.companion-portrait .companion-head{animation:none}
+.companion-stage:not(.is-visible) .companion-illustration *,.companion-stage.is-paused .companion-illustration *{animation-play-state:paused!important}
+@keyframes companion-breathe{50%{transform:scale(1.018,1.035)}}
+@keyframes companion-look{0%,35%,100%{transform:rotate(0)}45%,65%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
+@keyframes companion-tail{50%{transform:rotate(12deg)}}
+@keyframes companion-twitch{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-12deg)}90%{transform:rotate(5deg)}}
+@keyframes companion-blink{0%,42%,46%,92%,96%,100%{transform:scaleY(1)}44%,94%{transform:scaleY(.07)}}
+@keyframes companion-flap{50%{transform:rotate(12deg) scaleX(.88)}}
+@keyframes companion-shell{50%{transform:rotate(-3deg)}}
+@keyframes companion-shimmer{50%{opacity:.3}}
+@keyframes companion-hop{35%{transform:translateY(-16px) rotate(-3deg)}70%{transform:translateY(-6px) rotate(3deg)}}
+@keyframes companion-love{0%{opacity:0;transform:translateY(20px)}25%,65%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+@keyframes companion-nibble{50%{transform:rotate(4deg) translateY(3px)}}
+@media(max-width:850px){.companion-stage{grid-template-columns:1fr 280px;padding:20px;gap:0}.ruby-pet{width:300px;height:245px;left:calc(50% - 150px)}.companion-nook{height:250px}}
+@media(max-width:600px){.companion-stage{grid-template-columns:minmax(0,1fr);padding:20px 14px 0}.companion-nook{height:235px;max-width:330px;width:100%;margin:auto}.companion-copy h3{font-size:27px}.companion-copy p{font-size:12px}.companion-perches{margin-top:12px}.ruby-pet{width:285px;height:233px;left:calc(50% - 142.5px)}.companion-portrait{height:160px}}
+@media(prefers-reduced-motion:reduce){.companion-illustration *{animation:none!important}.ruby-pet{transition:none}.is-peeking .ruby-pet{transform:none}.companion-stage[data-mood] .companion-hearts{opacity:1}}
+/* Override Studio's small navigation SVG defaults for full-size character art. */
+.ruby-pet svg.companion-illustration,.companion-portrait svg.companion-illustration {display:block;width:100%;height:100%;max-width:none;flex:none}
+.companion-portrait svg.companion-illustration{max-width:240px;margin:auto}
+.studio-ui .companion-copy h3 {font-size:clamp(24px,3vw,36px);margin:8px 0 12px;line-height:1.15}

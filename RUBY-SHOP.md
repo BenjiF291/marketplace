@@ -26,3 +26,7 @@ Choose a compass when opening an inventory pack. The server draws up to three di
 Ruby shop purchases and uses are authenticated, transactional, and deduplicated by action ID. Utility rewards and consumption are server controlled. Ruby shop items can also be granted from the existing admin grant hub. New account fields use empty defaults; no account migration is needed. `rubyActions` receipts are server-only under existing default-deny rules.
 
 Deploy backend and frontend together. No new Firestore composite indexes or rule changes. Converter base costs are now one tier sell price per card, replacing the previous 1.5x multiplier. Pack-opening, VIP, and amulet rewards remain compatible.
+
+## Companion presentation upgrade
+
+Companions now use layered local SVG illustrations instead of emoji. Desktop art is 350px wide, mobile art 285px. A prominent nook beneath the Home hero offers Sunlit Ledge, Crystal Hollow, and Cozy Corner perches. Breathing, blinking, ears/feelers, tails, shells, and wings animate separately. Idle peeks hide behind the foreground ledge; clicking produces a hop with hearts, and feeding adds a nibble reaction. Animations pause offscreen and respect reduced motion. Prices, ownership, and feeding costs are unchanged, and animation never writes to Firestore.

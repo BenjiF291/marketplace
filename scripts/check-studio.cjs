@@ -35,6 +35,17 @@ const fixture=(url)=>{
  await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
  await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);assert.equal(await page.locator('#rubyShopDialog').isVisible(),true);assert.ok(await page.locator('.ruby-tile').count()>15);await page.screenshot({path:'.ui-tools/ruby-shop.png',fullPage:true});await page.keyboard.press('Escape');
  assert.equal(await page.locator('#dailyPackFeature h3').textContent(),'Gold discovery pack');
+ const companion=page.locator('.companion-stage');assert.equal(await companion.isVisible(),true);
+ assert.ok((await page.locator('.ruby-pet').boundingBox()).width>=300);
+ assert.ok((await page.locator('.ruby-pet svg').boundingBox()).width>=300);
+ await page.locator('.ruby-pet').click();assert.equal(await companion.getAttribute('data-mood'),'hello');
+ await page.locator('.companion-perches [data-perch="crystal"]').click();assert.equal(await companion.getAttribute('data-perch'),'crystal');
+ for(const kind of ['fox','snail','dragon']){await page.evaluate(kind=>{document.querySelector('.ruby-pet').innerHTML=companionArt('pet:'+kind);},kind);await companion.screenshot({path:'.ui-tools/companion-'+kind+'.png'});}
+ await page.evaluate(()=>{document.querySelector('.ruby-pet').innerHTML=companionArt('pet:fox');});
+ await page.setViewportSize({width:375,height:844});await companion.evaluate(node=>node.scrollIntoView({block:'center'}));await companion.screenshot({path:'.ui-tools/companion-mobile.png'});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ await page.setViewportSize({width:1440,height:1050});await page.evaluate(()=>scrollTo(0,0));
+
  assert.equal(await page.locator('[data-todays-pack] .daily-pack-badge').textContent(),"TODAY'S DAILY PACK");
  await page.screenshot({path:'.ui-tools/home-desktop.png',fullPage:true});
  const routes=['marketplace','inventory','workshop','amulets','battle','wallet','spin','vip','sell','admin','battle-manager'];const report=[];
