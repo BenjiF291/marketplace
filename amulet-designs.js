@@ -6,7 +6,7 @@ const SETS = [
   ['unsealer','Unsealer',{pack:12}],
   ['geode','Hidden Geode',{packgem:20}],
   ['lifeline','Pocket Lifeline',{wheel:6},'lowfunds'],
-  ['apprentice','Solo Apprentice',{converter:12},'solo']
+  ['apprentice','Crystal Apprentice',{converter:10}]
  ],[
   ['reclaimer','Reclaimer',{salvage:12}],
   ['dust','Gem Dust',{pigment:1}],
@@ -24,10 +24,10 @@ const SETS = [
   ['kiln','Perfect Kiln',{fullbatch:1}],
   ['prism','Prism Exchange',{converter:10,gemshop:8}],
   ['prospector','Prospector',{packgem:25,salvage:8}],
-  ['minimalist','Minimalist Brush',{pigment:3},'solo']
+  ['minimalist','Geode Brush',{pigment:1,packgem:10}]
  ],[
   ['rising','Rising Star',{ascend:40}],
-  ['merchant','Merchant Pair',{market:8},'pair'],
+  ['merchant','Merchant Crest',{market:7}],
   ['royal','Royal Weekend',{vipdays:2}],
   ['treasury','Ruby Treasury',{pack:25},'rubystash'],
   ['celebration','Celebration Bell',{wheelstreak:15,ascend:15}]
@@ -42,7 +42,7 @@ const SETS = [
   ['diplomat','Diplomat',{vip:12,market:5}],
   ['patronage','Royal Patronage',{pack:35},'vip'],
   ['veteran','Veterans Crest',{battle:20,trophybonus:1}],
-  ['precision','Precision Tools',{converter:20,fullbatch:1},'pair']
+  ['precision','Precision Tools',{converter:16,fullbatch:1}]
  ],[
   ['laurel','Lightning Laurel',{trophybonus:2}],
   ['storm','Storm Chime',{wheel:5,wheelstreak:12}],
@@ -53,17 +53,15 @@ const SETS = [
   ['summit','Summit Star',{ascend:50,gemshop:6}],
   ['crown','Collectors Crown',{pack:45,packgem:20}],
   ['unity','Unity Prism',{market:8,pigment:2},'diverse'],
-  ['champion','Lone Champion',{trophybonus:3,battle:25},'solo'],
+  ['champion','Club Champion',{trophybonus:3,battle:20}],
   ['atelier','Diamond Atelier',{fullbatch:1,pigment:2,converter:10}]
  ]
 ];
-const CONDITIONS={lowfunds:'While your balance is below 100 Footy',solo:'While this is your only equipped amulet',pair:'While exactly two amulets are equipped',diverse:'While at least three different gem tiers are equipped',novip:'While VIP is inactive',vip:'While VIP is active',rubystash:'While holding at least 100 Rubies (not consumed)',full:'While all five amulet slots are occupied'};
+const CONDITIONS={lowfunds:'While your balance is below 100 Footy',diverse:'While at least three different gem tiers are equipped',novip:'While VIP is inactive',vip:'While VIP is active',rubystash:'While holding at least 100 Rubies (not consumed)',full:'While all five amulet slots are occupied'};
 function active(condition,user,slots,now=Date.now()) {
  const date=user.vipUntil?.toDate?user.vipUntil.toDate():new Date(user.vipUntil||0);
  switch(condition){
  case 'lowfunds':return Number(user.balance||0)<100;
- case 'solo':return slots.length===1;
- case 'pair':return slots.length===2;
  case 'diverse':return new Set(slots.map(slot=>slot.gemKey).filter(key=>key&&key!=='trophy-road')).size>=3;
  case 'novip':return date.getTime()<=now;
  case 'vip':return date.getTime()>now;

@@ -33,7 +33,7 @@ function designs(rank) {
   // Special tiers use mixed roles rather than rescaled standard-tier items.
   return Array.from({length:5},(_,i)=>{
     const a=ALL_POWERS[(rank+i*3)%ALL_POWERS.length],b=ALL_POWERS[(rank*2+i*3+1)%ALL_POWERS.length];
-    return [`special-${i}`,`${a[1]} & ${b[1]}`,{[a[0]]:a[2],[b[0]]:b[2]},['diverse','pair','rubystash','vip','full'][i]];
+    return [`special-${i}`,`${a[1]} & ${b[1]}`,{[a[0]]:a[2],[b[0]]:b[2]},['diverse',null,'rubystash','vip','full'][i]];
   });
 }
 function designFields(design) {

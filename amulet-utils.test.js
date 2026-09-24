@@ -68,8 +68,8 @@ test('situational bonuses turn on and off with current account and loadout',()=>
  const find=key=>entries.find(e=>e.id.endsWith(':'+key));
  const lifeline=find('lifeline');assert.equal(effects({balance:99,amuletSlots:[lifeline]}).wheel,6);
  assert.equal(effects({balance:100,amuletSlots:[lifeline]}).wheel,undefined);
- const solo=find('minimalist');assert.equal(effects({amuletSlots:[solo]}).pigment,3);
- assert.equal(effects({amuletSlotCount:2,amuletSlots:[solo,entry]}).pigment,undefined);
+ const brush=find('minimalist');assert.equal(effects({amuletSlots:[brush]}).pigment,1);
+ assert.equal(effects({amuletSlotCount:2,amuletSlots:[brush,entry]}).pigment,1);
  const treasury=find('treasury');assert.equal(effects({gems:{bronze:100},amuletSlots:[treasury]}).pack,25);
  assert.equal(effects({gems:{bronze:99},amuletSlots:[treasury]}).pack,undefined);
  const diverse=find('palette');assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('reclaimer')]}).pigment,2);
@@ -94,4 +94,19 @@ test('Prism Brush adds dye without altering the one-gem cost',()=>{
  const {workshopAction}=require('./gem-workshop-utils');
  const result=workshopAction({gems:{bronze:2},amuletSlots:[{id:'road:chromatic',power:'pigment',value:2}]},tiers,'craft-dye',{gemKey:'bronze'});
  assert.equal(result.gemDyes.bronze,7);assert.equal(result.gems.bronze,1);
+});
+
+
+test('former solo and pair designs retain IDs and work in full five-slot loadouts',()=>{
+ const {rebalanceAmulet}=require('./amulet-utils');
+ for(const key of ['apprentice','minimalist','merchant','precision','champion']){
+  const item=entries.find(entry=>entry.id.endsWith(':'+key));
+  const old={...item,condition:'solo',equippedAt:100,removableAt:200};
+  const migrated=rebalanceAmulet(old);assert.equal(migrated.condition,null);assert.equal(migrated.id,old.id);assert.equal(migrated.removableAt,200);
+  const fillers=['fortune','unsealer','geode','reclaimer'].map(key=>entries.find(entry=>entry.id.endsWith(':'+key)));
+  const buffs=effects({amuletSlotCount:5,amuletSlots:[old,...fillers]});
+  for(const [power,value] of Object.entries(item.bonuses))assert.ok(buffs[power]>=value);
+ }
+ const extended=catalog([...tiers,{id:'special',name:'Special'}]);
+ assert.ok(extended.every(item=>!['solo','pair'].includes(item.condition)));
 });
