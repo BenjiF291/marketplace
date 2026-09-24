@@ -2153,32 +2153,25 @@ async function grantPackToUser() {
   }
 }
 
-const openingPackIds = new Set();
-async function openPack(itemId) {
-  if (openingPackIds.has(itemId)) return;
-  openingPackIds.add(itemId);
-  try {
-    const compass=window.pickRubyCompass?await window.pickRubyCompass():null;
-    if(compass===undefined)return;
-    const request=async body=>{
-      const res=await fetch(`${API_URL}/open-pack`,{method:'POST',headers:resourceHeaders(),body:JSON.stringify({itemId,...body})});
-      if(!res.ok)throw Error(await res.text());return res.json();
-    };
-    let result=await request(compass?{compass}:{});
-    while(result.choices){
-      const choice=await window.chooseRubyPackCard(result.choices);
-      if(choice===undefined)return;
-      result=await request({choice});
-    }
-    showPackOpeningAnimation(result);
-    loadInventory();
-    updateBalance();
-  } catch (error) {
-    console.error('Error opening pack:', error);
-    alert(error.message || 'Could not open pack');
-  } finally {
-    openingPackIds.delete(itemId);
+let packOpeningBusy=false,inventoryPacks=[];
+function updatePackOpenAll(){const button=document.getElementById('inventoryOpenAll');if(button){button.disabled=packOpeningBusy||!inventoryPacks.length;button.textContent=`Open all packs (${inventoryPacks.length})`;}}
+async function openPack(itemId,compass=null,pack=null){return openPackQueue([itemId],compass,pack);}
+async function openAllPacks(){return openPackQueue(inventoryPacks.map(p=>p.id));}
+async function openPackQueue(ids,compass=null,pack=null){
+ if(packOpeningBusy||!ids.length)return;packOpeningBusy=true;updatePackOpenAll();
+ try{
+  for(const itemId of ids){
+   const item=pack||inventoryPacks.find(p=>p.id===itemId)||{};
+   const request=async body=>{const res=await fetch(`${API_URL}/open-pack`,{method:'POST',headers:resourceHeaders(),body:JSON.stringify({itemId,...body})});if(!res.ok)throw Error(await res.text());return res.json();};
+   const completed=await new Promise(resolve=>window.playSpecialPackOpening({packName:item.name||'Pack',packColor:item.packColor},document.body.dataset.rubyOpening,{
+    bulk:ids.length>1,autoStart:ids.length>1&&itemId!==ids[0],
+    open:()=>request(compass?{compass}:{}),
+    choose:async choices=>{const choice=await window.chooseRubyPackCard(choices);return choice===undefined?null:request({choice});},
+    onClose:resolve
+   }));
+   if(!completed)break;
   }
+ }finally{packOpeningBusy=false;await Promise.all([loadInventory(),updateBalance()]);window.refreshRubyItems?.();updatePackOpenAll();}
 }
 
 function showPackOpeningAnimation(result) {
@@ -2782,6 +2775,7 @@ async function loadInventory() {
 
     const inventoryItems = await inventoryRes.json();
     const tiers = await tiersRes.json();
+    inventoryPacks=inventoryItems.filter(item=>item.itemType==='pack'&&!item.listedForSale);updatePackOpenAll();
     const sellPriceByCard = {};
 
     (Array.isArray(tiers) ? tiers : []).forEach(tier => {

@@ -1,4 +1,5 @@
 ﻿(() => {
+ let itemsOnly=false;
  let state=null,busy=false,journeyTables=null,journeyClockOffset=0;
  const extraCompanions=new Map();
  const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -120,11 +121,12 @@
  }
  async function refresh(){state=await call('/ruby-shop');journeyClockOffset=(state.serverNow||Date.now())-Date.now();grantSelect.replaceChildren();for(const item of state.catalog){const option=el('option',item.name);option.value=item.id;grantSelect.append(option);}paintHome();render();renderJourneys();return state;}
  function render(){if(!state)return;status.textContent=`${state.rubies} Rubies • ${state.fuelArmed?'Fuel armed for next conversion':'Choose something special'}`;list.replaceChildren();
- for(const item of state.catalog.filter(x=>filter.value==='all'||x.kind===filter.value)){
+ for(const item of state.catalog.filter(x=>(!itemsOnly||state.owned[x.id]>0)&&(filter.value==='all'||x.kind===filter.value))){
   const tile=el('article',undefined,'ruby-tile');tile.append(el('div',emoji[item.id]||({'opening':'✦','profile':'♛','supply':'◇'}[item.kind]||'◆'),'ruby-art'),el('h3',item.name),el('p',item.description),el('strong',`${item.price} Rubies`),el('small',`Owned: ${state.owned[item.id]||0}`));
   if(item.kind==='pet'){const portrait=tile.querySelector('.ruby-art');portrait.classList.add('companion-portrait');portrait.innerHTML=window.companionArt(item.id);}
   if(item.kind==='opening'){const preview=el('button','Preview animation','btn');preview.onclick=()=>window.playSpecialPackOpening({preview:true},item.id.split(':')[1]);tile.append(preview);}
-  const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||state.rubies<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);tile.append(buy);
+  const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||state.rubies<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);if(!itemsOnly)tile.append(buy);
+  if(item.id.startsWith('compass:')&&state.owned[item.id]>0){const use=el('button','Use on a pack','btn btn-primary');use.onclick=async()=>{use.disabled=true;try{const packs=(await call('/inventory')).filter(p=>p.itemType==='pack'&&!p.listedForSale);if(!packs.length){status.textContent='You have no packs to open.';return;}const packId=await choose('Choose a pack for '+item.name,packs.map(p=>({id:p.id,name:p.name})));if(packId){dialog.close();await openPack(packId,item.id,packs.find(p=>p.id===packId));}}catch(e){status.textContent=e.message;}finally{use.disabled=false;}};tile.append(use);}
   if(state.owned[item.id]>0&&item.kind!=='relic'&&!item.id.startsWith('compass:')&&!item.id.startsWith('food:')){
    const use=el('button',item.id==='retry'?'Replace latest spin':item.id==='recall'?'Recall from slot':item.id==='fuel'?'Arm next conversion':item.id==='food'?'Feed companion':'Equip','btn');use.disabled=busy;tile.append(use);
    let slot;
@@ -136,13 +138,11 @@
   list.append(tile);
  }}
  async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();updateJourneyClocks();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(result.reward){const r=result.reward;status.textContent=`Found ${r.amount} ${r.gemName}${r.bonus.kind!=='none'?' and '+r.bonus.name:''}!`;}if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){if(!extra.petId||extra.petId===pet.dataset.pet){explorer.home();react('snack');}else extraCompanions.get(extra.petId)?.explorer.home();status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();return result;}catch(e){status.textContent=e.message;return {success:false,error:e.message};}finally{busy=false;const message=status.textContent;render();renderJourneys();status.textContent=message;journeyStatus.textContent=message;}}
- async function open(){if(!dialog.open)dialog.showModal();status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
+ window.refreshRubyItems=refresh;
+ window.openRubyItemInventory=()=>open(true);
+ async function open(owned=false){itemsOnly=owned;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=owned?'supply':'all';if(!dialog.open)dialog.showModal();status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
  filter.onchange=render;
- window.pickRubyCompass=async()=>{
-  try{await refresh();}catch{return null;}
-  const owned=state.catalog.filter(x=>x.id.startsWith('compass:')&&state.owned[x.id]>0);if(!owned.length)return null;
-  return choose('Use a pack compass?', [{id:null,name:'Open normally'},...owned.map(x=>({id:x.id,name:`${x.name} (${state.owned[x.id]}) - ${x.description}`}))]);
- };
+
  function choose(title,options,images=false){return new Promise(resolve=>{const d=el('dialog',undefined,'ruby-dialog');d.append(el('h2',title));const grid=el('div',undefined,'ruby-grid');d.append(grid);let selected;
  for(const o of options){const b=el('button',undefined,'btn ruby-choice');if(images){const img=el('img');img.src='/images/'+encodeURIComponent(o.id);img.alt=o.name;b.append(img);}b.append(el('span',o.name));b.onclick=()=>{selected=o.id;d.close();};grid.append(b);}
  const cancel=el('button','Close - choose later','btn');cancel.onclick=()=>d.close();d.append(cancel);d.addEventListener('close',()=>{d.remove();resolve(selected);},{once:true});document.body.append(d);d.showModal();});}
