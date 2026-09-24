@@ -72,3 +72,9 @@ No scheduled job, polling request, Firestore rule change, or new index is needed
 - Pocket Dragon (250 Rubies), Treasure Hunter: the same quantity benefit as the snail, plus gem-tier decay increased by 0.04 (capped at 0.98) and double each rare bonus item's probability. Total bonus chances are 0.2%, 0.8%, and 2% for the three foods.
 
 All pets still consume one food, take four hours, and return 1–5 gems. The journey panel displays the selected pet's adjusted odds; food previews have a pet selector for comparing exact percentages before purchase. The server applies perks from the owned pet ID, never from client-provided multipliers. Journeys already underway retain their stored rewards; existing owned pets automatically benefit on their next departure. The food table above gives the Fox/base probabilities.
+
+## Cinematic pack effects
+
+Ember Burst and Aurora Reveal now run full-screen, roughly five-second opening sequences. Ember uses a glowing forge, sparks, charging pack and torn seal; Aurora uses drifting light curtains, orbiting rings and a rotating pack. Both end with a lit card reveal and the actual awarded bonuses. Preview animation in the Ruby shop is free and does not open a pack or equip the effect.
+
+`public/pack-cinema.js` and `public/pack-cinema.css` handle presentation only, after the existing server opening/compass selection has settled. Skip to reveal (or Escape) reveals immediately; Continue closes the scene. Reduced motion reveals immediately with a static backdrop. Dialog focus, timers and replaced scenes are cleaned up. Standard unequipped openings retain their existing animation. Include both new assets when deploying the frontend; existing purchases automatically use the upgraded effect.

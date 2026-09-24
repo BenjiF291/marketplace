@@ -2182,6 +2182,7 @@ async function openPack(itemId) {
 }
 
 function showPackOpeningAnimation(result) {
+  if(window.playSpecialPackOpening?.(result,document.body.dataset.rubyOpening))return;
   const overlay = document.getElementById('packOpeningOverlay');
   const pack = document.getElementById('openingPack');
   const card = document.getElementById('openedCardImage');

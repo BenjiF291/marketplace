@@ -123,6 +123,7 @@
  for(const item of state.catalog.filter(x=>filter.value==='all'||x.kind===filter.value)){
   const tile=el('article',undefined,'ruby-tile');tile.append(el('div',emoji[item.id]||({'opening':'✦','profile':'♛','supply':'◇'}[item.kind]||'◆'),'ruby-art'),el('h3',item.name),el('p',item.description),el('strong',`${item.price} Rubies`),el('small',`Owned: ${state.owned[item.id]||0}`));
   if(item.kind==='pet'){const portrait=tile.querySelector('.ruby-art');portrait.classList.add('companion-portrait');portrait.innerHTML=window.companionArt(item.id);}
+  if(item.kind==='opening'){const preview=el('button','Preview animation','btn');preview.onclick=()=>window.playSpecialPackOpening({preview:true},item.id.split(':')[1]);tile.append(preview);}
   const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||state.rubies<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);tile.append(buy);
   if(state.owned[item.id]>0&&item.kind!=='relic'&&!item.id.startsWith('compass:')&&!item.id.startsWith('food:')){
    const use=el('button',item.id==='retry'?'Replace latest spin':item.id==='recall'?'Recall from slot':item.id==='fuel'?'Arm next conversion':item.id==='food'?'Feed companion':'Equip','btn');use.disabled=busy;tile.append(use);
