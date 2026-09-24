@@ -8,7 +8,7 @@ module.exports=(app,db,authenticate)=>{
   const packs=await Promise.all(ids.map(id=>db.collection('packs').doc(id).get()));
   return journeys.tables(tiers,packs.filter(d=>d.exists).map(d=>({...d.data(),id:d.id})));
  }).catch(e=>{lootCache=null;throw e;});}return lootCache;};
- app.get('/pet-journeys',async(req,res)=>{try{await authenticate(req);const tables=await loot();res.json(tables.map(t=>({...t,rewards:t.rewards.map(({pack,...r})=>r)})));}catch(e){res.status(400).send(e.message);}});
+ app.get('/pet-journeys',async(req,res)=>{try{await authenticate(req);const tables=await loot();const clean=t=>({...t,rewards:t.rewards.map(({pack,...r})=>r)});res.json(tables.map(t=>({...clean(t),petOdds:Object.fromEntries(Object.entries(t.petOdds).map(([id,odds])=>[id,clean(odds)]))})));}catch(e){res.status(400).send(e.message);}});
 
  app.get('/ruby-shop',async(req,res)=>{try{const id=await authenticate(req),doc=await db.collection('users').doc(id).get();if(!doc.exists)throw Error('User not found');const u=doc.data();res.json({catalog:shop.CATALOG,owned:u.rubyItems||{},equipped:{...(u.rubyEquipped||{}),pets:journeys.pets(u)},journeys:Object.values(u.petJourneys||{}).map(({reward,...j})=>({...j,...(j.status==='claimed'?{reward}: {})})),serverNow:Date.now(),rubies:u.gems?.bronze||0,fuelArmed:!!u.rubyFuelArmed,treats:u.rubyTreats||0,slots:u.amuletSlots||[]});}catch(e){res.status(400).send(e.message);}});
  app.post('/ruby-shop/:action',async(req,res)=>{try{

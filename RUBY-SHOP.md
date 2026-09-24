@@ -64,3 +64,11 @@ Rare bonuses are non-exclusive amulets from rank 4 (Gold in the standard orderin
 `pet-journeys.js` owns the tables and reward rules. Authenticated `/pet-journeys` exposes probabilities. Start and claim use `/ruby-shop/journey-start` and `/ruby-shop/journey-claim` with existing transactional action receipts. Rewards are drawn with server cryptographic randomness and stored at departure, hidden from the pending-journey response. Retries cannot reroll, consume food twice, or claim twice; stale journey IDs are rejected. Pack rewards mint an owned, openable pack and a contents snapshot in the claim transaction. Amulets enter the existing inventory.
 
 No scheduled job, polling request, Firestore rule change, or new index is needed. Journey state lives in the server-only user document. Loot configuration is cached for one minute per server process; only packs referenced by eligible tiers are read. Ship the backend and frontend together, including the new `pet-journeys.js` and `public/pet-interactions.js` files. No new login or manual account migration is required.
+
+### Pet advantages
+
+- Ember Fox (100 Rubies): standard food odds; the affordable way to add another simultaneous journey.
+- Crystal Snail (150 Rubies), Crystal Collector: a 25% chance to increase the food's gem quantity by one, capped at five. This is folded into the displayed quantity distribution.
+- Pocket Dragon (250 Rubies), Treasure Hunter: the same quantity benefit as the snail, plus gem-tier decay increased by 0.04 (capped at 0.98) and double each rare bonus item's probability. Total bonus chances are 0.2%, 0.8%, and 2% for the three foods.
+
+All pets still consume one food, take four hours, and return 1–5 gems. The journey panel displays the selected pet's adjusted odds; food previews have a pet selector for comparing exact percentages before purchase. The server applies perks from the owned pet ID, never from client-provided multipliers. Journeys already underway retain their stored rewards; existing owned pets automatically benefit on their next departure. The food table above gives the Fox/base probabilities.

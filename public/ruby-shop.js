@@ -47,7 +47,7 @@
  const journeyButton=el('button','Companion journeys','btn');journeyButton.onclick=()=>openJourneys();filter.before(journeyButton);
  async function openJourneys(){dialog.close();if(document.body.classList.contains('studio-ui'))footyStudio.navigate('home');else{journeyDialog.append(journeyPanel);journeyDialog.showModal();}journeyPanel.open=true;await loadJourneyTables();journeyPanel.scrollIntoView({behavior:'smooth',block:'start'});}
  function lootRows(rows,table){
-  rows.replaceChildren();rows.append(el('p','One gem type, 1-5 gems, plus an independent bonus roll. All tiers can drop, even locked ones.'));
+  rows.replaceChildren();if(table.perk)rows.append(el('p',table.perk));rows.append(el('p','One gem type, 1-5 gems, plus an independent bonus roll. All tiers can drop, even locked ones.'));
   for(const [title,entries] of [['Gem type',table.gems.map(g=>({name:g.gemName,percent:g.percent}))],['Number of gems',table.quantities.map(q=>({name:`${q.amount} gems`,percent:q.percent}))],['Bonus item',table.rewards]]){
    rows.append(el('h4',title));const t=el('table');const head=el('tr');head.append(el('th','Reward'),el('th','Chance'));t.append(head);
    for(const reward of entries){const row=el('tr');row.append(el('td',reward.name),el('td',`${Number(reward.percent.toFixed(4))}%`));t.append(row);}rows.append(t);
@@ -60,7 +60,7 @@
   const ownedPets=state.catalog.filter(x=>x.kind==='pet'&&state.owned[x.id]>0);
   if(!ownedPets.length){journeyContent.textContent='Adopt a companion in the Ruby shop to start exploring.';return;}
   for(const animal of ownedPets){
-   const tile=el('article',undefined,'ruby-tile');const portrait=el('div',undefined,'journey-portrait');portrait.innerHTML=companionArt(animal.id);tile.append(portrait,el('h3',animal.name));
+   const tile=el('article',undefined,'ruby-tile');const portrait=el('div',undefined,'journey-portrait');portrait.innerHTML=companionArt(animal.id);tile.append(portrait,el('h3',animal.name),el('p',animal.description));
    const trip=(state.journeys||[]).find(j=>j.petId===animal.id&&j.status==='travelling');
    if(trip){
     const clock=el('p');clock.dataset.journeyEnd=trip.endsAt;tile.append(clock);
@@ -71,7 +71,7 @@
     const odds=el('details');odds.append(el('summary','Exact loot odds'));const rows=el('div',undefined,'journey-loot');rows.tabIndex=0;rows.setAttribute('aria-label','Scroll through journey rewards and odds');odds.append(rows);
     const send=el('button','Send on a 4-hour journey','btn btn-primary');send.onclick=()=>act('journey-start',null,{petId:animal.id,foodId:food.value});
     const paintOdds=()=>{rows.replaceChildren();const table=journeyTables.find(t=>t.id===food.value);send.disabled=busy||!(state.owned[food.value]>0);if(!table)return;
-     lootRows(rows,table);
+     lootRows(rows,table.petOdds?.[animal.id]||table);
     };food.onchange=paintOdds;paintOdds();tile.append(food,el('p','Consumes one serving. Each pet can take one journey at a time.'),odds,send);
    }
    journeyContent.append(tile);
@@ -131,7 +131,7 @@
    use.onclick=async()=>{if(item.id==='retry'&&!confirm('Replace your latest wheel reward? The new reward may be lower.'))return;await act('use',item.id,slot?{slot:Number(slot.value)}:{});};
    if(state.equipped[item.kind]===item.id||(item.kind==='pet'&&state.equipped.pets?.includes(item.id))){const off=el('button','Unequip','btn');off.onclick=()=>act('clear',item.id,{kind:item.kind});tile.append(off);}
   }
-  if(item.id==='food'||item.id.startsWith('food:')){const odds=el('button','Journey loot odds','btn');odds.onclick=async()=>{odds.disabled=true;await loadJourneyTables();odds.disabled=false;const table=journeyTables?.find(t=>t.id===item.id);if(!table){status.textContent='Could not load journey odds. Please try again.';return;}const d=el('dialog',undefined,'ruby-dialog pet-journeys');const close=el('button','Close','btn');close.onclick=()=>d.close();const rows=el('div');lootRows(rows,table);d.append(close,el('h2',table.name),el('p',`${table.price} Rubies per serving. One serving sends one pet on a four-hour journey.`),rows);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();};tile.append(odds);}
+  if(item.id==='food'||item.id.startsWith('food:')){const odds=el('button','Journey loot odds','btn');odds.onclick=async()=>{odds.disabled=true;await loadJourneyTables();odds.disabled=false;const table=journeyTables?.find(t=>t.id===item.id);if(!table){status.textContent='Could not load journey odds. Please try again.';return;}const d=el('dialog',undefined,'ruby-dialog pet-journeys');const close=el('button','Close','btn');close.onclick=()=>d.close();const rows=el('div');const petPicker=el('select');petPicker.setAttribute('aria-label','Pet for loot odds');for(const animal of state.catalog.filter(x=>x.kind==='pet')){const o=el('option',animal.name);o.value=animal.id;petPicker.append(o);}petPicker.onchange=()=>lootRows(rows,table.petOdds?.[petPicker.value]||table);petPicker.onchange();d.append(close,el('h2',table.name),petPicker,el('p',`${table.price} Rubies per serving. One serving sends one pet on a four-hour journey.`),rows);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();};tile.append(odds);}
   list.append(tile);
  }}
  async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();updateJourneyClocks();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(result.reward){const r=result.reward;status.textContent=`Found ${r.amount} ${r.gemName}${r.bonus.kind!=='none'?' and '+r.bonus.name:''}!`;}if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){if(!extra.petId||extra.petId===pet.dataset.pet){explorer.home();react('snack');}else extraCompanions.get(extra.petId)?.explorer.home();status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();return result;}catch(e){status.textContent=e.message;return {success:false,error:e.message};}finally{busy=false;const message=status.textContent;render();renderJourneys();status.textContent=message;journeyStatus.textContent=message;}}

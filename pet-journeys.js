@@ -2,6 +2,18 @@ const {randomInt}=require('node:crypto');
 const {gemIdentity}=require('./gem-utils');
 const {catalog}=require('./amulet-utils');
 const HOURS=4*3600000;
+const PET_PERKS={
+ 'pet:fox':'Affordable explorer: standard food odds and a full extra journey alongside your other pets.',
+ 'pet:snail':'Crystal Collector: 25% chance to add one gem to its haul, capped at 5.',
+ 'pet:dragon':'Treasure Hunter: the same extra-gem chance as the snail, better high-tier gem odds, and double the rare bonus chance.'
+};
+function petOdds(table,petId){
+ const collector=petId==='pet:snail'||petId==='pet:dragon',dragon=petId==='pet:dragon';
+ const quantities=table.quantities.map((q,i,all)=>{const weight=collector?Math.round(q.weight*(i===4?1:.75)+(i?all[i-1].weight*.25:0)):q.weight;return {...q,weight,percent:weight/10000};});
+ const gw=dragon?weights(table.gems.map((_,i)=>Math.pow(Math.min(.98,table.decay+.04),i))):table.gems.map(g=>g.weight);
+ const rewards=table.rewards.map(r=>{const weight=dragon?(r.kind==='none'?1000000-(1000000-r.weight)*2:r.weight*2):r.weight;return {...r,weight,percent:weight/10000};});
+ return {perk:PET_PERKS[petId],gems:table.gems.map((g,i)=>({...g,weight:gw[i],percent:gw[i]/10000})),quantities,rewards};
+}
 const FOODS=[
  {id:'food',name:'Crystal Crunch',price:2,decay:.62,amounts:[45,30,15,8,2],bonus:1000},
  {id:'food:trail',name:'Explorer Trail Mix',price:8,decay:.8,amounts:[20,30,25,18,7],bonus:4000},
@@ -19,14 +31,15 @@ function tables(tiers,packs){
   const bw=weights(bonuses.map(()=>1),food.bonus);
   return {...food,gems:gems.map((g,i)=>({...g,weight:gw[i],percent:gw[i]/10000})),quantities:food.amounts.map((p,i)=>({amount:i+1,weight:p*10000,percent:p})),
    rewards:[{kind:'none',name:'No bonus item',weight:1000000-(bonuses.length?food.bonus:0),percent:(1000000-(bonuses.length?food.bonus:0))/10000},...bonuses.map((b,i)=>({...b,weight:bw[i],percent:bw[i]/10000}))]};
- });
+ }).map(table=>({...table,petOdds:Object.fromEntries(Object.keys(PET_PERKS).map(id=>[id,petOdds(table,id)]))}));
 }
 function draw(rows,roll=randomInt(1000000)){let sum=0;for(const row of rows){sum+=row.weight;if(roll<sum)return row;}throw Error('Invalid loot table');}
 function pets(user){const ids=user.rubyEquipped?.pets??(user.rubyEquipped?.pet?[user.rubyEquipped.pet]:[]);return [...new Set(ids)].filter(id=>['pet:fox','pet:snail','pet:dragon'].includes(id)&&user.rubyItems?.[id]>0);}
 function start(user,petId,foodId,loot,journeyId,now=Date.now(),rolls){
  if(!['pet:fox','pet:snail','pet:dragon'].includes(petId)||!user.rubyItems?.[petId])throw Error('You do not own that pet');
  if(user.petJourneys?.[petId]?.status==='travelling')throw Error('This pet already has a journey. Claim its rewards first.');
- const table=loot.find(t=>t.id===foodId);if(!table||!table.gems.length)throw Error('Journey food or gem tiers unavailable');
+ const food=loot.find(t=>t.id===foodId);if(!food||!food.gems.length)throw Error('Journey food or gem tiers unavailable');
+ const table=petOdds(food,petId);
  if(!(user.rubyItems?.[foodId]>0))throw Error('You need one serving of this food');
  const gem=draw(table.gems,rolls?.[0]),amount=draw(table.quantities,rolls?.[1]).amount,bonus=draw(table.rewards,rolls?.[2]);
  const journey={id:journeyId,petId,foodId,startedAt:now,endsAt:now+HOURS,status:'travelling',reward:{gemKey:gem.gemKey,gemName:gem.gemName,amount,bonus}};
@@ -39,4 +52,4 @@ function claim(user,petId,journeyId,now=Date.now()){
  if(reward.bonus.kind==='amulet')update.amulets={...(user.amulets||{}),[reward.bonus.id]:(user.amulets?.[reward.bonus.id]||0)+1};
  return {update,reward};
 }
-module.exports={FOODS,HOURS,tables,draw,pets,start,claim};
+module.exports={FOODS,HOURS,PET_PERKS,tables,petOdds,draw,pets,start,claim};

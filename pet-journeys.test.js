@@ -4,6 +4,24 @@ const tiers=['Bronze','Rare Bronze','Silver','Rare Silver','Gold','Rare Gold','P
 const packs=tiers.map((t,i)=>({id:'p'+i,name:t.name,cardIds:['card'+i]}));
 const loot=j.tables(tiers,packs);
 const user=()=>({rubyItems:{'pet:fox':1,'pet:snail':1,'pet:dragon':1,food:3,'food:trail':2,'food:feast':1},gems:{bronze:10},gemConverterLevel:0});
+test('priced pet perks improve actual rewards and match the displayed odds for every food',()=>{
+ for(const food of loot){
+  const fox=food.petOdds['pet:fox'],snail=food.petOdds['pet:snail'],dragon=food.petOdds['pet:dragon'];
+  const mean=t=>t.quantities.reduce((n,q)=>n+q.amount*q.weight/1000000,0);
+  assert.ok(mean(snail)>mean(fox));assert.equal(mean(dragon),mean(snail));
+  assert.deepEqual(snail.gems,fox.gems);
+  assert.ok(dragon.gems.slice(8).reduce((n,g)=>n+g.weight,0)>fox.gems.slice(8).reduce((n,g)=>n+g.weight,0));
+  assert.equal(1000000-dragon.rewards[0].weight,2*(1000000-fox.rewards[0].weight));
+  for(const [id,table] of Object.entries(food.petOdds)){
+   for(const rows of [table.gems,table.quantities,table.rewards])assert.equal(rows.reduce((n,r)=>n+r.weight,0),1000000);
+   for(const roll of [0,400000,750000,990000,999999]){
+    const trip=j.start(user(),id,food.id,loot,'perks',0,[roll,roll,roll]).petJourneys[id];
+    assert.equal(trip.reward.amount,j.draw(table.quantities,roll).amount);assert.ok(trip.reward.amount>=1&&trip.reward.amount<=5);
+    assert.equal(trip.reward.gemKey,j.draw(table.gems,roll).gemKey);assert.deepEqual(trip.reward.bonus,j.draw(table.rewards,roll));assert.equal(trip.endsAt,j.HOURS);
+   }
+  }
+ }
+});
 test('journey odds sum exactly to 100%, include every gem, and better food improves results',()=>{
  let previousRank=-1,previousAmount=0,previousBonus=0;
  for(const table of loot){
@@ -60,7 +78,7 @@ test('journey routes conceal pending loot, reject early claims, deduplicate acti
  const visible=(await call('/ruby-shop')).value;assert.equal(visible.journeys[0].reward,undefined);
  assert.equal((await call('journey-claim',{petId:'pet:fox',journeyId:start.actionId,actionId:'early-1234567890123456'})).status,400);
  records['users/u'].rubyEquipped={pets:['pet:fox','pet:snail']};await call('clear',{kind:'pet',itemId:'pet:fox',actionId:'clear-1234567890123456'});assert.deepEqual(records['users/u'].rubyEquipped.pets,['pet:snail']);
- const table=(await call('/pet-journeys')).value[0];assert.ok(table.rewards.some(r=>r.kind==='pack'));assert.ok(table.rewards.every(r=>!r.pack));
+ const table=(await call('/pet-journeys')).value[0];assert.ok(table.rewards.some(r=>r.kind==='pack'));assert.ok(table.rewards.every(r=>!r.pack));assert.ok(Object.values(table.petOdds).every(t=>t.rewards.every(r=>!r.pack)));
 });
 test('rare pack and amulet claims mint exactly once, even with different retry action IDs',async()=>{
  for(const kind of ['pack','amulet']){
