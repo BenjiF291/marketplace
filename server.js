@@ -1744,10 +1744,11 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
-      return { cardId, packBonus, rubyBonus, packColor: packItem.packColor || pack.color || '#667eea' };
+      const packName = packItem.name || (pack.name ? (/\bpack$/i.test(pack.name) ? pack.name : `${pack.name} Pack`) : 'Pack');
+      return { cardId, packBonus, rubyBonus, packName, packColor: packItem.packColor || pack.color || '#667eea' };
     });
     if(result.choices)return res.json(result);
-    res.json({ success: true, packBonus: result.packBonus, rubyBonus: result.rubyBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
+    res.json({ success: true, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This compass cannot open that pack tier', 'You do not own this item'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
