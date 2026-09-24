@@ -2158,19 +2158,24 @@ async function openPack(itemId) {
   if (openingPackIds.has(itemId)) return;
   openingPackIds.add(itemId);
   try {
-    const res = await fetch(`${API_URL}/open-pack`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ itemId })
-    });
-    if (!res.ok) return alert(await res.text());
-    const result = await res.json();
+    const compass=window.pickRubyCompass?await window.pickRubyCompass():null;
+    if(compass===undefined)return;
+    const request=async body=>{
+      const res=await fetch(`${API_URL}/open-pack`,{method:'POST',headers:resourceHeaders(),body:JSON.stringify({itemId,...body})});
+      if(!res.ok)throw Error(await res.text());return res.json();
+    };
+    let result=await request(compass?{compass}:{});
+    while(result.choices){
+      const choice=await window.chooseRubyPackCard(result.choices);
+      if(choice===undefined)return;
+      result=await request({choice});
+    }
     showPackOpeningAnimation(result);
     loadInventory();
     updateBalance();
   } catch (error) {
     console.error('Error opening pack:', error);
-    alert('Could not open pack');
+    alert(error.message || 'Could not open pack');
   } finally {
     openingPackIds.delete(itemId);
   }

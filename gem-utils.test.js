@@ -47,7 +47,7 @@ test('insufficient gems, skipped tiers and stale duplicate upgrades are rejected
   assert.throws(() => upgradeConverter(tiers, upgraded, 'rare'));
 });
 test('rewards and fractional Footy costs for all supported batch sizes', () => {
-  assert.deepEqual([1, 2, 3].map(count => { const r = gemRecipe(tier, count); return [r.reward, r.cost]; }), [[3, 37.5], [7, 75], [12, 112.5]]);
+  assert.deepEqual([1, 2, 3].map(count => { const r = gemRecipe(tier, count); return [r.reward, r.cost]; }), [[3, 25], [7, 50], [12, 75]]);
   for (const count of [0, 4, 1.5]) assert.throws(() => gemRecipe(tier, count));
   for (const sellPrice of [0, -1, 'bad']) assert.throws(() => gemRecipe({ ...tier, sellPrice }));
 });

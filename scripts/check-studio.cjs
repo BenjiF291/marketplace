@@ -12,6 +12,7 @@ const battle=require('../public/practice-engine').trainingCards();battle[0]={...
 const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
 const fixture=(url)=>{
  if(url==='/users')return [user,{id:'other',username:'Alex',balance:400}];
+ if(url==='/ruby-shop')return {catalog:require('../ruby-shop').CATALOG,owned:{'pet:fox':1,'relic:rose':1,food:3},equipped:{pet:'pet:fox'},rubies:300,slots:[],treats:2};
  if(url==='/items')return items;
  if(url==='/inventory')return cards;
  if(url==='/ascend-tier-config')return tiers;
@@ -19,7 +20,7 @@ const fixture=(url)=>{
  if(url==='/brawl/skill')return require('../brawl-skill').profile({ratingVersion:2,placementsCompleted:5,skillLevel:436});
  if(url==='/trophies')return {trophies:250,peak:300,claimed:[25,75],path:require('../trophy-utils').PATH.map(reward=>({...reward,amuletName:require('../amulet-utils').EXCLUSIVES.find(entry=>entry.id===reward.amulet)?.name}))};
  if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:require('../amulet-utils').catalog(tiers),effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
- if(url==='/gem-converter')return {recipes:[{tierId:'bronze',tierName:'Bronze',gemKey:'bronze',gemName:'Ruby',unlocked:true,sellPrice:25,cards:images,costs:{1:37.5,2:75,3:112.5},rewards:{1:3,2:7,3:12}}],gems:{bronze:18},level:1,nextUpgrade:null};
+ if(url==='/gem-converter')return {recipes:[{tierId:'bronze',tierName:'Bronze',gemKey:'bronze',gemName:'Ruby',unlocked:true,sellPrice:25,cards:images,costs:{1:25,2:50,3:75},rewards:{1:3,2:7,3:12}}],gems:{bronze:18},level:1,nextUpgrade:null};
  if(url==='/gem-workshop')return {theme:{},compressor:false,gems:{bronze:18},dyes:{bronze:5},tiers:[{gemKey:'bronze',gemName:'Ruby'}],areas:{buttons:'Buttons',navigation:'Navigation',background:'Background'}};
  if(url.includes('history'))return {transfers:[],items:[]};
  if(url==='/health')return {ok:true};return [];
@@ -32,6 +33,7 @@ const fixture=(url)=>{
  await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
+ await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);assert.equal(await page.locator('#rubyShopDialog').isVisible(),true);assert.ok(await page.locator('.ruby-tile').count()>15);await page.screenshot({path:'.ui-tools/ruby-shop.png',fullPage:true});await page.keyboard.press('Escape');
  assert.equal(await page.locator('#dailyPackFeature h3').textContent(),'Gold discovery pack');
  assert.equal(await page.locator('[data-todays-pack] .daily-pack-badge').textContent(),"TODAY'S DAILY PACK");
  await page.screenshot({path:'.ui-tools/home-desktop.png',fullPage:true});

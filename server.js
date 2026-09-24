@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { admin, db } = require('./firebase-server');
 require('dotenv').config();
 
+const rubyShop = require('./ruby-shop');
 const app = express();
 const brawlAuth = require('./brawl-auth')(db);
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
@@ -1129,6 +1130,7 @@ app.post('/spin-wheel', async (req, res) => {
         balance: newBalance,
         lastSpin: now,
         wheelSpinCount,
+        wheelRetryReward: { multiplier: vipUntil && vipUntil.getTime() > now.getTime() ? 2 : 1, bonus: rewardAmount - baseReward * (vipUntil && vipUntil.getTime() > now.getTime() ? 2 : 1) },
         lastSpinAmount: rewardAmount
       });
     });
@@ -1692,6 +1694,7 @@ app.post('/open-pack', async (req, res) => {
 
   const packGemRoll=crypto.randomInt(100);
   try {
+    if(req.body.compass || req.body.choice)await brawlAuth.authenticate(req);
     const result = await db.runTransaction(async transaction => {
       const packItemRef = db.collection('items').doc(itemId);
       const packItemDoc = await transaction.get(packItemRef);
@@ -1706,10 +1709,24 @@ app.post('/open-pack', async (req, res) => {
         throw new Error('Pack has no available cards');
       }
       const pack = packDoc.data();
-      const cardId = pack.cardIds[crypto.randomInt(pack.cardIds.length)];
+      let cardId = pack.cardIds[crypto.randomInt(pack.cardIds.length)];
       const cardRef = db.collection('items').doc();
       const openerRef = db.collection('users').doc(requesterId);
       const opener = await transaction.get(openerRef);
+      if (!opener.exists) throw new Error('User not found');
+      let picks=packItem.pendingPackChoices;
+      if(picks){
+        if(!picks.includes(req.body.choice))return {choices:picks,packColor:packItem.packColor||pack.color};
+        cardId=req.body.choice;
+      } else if(req.body.compass){
+        const tierDocs=await transaction.get(db.collection('ascendTiers').orderBy('order','asc'));
+        if(!rubyShop.compassAllowed(req.body.compass,packItem.packId,tierDocs.docs.map(doc=>({...doc.data(),id:doc.id}))))throw new Error('This compass cannot open that pack tier');
+        const owned=rubyShop.spend(opener.data(),req.body.compass);
+        picks=rubyShop.choices(pack.cardIds);
+        transaction.update(openerRef,{rubyItems:owned});
+        transaction.update(packItemRef,{pendingPackChoices:picks});
+        return {choices:picks,packColor:packItem.packColor||pack.color};
+      }
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
       const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
       if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...(opener.data().gems||{}),bronze:Number(opener.data().gems?.bronze||0)+rubyBonus}});
@@ -1729,9 +1746,10 @@ app.post('/open-pack', async (req, res) => {
       transaction.delete(packItemRef);
       return { cardId, packBonus, rubyBonus, packColor: packItem.packColor || pack.color || '#667eea' };
     });
+    if(result.choices)return res.json(result);
     res.json({ success: true, packBonus: result.packBonus, rubyBonus: result.rubyBonus, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
-    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards'];
+    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This compass cannot open that pack tier', 'You do not own this item'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
     console.error('Error opening pack:', error);
     res.status(500).send('Could not open pack');
@@ -2011,7 +2029,7 @@ app.post('/items', async (req, res) => {
     if (sourceItemId) {
       const sourceItemRef = db.collection('items').doc(sourceItemId);
       const sourceItemDoc = await transaction.get(sourceItemRef);
-      if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true || sourceItemDoc.data().itemType === 'battle-card') {
+      if (!sourceItemDoc.exists || sourceItemDoc.data().buyerId !== sellerId || sourceItemDoc.data().sold !== true || sourceItemDoc.data().listedForSale === true || sourceItemDoc.data().pendingPackChoices || sourceItemDoc.data().itemType === 'battle-card') {
         throw new Error('Selected inventory item is unavailable');
       }
       sourceItem = sourceItemDoc.data();
@@ -2494,7 +2512,8 @@ app.get('/gem-converter', async (req, res) => {
     const recipes = tiers.map((tier, index) => ({
       ...gemIdentity(tier), cards: tier.cards || [], unlocked: index <= progress.level,
       rewards:[3,7,12+(amuletEffects(user.data()).fullbatch||0)],
-      costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter)) : null
+      fuelArmed: user.data().rubyFuelArmed === true,
+      costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => rubyShop.fuelCost(user.data(), discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter))) : null
     }));
     res.json({ ...progress, recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
   } catch (error) {
@@ -2576,6 +2595,12 @@ app.post('/gem-converter', async (req, res) => {
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
       const recipe = gemRecipe(tier, itemIds.length);
       recipe.cost = discounted(recipe.cost, amuletEffects(user.data()).converter);
+      let fuelUpdate={};
+      if(user.data().rubyFuelArmed){
+        fuelUpdate={rubyItems:rubyShop.spend(user.data(),'fuel'),rubyFuelArmed:false};
+        recipe.fuelSaving=Math.min(100,roundFooty(recipe.cost/2));
+        recipe.cost=roundFooty(recipe.cost-recipe.fuelSaving);
+      }
       const vipDate=user.data().vipUntil;
       const vipExpiry=vipDate?.toDate?vipDate.toDate():new Date(vipDate||0);
       recipe.vipBonus=vipExpiry.getTime()>Date.now()&&converterRoll<20?1:0;
@@ -2586,7 +2611,7 @@ app.post('/gem-converter', async (req, res) => {
       const gems = { ...(user.data().gems || {}) };
       gems[recipe.gemKey] = Number(gems[recipe.gemKey] || 0) + recipe.reward;
       const newBalance = Math.round((balance - recipe.cost) * 100) / 100;
-      transaction.update(userRef, { balance: newBalance, gems });
+      transaction.update(userRef, { balance: newBalance, gems, ...fuelUpdate });
       refs.forEach(ref => transaction.delete(ref));
       return { ...recipe, gems, balance: newBalance };
     });
@@ -2646,6 +2671,7 @@ app.get('/inventory', async (req, res) => {
 require('./amulet-routes')(app, db, getAscendTierConfig);
 require('./trophy-routes')(app, db, getBattleCardsForUser, brawlAuth.authenticate);
 require('./gem-workshop-routes')(app, db, getAscendTierConfig);
+require('./ruby-shop-routes')(app, db, brawlAuth.authenticate);
 
 /* ------------------ START SERVER ------------------ */
 const PORT = process.env.PORT || 3000;

@@ -48,7 +48,7 @@ function gemRecipe(tier, count = 1) {
     tierId: tier.id, tierName: tier.name,
     gemName: GEM_NAMES[key] || `${tier.name} Crystal`,
     gemKey: GEM_NAMES[key] ? key : `tier-${tier.id}`,
-    cost: Math.round(price * 1.5 * count * 100) / 100,
+    cost: Math.round(price * count * 100) / 100,
     reward: [0, 3, 7, 12][count]
   };
 }

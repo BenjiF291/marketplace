@@ -33,7 +33,7 @@ function harness(seed, randomInt) {
   for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
-    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
+    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, brawlAuth:{authenticate:async()=> 'buyer'},rubyShop:require('./ruby-shop'), crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
   }
   const invoke = async (url, body, user = 'buyer', action) => {
     let status = 200, payload;
@@ -110,8 +110,8 @@ test('converter amulet discount changes actual Footy cost without changing gem o
   data['users/buyer'].amuletSlots = [{ power: 'converter', value: 10 }];
   const h = harness(data);
   const result = await h.invoke('/gem-converter', { tierId: 'bronze', itemIds: ['owned'] });
-  assert.equal(result.status, 200); assert.equal(result.payload.cost, 33.75);
-  assert.equal(h.data()['users/buyer'].balance, 66.25); assert.equal(h.data()['users/buyer'].gems.bronze, 23);
+  assert.equal(result.status, 200); assert.equal(result.payload.cost, 22.5);
+  assert.equal(h.data()['users/buyer'].balance, 77.5); assert.equal(h.data()['users/buyer'].gems.bronze, 23);
   assert.equal(h.data()['items/owned'], undefined);
 });
 test('admin can grant an amulet, player can equip it, and early removal is rejected', async () => {
@@ -188,4 +188,26 @@ test('Hidden Geode awards one Ruby on a successful pack roll',async()=>{
  const data=seed();data['users/buyer'].amuletSlots=[{power:'packgem',value:10}];
  data['packs/p']={cardIds:['bronze.png']};data['items/p']={itemType:'pack',packId:'p',buyerId:'buyer',sold:true};
  const h=harness(data,()=>0),result=await h.invoke('/open-pack',{itemId:'p'});assert.equal(result.status,200);assert.equal(result.payload.rubyBonus,1);assert.equal(h.data()['users/buyer'].gems.bronze,21);
+});
+
+test('compass choices persist across retries and award only the selected card once',async()=>{
+ const data=seed();data['packs/p']={cardIds:['a.png','b.png','c.png','d.png']};data['ascendTiers/bronze']={name:'Bronze',order:0,packs:['p']};
+ data['items/pack']={itemType:'pack',packId:'p',buyerId:'buyer',sellerId:'seller',sold:true};data['users/buyer'].rubyItems={'compass:common':2};
+ const h=harness(data);const first=await h.invoke('/open-pack',{itemId:'pack',compass:'compass:common'});assert.equal(first.status,200);assert.equal(first.payload.choices.length,3);
+ const again=await h.invoke('/open-pack',{itemId:'pack',compass:'compass:common'});assert.deepEqual(again.payload.choices,first.payload.choices);assert.equal(h.data()['users/buyer'].rubyItems['compass:common'],1);
+ const chosen=first.payload.choices[0];const result=await h.invoke('/open-pack',{itemId:'pack',choice:chosen});assert.equal(result.payload.cardId,chosen);assert.equal(h.data()['items/pack'],undefined);
+ assert.equal((await h.invoke('/open-pack',{itemId:'pack',choice:chosen})).status,400);
+});
+test('converter fuel consumes once on success and survives insufficient funds',async()=>{
+ const data=seed();data['ascendTiers/bronze']={name:'Bronze',order:0,sellPrice:25,cards:['bronze.png']};data['items/owned']={buyerId:'buyer',sold:true,itemType:'card',imageUrl:'/images/bronze.png'};
+ Object.assign(data['users/buyer'],{rubyItems:{fuel:1},rubyFuelArmed:true});const h=harness(data);
+ const result=await h.invoke('/gem-converter',{tierId:'bronze',itemIds:['owned']});assert.equal(result.status,200);assert.equal(result.payload.cost,12.5);assert.equal(h.data()['users/buyer'].rubyItems.fuel,0);assert.equal(h.data()['users/buyer'].rubyFuelArmed,false);
+ data['users/buyer'].balance=0;const failed=harness(data);assert.equal((await failed.invoke('/gem-converter',{tierId:'bronze',itemIds:['owned']})).status,400);assert.equal(failed.data()['users/buyer'].rubyItems.fuel,1);
+});
+
+test('Ruby shop grants remain in the admin hub and reject non-admins',async()=>{
+ const data=seed();data['users/seller'].isAdmin=true;const h=harness(data);
+ assert.equal((await h.invoke('/admin/grant-resource',{userId:'buyer',kind:'ruby-item',rubyItemId:'compass:rare',quantity:2},'buyer')).status,403);
+ assert.equal((await h.invoke('/admin/grant-resource',{userId:'buyer',kind:'ruby-item',rubyItemId:'compass:rare',quantity:2},'seller')).status,200);
+ assert.equal(h.data()['users/buyer'].rubyItems['compass:rare'],2);
 });

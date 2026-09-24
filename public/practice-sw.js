@@ -1,5 +1,5 @@
-const CACHE = 'battle-practice-shell-v15';
-const FILES = ['index.html', 'style.css', 'studio.css', 'studio.js', 'app.js', 'ascend-utils.js', 'gem-colors.js', 'amulets.js', 'gem-workshop.js', 'dye-mode.js', 'practice-engine.js', 'battle-effects.js', 'brawl-turns.js', 'practice-battle.js', 'practice-worker.js'];
+const CACHE = 'battle-practice-shell-v16';
+const FILES = ['index.html', 'style.css', 'studio.css', 'studio.js', 'ruby-shop.js', 'ruby-shop.css', 'app.js', 'ascend-utils.js', 'gem-colors.js', 'amulets.js', 'gem-workshop.js', 'dye-mode.js', 'practice-engine.js', 'battle-effects.js', 'brawl-turns.js', 'practice-battle.js', 'practice-worker.js'];
 const urls = FILES.map(file => new URL(file, self.registration.scope).href);
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(urls)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('battle-practice-shell-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())); });

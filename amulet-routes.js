@@ -40,9 +40,9 @@ module.exports = function(app, db, getTiers) {
   });
   app.post('/admin/grant-resource', async (req, res) => {
     const id = req.header('X-User-Id');
-    const { userId, kind, amuletId, quantity } = req.body;
+    const { userId, kind, amuletId, rubyItemId, quantity } = req.body;
     if (!id) return res.status(401).send('Missing user');
-    if (!userId || typeof userId !== 'string' || userId.includes('/') || !Number.isSafeInteger(quantity) || quantity < 1 || !['footy', 'amulet'].includes(kind)) return res.status(400).send('Invalid grant');
+    if (!userId || typeof userId !== 'string' || userId.includes('/') || !Number.isSafeInteger(quantity) || quantity < 1 || !['footy', 'amulet', 'ruby-item'].includes(kind)) return res.status(400).send('Invalid grant');
     try {
       await db.runTransaction(async transaction => {
         const ref = db.collection('users').doc(userId);
@@ -53,6 +53,11 @@ module.exports = function(app, db, getTiers) {
           const balance = Number(user.data().balance || 0) + quantity;
           if (!Number.isFinite(balance) || balance > Number.MAX_SAFE_INTEGER) throw new Error('Amount too large');
           transaction.update(ref, { balance });
+        } else if(kind==='ruby-item') {
+          if(!require('./ruby-shop').CATALOG.some(item=>item.id===rubyItemId))throw new Error('Unknown Ruby item');
+          const owned={...(user.data().rubyItems||{})};owned[rubyItemId]=(owned[rubyItemId]||0)+quantity;
+          if(!Number.isSafeInteger(owned[rubyItemId]))throw new Error('Amount too large');
+          transaction.update(ref,{rubyItems:owned});
         } else {
           const tiers = await transaction.get(db.collection('ascendTiers').orderBy('order', 'asc'));
           const entries = catalog(tiers.docs.map(doc => ({ ...doc.data(), id: doc.id })));
