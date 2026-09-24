@@ -40,3 +40,5 @@ Peeks are intermittent, clipped to show only part of the creature, responsive to
 ### Object-based hiding spots
 
 The floating call-back bar has been removed. Recall is available only at the companion's home. The explorer now uses 27 anchor families, including individual listing cards, inventory cards, amulets, relics, headings and banners. Each anchor offers five possible edges, with up to twelve objects per family: well over twelve possible positions, depending on loaded content and screen space. Positions must fit beside the actual object without snapping to the screen edge, and avoid the centre of interactive controls. Roaming avoids its last ten chosen positions. Hide-and-seek keeps its chosen object, but can use a different edge when screen space changes.
+
+Visible peeks stay attached to their original object and edge for the entire appearance, including while scrolling out of view or back. Scroll does not reroll the location or restart the animation. At the end of a peek, the companion retreats behind its object for 650ms before its layer is removed. Reduced-motion mode skips travel animation.

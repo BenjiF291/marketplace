@@ -86,3 +86,7 @@ body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double
 @keyframes companion-object-arrive{from{transform:var(--peek-from)}to{transform:var(--peek-to)}}
 @media(max-width:600px){.companion-world-peek button,.companion-world-peek svg.companion-illustration{width:150px;height:123px}.companion-world-peek button{margin-left:-75px}.companion-world-peek[data-edge=left] button,.companion-world-peek[data-edge=right] button{margin:0}}
 @media(prefers-reduced-motion:reduce){.companion-world-peek.is-out button{animation:none;transform:var(--peek-to)}.companion-stage[data-explore] .ruby-pet{transition:none}.companion-world-peek .companion-illustration *{animation:none!important}}
+
+.companion-world-peek.is-leaving button{animation:companion-object-retreat .65s ease-in both;pointer-events:none}
+@keyframes companion-object-retreat{from{transform:var(--peek-exit-start,var(--peek-to))}to{transform:var(--peek-from)}}
+@media(prefers-reduced-motion:reduce){.companion-world-peek.is-leaving button{animation:none;transform:var(--peek-from)}}

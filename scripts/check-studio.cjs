@@ -43,9 +43,19 @@ const fixture=(url)=>{
  assert.equal(await page.locator('.companion-world-peek').isVisible(),true);
  assert.ok((await page.locator('.companion-world-peek').getAttribute('data-spot')).startsWith('market'));
  assert.equal(await page.locator('.companion-remote').count(),0);
+ const anchored=await page.locator('.companion-world-peek').evaluate(node=>({top:node.getBoundingClientRect().top,spot:node.dataset.spot,scroll:scrollY}));
+ await page.evaluate(()=>scrollBy(0,400));await page.waitForTimeout(150);
+ const scrolled=await page.locator('.companion-world-peek').evaluate(node=>({top:node.getBoundingClientRect().top,spot:node.dataset.spot,scroll:scrollY,hidden:node.hidden}));
+ assert.equal(scrolled.hidden,false);assert.equal(scrolled.spot,anchored.spot);
+ assert.ok(Math.abs((scrolled.top-anchored.top)+(scrolled.scroll-anchored.scroll))<2,'pet follows its object without disappearing');
+ await page.evaluate(y=>scrollTo(0,y),anchored.scroll);await page.waitForTimeout(100);
+
  await page.waitForTimeout(900);await page.screenshot({path:'.ui-tools/companion-roaming.png'});
+ await page.locator('.companion-world-peek.is-leaving').waitFor({state:'attached',timeout:10000});
+ assert.equal(await page.locator('.companion-world-peek').evaluate(node=>node.hidden),false);
+ await page.waitForTimeout(800);assert.equal(await page.locator('.companion-world-peek').evaluate(node=>node.hidden),true);
  await page.evaluate(()=>footyStudio.navigate('home'));await page.locator('[data-companion-mode="home"]').click();assert.equal(await companion.getAttribute('data-explore'),'home');
- assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
+ await page.waitForTimeout(800);assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
  await page.evaluate(()=>footyStudio.navigate('home'));
  await page.locator('[data-companion-mode="hide"]').click();await page.waitForTimeout(1200);
  let found=false;
