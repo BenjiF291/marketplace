@@ -7,7 +7,7 @@
 .cinema-horizon{position:absolute;left:-25%;bottom:-30%;width:150%;height:45%;border-radius:50%;box-shadow:0 -10px 90px var(--glow);opacity:.25}
 .cinema-particle{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:var(--glow);box-shadow:0 0 12px var(--glow);animation:cinema-drift var(--duration) var(--delay) linear infinite}
 .cinema-heading,.cinema-footer{text-align:center;z-index:3;width:min(100%,620px)}.cinema-eyebrow{font-size:10px;letter-spacing:.3em;margin:0 0 12px;opacity:.65}.cinema-heading h2{font-family:Georgia,serif;font-size:clamp(24px,4vw,44px);font-weight:400;letter-spacing:-.025em;margin:0;color:var(--light)}.cinema-status{font-size:13px;opacity:.7;margin:12px 0 0;min-height:18px}
-.cinema-stage{position:relative;width:min(100%,660px);min-height:0;display:grid;place-items:center;perspective:1000px;overflow:hidden}
+.cinema-stage{position:relative;width:min(100%,660px);min-height:0;display:grid;place-items:center;perspective:1000px;overflow:visible}
 .cinema-ring{position:absolute;width:min(62vw,42vh,390px);aspect-ratio:1;border:1px solid var(--glow);border-radius:50%;opacity:.45;box-shadow:0 0 24px #ff9b3322,inset 0 0 24px #ff9b3322;animation:cinema-orbit 12s linear infinite}
 .ring-one{border-style:dashed;outline:1px solid color-mix(in srgb,var(--glow) 20%,transparent);outline-offset:20px}.ring-two{width:min(75vw,52vh,480px);transform:rotateX(65deg);border-width:3px;animation:cinema-orbit-tilt 9s linear infinite}
 .cinema-pack{width:clamp(125px,24vh,210px);height:clamp(170px,33vh,285px);position:absolute;filter:drop-shadow(0 22px 32px #0009);animation:cinema-arrival .9s ease-out both;transform-style:preserve-3d}
