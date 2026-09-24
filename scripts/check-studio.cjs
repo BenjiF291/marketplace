@@ -10,7 +10,12 @@ items[items.length-1].expiresAt=new Date(Date.now()+432000000).toISOString();
 const user={id:'ui-preview',username:'Club captain',isAdmin:true,balance:2450};
 const battle=require('../public/practice-engine').trainingCards();battle[0]={...battle[0],name:'Mirror tester',linkedCardImage:'Mirror_test.png',mirrorPower:'focus'};
 const tiers=[{id:'bronze',name:'Bronze',order:0,sellPrice:25,cards:images}];
+const petPreview={rubyItems:{'pet:fox':1,'pet:snail':1,'pet:dragon':1,food:3,'food:trail':2,'food:feast':1},rubyEquipped:{pets:['pet:fox','pet:snail','pet:dragon']},gems:{bronze:300}};
+const petTiers=['Bronze','Rare Bronze','Silver','Rare Silver','Gold','Rare Gold','Platinum','Lightning','Ultra','Genious'].map((name,order)=>({id:'pet'+order,name,order,packs:['pp'+order]}));
+const petLoot=require('../pet-journeys').tables(petTiers,[{id:'pp4',name:'Gold',cardIds:[images[0]]}]);
 const fixture=(url)=>{
+ if(url==='/pet-journeys')return petLoot;
+ if(url==='/ruby-shop'&&process.env.PET_JOURNEY_CHECK_ONLY==='1')return {catalog:require('../ruby-shop').CATALOG,owned:petPreview.rubyItems,equipped:petPreview.rubyEquipped,journeys:Object.values(petPreview.petJourneys||{}),serverNow:Date.now(),rubies:300,slots:[],treats:2};
  if(url==='/users')return [user,{id:'other',username:'Alex',balance:400}];
  if(url==='/ruby-shop')return {catalog:require('../ruby-shop').CATALOG,owned:{'pet:fox':1,'relic:rose':1,food:3},equipped:{pet:'pet:fox'},rubies:300,slots:[],treats:2};
  if(url==='/items')return items;
@@ -30,9 +35,35 @@ const fixture=(url)=>{
  const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:1050},serviceWorkers:'block'});
  await context.addInitScript(()=>{localStorage.setItem('userId','ui-preview');localStorage.setItem('username','Club captain');localStorage.setItem('sessionToken','preview-only');});
- await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
+ await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'&&process.env.PET_JOURNEY_CHECK_ONLY==='1'&&req.url().includes('/ruby-shop/journey-')){const body=req.postDataJSON(),j=require('../pet-journeys');let reward;if(req.url().endsWith('journey-start'))Object.assign(petPreview,j.start(petPreview,body.petId,body.foodId,petLoot,body.actionId,Date.now(),[999999,999999,0]));else {const trip=petPreview.petJourneys[body.petId];const claimed=j.claim(petPreview,body.petId,body.journeyId,trip.endsAt);Object.assign(petPreview,claimed.update);reward=claimed.reward;}await route.fulfill({json:{success:true,reward}});return;}if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
+ if(process.env.PET_JOURNEY_CHECK_ONLY==='1'){
+  assert.equal(await page.locator('.companion-stage:not([hidden])').count(),3);
+  await page.locator('.ruby-pet').first().click();await page.getByRole('button',{name:'Play fetch',exact:true}).click();assert.equal(await page.locator('.pet-play-art').getAttribute('data-mood'),'fetch');
+  await page.getByRole('button',{name:'Dance',exact:true}).click();assert.equal(await page.locator('.pet-play-art').getAttribute('data-mood'),'dance');await page.locator('#petInteraction').getByRole('button',{name:'Close',exact:true}).click();
+  await page.locator('[data-companion-mode="roam"]').evaluateAll(nodes=>nodes.forEach(n=>n.click()));await page.evaluate(()=>{footyStudio.navigate('marketplace');scrollTo(0,0);});await page.waitForTimeout(1700);
+  const peeks=await page.locator('.companion-world-peek:not([hidden])').evaluateAll(nodes=>nodes.map(n=>({object:n.dataset.object,rect:n.getBoundingClientRect().toJSON()})));
+  assert.ok(peeks.length>=2,'multiple pets can roam together');assert.equal(new Set(peeks.map(p=>p.object)).size,peeks.length);
+  for(let i=0;i<peeks.length;i++)for(let k=i+1;k<peeks.length;k++){const a=peeks[i].rect,b=peeks[k].rect;assert.ok(a.right<=b.left||a.left>=b.right||a.bottom<=b.top||a.top>=b.bottom,'roaming pets do not overlap');}
+  await page.screenshot({path:'.ui-tools/multiple-pets-roaming.png'});
+  await page.evaluate(()=>footyStudio.navigate('home'));await page.locator('[data-companion-mode="home"]').evaluateAll(nodes=>nodes.forEach(n=>n.click()));
+  await page.locator('#petJourneys>summary').click();await page.locator('#petJourneys select').first().waitFor();assert.equal(await page.locator('#petJourneys select').count(),3);
+  await page.locator('#petJourneys select').first().selectOption('food:feast');await page.locator('#petJourneys .ruby-tile details').first().locator('summary').click();
+  assert.ok((await page.locator('#petJourneys .ruby-tile').first().textContent()).includes('Genious Crystal'));assert.ok((await page.locator('#petJourneys .ruby-tile').first().textContent()).includes('99%'));
+  await page.setViewportSize({width:375,height:844});await page.locator('#petJourneys').scrollIntoViewIfNeeded();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:'.ui-tools/pet-journeys-mobile.png'});
+  await page.locator('#petJourneys .ruby-tile').first().getByRole('button',{name:'Send on a 4-hour journey'}).click();await page.locator('[data-claim-end]').waitFor();
+  assert.equal(await page.locator('[data-claim-end]').isDisabled(),true);assert.equal(petPreview.rubyItems['food:feast'],0);assert.equal(await page.locator('.companion-stage:not([hidden])').count(),2);
+  await page.locator('#petJourneys select').first().selectOption('food:trail');await page.locator('#petJourneys').getByRole('button',{name:'Send on a 4-hour journey'}).first().click();await page.waitForTimeout(500);assert.equal(await page.locator('[data-claim-end]').count(),2);
+  petPreview.petJourneys['pet:fox'].endsAt=Date.now()-1;
+  await page.locator('#rubyShopButton').click();await page.waitForTimeout(300);await page.keyboard.press('Escape');await page.locator('[data-claim-end]').first().click();await page.waitForTimeout(500);
+  assert.equal(petPreview.gems['tier-pet9'],5);assert.equal(await page.locator('[data-claim-end]').count(),1);assert.ok((await page.locator('#petJourneys>[role="status"]').textContent()).includes('5 Genious Crystal'));
+  assert.equal(await page.locator('#petJourneys').getByRole('button',{name:'Send on a 4-hour journey'}).first().isEnabled(),true);
+  await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);await page.locator('#rubyShopDialog .ruby-tile').filter({has:page.getByRole('heading',{name:'Starlight Feast',exact:true})}).getByRole('button',{name:'Journey loot odds'}).click();
+  const oddsDialog=page.locator('dialog.pet-journeys');assert.equal(await oddsDialog.isVisible(),true);assert.ok((await oddsDialog.textContent()).includes('Genious Crystal'));await oddsDialog.getByRole('button',{name:'Close',exact:true}).click();await page.keyboard.press('Escape');
+  await page.locator('#uiVersionToggle').click();await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);await page.locator('#rubyShopDialog').getByRole('button',{name:'Companion journeys',exact:true}).click();assert.equal(await page.locator('dialog[open] #petJourneys').isVisible(),true);await page.locator('dialog[open]').getByRole('button',{name:'Close',exact:true}).click();
+  assert.deepEqual(errors,[]);console.log('Pet journeys UI passed: multiple companions, collision-free roaming, interactions, food odds, mobile layout, simultaneous departures, countdown and claim.');await browser.close();await new Promise(r=>server.close(r));return;
+ }
  if(process.env.AMULET_CHECK_ONLY==='1'){
   await page.evaluate(()=>footyStudio.navigate('amulets'));await page.waitForTimeout(500);
   await page.locator('#amuletTier').selectOption('silver');assert.equal(await page.locator('#amuletShop .amulet-tile').count(),5);
@@ -84,7 +115,7 @@ const fixture=(url)=>{
 
  assert.ok((await page.locator('.ruby-pet').boundingBox()).width>=300);
  assert.ok((await page.locator('.ruby-pet svg').boundingBox()).width>=300);
- await page.locator('.ruby-pet').click();assert.equal(await companion.getAttribute('data-mood'),'hello');
+ await page.locator('.ruby-pet').click();assert.equal(await companion.getAttribute('data-mood'),'hello');await page.locator('#petInteraction').getByRole('button',{name:'Close',exact:true}).click();
  await page.locator('.companion-perches [data-perch="crystal"]').click();assert.equal(await companion.getAttribute('data-perch'),'crystal');
  for(const kind of ['fox','snail','dragon']){await page.evaluate(kind=>{document.querySelector('.ruby-pet').innerHTML=companionArt('pet:'+kind);},kind);await companion.screenshot({path:'.ui-tools/companion-'+kind+'.png'});}
  await page.evaluate(()=>{document.querySelector('.ruby-pet').innerHTML=companionArt('pet:fox');});

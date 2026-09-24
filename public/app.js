@@ -3142,7 +3142,7 @@ async function loadGemConverter() {
 function renderGemWallet() {
   const wallet = document.getElementById('gemBalances');
   wallet.replaceChildren();
-  const recipes = gemConverterData.recipes.filter(recipe => recipe.unlocked);
+  const recipes = gemConverterData.recipes.filter(recipe => recipe.unlocked || Number(gemConverterData.gems[recipe.gemKey]) > 0);
   for (const recipe of recipes) {
     const tile = document.createElement('div');
     tile.className = `gem-balance-tile${recipe.unlocked ? '' : ' is-locked'}`;

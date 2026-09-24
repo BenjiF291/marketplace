@@ -42,3 +42,25 @@ Peeks are intermittent, clipped to show only part of the creature, responsive to
 The floating call-back bar has been removed. Recall is available only at the companion's home. The explorer now uses 27 anchor families, including individual listing cards, inventory cards, amulets, relics, headings and banners. Each anchor offers five possible edges, with up to twelve objects per family: well over twelve possible positions, depending on loaded content and screen space. Positions must fit beside the actual object without snapping to the screen edge, and avoid the centre of interactive controls. Roaming avoids its last ten chosen positions. Hide-and-seek keeps its chosen object, but can use a different edge when screen space changes.
 
 Visible peeks stay attached to their original object and edge for the entire appearance, including while scrolling out of view or back. Scroll does not reroll the location or restart the animation. At the end of a peek, the companion retreats behind its object for 650ms before its layer is removed. Reduced-motion mode skips travel animation.
+
+## Multiple companions and journeys
+
+All three owned pets can now be equipped together. Equipping another pet preserves the others; Unequip removes just that pet. Legacy single-pet equipment is read automatically. Each pet has its own home, roaming and hide-and-seek controls. Roaming reserves objects and checks visible pet rectangles, including departing pets, to prevent shared spots and overlapping arrivals. Clicking a pet opens head scratches, fetch, dance and nap interactions. These interactions and countdowns are local and make no database writes. Feeding Crystal Crunch for fun still consumes one serving and does not award loot.
+
+Open **Companion journeys** at Home or from the Ruby shop (also accessible in Classic UI). Each owned pet can take one journey at a time; all three may travel simultaneously. Starting consumes one food and takes exactly four hours of server time, continuing while logged out. Travelling pets leave the home/roaming display until their rewards are claimed. Claiming returns them to their equipped homes. There is no automatic repeat or cancellation/refund.
+
+Every journey awards 1–5 gems of one random tier, including configured special tiers and tiers the converter has not unlocked. Owning these gems does not unlock conversion, but their balance is visible in the gem wallet. Quantity, gem tier and rare bonus are independent draws. The bonus is added to the gems, not substituted for them.
+
+| Food | Ruby price | Chances of 1 / 2 / 3 / 4 / 5 gems | Rare bonus chance |
+|---|---:|---|---:|
+| Crystal Crunch | 2 | 45% / 30% / 15% / 8% / 2% | 0.1% |
+| Explorer Trail Mix | 8 | 20% / 30% / 25% / 18% / 7% | 0.4% |
+| Starlight Feast | 20 | 8% / 17% / 30% / 28% / 17% | 1% |
+
+Gem-tier weights use `decay ^ rank` across configured tiers in ascending order; decay is 0.62 / 0.80 / 0.94 respectively. Better food gives higher tiers more weight. Probabilities are normalized to one million integer outcomes, with at least one outcome for every configured tier. The UI displays the resulting exact percentages, not rounded estimates or qualitative rarity labels.
+
+Rare bonuses are non-exclusive amulets from rank 4 (Gold in the standard ordering) upward, and nonempty packs assigned to those tiers. Trophy-exclusive amulets are excluded. The bonus probability is split approximately equally across eligible items, with exact per-item percentages shown. If no bonus items are configured, the bonus roll is always empty. Use **Journey loot odds** on any food in the shop, even before owning a pet, or **Exact loot odds** beside each pet's selected food. Amulet rewards include their gem tier in the name.
+
+`pet-journeys.js` owns the tables and reward rules. Authenticated `/pet-journeys` exposes probabilities. Start and claim use `/ruby-shop/journey-start` and `/ruby-shop/journey-claim` with existing transactional action receipts. Rewards are drawn with server cryptographic randomness and stored at departure, hidden from the pending-journey response. Retries cannot reroll, consume food twice, or claim twice; stale journey IDs are rejected. Pack rewards mint an owned, openable pack and a contents snapshot in the claim transaction. Amulets enter the existing inventory.
+
+No scheduled job, polling request, Firestore rule change, or new index is needed. Journey state lives in the server-only user document. Loot configuration is cached for one minute per server process; only packs referenced by eligible tiers are read. Ship the backend and frontend together, including the new `pet-journeys.js` and `public/pet-interactions.js` files. No new login or manual account migration is required.

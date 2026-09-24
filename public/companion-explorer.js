@@ -1,5 +1,8 @@
 /* Local companion play: no account writes or rewards for finding a hiding pet. */
-window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
+const companionReservations=new Map();
+window.createCompanionExplorer = ({stage,pet,copy,message,react,onInteract}) => {
+ const owner=Symbol('companion');
+ const objectKey=entry=>entry.selector+':'+entry.index;
  const anchors=[
   ['hero','#studioHome .studio-hero','the home banner'],
   ['daily','#dailyPackFeature','the daily pack'],
@@ -38,7 +41,7 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
  }
  const peek=make('div',null,'companion-world-peek');peek.hidden=true;
  const find=make('button');find.type='button';find.setAttribute('aria-label','Found you! Play with your companion');peek.append(find);document.body.append(peek);
- function finishRetreat(){peek.hidden=true;peek.classList.remove('is-out','is-leaving');attachment=null;}
+ function finishRetreat(){if(mode!=='hide')companionReservations.delete(owner);peek.hidden=true;peek.classList.remove('is-out','is-leaving');attachment=null;}
  function retreat(){
   peekWanted=false;find.tabIndex=-1;clearTimeout(retreatTimer);
   if(peek.hidden||reduced()){finishRetreat();return;}
@@ -46,7 +49,7 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
   peek.classList.remove('is-out');peek.classList.add('is-leaving');
   retreatTimer=setTimeout(finishRetreat,700);
  }
- function cancel(animate=false){peekWanted=false;clearTimeout(timer);clearTimeout(departTimer);clearTimeout(peekTimer);clearTimeout(retreatTimer);if(animate)retreat();else finishRetreat();}
+ function cancel(animate=false){companionReservations.delete(owner);peekWanted=false;clearTimeout(timer);clearTimeout(departTimer);clearTimeout(peekTimer);clearTimeout(retreatTimer);if(animate)retreat();else finishRetreat();}
  const recent=[];
  const edges=['top-left','top-right','left','right','bottom'];
  function nodeFor(entry){return document.querySelectorAll(entry.selector)[entry.index]||null;}
@@ -56,6 +59,9 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
   return edges.map(edge=>({id:`${id}:${index}:${edge}`,selector,index,label,edge}));
  }));}
  function placement(entry){
+  if([...companionReservations].some(([key,r])=>key!==owner&&r.object===objectKey(entry)))return null;
+  const visibleOthers=[...document.querySelectorAll('.companion-world-peek:not([hidden])')].filter(n=>n!==peek);
+  if(visibleOthers.some(n=>n.dataset.object===objectKey(entry)))return null;
   const node=nodeFor(entry);if(!node||!node.getClientRects().length)return null;
   const r=node.getBoundingClientRect(),small=innerWidth<600;
   const horizontal=entry.edge.startsWith('top')||entry.edge==='bottom';
@@ -73,9 +79,11 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
   if(x<10||x+w>innerWidth-10||y<90||y+h>innerHeight-85)return null;
   const occupied=document.elementsFromPoint(x+w/2,y+h/2).some(element=>!peek.contains(element)&&element.closest('button,input,select,a,textarea,[role="button"]'));
   if(occupied)return null;
+  if([...companionReservations].some(([key,r])=>key!==owner&&r.box&&x<r.box.x+r.box.w&&x+w>r.box.x&&y<r.box.y+r.box.h&&y+h>r.box.y))return null;
+  if(visibleOthers.some(n=>{const r=n.getBoundingClientRect();return x<r.right&&x+w>r.left&&y<r.bottom&&y+h>r.top;}))return null;
   return {x,y,w,h};
  }
- function candidates(visibleOnly=false){const all=spots();return visibleOnly?all.filter(entry=>placement(entry)):all;}
+ function candidates(visibleOnly=false){const all=spots().filter(s=>![...companionReservations].some(([key,r])=>key!==owner&&r.object===objectKey(s)));return visibleOnly?all.filter(entry=>placement(entry)):all;}
  function position(){
   // Once visible, follow the original object even beyond the viewport margins.
   // Scrolling must not re-run eligibility, switch edges, or restart the entrance.
@@ -83,7 +91,7 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
    const {node,rect,box}=attachment;
    if(!node.isConnected||!node.getClientRects().length){if(!peek.classList.contains('is-leaving'))retreat();return false;}
    const current=node.getBoundingClientRect();
-   peek.style.left=(box.x+current.left-rect.left)+'px';peek.style.top=(box.y+current.top-rect.top)+'px';
+   const moved={...box,x:box.x+current.left-rect.left,y:box.y+current.top-rect.top};peek.style.left=moved.x+'px';peek.style.top=moved.y+'px';if(!peek.classList.contains('is-leaving'))companionReservations.set(owner,{object:attachment.object,box:moved});
    return true;
   }
   if(!spot||mode==='home'||document.hidden||document.querySelector('dialog[open]')||document.body.classList.contains('dye-mode')){peek.hidden=true;return false;}
@@ -91,9 +99,9 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
   if(!box&&mode==='hide'){for(const edge of edges){const alternative={...spot,edge,id:`${spot.selector}:${spot.index}:${edge}`};const fit=placement(alternative);if(fit){spot=alternative;box=fit;break;}}}
   if(!box){peek.hidden=true;return false;}
   peek.style.left=box.x+'px';peek.style.top=box.y+'px';peek.style.width=box.w+'px';peek.style.height=box.h+'px';
-  peek.dataset.spot=spot.id;peek.dataset.edge=spot.edge;const node=nodeFor(spot);attachment={node,rect:node.getBoundingClientRect(),box};return true;
+  peek.dataset.spot=spot.id;peek.dataset.object=objectKey(spot);peek.dataset.edge=spot.edge;const node=nodeFor(spot);attachment={node,object:objectKey(spot),rect:node.getBoundingClientRect(),box};companionReservations.set(owner,{object:objectKey(spot),box});return true;
  }
- function choose(visibleOnly){const pool=candidates(visibleOnly);if(!pool.length)return null;const fresh=pool.filter(s=>!recent.includes(s.id));const choices=fresh.length?fresh:pool;const next=choices[Math.floor(Math.random()*choices.length)];recent.push(next.id);if(recent.length>10)recent.shift();return next;}
+ function choose(visibleOnly){const pool=candidates(visibleOnly);if(!pool.length)return null;const fresh=pool.filter(s=>!recent.includes(s.id));const choices=fresh.length?fresh:pool;const next=choices[Math.floor(Math.random()*choices.length)];companionReservations.set(owner,{object:objectKey(next)});recent.push(next.id);if(recent.length>10)recent.shift();return next;}
  function cycle(){
   if(mode==='home'||!petId)return;
   if(mode==='roam')spot=choose(true);
@@ -115,6 +123,7 @@ window.createCompanionExplorer = ({stage,pet,copy,message,react}) => {
  find.onclick=()=>{
   const foundMode=mode;const at=spot?.label||'a corner';
   if(foundMode==='hide'){setMode('home');message.textContent=`Found you by ${at}! Play again whenever you like.`;}
+  else if(onInteract){onInteract(petId);}
   else {find.classList.remove('found');void find.offsetWidth;find.classList.add('found');message.textContent=`Hello from ${at}!`;}
  };
  function refreshPosition(){if(frame)return;frame=requestAnimationFrame(()=>{frame=null;if(!peek.hidden){position();}else if(peekWanted&&position()){peek.hidden=false;peek.classList.add('is-out');find.tabIndex=0;}});}
