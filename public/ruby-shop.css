@@ -69,19 +69,20 @@ body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double
 .companion-portrait svg.companion-illustration{max-width:240px;margin:auto}
 .studio-ui .companion-copy h3 {font-size:clamp(24px,3vw,36px);margin:8px 0 12px;line-height:1.15}
 .companion-mode-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.companion-mode-controls button,.companion-remote button{font:inherit;font-size:12px;border:1px solid #a791ab;border-radius:16px;padding:9px 13px;background:#fff;color:#47345c;cursor:pointer}
+.companion-mode-controls button{font:inherit;font-size:12px;border:1px solid #a791ab;border-radius:16px;padding:9px 13px;background:#fff;color:#47345c;cursor:pointer}
 .companion-mode-controls button[aria-pressed=true]{background:#47345c;color:white}
 .companion-stage[data-explore=roam] .ruby-pet,.companion-stage[data-explore=hide] .ruby-pet{transform:translateY(115%);pointer-events:none;visibility:hidden;transition:transform .85s ease-in,visibility 0s .85s}
-.companion-remote{position:fixed;bottom:18px;right:20px;z-index:50;display:flex;align-items:center;gap:12px;border:1px solid #d1b6dc;border-radius:20px;padding:8px 10px 8px 16px;background:#fff9fc;box-shadow:0 5px 22px #43335422;color:#47345c;font-size:12px;max-width:calc(100vw - 24px)}
-.companion-remote[hidden],.companion-world-peek[hidden]{display:none!important}
-.companion-world-peek{position:fixed;width:138px;height:170px;overflow:hidden;z-index:35;pointer-events:none;contain:layout paint;filter:drop-shadow(0 3px 3px #2d253722)}
-.companion-world-peek button{width:230px;height:188px;border:0;padding:0;background:none;position:absolute;left:33px;top:4px;transform:translateX(110%) rotate(-20deg);transition:transform .85s cubic-bezier(.22,1,.36,1);pointer-events:auto;cursor:pointer}
-.companion-world-peek.is-out button{transform:translateX(-28%) rotate(-20deg)}
-.companion-world-peek svg.companion-illustration{width:230px;height:188px;max-width:none;display:block}
+/* Each clipped window is aligned to an object's actual edge, not the viewport. */
+.companion-world-peek[hidden]{display:none!important}
+.companion-world-peek{position:fixed;overflow:hidden;z-index:35;pointer-events:none;contain:layout paint;filter:drop-shadow(0 3px 3px #2d253722)}
+.companion-world-peek button{width:195px;height:160px;border:0;padding:0;background:none;position:absolute;left:50%;top:0;margin-left:-97px;pointer-events:auto;cursor:pointer;--peek-from:translateY(100%);--peek-to:translateY(0)}
+.companion-world-peek svg.companion-illustration{width:195px;height:160px;max-width:none;display:block}
+.companion-world-peek[data-edge=left] button{left:0;margin:0;--peek-from:translateX(100%);--peek-to:translateX(-25%) rotate(-18deg)}
+.companion-world-peek[data-edge=right] button{left:auto;right:0;margin:0;--peek-from:translateX(-100%);--peek-to:translateX(25%) rotate(18deg)}
+.companion-world-peek[data-edge=bottom] button{top:auto;bottom:0;--peek-from:translateY(-100%) rotate(180deg);--peek-to:translateY(0) rotate(180deg)}
+.companion-world-peek.is-out button{animation:companion-object-arrive .85s ease-out both}
 .companion-world-peek button:focus-visible{outline:3px solid #bc426c;outline-offset:-12px}
 .companion-world-peek .found .companion-hearts{animation:companion-love 2s ease both}
-@media(max-width:600px){.companion-world-peek{width:104px;height:132px}.companion-world-peek button,.companion-world-peek svg.companion-illustration{width:185px;height:151px}.companion-remote{bottom:80px;right:12px;font-size:11px;gap:6px;padding:7px 9px}.companion-remote span{max-width:155px}}
-@media(prefers-reduced-motion:reduce){.companion-world-peek button,.companion-stage[data-explore] .ruby-pet{transition:none}.companion-world-peek .companion-illustration *{animation:none!important}}
-@keyframes companion-world-arrive{from{transform:translateX(110%) rotate(-20deg)}to{transform:translateX(-28%) rotate(-20deg)}}
-.companion-world-peek.is-out button{animation:companion-world-arrive .85s ease-out both}
-@media(prefers-reduced-motion:reduce){.companion-world-peek.is-out button{animation:none}}
+@keyframes companion-object-arrive{from{transform:var(--peek-from)}to{transform:var(--peek-to)}}
+@media(max-width:600px){.companion-world-peek button,.companion-world-peek svg.companion-illustration{width:150px;height:123px}.companion-world-peek button{margin-left:-75px}.companion-world-peek[data-edge=left] button,.companion-world-peek[data-edge=right] button{margin:0}}
+@media(prefers-reduced-motion:reduce){.companion-world-peek.is-out button{animation:none;transform:var(--peek-to)}.companion-stage[data-explore] .ruby-pet{transition:none}.companion-world-peek .companion-illustration *{animation:none!important}}

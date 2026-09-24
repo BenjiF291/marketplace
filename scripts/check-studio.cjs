@@ -41,9 +41,10 @@ const fixture=(url)=>{
  assert.equal(await page.locator('.ruby-pet').isVisible(),false);
  await page.evaluate(()=>footyStudio.navigate('marketplace'));await page.waitForTimeout(1200);
  assert.equal(await page.locator('.companion-world-peek').isVisible(),true);
- assert.equal(await page.locator('.companion-world-peek').getAttribute('data-spot'),'market');
+ assert.ok((await page.locator('.companion-world-peek').getAttribute('data-spot')).startsWith('market'));
+ assert.equal(await page.locator('.companion-remote').count(),0);
  await page.waitForTimeout(900);await page.screenshot({path:'.ui-tools/companion-roaming.png'});
- await page.locator('.companion-remote button').click();assert.equal(await companion.getAttribute('data-explore'),'home');
+ await page.evaluate(()=>footyStudio.navigate('home'));await page.locator('[data-companion-mode="home"]').click();assert.equal(await companion.getAttribute('data-explore'),'home');
  assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
  await page.evaluate(()=>footyStudio.navigate('home'));
  await page.locator('[data-companion-mode="hide"]').click();await page.waitForTimeout(1200);
@@ -55,7 +56,7 @@ const fixture=(url)=>{
    await page.locator('.companion-world-peek button').evaluate(button=>button.click());found=true;break;
   }
  }
- assert.equal(found,true,'a hiding pet is discoverable in the twelve registered spots');
+ assert.equal(found,true,'a hiding pet is discoverable around the registered page objects');
  assert.equal(await companion.getAttribute('data-explore'),'home');
  await page.evaluate(()=>footyStudio.navigate('home'));
 
@@ -77,13 +78,13 @@ const fixture=(url)=>{
   assert.equal(await page.locator('.companion-world-peek').isVisible(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:'.ui-tools/companion-roaming-mobile.png',animations:'disabled'});
-  await page.locator('.companion-remote button').click();await page.waitForTimeout(1400);
+  await page.evaluate(()=>footyStudio.navigate('home'));await page.locator('[data-companion-mode="home"]').click();await page.waitForTimeout(1400);
   assert.equal(await page.locator('.companion-world-peek').isVisible(),false);
   assert.equal(await companion.getAttribute('data-explore'),'home');
   await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>footyStudio.navigate('home'));
   await page.locator('[data-companion-mode="hide"]').click();
   assert.equal(await page.locator('.ruby-pet').evaluate(node=>getComputedStyle(node).transitionDuration),'0s');
-  await page.locator('.companion-remote button').click();
+  await page.evaluate(()=>footyStudio.navigate('home'));await page.locator('[data-companion-mode="home"]').click();
   assert.deepEqual(errors,[]);console.log('Companion checks passed: dive, cross-tab roaming, hide-and-seek, recall, mobile layout, and reduced motion.');
   await browser.close();await new Promise(r=>server.close(r));return;
  }
