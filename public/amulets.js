@@ -1,5 +1,13 @@
 let amuletState = null;
 let amuletPending = false;
+let amuletBrowseMode = 'tier';
+function setAmuletBrowseMode(mode) {
+  if (!['tier', 'all'].includes(mode)) return;
+  amuletBrowseMode = mode;
+  document.querySelectorAll('[data-amulet-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.amuletView === mode)));
+  document.getElementById('amuletTierPicker').hidden = mode === 'all';
+  renderAmulets();
+}
 let amuletUnlockTimer = null;
 const resourceHeaders = () => ({ 'Content-Type': 'application/json', 'X-User-Id': currentUserId, 'Authorization': `Bearer ${localStorage.getItem('sessionToken') || ''}` });
 function amuletNode(tag, text, className) {
@@ -78,14 +86,22 @@ function renderAmulets() {
   }
   if (!owned.children.length) owned.textContent = 'Your unequipped amulets will appear here.';
   const key = document.getElementById('amuletTier').value;
-  const entries = amuletState.catalog.filter(entry => entry.gemKey === key);
-  document.getElementById('amuletWallet').textContent = key==='trophy-road'?'Earn these amulets from trophy milestones. They cannot be bought.':`${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${amuletState.balance} Footy`;
+  const entries = amuletBrowseMode === 'all' ? amuletState.catalog : amuletState.catalog.filter(entry => entry.gemKey === key);
+  document.getElementById('amuletWallet').textContent = amuletBrowseMode === 'all' ? `All tiers / ${amuletState.balance} Footy` : key==='trophy-road'?'Earn these amulets from trophy milestones. They cannot be bought.':`${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${amuletState.balance} Footy`;
+  let previousGem = null;
   for (const entry of entries) {
+    if (amuletBrowseMode === 'all' && previousGem !== entry.gemKey) {
+      const heading = amuletNode('div', undefined, 'amulet-tier-heading');
+      heading.append(amuletNode('h4', entry.exclusive ? 'Trophy road exclusives' : `${entry.gemName} / ${entry.tierName}`),
+        amuletNode('p', entry.exclusive ? 'Earn these on the trophy road.' : `${amuletState.gems[entry.gemKey] || 0} ${entry.gemName} available`));
+      shop.appendChild(heading);
+      previousGem = entry.gemKey;
+    }
     const tile = amuletTile(entry);
     if(entry.exclusive){tile.appendChild(amuletNode('strong',`Trophy road exclusive - earn at ${entry.milestone} trophies`));shop.appendChild(tile);continue;}
     const price = Math.ceil(entry.price * (1 - (amuletState.effects.gemshop || 0) / 100));
     const button = amuletNode('button', `Buy - ${price} ${entry.gemName}`, 'btn btn-primary');
-    button.disabled = amuletPending || (amuletState.gems[key] || 0) < price;
+    button.disabled = amuletPending || (amuletState.gems[entry.gemKey] || 0) < price;
     button.onclick = () => amuletAction('buy', { amuletId: entry.id });
     tile.appendChild(button); shop.appendChild(tile);
   }

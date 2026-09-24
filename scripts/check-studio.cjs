@@ -19,7 +19,7 @@ const fixture=(url)=>{
  if(url==='/battle-cards'||url==='/battle-inventory')return battle;
  if(url==='/brawl/skill')return require('../brawl-skill').profile({ratingVersion:2,placementsCompleted:5,skillLevel:436});
  if(url==='/trophies')return {trophies:250,peak:300,claimed:[25,75],path:require('../trophy-utils').PATH.map(reward=>({...reward,amuletName:require('../amulet-utils').EXCLUSIVES.find(entry=>entry.id===reward.amulet)?.name}))};
- if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:require('../amulet-utils').catalog(tiers),effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
+ if(url==='/amulets')return {slots:[null],slotCount:1,vipPrice:300,vipDays:30,owned:{},catalog:require('../amulet-utils').catalog([...tiers,{id:'silver',name:'Silver',order:2}]),effects:{},slotPrices:[0,50,150,500,1000],balance:2450,isAdmin:true,serverNow:Date.now(),gems:{bronze:18}};
  if(url==='/gem-converter')return {recipes:[{tierId:'bronze',tierName:'Bronze',gemKey:'bronze',gemName:'Ruby',unlocked:true,sellPrice:25,cards:images,costs:{1:25,2:50,3:75},rewards:{1:3,2:7,3:12}}],gems:{bronze:18},level:1,nextUpgrade:null};
  if(url==='/gem-workshop')return {theme:{},compressor:false,gems:{bronze:18},dyes:{bronze:5},tiers:[{gemKey:'bronze',gemName:'Ruby'}],areas:{buttons:'Buttons',navigation:'Navigation',background:'Background'}};
  if(url.includes('history'))return {transfers:[],items:[]};
@@ -33,6 +33,18 @@ const fixture=(url)=>{
  await context.route('https://marketplace-aw8b.onrender.com/**',async route=>{const req=route.request();if(req.method()!=='GET'){await route.fulfill({status:403,body:'Preview: writes blocked'});return;}await route.fulfill({json:fixture(new URL(req.url()).pathname)});});
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  await page.goto('http://127.0.0.1:4173/index.html');await page.waitForTimeout(800);
+ if(process.env.AMULET_CHECK_ONLY==='1'){
+  await page.evaluate(()=>footyStudio.navigate('amulets'));await page.waitForTimeout(500);
+  await page.locator('#amuletTier').selectOption('silver');assert.equal(await page.locator('#amuletShop .amulet-tile').count(),5);
+  await page.locator('[data-amulet-view="all"]').click();assert.equal(await page.locator('#amuletTierPicker').isVisible(),false);
+  assert.equal(await page.locator('#amuletShop .amulet-tier-heading').count(),3);assert.equal(await page.locator('#amuletShop .amulet-tile').count(),14);
+  assert.equal(await page.locator('#amuletShop .amulet-tile').nth(5).locator('button').isDisabled(),true);
+  await page.evaluate(()=>loadAmulets());assert.equal(await page.locator('[data-amulet-view="all"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-amulet-view="tier"]').click();assert.equal(await page.locator('#amuletTier').inputValue(),'silver');assert.equal(await page.locator('#amuletShop .amulet-tile').count(),5);
+  await page.locator('[data-amulet-view="all"]').click();await page.setViewportSize({width:375,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.locator('#amuletShop').screenshot({path:'.ui-tools/amulets-all-mobile.png',animations:'disabled'});
+  assert.deepEqual(errors,[]);console.log('Amulet views passed: tier/all toggle, retained selection, reload, gem affordability, mobile layout.');await browser.close();await new Promise(r=>server.close(r));return;
+ }
  await page.locator('#rubyShopButton').click();await page.waitForTimeout(200);assert.equal(await page.locator('#rubyShopDialog').isVisible(),true);assert.ok(await page.locator('.ruby-tile').count()>15);await page.screenshot({path:'.ui-tools/ruby-shop.png',fullPage:true});await page.keyboard.press('Escape');
  assert.equal(await page.locator('#dailyPackFeature h3').textContent(),'Gold discovery pack');
  const companion=page.locator('.companion-stage');assert.equal(await companion.isVisible(),true);

@@ -230,7 +230,12 @@
       <h3>Your equipped amulets</h3><div id="amuletSlots" class="amulet-grid"></div>
       <button id="unlockAmuletSlot" class="btn btn-primary" onclick="amuletAction('unlock', {expectedCount: amuletState.slotCount})">Unlock slot</button>
       <h3>Your amulet inventory</h3><div id="amuletOwned" class="amulet-grid"></div>
-      <h3>Amulet shop</h3><label for="amuletTier">Gem tier or trophy exclusives</label><select id="amuletTier" class="input-field" onchange="renderAmulets()"></select>
+      <h3>Amulet shop</h3>
+      <div class="amulet-view-switch" role="group" aria-label="Amulet browsing mode">
+        <button type="button" class="btn" data-amulet-view="tier" aria-pressed="true" onclick="setAmuletBrowseMode('tier')">One tier</button>
+        <button type="button" class="btn" data-amulet-view="all" aria-pressed="false" onclick="setAmuletBrowseMode('all')">Scroll all tiers</button>
+      </div>
+      <div id="amuletTierPicker"><label for="amuletTier">Gem tier or trophy exclusives</label><select id="amuletTier" class="input-field" onchange="renderAmulets()"></select></div>
       <p id="amuletWallet"></p><div id="amuletShop" class="amulet-grid"></div>
       <p id="amuletStatus" role="status"></p>
     </section>
