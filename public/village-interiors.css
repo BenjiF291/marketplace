@@ -1,0 +1,84 @@
+/* Scoped game interiors; leaving village mode restores both existing interfaces. */
+.village-interior-chrome[hidden]{display:none!important}
+body.studio-ui.village-interior{--studio-paper:#f1e6cc;--studio-line:#c4aa76;--studio-ink:#322a20;--studio-muted:#6c5b44;--studio-accent:#765331;background:#211c18;color:#322a20}
+.village-interior #studioShell,.village-interior .studio-page-heading,.village-interior .village-return{display:none!important}
+.village-interior #uiVersionToggle,.village-interior #villageModeToggle,.village-interior #rubyShopButton{display:none!important}
+.village-interior-chrome{position:relative;min-height:370px;isolation:isolate;background:#28251f}
+.village-interior-art{position:absolute;inset:0;z-index:-2;overflow:hidden}
+.studio-ui .village-interior-art svg{width:100%;height:100%;display:block;overflow:hidden;filter:brightness(.74)}
+.village-interior-chrome:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(#110e0b70,transparent 35%,#211c1899 75%,#211c18)}
+.village-interior-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 28px;background:linear-gradient(#191712e8,#19171266)}
+.village-interior-bar .village-secondary{background:linear-gradient(#55452e,#302b21);border:1px solid #a38955;box-shadow:inset 0 1px #e6cd8755,0 3px 10px #0005;color:#f4e6c4;font-size:13px}
+.village-interior-controls{margin-left:auto}.village-interior-controls #dyeHeaderControls{flex-wrap:wrap;justify-content:flex-end}
+.village-interior-controls .btn{background:#3f382a!important;color:#f8e8bc!important;border:1px solid #937a48!important}
+.village-interior-heading{text-align:center;max-width:850px;padding:55px 20px 35px;margin:auto;color:#ffedc4;text-shadow:0 3px 12px #100900,0 1px 3px #000}
+.village-interior-heading h1{font:clamp(32px,5vw,58px)/1.15 Georgia,serif;margin:0 0 12px;color:#ffedc4;letter-spacing:-.025em}
+.village-interior-heading p{font-size:16px;color:#f4e5c7;margin:0}
+.village-stations{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:5px 15px 24px}
+.village-stations button{min-height:44px;padding:10px 22px;border-radius:5px 5px 0 0;border:1px solid #a78b55;background:linear-gradient(#51402c,#30271e);color:#e8d1a2;box-shadow:inset 0 1px #fff2;font-weight:650}
+.village-stations button[aria-pressed=true]{background:linear-gradient(#e4cb93,#b99553);color:#302518;border-color:#f4d99b}
+body.studio-ui.village-interior .container{position:relative;margin:-5px auto 0;padding:0 24px 70px;max-width:1320px}
+.village-interior .main-grid>section.studio-visible{border:1px solid #ae8e56;border-radius:9px;box-shadow:0 15px 45px #0005,inset 0 0 0 4px #8e6c3120;background:linear-gradient(110deg,#f5ecd6,#e6d6b4);padding:28px}
+.village-interior .main-grid>section h2{font:26px Georgia,serif;color:#48361f;border-bottom:1px solid #b99d6c;padding-bottom:14px}
+.village-interior .main-grid>section h3{font-family:Georgia,serif;color:#4f3a20}
+.village-interior .main-grid .btn{border:1px solid #ab8a52;border-radius:5px;background:linear-gradient(#f6e9c9,#dcc28c);color:#48341e;box-shadow:inset 0 1px #fff8,0 2px 0 #795b3933}
+.village-interior .main-grid .btn-primary,.village-interior .main-grid .btn-success{background:linear-gradient(#527263,#2c4b3c);color:#fff2ca;border-color:#294636}
+.village-interior .main-grid .btn-danger{background:#eed2bc;color:#803620}
+.village-interior .main-grid input,.village-interior .main-grid select{background:#fff8e6;border:1px solid #b99b66;border-radius:5px;color:#3d3326}
+.village-interior .main-grid details{background:#eee0c0;border:1px solid #baa16f;border-radius:7px}
+.village-interior .main-grid details summary{color:#5e452a;padding:15px;font-family:Georgia,serif}
+.village-interior .items-list>li,.village-interior .amulet-card,.village-interior .ruby-product{border-color:#b69b69;background:#fff7e3;box-shadow:0 4px 10px #6b4c2220}
+.village-interior .gem-machine{border-color:#ad7b45;background:radial-gradient(ellipse at 50% 65%,#b26933,#302924 80%);color:#fff0cd;box-shadow:inset 0 0 35px #120c08}
+.village-interior .gem-machine p{color:#fff0cd}
+.village-interior .ruby-dialog{background:#f2e4c6;border:2px solid #b89553;color:#3b3022;box-shadow:0 25px 70px #0008}
+.village-interior .ruby-dialog h2{font-family:Georgia,serif;color:#5d3a25}
+.village-interior[data-village-building=forge] #gemWorkshop,
+.village-interior[data-village-building=dye] #gemConverter,
+.village-interior[data-village-building=compressor] #gemConverter,
+.village-interior[data-village-building=dye] .village-compressor-tool,
+.village-interior[data-village-building=compressor] .village-dye-tool{display:none!important}
+.village-interior[data-village-building=forge] #gemConverter>summary,
+.village-interior[data-village-building=dye] #gemWorkshop>summary,
+.village-interior[data-village-building=compressor] #gemWorkshop>summary{display:none}
+.village-interior #studioWorkshop>details{margin:0;padding:20px}
+.village-interior[data-village-building=pets] #studioHome>:not(#rubyHabitat):not(#petJourneys):not(.companion-stage){display:none!important}
+.village-interior[data-village-building=cabinet] .container{display:none}
+.village-interior[data-village-building=cabinet] #rubyShopDialog[open]{position:relative;inset:auto;margin:0 auto 60px;width:min(1200px,calc(100% - 32px));max-width:none;max-height:none;box-sizing:border-box}
+.village-interior[data-village-building=cabinet] #rubyShopDialog>button:first-child{display:none}
+.village-interior[data-village-building=arena]{--studio-accent:#375e78}
+.village-interior[data-village-building=arena] .main-grid>section{background:linear-gradient(115deg,#e3e2d2,#bcc9c6)}
+.village-interior[data-village-building=dye]{--studio-accent:#785876}
+.village-interior[data-village-building=vip] .main-grid>section{background:linear-gradient(115deg,#f1e6d5,#ddc9df)}
+@media(max-width:650px){.village-interior-bar{padding:12px;gap:8px;flex-wrap:wrap}.village-interior-controls{order:3;flex-basis:100%;margin:0}.village-interior-controls #dyeHeaderControls{justify-content:center}.village-interior-heading{padding:34px 15px 25px}.village-interior-heading p{font-size:13px}.village-interior-chrome{min-height:315px}.village-stations{gap:5px;padding-bottom:16px}.village-stations button{font-size:11px;padding:9px 12px}body.studio-ui.village-interior .container{padding:0 10px 35px}.village-interior .main-grid>section.studio-visible{padding:15px}.village-interior #studioWorkshop>details{padding:10px}.village-interior .main-grid>section h2{font-size:22px}}
+
+.village-interior-bar{position:fixed;inset:0 0 auto;z-index:90;background:#211c18eb;backdrop-filter:blur(10px)}
+.village-interior-heading{padding-top:135px}
+.village-interior .main-grid .items-list>*{background:linear-gradient(145deg,#fff6df,#e8d5ae);border:1px solid #b99d67;border-radius:7px;box-shadow:0 4px 0 #785b2c25}
+.village-interior .main-grid .amulet-tile{background:linear-gradient(135deg,#fff5d9,#e3d1a7);border:1px solid #b09156;border-radius:7px;box-shadow:inset 0 0 0 3px #d9bf871f}
+.village-interior[data-village-building=blacksmith] #amuletSection>[data-village-station]{display:none}
+.village-interior[data-village-building=blacksmith][data-village-station=shop] #amuletSection>[data-village-station=shop],
+.village-interior[data-village-building=blacksmith][data-village-station=equip] #amuletSection>[data-village-station=equip],
+.village-interior[data-village-building=blacksmith][data-village-station=owned] #amuletSection>[data-village-station=owned]{display:revert}
+.village-interior[data-village-building=blacksmith] #amuletSection>.amulet-grid{display:none}
+.village-interior[data-village-building=blacksmith][data-village-station=shop] #amuletShop,
+.village-interior[data-village-building=blacksmith][data-village-station=equip] #amuletSlots,
+.village-interior[data-village-building=blacksmith][data-village-station=owned] #amuletOwned{display:grid}
+@media(max-width:650px){.village-interior-heading{padding-top:140px}}
+
+body.village-interior[data-village-building=blacksmith][data-village-station=shop] #amuletSection>#amuletShop,
+body.village-interior[data-village-building=blacksmith][data-village-station=equip] #amuletSection>#amuletSlots,
+body.village-interior[data-village-building=blacksmith][data-village-station=owned] #amuletSection>#amuletOwned{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.village-forge-guide{display:none}
+.village-interior[data-village-building=forge] #gemConverter{display:flex;flex-direction:column;gap:10px}
+.village-interior[data-village-building=forge] #gemConverter>*{order:4}
+.village-interior[data-village-building=forge] #gemConverter>.village-forge-instruction{display:none}
+.village-interior[data-village-building=forge] #gemConverter>#gemMachine{order:0}
+.village-interior[data-village-building=forge] #gemConverter>#gemRecipe,
+.village-interior[data-village-building=forge] #gemConverter>label[for=gemRecipe]{order:1}
+.village-interior[data-village-building=forge] #gemConverter>#gemCards,
+.village-interior[data-village-building=forge] #gemConverter>#gemQuote,
+.village-interior[data-village-building=forge] #gemConverter>#gemStart,
+.village-interior[data-village-building=forge] #gemConverter>#gemStatus{order:2}
+.village-interior[data-village-building=forge] .village-forge-guide{display:block}
+.village-interior .gem-balance-card{background:#fff3d4;border-color:#b5955f}
+.village-interior [id]{scroll-margin-top:125px}

@@ -143,6 +143,7 @@
     $('studioPageDescription').textContent=routes[route].description;$('studioBreadcrumb').textContent=routes[route].label;
     document.querySelectorAll('[data-ui-nav]').forEach(button=>{const selected=button.dataset.uiNav===route;button.classList.toggle('is-current',selected);if(selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
     document.body.dataset.studioPage=route;
+    window.dispatchEvent(new CustomEvent('footy-studio-navigate',{detail:route}));
     if(route==='battle'&&$('battleGameSection').dataset.studioBattle==='bob'&&!$('practiceBattle').open)$('practiceBattle').open=true;
     if(route==='workshop'&&!gemNodes[0].open)gemNodes[0].open=true;
     if(push&&location.hash!==`#/${route}`)history.pushState({studio:route},'',`#/`+route);

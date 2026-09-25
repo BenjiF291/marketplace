@@ -23,3 +23,12 @@
 @keyframes village-glints{50%{opacity:.1;translate:0 -2px}}
 @media(max-width:650px){.village-brand{padding:8px 12px}.village-brand h1{font-size:26px}.village-building-label{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.village-water-glints,.village-fireflies{animation:none}}
+
+/* The viewport is always water; island artwork fades into it without an image edge. */
+.village-viewport{background-image:url('assets/village/ocean-painted.png');background-repeat:repeat;background-size:600px 600px}
+.village-world{background:transparent}
+.village-world>.village-terrain{mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect}
+.village-building[hidden]{display:none!important}
+.village-appearing{animation:village-arrive .65s cubic-bezier(.2,.8,.2,1)}
+@keyframes village-arrive{from{opacity:0;translate:0 -24px;filter:brightness(1.8)}to{opacity:1;translate:0 0;filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){.village-appearing{animation:none}}

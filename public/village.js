@@ -19,16 +19,21 @@
  const toggle=el('button','btn','Try village');toggle.id='villageModeToggle';toggle.hidden=true;toggle.type='button';document.getElementById('dyeHeaderControls').prepend(toggle);
  const back=el('button','village-return','← Village');back.hidden=true;back.type='button';document.body.append(back);
  let enabled=false,verified=false,data=null,simulation=null,d=null,viewport,world,inspector,levelSelect,notice,status,tiles=new Map(),selected=null,previousStudio=true,loading=false;
+ let jump,entering=false;
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false;
  const pointers=new Map();const pref=`footy-village:${currentUserId}`;
  const level=()=>simulation===null?data.level:simulation;
  const unlocked=b=>level()>=b.level;
  const saved=(value)=>{try{localStorage.setItem(pref,value?'on':'off');}catch{}};
- function applyCamera(){frame=0;world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;}
+ function applyCamera(){frame=0;world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;viewport.style.backgroundPosition=`${camera.x}px ${camera.y}px`;viewport.style.backgroundSize=`${600*camera.scale}px ${600*camera.scale}px`;}
  function paintCamera(){if(!frame)frame=requestAnimationFrame(applyCamera);}
- function clamp(){const r=viewport.getBoundingClientRect();camera.x=Math.max(100-1440*camera.scale,Math.min(r.width-100,camera.x));camera.y=Math.max(100-1000*camera.scale,Math.min(r.height-100,camera.y));}
+ function clamp(){const r=viewport.getBoundingClientRect(),s=camera.scale;
+  // Keep the viewport centre inside a bounded region around the island.
+  camera.x=Math.max(r.width/2-1170*s,Math.min(r.width/2-270*s,camera.x));
+  camera.y=Math.max(r.height/2-810*s,Math.min(r.height/2-190*s,camera.y));
+ }
  function zoom(next,cx,cy){const r=viewport.getBoundingClientRect();cx??=r.width/2;cy??=r.height/2;next=Math.max(.4,Math.min(2.4,next));const ratio=next/camera.scale;camera.x=cx-(cx-camera.x)*ratio;camera.y=cy-(cy-camera.y)*ratio;camera.scale=next;clamp();paintCamera();}
- function reset(){const r=viewport.getBoundingClientRect();camera.scale=r.width<650?.73:Math.min(1.1,r.width/1340,r.height/870);camera.x=r.width/2-720*camera.scale;camera.y=r.height/2-470*camera.scale;initialized=true;paintCamera();}
+ function reset(){const r=viewport.getBoundingClientRect();camera.scale=r.width<650?.73:Math.min(1.1,r.width/1340,r.height/870);camera.x=r.width/2-720*camera.scale;camera.y=r.height/2-470*camera.scale;initialized=true;clamp();paintCamera();}
  function focusBuilding(b){const r=viewport.getBoundingClientRect();camera.x=r.width/2-b.x*camera.scale;camera.y=r.height*.4-b.y*camera.scale;clamp();paintCamera();}
  function select(b,focus=false){selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;
   const dismiss=el('button','village-sheet-close','×');dismiss.setAttribute('aria-label','Close building details');dismiss.onclick=()=>{inspector.hidden=true;tiles.get(b.id)?.focus();};
@@ -39,10 +44,11 @@
   if(unlocked(b)&&b.secondary){const sell=el('button','village-secondary',b.secondaryLabel||'Sell an item');sell.onclick=()=>enterBuilding({...b,route:b.secondary});inspector.append(sell);}
  }
  function render(){if(!data||!world)return;const l=level();
-  for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:l,!open);const label=el('span','village-building-label',b.name);label.append(el('small','',b.id==='forge'?`Level ${(data.forgeLevel||0)+1} - ${data.tiers[data.forgeLevel||0]?.name||'Bronze'}`:open?'Enter':`Town Hall ${b.level+1}`));tile.append(label);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
+  for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);const appeared=tile.hidden&&open;tile.hidden=!open;tile.classList.toggle('village-appearing',appeared);if(!open){tile.replaceChildren();continue;}tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:l,!open);const label=el('span','village-building-label',b.name);label.append(el('small','',b.id==='forge'?`Level ${(data.forgeLevel||0)+1} - ${data.tiers[data.forgeLevel||0]?.name||'Bronze'}`:open?'Enter':`Town Hall ${b.level+1}`));tile.append(label);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
   notice.textContent=simulation===null?'Shared Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
   status.textContent=`${buildings.filter(unlocked).length} / ${buildings.length} buildings open`;
-  if(selected)select(selected);
+  jump.replaceChildren(new Option('Find a building...',''));buildings.filter(unlocked).forEach(b=>jump.append(new Option(b.name,b.id)));
+  if(selected){if(unlocked(selected))select(selected);else{selected=null;inspector.hidden=true;}}
  }
  function create(){
   d=el('dialog','village-map');d.id='villageMap';d.setAttribute('aria-label','Admin village preview');
@@ -52,10 +58,10 @@
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);toolbar.append(tools);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');
   world=el('div','village-world');world.innerHTML=VillageArt.terrain();viewport.append(world);
-  for(const b of buildings){const tile=el('button','village-building');tile.type='button';tile.dataset.building=b.id;tile.style.left=b.x+'px';tile.style.top=b.y+'px';tile.style.zIndex=Math.round(b.y);tile.onclick=e=>{if(moved&&e.detail!==0){e.preventDefault();return;}select(b);};tile.onfocus=()=>{if(!pointers.size&&d.open&&document.activeElement===tile)focusBuilding(b);};world.append(tile);tiles.set(b.id,tile);}
+  for(const b of buildings){const tile=el('button','village-building');tile.type='button';tile.dataset.building=b.id;tile.style.left=b.x+'px';tile.style.top=b.y+'px';tile.style.zIndex=Math.round(b.y);tile.onclick=e=>{if(!unlocked(b))return;if(moved&&e.detail!==0){e.preventDefault();return;}select(b);};tile.onfocus=()=>{if(!pointers.size&&d.open&&document.activeElement===tile)focusBuilding(b);};world.append(tile);tiles.set(b.id,tile);}
   const caption=el('div','village-map-caption');caption.append(el('span','','THE COLLECTOR’S ISLE'),el('small','','Swipe to explore · Tap a building to enter'));world.append(caption);
   const controls=el('div','village-camera-controls');for(const [label,text,fn] of [['Zoom out','−',()=>zoom(camera.scale/1.2)],['Recenter map','⌖',reset],['Zoom in','+',()=>zoom(camera.scale*1.2)]]){const b=el('button','',text);b.setAttribute('aria-label',label);b.onclick=fn;controls.append(b);}
-  const footer=el('footer','village-footer');status=el('span');const jump=el('select');jump.setAttribute('aria-label','Find a building');jump.append(new Option('Find a building…',''));buildings.forEach(b=>jump.append(new Option(b.name,b.id)));jump.onchange=()=>{const b=buildings.find(b=>b.id===jump.value);if(b){focusBuilding(b);select(b);}jump.value='';};footer.append(status,jump);
+  const footer=el('footer','village-footer');status=el('span');jump=el('select');jump.setAttribute('aria-label','Find a building');jump.append(new Option('Find a building…',''));buildings.forEach(b=>jump.append(new Option(b.name,b.id)));jump.onchange=()=>{const b=buildings.find(b=>b.id===jump.value);if(b){focusBuilding(b);select(b);}jump.value='';};footer.append(status,jump);
   inspector=el('section','village-inspector');inspector.hidden=true;inspector.setAttribute('aria-label','Selected building');
   d.append(viewport,toolbar,controls,footer,inspector);document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();if(!inspector.hidden)inspector.hidden=true;else disable();});
   viewport.addEventListener('pointerdown',e=>{if(e.button>0)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;gesture={x:e.clientX,y:e.clientY,camX:camera.x,camY:camera.y};if(pointers.size===2){const [a,b]=[...pointers.values()];gesture={distance:Math.hypot(a.x-b.x,a.y-b.y),scale:camera.scale};}});
@@ -67,9 +73,20 @@
  }
  async function load(){const res=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!res.ok)throw Error(await res.text());data=await res.json();verified=true;}
  function options(){levelSelect.replaceChildren(new Option('Use shared Town Hall progression','account'));for(let i=0;i<=9;i++)levelSelect.append(new Option(`Preview: Town Hall ${i+1}`,String(i)));levelSelect.value=simulation===null?'account':String(simulation);}
- async function show(){if(loading)return;if(!enabled)previousStudio=footyStudio.enabled;loading=true;toggle.disabled=true;back.disabled=true;try{await load();if(!d)create();if(!enabled)previousStudio=footyStudio.enabled;enabled=true;saved(true);toggle.textContent='Village mode: on';toggle.setAttribute('aria-pressed','true');back.hidden=true;options();render();if(!d.open)d.showModal();if(!initialized)reset();viewport.focus({preventScroll:true});}catch(e){disable();alert(e.message);}finally{loading=false;toggle.disabled=false;back.disabled=false;}}
- function disable(){enabled=false;verified=false;saved(false);if(d?.open)d.close();back.hidden=true;toggle.textContent='Try village';toggle.setAttribute('aria-pressed','false');if(footyStudio.enabled!==previousStudio)footyStudio.setMode(previousStudio);}
- function enterBuilding(b){if(!verified||!enabled)return;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=false;if(!footyStudio.enabled)footyStudio.setMode(true);if(b.route==='hall'){window.openTownHall();return;}if(b.route==='ruby'){document.getElementById('rubyShopButton').click();return;}footyStudio.navigate(b.route);if(b.target){const target=document.getElementById(b.target);if(target){if(target.tagName==='DETAILS')target.open=true;target.scrollIntoView({behavior:'smooth',block:'start'});}}}
+ async function show(){if(loading)return;if(!enabled)previousStudio=footyStudio.enabled;loading=true;toggle.disabled=true;back.disabled=true;try{await load();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();if(!enabled)previousStudio=footyStudio.enabled;enabled=true;saved(true);toggle.textContent='Village mode: on';toggle.setAttribute('aria-pressed','true');back.hidden=true;options();render();if(!d.open)d.showModal();if(!initialized)reset();viewport.focus({preventScroll:true});}catch(e){disable();alert(e.message);}finally{loading=false;toggle.disabled=false;back.disabled=false;}}
+ function disable(){window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();enabled=false;verified=false;saved(false);if(d?.open)d.close();back.hidden=true;toggle.textContent='Try village';toggle.setAttribute('aria-pressed','false');if(footyStudio.enabled!==previousStudio)footyStudio.setMode(previousStudio);}
+ function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;
+  try{d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
+   if(!footyStudio.enabled)footyStudio.setMode(true);
+   if(b.route==='hall'){VillageInteriors.close();back.hidden=false;window.openTownHall();return;}
+   footyStudio.navigate(b.route==='ruby'?'home':b.route);
+   VillageInteriors.open(b,{back:show,exit:disable,enter:enterBuilding});
+   if(b.route==='ruby')document.getElementById('rubyShopButton').click();
+   if(b.target){const target=document.getElementById(b.target);if(target?.tagName==='DETAILS')target.open=true;}
+  }finally{entering=false;}
+ }
+ window.addEventListener('footy-studio-navigate',e=>{if(entering||!enabled||d?.open||!VillageInteriors.active)return;const current=VillageInteriors.active;if(e.detail===current.route||current.route==='ruby'&&e.detail==='home')return;const next=buildings.find(b=>b.route===e.detail&&unlocked(b));if(next)enterBuilding(next);else{VillageInteriors.close();back.hidden=false;}});
+
  toggle.onclick=()=>enabled?disable():show();back.onclick=show;
  let restored=false;function role(){const admin=typeof currentUserIsAdmin!=='undefined'&&currentUserIsAdmin===true;toggle.hidden=!admin;if(!admin){if(enabled)disable();return;}if(!restored){restored=true;try{if(localStorage.getItem(pref)==='on')show();}catch{}}}
  window.addEventListener('footy-role-changed',role);role();
