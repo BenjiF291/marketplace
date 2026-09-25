@@ -80,6 +80,22 @@
  }
  function updateJourneyClocks(){const now=Date.now()+journeyClockOffset;journeyContent.querySelectorAll('[data-journey-end]').forEach(n=>{const left=Math.max(0,Number(n.dataset.journeyEnd)-now),m=Math.ceil(left/60000);n.textContent=left?`Exploring - ${Math.floor(m/60)}h ${m%60}m remaining`:'Your companion is back! Claim its discoveries.';});journeyContent.querySelectorAll('[data-claim-end]').forEach(b=>b.disabled=busy||Number(b.dataset.claimEnd)>now);}
  setInterval(updateJourneyClocks,1000);
+ function showJourneyDiscoveries(reward,petId){
+  const previous=document.activeElement;
+  const d=el('dialog',undefined,'ruby-dialog journey-discoveries');d.setAttribute('aria-labelledby','journeyDiscoveryTitle');
+  const title=el('h2','Journey discoveries');title.id='journeyDiscoveryTitle';
+  const portrait=el('div',undefined,'journey-discovery-pet');portrait.innerHTML=companionArt(petId);
+  const animal=state?.catalog.find(item=>item.id===petId)?.name||'Your companion';
+  const gems=el('div',undefined,'journey-discovery-gems');gems.append(gemIcon(reward.gemKey),el('strong',`+${reward.amount}`),el('span',reward.gemName));
+  d.append(portrait,title,el('p',`${animal} brought these back for you!`),gems);
+  if(reward.bonus&&reward.bonus.kind!=='none'){
+   const bonus=el('div',undefined,'journey-discovery-bonus');
+   bonus.append(el('span','RARE FIND'),el('strong',reward.bonus.name),el('p',reward.bonus.kind==='pack'?'1 pack added to your inventory':'1 amulet added to your amulet inventory'));d.append(bonus);
+  }
+  d.append(el('p','Rewards added to your account.','journey-discovery-saved'));
+  const close=el('button','Lovely!','btn btn-primary');close.onclick=()=>d.close();d.append(close);
+  d.addEventListener('close',()=>{d.remove();if(previous?.isConnected)previous.focus();},{once:true});document.body.append(d);d.showModal();close.focus();
+ }
  function renderCompanions(ids){
   for(const [id,view] of extraCompanions){if(!ids.slice(1).includes(id)){view.stage.hidden=true;view.explorer.update(null);}}
   for(const id of ids.slice(1)){
@@ -137,7 +153,7 @@
   if(item.id==='food'||item.id.startsWith('food:')){const odds=el('button','Journey loot odds','btn');odds.onclick=async()=>{odds.disabled=true;await loadJourneyTables();odds.disabled=false;const table=journeyTables?.find(t=>t.id===item.id);if(!table){status.textContent='Could not load journey odds. Please try again.';return;}const d=el('dialog',undefined,'ruby-dialog pet-journeys');const close=el('button','Close','btn');close.onclick=()=>d.close();const rows=el('div');const petPicker=el('select');petPicker.setAttribute('aria-label','Pet for loot odds');for(const animal of state.catalog.filter(x=>x.kind==='pet')){const o=el('option',animal.name);o.value=animal.id;petPicker.append(o);}petPicker.onchange=()=>lootRows(rows,table.petOdds?.[petPicker.value]||table);petPicker.onchange();d.append(close,el('h2',table.name),petPicker,el('p',`${table.price} Rubies per serving. One serving sends one pet on a four-hour journey.`),rows);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();};tile.append(odds);}
   list.append(tile);
  }}
- async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();updateJourneyClocks();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});await refresh();await updateBalance();if(result.reward){const r=result.reward;status.textContent=`Found ${r.amount} ${r.gemName}${r.bonus.kind!=='none'?' and '+r.bonus.name:''}!`;}if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){if(!extra.petId||extra.petId===pet.dataset.pet){explorer.home();react('snack');}else extraCompanions.get(extra.petId)?.explorer.home();status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();return result;}catch(e){status.textContent=e.message;return {success:false,error:e.message};}finally{busy=false;const message=status.textContent;render();renderJourneys();status.textContent=message;journeyStatus.textContent=message;}}
+ async function act(action,itemId,extra={}){if(busy)return;if(itemId==='retry'&&typeof isSpinning!=='undefined'&&isSpinning){status.textContent='Wait for the wheel to finish before retrying.';return;}busy=true;render();updateJourneyClocks();try{const result=await call('/ruby-shop/'+action,{itemId,...extra,actionId:crypto.randomUUID()});if(action==='journey-claim'&&result.reward)showJourneyDiscoveries(result.reward,extra.petId);await refresh();await updateBalance();if(result.reward){const r=result.reward;status.textContent=`Found ${r.amount} ${r.gemName}${r.bonus.kind!=='none'?' and '+r.bonus.name:''}!`;}if(itemId==='retry'){document.getElementById('spinResult').textContent=`Replacement reward: ${result.amount} Footy.`;}if(itemId==='retry')status.textContent=`Replacement wheel reward: ${result.amount} Footy. Balance: ${result.balance}.`;if(itemId==='food'){if(!extra.petId||extra.petId===pet.dataset.pet){explorer.home();react('snack');}else extraCompanions.get(extra.petId)?.explorer.home();status.textContent='Crunch! Your companion enjoyed the treat.';}if(itemId==='fuel'&&typeof loadGemConverter==='function')await loadGemConverter();return result;}catch(e){status.textContent=e.message;return {success:false,error:e.message};}finally{busy=false;const message=status.textContent;render();renderJourneys();status.textContent=message;journeyStatus.textContent=message;}}
  window.refreshRubyItems=refresh;
  window.openRubyItemInventory=()=>open(true);
  async function open(owned=false){itemsOnly=owned;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=owned?'supply':'all';if(!dialog.open)dialog.showModal();status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
