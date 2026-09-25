@@ -63,6 +63,7 @@ const fixture=(url)=>{
  if(process.env.VILLAGE_CHECK_ONLY==='1'){
   const requests=[];page.on('request',r=>{if(r.url().includes('/admin/village'))requests.push(r.method());});
   await page.locator('#villageModeToggle').click();await page.locator('#villageMap').waitFor({state:'visible'});assert.equal(await page.locator('.village-building').count(),13);assert.equal(await page.locator('.village-terrain').evaluate(n=>getComputedStyle(n).width),'1440px');assert.equal(await page.locator('.village-building.locked').count(),6);
+  await page.evaluate(async()=>{for(const src of ['assets/village/island-painted.png','assets/village/buildings-painted.png']){const image=new Image();image.src=src;await image.decode();if(image.naturalWidth<1000)throw Error('Village asset is missing or too small');}});
   await page.screenshot({path:'.ui-tools/village-desktop-start.png'});
   const before=await page.locator('.village-world').getAttribute('style');await page.mouse.move(700,600);await page.mouse.down();await page.mouse.move(900,650,{steps:12});await page.mouse.up();assert.notEqual(await page.locator('.village-world').getAttribute('style'),before);
   await page.getByLabel('Find a building').selectOption('blacksmith');assert.equal(await page.locator('.village-inspector').getByRole('button',{name:'Visit the Town Hall'}).count(),1);

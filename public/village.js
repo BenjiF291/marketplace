@@ -1,19 +1,19 @@
 /* Admin-only island navigation. Unlock previews never modify the account. */
 (() => {
  const buildings=[
-  {id:'townhall',name:'Town hall',kind:'townhall',x:630,y:400,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Meet other players, decorate the walls, and play Skystones at the table.'},
-  {id:'archive',name:'Card archive',kind:'archive',x:325,y:405,level:0,route:'inventory',description:'Your cards, packs, consumables and ascensions, all under one roof.'},
-  {id:'market',name:'Marketplace',kind:'market',x:484,y:510,level:0,route:'marketplace',description:'Browse player listings and the daily pack, or open your selling stall.',secondary:'sell'},
-  {id:'forge',name:'Gem forge',kind:'forge',x:807,y:260,level:0,route:'workshop',description:'Convert cards into gems and upgrade the forge. New roofs, crystals and a floating core appear as it grows.'},
-  {id:'arena',name:'Skystones arena',kind:'arena',x:1050,y:360,level:0,route:'battle',description:'Challenge Bob, face other players, and climb the skill and trophy paths.'},
-  {id:'wheel',name:'Fortune pavilion',kind:'wheel',x:475,y:295,level:0,route:'spin',description:'Visit the wheel when your next spin is ready.'},
-  {id:'blacksmith',name:'Blacksmith',kind:'blacksmith',x:898,y:481,level:1,route:'amulets',description:'Forge amulets with gems, compare their powers, and manage your equipped slots.'},
-  {id:'pets',name:'Companion lodge',kind:'pets',x:423,y:698,level:2,route:'home',target:'petJourneys',description:'Visit your companions, send them exploring, and collect their discoveries.'},
-  {id:'cabinet',name:'Ruby emporium',kind:'cabinet',x:265,y:575,level:1,route:'ruby',description:'Adopt companions, buy food and useful items, and choose your pack-opening effects.'},
-  {id:'dye',name:'Colour studio',kind:'dye',x:966,y:642,level:3,route:'workshop',target:'gemWorkshop',description:'Craft dyes and bring your colours into the club.'},
-  {id:'compressor',name:'Crystal refinery',kind:'compressor',x:702,y:773,level:4,route:'workshop',target:'gemWorkshop',description:'Craft your compressor and combine gems into higher tiers.'},
-  {id:'vault',name:'Footy vault',kind:'vault',x:649,y:579,level:0,route:'wallet',description:'Your balance, transfers and account history.'},
-  {id:'vip',name:'Royal hall',kind:'vip',x:650,y:205,level:5,route:'vip',description:'Your VIP membership and its benefits.'}
+  {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Meet other players, decorate the walls, and play Skystones at the table.'},
+  {id:'archive',name:'Card archive',kind:'archive',x:380,y:356,level:0,route:'inventory',description:'Your cards, packs, consumables and ascensions, all under one roof.'},
+  {id:'market',name:'Marketplace',kind:'market',x:488,y:469,level:0,route:'marketplace',description:'Browse player listings and the daily pack, or open your selling stall.',secondary:'sell'},
+  {id:'forge',name:'Gem forge',kind:'forge',x:745,y:268,level:0,route:'workshop',description:'Convert cards into gems and upgrade the forge. Its copper workshop grows into a crystal forge and then a diamond foundry.'},
+  {id:'arena',name:'Skystones arena',kind:'arena',x:920,y:350,level:0,route:'battle',description:'Challenge Bob, face other players, and climb the skill and trophy paths.'},
+  {id:'wheel',name:'Fortune pavilion',kind:'wheel',x:514,y:224,level:0,route:'spin',description:'Visit the wheel when your next spin is ready.'},
+  {id:'blacksmith',name:'Blacksmith',kind:'blacksmith',x:905,y:470,level:1,route:'amulets',description:'Forge amulets with gems, compare their powers, and manage your equipped slots.'},
+  {id:'pets',name:'Companion lodge',kind:'pets',x:477,y:625,level:2,route:'home',target:'petJourneys',description:'Visit your companions, send them exploring, and collect their discoveries.'},
+  {id:'cabinet',name:'Ruby emporium',kind:'cabinet',x:290,y:495,level:1,route:'ruby',description:'Adopt companions, buy food and useful items, and choose your pack-opening effects.'},
+  {id:'dye',name:'Colour studio',kind:'dye',x:1031,y:599,level:3,route:'workshop',target:'gemWorkshop',description:'Craft dyes and bring your colours into the club.'},
+  {id:'compressor',name:'Crystal refinery',kind:'compressor',x:701,y:742,level:4,route:'workshop',target:'gemWorkshop',description:'Craft your compressor and combine gems into higher tiers.'},
+  {id:'vault',name:'Footy vault',kind:'vault',x:621,y:572,level:0,route:'wallet',description:'Your balance, transfers and account history.'},
+  {id:'vip',name:'Royal hall',kind:'vip',x:811,y:604,level:5,route:'vip',description:'Your VIP membership and its benefits.'}
  ];
  const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;};
  const toggle=el('button','btn','Try village');toggle.id='villageModeToggle';toggle.hidden=true;toggle.type='button';document.getElementById('dyeHeaderControls').prepend(toggle);
@@ -27,7 +27,7 @@
  function applyCamera(){frame=0;world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;}
  function paintCamera(){if(!frame)frame=requestAnimationFrame(applyCamera);}
  function clamp(){const r=viewport.getBoundingClientRect();camera.x=Math.max(100-1440*camera.scale,Math.min(r.width-100,camera.x));camera.y=Math.max(100-1000*camera.scale,Math.min(r.height-100,camera.y));}
- function zoom(next,cx,cy){const r=viewport.getBoundingClientRect();cx??=r.width/2;cy??=r.height/2;next=Math.max(.4,Math.min(1.65,next));const ratio=next/camera.scale;camera.x=cx-(cx-camera.x)*ratio;camera.y=cy-(cy-camera.y)*ratio;camera.scale=next;clamp();paintCamera();}
+ function zoom(next,cx,cy){const r=viewport.getBoundingClientRect();cx??=r.width/2;cy??=r.height/2;next=Math.max(.4,Math.min(2.4,next));const ratio=next/camera.scale;camera.x=cx-(cx-camera.x)*ratio;camera.y=cy-(cy-camera.y)*ratio;camera.scale=next;clamp();paintCamera();}
  function reset(){const r=viewport.getBoundingClientRect();camera.scale=r.width<650?.73:Math.min(1.1,r.width/1340,r.height/870);camera.x=r.width/2-720*camera.scale;camera.y=r.height/2-470*camera.scale;initialized=true;paintCamera();}
  function focusBuilding(b){const r=viewport.getBoundingClientRect();camera.x=r.width/2-b.x*camera.scale;camera.y=r.height*.4-b.y*camera.scale;clamp();paintCamera();}
  function select(b,focus=false){selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;

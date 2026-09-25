@@ -42,7 +42,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
    else if(b.type==='decorate'||b.type==='level'){
     if(b.type==='decorate'&&(!Number.isInteger(b.slot)||b.slot<0||b.slot>7||b.item!==null&&!DECOR.some(d=>d.id===b.item)))throw Error('Choose a display item and shelf.');
     if(b.type==='level'&&(!Number.isInteger(b.level)||b.level<1||b.level>10))throw Error('Town Hall levels range from 1 to 10.');
-    cached=await db.runTransaction(async tx=>{const doc=await tx.get(ref),r={level:1,revision:0,decor:{},...(doc.data()||{})};if(b.revision!==r.revision)throw Error('The hall changed. Refresh and try again.');const next={...r,revision:r.revision+1};if(b.type==='level')next.level=b.level;else {next.decor={...r.decor};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name};}tx.set(ref,next);return next;});cacheUntil=now+15000;
+    cached=await db.runTransaction(async tx=>{const doc=await tx.get(ref),r={level:1,revision:0,decor:{},...(doc.data()||{})};if(b.revision!==r.revision){cacheUntil=0;throw Error('The hall changed. Refresh and try again.');}const next={...r,revision:r.revision+1};if(b.type==='level')next.level=b.level;else {next.decor={...r.decor};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name};}tx.set(ref,next);return next;});cacheUntil=now+15000;
    }else throw Error('Unknown room action.');
    res.json(await snapshot(s.id));
   }catch(e){res.status(400).send(e.message);}

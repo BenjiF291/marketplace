@@ -7,3 +7,19 @@
 .village-smoke{animation:village-smoke 4s ease-in-out infinite;transform-origin:155px 40px}.village-floating-gem{animation:village-float 3s ease-in-out infinite}.village-wheel{animation:village-wheel 35s linear infinite}.village-fire{animation:village-flame 2s ease-in-out infinite;transform-origin:86px 170px}.village-fountain{animation:village-water 2.5s ease-in-out infinite}@keyframes village-smoke{50%{transform:translateY(-12px) scale(1.1);opacity:.25}}@keyframes village-float{50%{transform:translateY(-8px)}}@keyframes village-wheel{to{transform:rotate(360deg)}}@keyframes village-flame{50%{transform:scaleY(.8);opacity:.6}}@keyframes village-water{50%{opacity:.45}}
 @media(max-width:650px){.village-toolbar{left:14px;right:14px;gap:10px}.village-brand h1{font-size:31px}.village-brand small{font-size:8px}.village-toolbar>.village-secondary{font-size:11px;padding:8px 10px}.village-preview-tools{align-items:flex-start;flex-direction:column;gap:5px}.village-preview-tools select{max-width:260px}.village-preview-notice{font-size:10px}.village-camera-controls{right:14px;bottom:86px}.village-footer{left:14px;right:14px}.village-footer>span{padding:10px 8px;font-size:10px}.village-footer select{width:170px;font-size:11px}.village-inspector{left:14px;right:68px;width:auto;transform:none;bottom:84px;padding:16px;max-height:52vh;overflow:auto}.village-building-info{flex-basis:100%}.village-building-info h2{font-size:24px}.village-building-info p{font-size:12px}.village-primary,.village-secondary{font-size:12px!important}.village-inspector .village-primary{width:100%}}
 @media(prefers-reduced-motion:reduce){.village-map *{animation:none!important;transition:none!important}}
+
+/* Painted scenery: each SVG is a clipped window into one cached sprite atlas. */
+.village-building svg.village-painted-building{width:164px;height:164px;overflow:hidden;filter:drop-shadow(0 8px 5px #102e392b)}
+.village-building[data-building="townhall"] svg{width:188px;height:188px}
+.village-building[data-building="arena"] svg{width:180px;height:180px}
+.village-building:hover svg.village-painted-building,.village-building.selected svg.village-painted-building{filter:drop-shadow(0 0 8px #ffe9a9) drop-shadow(0 8px 5px #102e3955)}
+.village-building-label{margin-top:-4px;background:#162d32ed;color:#fff1d1;border-color:#a58b5e;box-shadow:0 3px 12px #071f3266;font-size:12px;padding:6px 11px}
+.village-building-label small{color:#c8d5c5}.village-building.selected .village-building-label{background:#eee0b8;color:#253f39}.village-building.selected .village-building-label small{color:#526651}
+.village-building.locked svg{opacity:1}.village-building.locked .village-building-label{background:#2d3939ed;color:#dfd4bb}.village-building.locked .village-building-label small{color:#bec3b3}
+.village-map-caption{top:929px;color:#ffefc9;text-shadow:0 2px 5px #113b48;letter-spacing:.16em}
+.village-brand{padding:12px 18px;background:#112e36e8;border:1px solid #b59b6355;border-radius:12px;box-shadow:0 8px 24px #10283233;text-shadow:none}.village-brand h1{color:#f9e9c6;font-size:33px}.village-brand small{color:#c9bea2}
+.village-viewport{background:#12596a}.village-world{background:#12596a}
+.village-water-glints{animation:village-glints 5s ease-in-out infinite}.village-fireflies{animation:village-glints 4s ease-in-out infinite alternate}
+@keyframes village-glints{50%{opacity:.1;translate:0 -2px}}
+@media(max-width:650px){.village-brand{padding:8px 12px}.village-brand h1{font-size:26px}.village-building-label{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.village-water-glints,.village-fireflies{animation:none}}
