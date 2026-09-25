@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="studio.css">
   <link rel="stylesheet" href="ruby-shop.css">
 <link rel="stylesheet" href="pack-cinema.css">
+<link rel="stylesheet" href="village.css">
 </head>
 <body>
 <script src="ascend-utils.js"></script>
@@ -430,7 +431,7 @@
         <button id="gemStart" class="btn btn-primary" onclick="startGemConverter()" disabled>Start converter</button>
         <p id="gemStatus" role="status" aria-live="polite"></p>
       </details>
-      <details class="gem-converter" ontoggle="if(this.open) loadGemWorkshop()">
+      <details id="gemWorkshop" class="gem-converter" ontoggle="if(this.open) loadGemWorkshop()">
         <summary>Gem Workshop - Compressor &amp; Dyes</summary>
         <h3>Gem compressor</h3><p>Craft once with 10 Opals, 5 Citrine and 2 Emeralds. Compress 4 gems into 1 gem of the next tier.</p>
         <button id="craftCompressor" class="btn btn-primary" onclick="workshopAction('craft', {})" disabled>Craft compressor</button>
@@ -559,5 +560,7 @@
 <script src="companion-explorer.js"></script>
 <script src="pet-interactions.js"></script>
 <script src="ruby-shop.js"></script>
+<script src="village-art.js"></script>
+<script src="village.js"></script>
 </body>
 </html>
