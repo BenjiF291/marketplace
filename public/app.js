@@ -644,6 +644,17 @@ async function inviteBattlePlayer() {
   }
 }
 
+window.openHallSkystones=async function(matchId){
+  if(battleMatchId&&battleMatchId!==matchId&&battleMatch?.status==='board')throw Error('Finish your current Skystones game first.');
+  const response=await fetch(`${API_URL}/battle-matches/${encodeURIComponent(matchId)}`,{headers:resourceHeaders()});
+  if(!response.ok)throw Error(await response.text());
+  battleMatch=await response.json();battleMatchId=battleMatch.id;
+  if(!footyStudio.enabled)footyStudio.setMode(true);footyStudio.navigate('battle');
+  document.getElementById('battleGameSection').dataset.studioBattle='duel';
+  document.querySelector('[data-ui-control="duel"]')?.click();
+  await loadBattleInventory();prepareBattleDeck();startBattleMatchPolling();
+};
+
 async function findBattleInvitation() {
   if (battleMatchId) return;
   try {

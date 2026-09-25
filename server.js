@@ -36,7 +36,7 @@ app.use((req, res, next) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-User-Id');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-User-Id, X-Hall-Token');
   res.header('Access-Control-Max-Age', '3600');
 
   if (req.method === 'OPTIONS') {
@@ -612,28 +612,7 @@ app.post('/battle-matches', async (req, res) => {
     if (!requesterDoc.exists || !opponentDoc.exists) return res.status(404).send('Player not found');
     const now = new Date();
     const matchRef = db.collection('battleMatches').doc();
-    const match = {
-      status: 'setup',
-      averageLimit: limit,
-      prize: matchPrize,
-      prizePaid: false,
-      timeControlSeconds,
-      clocks: { [requesterId]: timeControlSeconds * 1000, [opponentId]: timeControlSeconds * 1000 },
-      participantIds: [requesterId, opponentId],
-      participants: {
-        [requesterId]: { username: requesterDoc.data().username },
-        [opponentId]: { username: opponentDoc.data().username }
-      },
-      decks: { [requesterId]: [], [opponentId]: [] },
-      colors: { [requesterId]: null, [opponentId]: null },
-      ready: { [requesterId]: false, [opponentId]: false },
-      starterId: null,
-      starterCard: null,
-      turnPlayerId: null,
-      board: Array(16).fill(null),
-      createdAt: now,
-      updatedAt: now
-    };
+    const match = require('./battle-match-create')({id:requesterId,name:requesterDoc.data().username},{id:opponentId,name:opponentDoc.data().username},limit,matchPrize,timeControlSeconds,now);
     await matchRef.set(match);
     res.status(201).json(battleMatchView(matchRef.id, match));
   } catch (error) {
@@ -2671,6 +2650,7 @@ app.get('/inventory', async (req, res) => {
 
 require('./amulet-routes')(app, db, getAscendTierConfig);
 require('./village-routes')(app, db, brawlAuth.authenticate, getAscendTierConfig);
+require('./town-hall-routes')(app, db, brawlAuth.authenticate);
 require('./trophy-routes')(app, db, getBattleCardsForUser, brawlAuth.authenticate);
 require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 require('./ruby-shop-routes')(app, db, brawlAuth.authenticate);
