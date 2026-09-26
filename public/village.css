@@ -58,3 +58,6 @@
 @media(prefers-reduced-motion:reduce){.village-map::after,.village-entrance{transition:none}.village-interior-chrome,.town-hall[open]{animation:none}}
 
 .village-returning{pointer-events:none}.village-returning::after{animation:island-return-fade .65s ease-out forwards;transition:none}@keyframes island-return-fade{from{opacity:1}to{opacity:0}}
+
+/* Avoid retaining an oversized composited island texture on mobile GPUs. */
+@media(pointer:coarse){.village-world{will-change:auto}.village-map{overscroll-behavior:none}}
