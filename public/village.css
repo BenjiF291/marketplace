@@ -38,3 +38,23 @@
 .island-app:not(.village-interior)>.container{display:none!important}
 #islandLoading{position:fixed;inset:0;display:grid;place-content:center;text-align:center;background:#153d48;color:#fff;z-index:1000;gap:12px}
 #islandLoading[hidden]{display:none}
+
+/* Quiet island HUD and one-tap entrance plaque. */
+.village-toolbar{justify-content:flex-end}
+.village-footer{justify-content:flex-end;pointer-events:none}
+.village-footer select{pointer-events:auto}
+.village-inspector{left:50%;right:auto;bottom:max(76px,calc(env(safe-area-inset-bottom) + 66px));transform:translateX(-50%);width:auto;max-width:calc(100% - 32px);padding:0;background:none;border:0;box-shadow:none;overflow:visible}
+.village-entrance{position:relative;min-width:210px;min-height:58px;padding:15px 32px;border:1px solid #e0be78;border-radius:16px;background:linear-gradient(160deg,#614727,#30251c);color:#fff0c9;font:600 21px Georgia,serif!important;box-shadow:inset 0 0 0 3px #d4aa4d22,0 8px 28px #092b3677;cursor:pointer;transition:filter .2s,transform .2s}
+.village-entrance:hover{filter:brightness(1.2);transform:translateY(-2px)}
+.village-travelling{pointer-events:none}
+.village-map::after{content:'';position:absolute;inset:0;background:#161d1e;opacity:0;pointer-events:none;transition:opacity .22s}
+.village-travelling::after{opacity:1;transition:opacity .25s .4s}
+.village-interior-chrome,.town-hall[open]{animation:island-enter .4s ease-out}
+@keyframes island-enter{from{opacity:.15}to{opacity:1}}
+.island-guide{box-sizing:border-box;width:min(530px,calc(100% - 32px));max-height:90dvh;overflow:auto;padding:30px;border:1px solid #bb9d62;border-radius:22px;background:linear-gradient(145deg,#233f40,#172d32);color:#f6ebd0;box-shadow:0 24px 100px #0007}
+.island-guide::backdrop{background:#071c27b8;backdrop-filter:blur(5px)}
+.island-guide small{font-size:10px;letter-spacing:.2em;color:#dfbd7c}.island-guide h2{font:32px Georgia,serif;margin:12px 0 20px}.island-guide p{font-size:15px;line-height:1.6;color:#dce4dc}.island-guide .village-entrance{width:100%;margin-top:12px}
+.island-rotate{display:none}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:600px){.island-rotate:not(.dismissed){position:absolute;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;background:#153d48f5;color:#fff0cf}.island-rotate-icon{font-size:90px;rotate:-25deg}.island-rotate h2{font:28px Georgia,serif}.island-rotate p{line-height:1.6}}
+@media(orientation:landscape) and (max-height:500px){.village-toolbar{top:max(8px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}.village-footer{bottom:max(8px,env(safe-area-inset-bottom))}.village-inspector{bottom:12px}.village-entrance{min-height:48px;padding:10px 26px;font-size:18px!important}.island-guide{padding:18px 24px}.island-guide h2{margin:8px 0}.island-guide p{font-size:13px;margin:10px 0}}
+@media(prefers-reduced-motion:reduce){.village-map::after,.village-entrance{transition:none}.village-interior-chrome,.town-hall[open]{animation:none}}
