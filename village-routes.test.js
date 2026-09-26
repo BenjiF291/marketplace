@@ -10,9 +10,9 @@ test('village rejects missing sessions before reading an account and rejects non
  const noSession=fixture({isAdmin:true},async()=>{throw Error('no session');});assert.equal((await noSession.call()).status,401);assert.equal(noSession.reads,0);
  for(const user of [undefined,{isAdmin:false},{isAdmin:'true'}])assert.equal((await fixture(user).call()).status,403);
 });
-test('admin village uses shared hall progression independently of the personal gem forge',async()=>{
- const f=fixture({isAdmin:true,gemConverterLevel:3,balance:42,gemCompressor:true});const response=await f.call();assert.equal(response.status,200);assert.equal(response.body.level,0);assert.equal(response.body.forgeLevel,3);assert.equal(response.body.compressor,true);assert.equal(response.body.balance,42);assert.equal(f.reads,2);
- assert.equal((await fixture({isAdmin:true},undefined,{level:6}).call()).body.level,5);
+test('admin village uses private hall progression independently of the personal gem forge',async()=>{
+ const f=fixture({isAdmin:true,gemConverterLevel:3,balance:42,gemCompressor:true});const response=await f.call();assert.equal(response.status,200);assert.equal(response.body.level,0);assert.equal(response.body.forgeLevel,3);assert.equal(response.body.compressor,true);assert.equal(response.body.balance,42);assert.equal(f.reads,1);
+ assert.equal((await fixture({isAdmin:true,townHallXP:1850},undefined,{level:1}).call()).body.level,5);
  assert.equal((await fixture({isAdmin:true}).call()).body.level,0);
  assert.equal((await fixture({isAdmin:true,gemConverterLevel:-10}).call()).body.level,0);
  assert.equal((await fixture({isAdmin:true,gemConverterLevel:5000}).call()).body.forgeLevel,9);

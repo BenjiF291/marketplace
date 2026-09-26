@@ -29,11 +29,11 @@ function harness(seed, randomInt) {
   require('./amulet-routes')(app, db, async () => []);
   const source = fs.readFileSync('server.js', 'utf8');
   const start = source.indexOf("app.post('/buy',"); const end = source.indexOf('/* ------------------ HISTORY', start);
-  vm.runInNewContext(source.slice(start, end), { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./marketplace-utils') });
+  vm.runInNewContext(source.slice(start, end), { app, db, require, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./marketplace-utils') });
   for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
-    vm.runInNewContext(code, { app, db, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, brawlAuth:{authenticate:async()=> 'buyer'},rubyShop:require('./ruby-shop'), crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
+    vm.runInNewContext(code, { app, db, require, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, brawlAuth:{authenticate:async()=> 'buyer'},rubyShop:require('./ruby-shop'), crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
   }
   const invoke = async (url, body, user = 'buyer', action) => {
     let status = 200, payload;
@@ -211,3 +211,5 @@ test('Ruby shop grants remain in the admin hub and reject non-admins',async()=>{
  assert.equal((await h.invoke('/admin/grant-resource',{userId:'buyer',kind:'ruby-item',rubyItemId:'compass:rare',quantity:2},'seller')).status,200);
  assert.equal(h.data()['users/buyer'].rubyItems['compass:rare'],2);
 });
+
+test('admin gameplay XP is committed once alongside a real spin',async()=>{const data=seed();data['users/buyer'].isAdmin=true;const h=harness(data);assert.equal((await h.invoke('/spin-wheel',{userId:'buyer'})).status,200);assert.equal(h.data()['users/buyer'].townHallXP,5);await h.invoke('/spin-wheel',{userId:'buyer'});assert.equal(h.data()['users/buyer'].townHallXP,5);});

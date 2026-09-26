@@ -23,7 +23,7 @@ module.exports=(app,db,authenticate)=>{
   let update,journeyReward;
   if(req.params.action==='journey-start')update=journeys.start(user.data(),body.petId,body.foodId,journeyTables,body.actionId,Date.now(),rolls);
   else if(req.params.action==='journey-claim'){
-    const claimed=journeys.claim(user.data(),body.petId,body.journeyId);update=claimed.update;journeyReward=claimed.reward;
+    const claimed=journeys.claim(user.data(),body.petId,body.journeyId);update={...claimed.update,...require('./town-hall-progress').gameplay(user.data(),'journey')};journeyReward=claimed.reward;
     if(journeyReward.bonus.kind==='pack'){
       const packId=`journey-${id}-${body.journeyId}`,pack=journeyReward.bonus.pack;
       tx.set(db.collection('packs').doc(packId),{...pack,createdAt:new Date(),journeyReward:true});

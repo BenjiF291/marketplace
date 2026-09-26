@@ -12,7 +12,7 @@ Drag/swipe to pan, pinch/wheel or use the zoom buttons, and recenter with the co
 
 ## Town Hall progression
 
-`GET /admin/village` authenticates the existing session and checks `users/{id}.isAdmin === true`. Shared Town Hall level controls the private preview's building unlocks. A personal gem converter upgrade changes only that account's forge appearance and recipes.
+`GET /admin/village` authenticates the existing session and checks `users/{id}.isAdmin === true`. Each account's Town Hall XP determines its own level and building unlocks. Shared room state never controls another player's level. A personal gem converter upgrade changes only that account's forge appearance and recipes.
 
 | Town Hall level | Newly available buildings |
 |---|---|
@@ -23,7 +23,7 @@ Drag/swipe to pan, pinch/wheel or use the zoom buttons, and recenter with the co
 | 5 | Crystal refinery |
 | 6 | Royal hall |
 
-Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use shared Town Hall progression** follows the saved community level. Inside the Town Hall, admins can set its shared level from 1 to 10 for testing. Upgrade prices have not been invented. These preview navigation gates do not change access to existing app menus.
+Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use your Town Hall progression** follows that account's XP level. The old manual level setter has been removed. Projects and gameplay fill the personal XP bar; reaching a threshold automatically upgrades the hall. See [TOWN_HALL.md](TOWN_HALL.md) for progression values. These preview navigation gates do not change access to existing app menus.
 
 ## Shared community room
 
@@ -32,20 +32,20 @@ The Town Hall is the only shared building; everyone else keeps their own village
 - Saved character appearance: skin, hair, hairstyle and clothing.
 - Click/tap to walk, routing around the long table.
 - Eight exclusive seats, chat and emotes.
-- Eight shared wall displays with books, plants, banners, crystals and trophies. Display pieces are free preview objects, not inventory rewards.
+- Eight shared wall displays with books, plants, banners, crystals and trophies. Displays require owned Ruby-shop collectibles. Pieces are lent rather than consumed, credited to their owners, and cannot be duplicated across shelves by the same owner.
 - Seated players can invite each other to the existing Skystones (formerly called Brawl) PvP game. Both must accept the same deck limit and timer. Matches have zero Footy stake and reuse existing deck selection, rules, clocks and battle polling.
 
-Characters save to `users/{id}.townHallCharacter`. The shared level and decorations save to `communityRooms/town-hall`. Concurrent decoration changes use a transaction and revision check. Accepted invitations create a deterministic battle document transactionally, preventing duplicate matches on retries.
+Characters save to `users/{id}.townHallCharacter`. Only shared decorations save to `communityRooms/town-hall`. Personal XP saves to each user account. Concurrent decoration changes use a transaction and revision check. Accepted invitations create a deterministic battle document transactionally, preventing duplicate matches on retries.
 
-Presence, movement, chat and pending invitations are in memory on a **single Node server process** during this preview. Polling runs every 1.5 seconds without per-poll Firestore reads; shared decoration/level reads are cached for 15 seconds. Presence expires after 12 seconds without contact. Room tokens last five minutes, then the client rejoins using normal account authentication. Closing the room stops polling and leaves. A process restart loses presence/chat/pending invitations; characters, shared decorations, level and created games survive. Multiple backend instances would need shared presence transport before public rollout.
+Presence, movement, chat and pending invitations are in memory on a **single Node server process** during this preview. Polling runs every 1.5 seconds without per-poll Firestore reads; shared decoration reads are cached for 15 seconds. Presence expires after 12 seconds without contact. Room tokens last five minutes, then the client rejoins using normal account authentication. Closing the room stops polling and leaves. A process restart loses presence/chat/pending invitations; characters, shared decorations, personal XP and created games survive. Multiple backend instances would need shared presence transport before public rollout.
 
-Only explicit character saves, decoration/level changes and accepted games write persistent state. Existing Firestore default-deny rules keep the new room collection server-only. No client Firestore subscription or new index is required.
+Only explicit character saves, decoration changes and accepted games write persistent state. Existing Firestore default-deny rules keep the new room collection server-only. No client Firestore subscription or new index is required.
 
 ## Deployment and checks
 
 Deploy frontend and backend together, including the Town Hall routes, shared battle-match builder, world logic, room UI and local artwork. The gate remains admin-only. Public rollout is a separate change.
 
-`node --test` includes village authorization, independent forge progression, room access, two-player presence, collision routing, exclusive seats, character sanitization, decoration revisions and idempotent Skystones creation. The fixture browser harness supports `VILLAGE_CHECK_ONLY=1` and `TOWN_HALL_CHECK_ONLY=1`; both use local fixtures rather than live account writes. The Town Hall check uses two browser sessions and verifies the handoff to the existing PvP setup. Screenshots live under `.ui-tools/`.
+`node --test` includes village authorization, independent forge progression, room access, two-player presence, collision routing, exclusive seats, character sanitization, decoration ownership/revisions, private XP and idempotent Skystones creation. The fixture browser harness supports `VILLAGE_CHECK_ONLY=1` and `TOWN_HALL_CHECK_ONLY=1`; both use local fixtures rather than live account writes. The Town Hall check uses two browser sessions and verifies the handoff to the existing PvP setup. Screenshots live under `.ui-tools/`.
 
 ## Building interiors
 

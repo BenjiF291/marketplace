@@ -1,17 +1,18 @@
 const crypto=require('node:crypto');const world=require('./public/hall-world');
-const DECOR=[{id:'books',name:'Collected books',icon:'books'},{id:'plant',name:'Fern planter',icon:'plant'},{id:'banner',name:'Club pennant',icon:'banner'},{id:'bronze-cup',name:'Bronze trophy',icon:'cup'},{id:'silver-cup',name:'Silver trophy',icon:'cup'},{id:'gold-cup',name:'Golden trophy',icon:'cup'},{id:'crystal',name:'Crystal display',icon:'crystal'}];
+const progress=require('./town-hall-progress');
+const DECOR=require('./ruby-shop').CATALOG.filter(x=>x.kind==='relic');
 module.exports=(app,db,authenticate,clock=Date.now)=>{
- const tokens=new Map(),members=new Map(),messages=[],invites=new Map();let cached=null,cacheUntil=0;
+ const tokens=new Map(),members=new Map(),accounts=new Map(),messages=[],invites=new Map();let cached=null,cacheUntil=0;
  const ref=db.collection('communityRooms').doc('town-hall');
  async function room(){if(!cached||clock()>cacheUntil){const doc=await ref.get();cached={level:1,revision:0,decor:{},...(doc.data()||{})};cacheUntil=clock()+15000;}return cached;}
  function clean(){const now=clock();for(const [token,s] of tokens)if(s.expires<=now)tokens.delete(token);for(const [id,m] of members)if(now-m.lastSeen>12000)members.delete(id);for(const [id,v] of invites)if(v.expires<now)invites.delete(id);}
  function session(req){clean();const s=tokens.get(req.header('X-Hall-Token'));if(!s)throw Error('Your room session ended. Re-enter the Town Hall.');return s;}
- async function snapshot(id){const r=await room();clean();return {self:id,serverNow:clock(),members:[...members.values()].map(({lastSeen,lastAction,lastChat,...m})=>m),invites:[...invites.values()].filter(v=>v.to===id||v.from===id),messages:messages.slice(-30),room:{level:r.level,revision:r.revision,decor:r.decor},catalog:DECOR,seats:world.SEATS};}
+ async function snapshot(id){const r=await room();clean();return {self:id,serverNow:clock(),members:[...members.values()].map(({lastSeen,lastAction,lastChat,...m})=>m),invites:[...invites.values()].filter(v=>v.to===id||v.from===id),messages:messages.slice(-30),room:{revision:r.revision,decor:Object.fromEntries(Object.entries(r.decor||{}).filter(([,v])=>v.owner&&DECOR.some(i=>i.id===v.item)))},progress:progress.profile(accounts.get(id)),owned:accounts.get(id)?.rubyItems||{},resources:accounts.get(id)?.gems||{},projects:progress.PROJECTS,rewards:progress.REWARDS,catalog:DECOR,seats:world.SEATS};}
  function seated(m){return m&&m.seat!==null&&Math.hypot(world.position(m,clock()).x-world.SEATS[m.seat].x,world.position(m,clock()).y-world.SEATS[m.seat].y)<15;}
  app.post('/admin/town-hall/join',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
   try{const doc=await db.collection('users').doc(id).get();const u=doc.data();if(!u||u.isAdmin!==true)return res.status(403).send('The Town Hall is currently an admin-only preview.');
-   clean();if(members.size>=40&&!members.has(id))throw Error('The room is full. Try again shortly.');
+   accounts.set(id,u);clean();if(members.size>=40&&!members.has(id))throw Error('The room is full. Try again shortly.');
    const token=crypto.randomBytes(32).toString('hex');tokens.set(token,{id,expires:clock()+5*60000});
    if(!members.has(id))members.set(id,{id,name:String(u.username||'Player').slice(0,40),character:world.character(u.townHallCharacter),path:[{x:450,y:510}],startedAt:clock(),seat:null,lastSeen:clock()});else members.get(id).lastSeen=clock();
    res.json({token,...await snapshot(id)});
@@ -26,6 +27,12 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
    else if(b.type==='sit'){if(!Number.isInteger(b.seat)||!world.SEATS[b.seat])throw Error('Choose a seat.');if([...members.values()].some(p=>p.id!==s.id&&p.seat===b.seat))throw Error('Someone is already sitting there.');m.path=world.route(world.position(m,now),world.SEATS[b.seat]);m.startedAt=now;m.seat=b.seat;}
    else if(b.type==='stand'){m.seat=null;}
    else if(b.type==='chat'||b.type==='emote'){if(now-(m.lastChat||0)<1200)throw Error('Please wait before speaking again.');const text=b.type==='emote'?({wave:'waves hello',cheer:'cheers!',laugh:'laughs',clap:'applauds'})[b.emote]:String(b.text||'').trim();if(!text||text.length>180)throw Error('Write a message of 1–180 characters.');m.lastChat=now;m.bubble={text,until:now+5000};messages.push({id:crypto.randomUUID(),name:m.name,text,emote:b.type==='emote',at:now});if(messages.length>40)messages.shift();}
+   else if(b.type==='refresh'){const u=(await db.collection('users').doc(s.id).get()).data();accounts.set(s.id,u);cacheUntil=0;}
+   else if(b.type==='project'){
+    if(!/^[a-zA-Z0-9-]{16,80}$/.test(b.actionId||''))throw Error('Invalid project identifier.');
+    const userRef=db.collection('users').doc(s.id),receipt=db.collection('townHallActions').doc(s.id+'_'+b.actionId);
+    const updated=await db.runTransaction(async tx=>{const prior=await tx.get(receipt),doc=await tx.get(userRef);if(prior.exists)return doc.data();const user=doc.data(),update=progress.project(user,b.project,now);tx.set(userRef,{...user,...update});tx.set(receipt,{at:now,project:b.project});return {...user,...update};});accounts.set(s.id,updated);
+   }
    else if(b.type==='character'){const character=world.character(b.character);await db.collection('users').doc(s.id).update({townHallCharacter:character});m.character=character;}
    else if(b.type==='invite'){
     const other=members.get(b.target);if(!seated(m)||!seated(other)||other.id===m.id)throw Error('Both players need to be seated at the table.');
@@ -39,10 +46,17 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
     await db.runTransaction(async tx=>{const existing=await tx.get(matchRef);if(!existing.exists)tx.set(matchRef,require('./battle-match-create')(other,m,invite.averageLimit,0,invite.timeControlSeconds,new Date(now)));});
     invite.matchId=matchRef.id;m.matchId=matchRef.id;other.matchId=matchRef.id;
    }else if(b.type==='decline'){const invite=invites.get(b.inviteId);if(invite&&(invite.to===m.id||invite.from===m.id))invites.delete(invite.id);}
-   else if(b.type==='decorate'||b.type==='level'){
-    if(b.type==='decorate'&&(!Number.isInteger(b.slot)||b.slot<0||b.slot>7||b.item!==null&&!DECOR.some(d=>d.id===b.item)))throw Error('Choose a display item and shelf.');
-    if(b.type==='level'&&(!Number.isInteger(b.level)||b.level<1||b.level>10))throw Error('Town Hall levels range from 1 to 10.');
-    cached=await db.runTransaction(async tx=>{const doc=await tx.get(ref),r={level:1,revision:0,decor:{},...(doc.data()||{})};if(b.revision!==r.revision){cacheUntil=0;throw Error('The hall changed. Refresh and try again.');}const next={...r,revision:r.revision+1};if(b.type==='level')next.level=b.level;else {next.decor={...r.decor};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name};}tx.set(ref,next);return next;});cacheUntil=now+15000;
+   else if(b.type==='decorate'){
+    if(!Number.isInteger(b.slot)||b.slot<0||b.slot>7||b.item!==null&&!DECOR.some(d=>d.id===b.item))throw Error('Choose an owned collectible and shelf.');
+    const userRef=db.collection('users').doc(s.id);
+    const result=await db.runTransaction(async tx=>{const doc=await tx.get(ref),userDoc=await tx.get(userRef),u=userDoc.data(),r={revision:0,decor:{},...(doc.data()||{})};
+     if(b.revision!==r.revision){cacheUntil=0;throw Error('The hall changed. Refresh and try again.');}
+     const old=r.decor[b.slot];if(old?.owner&&old.owner!==s.id&&u.isAdmin!==true)throw Error('Only its owner can remove that display.');
+     if(b.item!==null){if(!(u.rubyItems?.[b.item]>0))throw Error('Buy this collectible in the Ruby shop first.');if(Object.entries(r.decor).some(([slot,v])=>Number(slot)!==b.slot&&v.owner===s.id&&v.item===b.item))throw Error('That collectible is already on display.');}
+     const next={revision:r.revision+1,decor:{...r.decor}};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name,owner:s.id};
+     let update={};if(b.item!==null&&!(u.townHallShowcased||[]).includes(b.item)){update={...progress.grant(u,30,'Showcase: '+DECOR.find(i=>i.id===b.item).name,now),townHallShowcased:[...(u.townHallShowcased||[]),b.item]};tx.set(userRef,{...u,...update});}
+     tx.set(ref,next);return {room:next,user:{...u,...update}};
+    });cached=result.room;cacheUntil=now+15000;accounts.set(s.id,result.user);
    }else throw Error('Unknown room action.');
    res.json(await snapshot(s.id));
   }catch(e){res.status(400).send(e.message);}

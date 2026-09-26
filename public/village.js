@@ -1,7 +1,7 @@
 /* Admin-only island navigation. Unlock previews never modify the account. */
 (() => {
  const buildings=[
-  {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Meet other players, decorate the walls, and play Skystones at the table.'},
+  {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Display your collectibles, earn personal Town Hall XP, and play Skystones at the table.'},
   {id:'archive',name:'Card archive',kind:'archive',x:380,y:356,level:0,route:'inventory',description:'Your cards, packs, consumables and ascensions, all under one roof.'},
   {id:'market',name:'Marketplace',kind:'market',x:488,y:469,level:0,route:'marketplace',description:'Browse player listings and the daily pack, or open your selling stall.',secondary:'sell'},
   {id:'forge',name:'Gem forge',kind:'forge',x:745,y:268,level:0,route:'workshop',description:'Convert cards into gems and upgrade the forge. Its copper workshop grows into a crystal forge and then a diamond foundry.'},
@@ -45,7 +45,7 @@
  }
  function render(){if(!data||!world)return;const l=level();
   for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);const appeared=tile.hidden&&open;tile.hidden=!open;tile.classList.toggle('village-appearing',appeared);if(!open){tile.replaceChildren();continue;}tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:l,!open);const label=el('span','village-building-label',b.name);label.append(el('small','',b.id==='forge'?`Level ${(data.forgeLevel||0)+1} - ${data.tiers[data.forgeLevel||0]?.name||'Bronze'}`:open?'Enter':`Town Hall ${b.level+1}`));tile.append(label);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
-  notice.textContent=simulation===null?'Shared Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
+  notice.textContent=simulation===null?'Your Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
   status.textContent=`${buildings.filter(unlocked).length} / ${buildings.length} buildings open`;
   jump.replaceChildren(new Option('Find a building...',''));buildings.filter(unlocked).forEach(b=>jump.append(new Option(b.name,b.id)));
   if(selected){if(unlocked(selected))select(selected);else{selected=null;inspector.hidden=true;}}
@@ -72,7 +72,7 @@
   new ResizeObserver(()=>{if(d.open){if(!initialized)reset();else{clamp();paintCamera();}}}).observe(viewport);
  }
  async function load(){const res=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!res.ok)throw Error(await res.text());data=await res.json();verified=true;}
- function options(){levelSelect.replaceChildren(new Option('Use shared Town Hall progression','account'));for(let i=0;i<=9;i++)levelSelect.append(new Option(`Preview: Town Hall ${i+1}`,String(i)));levelSelect.value=simulation===null?'account':String(simulation);}
+ function options(){levelSelect.replaceChildren(new Option('Use your Town Hall progression','account'));for(let i=0;i<=9;i++)levelSelect.append(new Option(`Preview: Town Hall ${i+1}`,String(i)));levelSelect.value=simulation===null?'account':String(simulation);}
  async function show(){if(loading)return;if(!enabled)previousStudio=footyStudio.enabled;loading=true;toggle.disabled=true;back.disabled=true;try{await load();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();if(!enabled)previousStudio=footyStudio.enabled;enabled=true;saved(true);toggle.textContent='Village mode: on';toggle.setAttribute('aria-pressed','true');back.hidden=true;options();render();if(!d.open)d.showModal();if(!initialized)reset();viewport.focus({preventScroll:true});}catch(e){disable();alert(e.message);}finally{loading=false;toggle.disabled=false;back.disabled=false;}}
  function disable(){window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();enabled=false;verified=false;saved(false);if(d?.open)d.close();back.hidden=true;toggle.textContent='Try village';toggle.setAttribute('aria-pressed','false');if(footyStudio.enabled!==previousStudio)footyStudio.setMode(previousStudio);}
  function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;

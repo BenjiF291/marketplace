@@ -1109,6 +1109,7 @@ app.post('/spin-wheel', async (req, res) => {
         balance: newBalance,
         lastSpin: now,
         wheelSpinCount,
+        ...require('./town-hall-progress').gameplay(user,'wheel'),
         wheelRetryReward: { multiplier: vipUntil && vipUntil.getTime() > now.getTime() ? 2 : 1, bonus: rewardAmount - baseReward * (vipUntil && vipUntil.getTime() > now.getTime() ? 2 : 1) },
         lastSpinAmount: rewardAmount
       });
@@ -1706,6 +1707,7 @@ app.post('/open-pack', async (req, res) => {
         transaction.update(packItemRef,{pendingPackChoices:picks});
         return {choices:picks,packColor:packItem.packColor||pack.color};
       }
+      const hallXP=require('./town-hall-progress').gameplay(opener.data(),'pack');if(Object.keys(hallXP).length)transaction.update(openerRef,hallXP);
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
       const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
       if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...(opener.data().gems||{}),bronze:Number(opener.data().gems?.bronze||0)+rubyBonus}});

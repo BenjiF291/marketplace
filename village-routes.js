@@ -5,8 +5,8 @@ module.exports=(app,db,authenticate,getTiers)=>{
   try{
    const doc=await db.collection('users').doc(id).get();
    if(!doc.exists||doc.data().isAdmin!==true)return res.status(403).send('The village preview is currently admin-only.');
-   const user=doc.data(),[tiers,hall]=await Promise.all([getTiers(),db.collection('communityRooms').doc('town-hall').get()]);
-   const maxLevel=9,level=Math.min(9,Math.max(0,(Number(hall.data()?.level)||1)-1));
+   const user=doc.data(),tiers=await getTiers();
+   const maxLevel=9,level=require('./town-hall-progress').profile(user).level-1;
    const forgeLevel=user.gemConverterAllUnlocked?Math.max(0,tiers.length-1):Math.min(Math.max(0,tiers.length-1),Math.max(0,Math.trunc(Number(user.gemConverterLevel)||0)));
    res.json({level,maxLevel,forgeLevel,tiers:tiers.map(t=>({id:t.id,name:t.name})),balance:Number(user.balance)||0,compressor:!!user.gemCompressor,preview:true});
   }catch{res.status(500).send('Could not load your village. Please try again.');}

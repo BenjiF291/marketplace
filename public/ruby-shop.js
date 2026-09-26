@@ -130,7 +130,7 @@
   document.body.dataset.rubyProfile=(state.equipped.profile||'').split(':')[1]||'';
   document.body.dataset.rubyOpening=(state.equipped.opening||'').split(':')[1]||'';
   const relics=state.catalog.filter(x=>x.kind==='relic'&&state.owned[x.id]>0);
-  for(const item of relics){const figure=el('figure');figure.append(el('span',emoji[item.id],'ruby-relic'),el('figcaption',item.name));shelf.append(figure);}
+  for(const item of relics){const figure=el('figure');const art=el('span',emoji[item.id]||'', 'ruby-relic');if(window.HallArt)art.innerHTML=HallArt.decor(item.id);figure.append(art,el('figcaption',item.name));shelf.append(figure);}
   if(!relics.length)shelf.append(el('p','Discover companions, relics and useful treasures in the Ruby shop.'));
   const shop=el('button','Visit Ruby shop','btn');shop.onclick=()=>open();shelf.append(shop);
   if(id){const feed=el('button',`Feed a treat (${state.owned.food||0})`,'btn');feed.disabled=!(state.owned.food>0);feed.onclick=()=>act('use','food');shelf.append(feed);const hint=el('small',`${state.treats} treats enjoyed. Your companion never needs feeding.`);shelf.append(hint);}
@@ -142,6 +142,7 @@
   if(item.kind==='pet'){const portrait=tile.querySelector('.ruby-art');portrait.classList.add('companion-portrait');portrait.innerHTML=window.companionArt(item.id);}
   if(item.kind==='opening'){const preview=el('button','Preview animation','btn');preview.onclick=()=>window.playSpecialPackOpening({preview:true},item.id.split(':')[1]);tile.append(preview);}
   const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||state.rubies<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);if(!itemsOnly)tile.append(buy);
+  if(item.kind==='relic'&&window.HallArt)tile.querySelector('.ruby-art').innerHTML=HallArt.decor(item.id);
   if(item.id.startsWith('compass:')&&state.owned[item.id]>0){const use=el('button','Use on a pack','btn btn-primary');use.onclick=async()=>{use.disabled=true;try{const packs=(await call('/inventory')).filter(p=>p.itemType==='pack'&&!p.listedForSale);if(!packs.length){status.textContent='You have no packs to open.';return;}const packId=await choose('Choose a pack for '+item.name,packs.map(p=>({id:p.id,name:p.name})));if(packId){dialog.close();await openPack(packId,item.id,packs.find(p=>p.id===packId));}}catch(e){status.textContent=e.message;}finally{use.disabled=false;}};tile.append(use);}
   if(state.owned[item.id]>0&&item.kind!=='relic'&&!item.id.startsWith('compass:')&&!item.id.startsWith('food:')){
    const use=el('button',item.id==='retry'?'Replace latest spin':item.id==='recall'?'Recall from slot':item.id==='fuel'?'Arm next conversion':item.id==='food'?'Feed companion':'Equip','btn');use.disabled=busy;tile.append(use);
