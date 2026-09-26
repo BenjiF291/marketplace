@@ -54,7 +54,7 @@
 .island-guide{box-sizing:border-box;width:min(530px,calc(100% - 32px));max-height:90dvh;overflow:auto;padding:30px;border:1px solid #bb9d62;border-radius:22px;background:linear-gradient(145deg,#233f40,#172d32);color:#f6ebd0;box-shadow:0 24px 100px #0007}
 .island-guide::backdrop{background:#071c27b8;backdrop-filter:blur(5px)}
 .island-guide small{font-size:10px;letter-spacing:.2em;color:#dfbd7c}.island-guide h2{font:32px Georgia,serif;margin:12px 0 20px}.island-guide p{font-size:15px;line-height:1.6;color:#dce4dc}.island-guide .village-entrance{width:100%;margin-top:12px}
-.island-rotate{display:none}
-@media(pointer:coarse) and (orientation:portrait) and (max-width:600px){.island-rotate:not(.dismissed){position:absolute;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;background:#153d48f5;color:#fff0cf}.island-rotate-icon{font-size:90px;rotate:-25deg}.island-rotate h2{font:28px Georgia,serif}.island-rotate p{line-height:1.6}}
 @media(orientation:landscape) and (max-height:500px){.village-toolbar{top:max(8px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}.village-footer{bottom:max(8px,env(safe-area-inset-bottom))}.village-inspector{bottom:12px}.village-entrance{min-height:48px;padding:10px 26px;font-size:18px!important}.island-guide{padding:18px 24px}.island-guide h2{margin:8px 0}.island-guide p{font-size:13px;margin:10px 0}}
 @media(prefers-reduced-motion:reduce){.village-map::after,.village-entrance{transition:none}.village-interior-chrome,.town-hall[open]{animation:none}}
+
+.village-returning{pointer-events:none}.village-returning::after{animation:island-return-fade .65s ease-out forwards;transition:none}@keyframes island-return-fade{from{opacity:1}to{opacity:0}}

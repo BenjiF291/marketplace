@@ -24,3 +24,5 @@
 .ruby-relic svg,.ruby-art svg{width:90px!important;height:90px!important;overflow:hidden}
 
 .hall-display-credit{display:block;position:absolute;top:100%;left:50%;transform:translateX(-50%);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;color:#ffe4a6;background:#211a13b8;padding:2px 4px;border-radius:3px}
+
+.hall-exit-door{position:absolute;left:370px;top:500px;width:160px;height:120px;z-index:5;background:transparent!important;border:0!important;box-shadow:none!important;cursor:pointer;border-radius:50% 50% 6px 6px;padding:0}.hall-exit-door:hover,.hall-exit-door:focus-visible{background:#ffe0a022!important;outline:3px solid #f2d18a;outline-offset:-6px}

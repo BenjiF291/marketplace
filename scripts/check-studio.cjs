@@ -64,7 +64,7 @@ const fixture=(url)=>{
   await page.getByRole('button',{name:'Return to island',exact:true}).click();await page.locator('#villageMap').waitFor({state:'visible'});
   hallRecords['users/ui-preview'].isAdmin=false;
   await page.getByLabel('Find a building',{exact:true}).selectOption('townhall');await page.getByRole('button',{name:'Enter Town hall',exact:true}).click();await page.locator('#townHallRoom').waitFor({state:'visible'});
-  await page.getByRole('button',{name:'Leave Town Hall',exact:true}).click();await page.locator('#villageMap').waitFor({state:'visible'});
+  await page.getByRole('button',{name:'Exit through the Town Hall door',exact:true}).click();await page.locator('#villageMap').waitFor({state:'visible'});
   await page.setViewportSize({width:844,height:390});await page.screenshot({path:'.ui-tools/island-landscape.png'});await page.setViewportSize({width:390,height:844});await page.evaluate(()=>Island.enter('archive'));
   assert.equal(await page.getByRole('button',{name:'Return to island',exact:true}).isVisible(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -72,7 +72,7 @@ const fixture=(url)=>{
   const phone=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});
   await phone.addInitScript(()=>{localStorage.setItem('userId','ui-preview');localStorage.setItem('sessionToken','preview-only');localStorage.setItem('footy-island-guide-v1:ui-preview','done');});
   await phone.route('https://marketplace-aw8b.onrender.com/**',route=>route.fulfill({json:fixture(new URL(route.request().url()).pathname)}));
-  const mobile=await phone.newPage();await mobile.goto('http://127.0.0.1:4173/index.html');await mobile.getByRole('heading',{name:'Turn your phone sideways'}).waitFor();
+  const mobile=await phone.newPage();await mobile.goto('http://127.0.0.1:4173/index.html');await mobile.locator('#villageMap').waitFor({state:'visible'});assert.equal(await mobile.locator('.island-rotate').count(),0);const beforeTap=await mobile.locator('.village-world').evaluate(n=>n.style.transform);await mobile.locator('[data-building=townhall]').tap();assert.equal(await mobile.locator('.village-world').evaluate(n=>n.style.transform),beforeTap);
   await mobile.setViewportSize({width:844,height:390});assert.equal(await mobile.locator('.island-rotate').isVisible(),false);
   await mobile.getByLabel('Find a building',{exact:true}).selectOption('market');await mobile.getByRole('button',{name:'Enter Marketplace',exact:true}).click();await mobile.getByRole('button',{name:'Return to island',exact:true}).waitFor();await phone.close();
   assert.deepEqual(errors,[]);console.log('Public island passed: ordinary account, mandatory map, hidden admin tools, market/archive interiors, shared hall return, mobile layout.');
