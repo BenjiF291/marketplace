@@ -64,7 +64,7 @@ const fixture=(url)=>{
   await page.getByRole('button',{name:'Return to island',exact:true}).click();await page.locator('#villageMap').waitFor({state:'visible'});
   hallRecords['users/ui-preview'].isAdmin=false;
   await page.getByLabel('Find a building',{exact:true}).selectOption('townhall');await page.getByRole('button',{name:'Enter Town hall',exact:true}).click();await page.locator('#townHallRoom').waitFor({state:'visible'});
-  await page.getByRole('button',{name:'Exit through the Town Hall door',exact:true}).click();await page.locator('#villageMap').waitFor({state:'visible'});
+  await page.getByRole('button',{name:'Exit through the Town Hall door',exact:true}).click();assert.equal(await page.locator('#townHallRoom').isVisible(),true);await page.locator('#townHallRoom.hall-exiting').waitFor();await page.locator('#villageMap').waitFor({state:'visible'});
   await page.setViewportSize({width:844,height:390});await page.screenshot({path:'.ui-tools/island-landscape.png'});await page.setViewportSize({width:390,height:844});await page.evaluate(()=>Island.enter('archive'));
   assert.equal(await page.getByRole('button',{name:'Return to island',exact:true}).isVisible(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

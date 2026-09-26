@@ -81,9 +81,11 @@
   viewport.addEventListener('keydown',e=>{if(e.target!==viewport)return;const move={ArrowLeft:[70,0],ArrowRight:[-70,0],ArrowUp:[0,70],ArrowDown:[0,-70]}[e.key];if(move){e.preventDefault();camera.x+=move[0];camera.y+=move[1];clamp();paintCamera();}if(['+','=','-'].includes(e.key)){e.preventDefault();zoom(camera.scale*(e.key==='-'?1/1.2:1.2));}});
   new ResizeObserver(()=>{if(d.open&&!travelling){if(!initialized)reset();else{clamp();paintCamera();}}}).observe(viewport);
  }
+ let islandPreload=null;
+ function preload(){if(!islandPreload)islandPreload=load().then(()=>true,()=>false);return islandPreload;}
  async function load(){const res=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!res.ok)throw Error(await res.text());data=await res.json();verified=true;}
  function options(){levelSelect.hidden=!data.isAdmin;if(!data.isAdmin)simulation=null;levelSelect.replaceChildren(new Option('Use your Town Hall progression','account'));for(let i=0;i<=9;i++)levelSelect.append(new Option(`Preview: Town Hall ${i+1}`,String(i)));levelSelect.value=simulation===null?'account':String(simulation);}
- async function show(){if(loading)return;if(!enabled)previousStudio=footyStudio.enabled;loading=true;toggle.disabled=true;back.disabled=true;try{await load();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();if(!enabled)previousStudio=footyStudio.enabled;enabled=true;document.getElementById('islandLoading').hidden=true;saved(true);toggle.textContent='Village mode: on';toggle.setAttribute('aria-pressed','true');back.hidden=true;options();render();if(!d.open)d.showModal();if(!initialized)reset();await zoomOut(lastBuilding);lastBuilding=null;viewport.focus({preventScroll:true});guide();}catch(e){const panel=document.getElementById('islandLoading');panel.hidden=false;panel.querySelector('p').textContent=e.message;}finally{loading=false;toggle.disabled=false;back.disabled=false;}}
+ async function show(){if(loading)return;if(!enabled)previousStudio=footyStudio.enabled;loading=true;toggle.disabled=true;back.disabled=true;try{const ready=islandPreload;islandPreload=null;if(!ready||!await ready)await load();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();if(!enabled)previousStudio=footyStudio.enabled;enabled=true;document.getElementById('islandLoading').hidden=true;saved(true);toggle.textContent='Village mode: on';toggle.setAttribute('aria-pressed','true');back.hidden=true;options();render();if(!d.open)d.showModal();if(!initialized)reset();await zoomOut(lastBuilding);lastBuilding=null;viewport.focus({preventScroll:true});guide();}catch(e){const panel=document.getElementById('islandLoading');panel.hidden=false;panel.querySelector('p').textContent=e.message;}finally{loading=false;toggle.disabled=false;back.disabled=false;}}
  async function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
@@ -95,7 +97,7 @@
   }finally{entering=false;}
  }
  window.addEventListener('footy-studio-navigate',e=>{if(entering||!enabled)return;const current=VillageInteriors.active;if(current&&(e.detail===current.route||current.route==='ruby'&&e.detail==='home'))return;const route=e.detail;const next=buildings.find(b=>b.route===route&&unlocked(b))||(route==='sell'?{...buildings.find(b=>b.id==='market'),route}:null)||(['admin','battle-manager'].includes(route)&&data.isAdmin?{...buildings[0],route,name:'Admin tools'}:null);queueMicrotask(()=>{if(next)enterBuilding(next);else show();});});
- window.Island={show,enter:id=>{const b=buildings.find(b=>b.id===id);if(b&&unlocked(b))enterBuilding(b);else show();}};
+ window.Island={show,preload,enter:id=>{const b=buildings.find(b=>b.id===id);if(b&&unlocked(b))enterBuilding(b);else show();}};
  back.onclick=show;
  document.getElementById('islandRetry').onclick=show;
  document.getElementById('islandLogin').onclick=()=>logout();
