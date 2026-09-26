@@ -94,7 +94,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     if(footy)update.balance=(user.data().balance||0)+footy;
     if(isSkill)tx.set(profileRef,{...profileDoc.data(),...settled.state,activeComputerBattle:null});
     const delta=update.trophies-(user.data().trophies||0);
-    tx.update(userRef,{...update,...(isSkill?require('./town-hall-progress').gameplay(user.data(),result.result>0?'ranked win':result.result<0?'ranked loss':'ranked draw'):{}),activeComputerBattle:null});
+    tx.update(userRef,{...update,...(isSkill?require('./town-hall-progress').gameplay(user.data(),result.result>0?'ranked win':result.result<0?'ranked loss':'ranked draw'):require('./town-hall-progress').gameplay(user.data(),'training battle')),activeComputerBattle:null});
     const response={trophies:update.trophies,delta,status:'finished',footy,ruby,skill:change,moveReviews:result.moveReviews||[],profile:isSkill?skill.profile(settled.state):null};
     tx.update(ref,{status:'finished',result:result.result,delta,response,finishedAt:new Date()});
     return response;
@@ -117,7 +117,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
       tx.set(db.collection('packs').doc(packId),{name:reward.packName,cardIds:rewardTier.cards,color:rewardTier.backgroundColor||'#b79d4a',trophyReward:true});
       for(let i=0;i<(reward.packCount||1);i++)tx.set(db.collection('items').doc(),{name:reward.packName,itemType:'pack',packId,packColor:rewardTier.backgroundColor||'#b79d4a',price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,sourceItemId:null,imageUrl:null,purchasedAt:new Date(),createdAt:new Date()});
     }
-    tx.update(ref,{gems,amulets,gemDyes:dyes,balance:(user.balance||0)+reward.footy,trophyClaims:[...claims,reward.at]});return {success:true};
+    tx.update(ref,{...require('./town-hall-progress').gameplay(user,'trophy reward'),gems,amulets,gemDyes:dyes,balance:(user.balance||0)+reward.footy,trophyClaims:[...claims,reward.at]});return {success:true};
   });
  });
 };

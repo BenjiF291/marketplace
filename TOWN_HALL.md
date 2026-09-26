@@ -6,26 +6,27 @@ Still an admin-only preview. Frontend and backend must deploy together. No deplo
 
 Cumulative thresholds for levels 1-10: **0, 100, 300, 650, 1150, 1850, 2850, 4200, 6000, 8500**. Level 2 unlocks Blacksmith/Ruby emporium, 3 companions, 4 dyes, 5 refinery, 6 Royal hall. Levels 7-10 are prestige levels for now. XP never exceeds 8500. The room shows current progress and the next unlock. Upgrades happen automatically, with a golden level-up celebration; reduced-motion preferences disable motion. Returning to the island refreshes its unlocked buildings.
 
-Gameplay XP, up to 100 per UTC day:
+Small activity rewards replace the former resource-for-XP projects. Existing XP is preserved. The combined daily limit is 100 XP per UTC day, including collectible display bonuses.
 
-| Activity | XP |
+| Completed activity | XP |
 |---|---:|
-| Wheel spin | 5 |
-| Pack actually opened | 12 |
-| Pet journey claimed | 15 |
-| Completed ranked Skystones win / draw / loss | 20 / 12 / 8 |
+| Wheel spin | 3 |
+| Pack opening | 5 |
+| Pet journey claim | 6 |
+| Ranked win / draw / loss | 10 / 6 / 4 |
+| Training battle / fully played PvP battle | 2 / 6 |
+| Marketplace purchase / sale | 2 / 3 |
+| Sell card to bank / ascend cards | 2 / 5 |
+| Convert cards / compress gems | 3 / 2 |
+| Craft dyes / consume dye on a change | 1 / 1 |
+| Upgrade converter / build compressor | 8 / 8 |
+| Craft amulet / unlock amulet slot | 4 / 5 |
+| Ruby-shop purchase / feed pet | 2 / 1 |
+| Claim trophy reward / first collectible display | 3 / 3 |
 
-Training and forfeits do not grant XP. During the private preview only admin accounts accrue gameplay XP. Rewards are included in the same transactions as the existing game rewards, with their existing cooldown and retry protections. No separate Firebase reads/writes are added to those reward transactions for XP.
+No XP for transfers, listing/cancelling an unsold item, free cosmetic/equipment toggles, grants, opening menus, forfeits or failed actions. PvP XP requires finishing the deck, not a timeout. Marketplace records carry the rewarded buyer/seller histories through resale: each account earns each role's XP once per physical item, up to 32 distinct accounts per role. This prevents repeat back-and-forth sale XP. Activity rewards remain admin-only during the private preview.
 
-Projects, up to 100 XP per UTC day, separate from gameplay:
-
-| Project | Consumed resources | XP |
-|---|---|---:|
-| Restore stonework | 5 Rubies | 20 |
-| Stained-glass windows | 2 Citrine | 45 |
-| Provision builders | 3 Crystal Crunch | 15 |
-
-Projects use explicit contribution buttons, server-defined prices, transactions and persistent action receipts. Retrying one action cannot charge or reward twice. Max-level accounts cannot spend resources on projects. The first display of each different owned collectible grants 30 personal XP once. Removing and replacing it never grants more XP. This bonus is separate from daily limits.
+XP commits alongside existing gameplay transactions. Paid PvP already reads accounts; zero-stake completed PvP now reads both accounts to award XP. No extra per-move XP reads occur. Retried pack openings, card consumption, trades, trophy/journey claims and match settlements follow existing exactly-once protections. Crafting only grants XP after successful resource consumption; XP is per action, not per resource spent. The retired project endpoint rejects old clients without spending resources.
 
 ## Collectible displays
 
@@ -43,4 +44,4 @@ Presence/chat remain in server memory on one backend process. Walking/polling do
 
 ## Verification
 
-`node --test` covers progression thresholds/caps, project costs and retries, independent levels, missing ownership, display duplication, one-time showcase XP, authorisation and existing game regressions. `TOWN_HALL_CHECK_ONLY=1 node scripts/check-studio.cjs` uses two local fixture sessions to check character persistence, shared owned decorations, private level-up celebration, chat, seats and the Skystones handoff. Browser fixtures do not mutate live accounts.
+`node --test` covers progression thresholds/caps, retired projects and transaction retries, independent levels, missing ownership, display duplication, one-time showcase XP, authorisation and existing game regressions. `TOWN_HALL_CHECK_ONLY=1 node scripts/check-studio.cjs` uses two local fixture sessions to check character persistence, shared owned decorations, private level-up celebration, chat, seats and the Skystones handoff. Browser fixtures do not mutate live accounts.

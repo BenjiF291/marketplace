@@ -33,7 +33,8 @@ module.exports = function(app, db, getTiers) {
         const tiers = await transaction.get(db.collection('ascendTiers').orderBy('order', 'asc'));
         if (!user.exists) throw new Error('User not found');
         const entries = catalog(tiers.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-        transaction.update(ref, changeAmulets(user.data(), req.params.action, req.body, entries));
+        const change=changeAmulets(user.data(), req.params.action, req.body, entries);
+        transaction.update(ref,{...change,...require('./town-hall-progress').gameplay(user.data(),({buy:'amulet crafted',unlock:'amulet slot unlocked'})[req.params.action])});
       });
       res.json({ success: true });
     } catch (error) { res.status(400).send(error.message); }

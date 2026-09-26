@@ -21,7 +21,10 @@ module.exports = (app, db, getTiers) => {
         const user = await tx.get(ref);
         const tiers = await tx.get(db.collection('ascendTiers').orderBy('order', 'asc'));
         if (!user.exists) throw new Error('User not found');
-        tx.update(ref, workshopAction(user.data(), tiers.docs.map(doc => ({ ...doc.data(), id: doc.id })), req.params.action, req.body));
+        const change=workshopAction(user.data(), tiers.docs.map(doc => ({ ...doc.data(), id: doc.id })), req.params.action, req.body);
+        const spentDye=change.gemDyes&&Object.entries(user.data().gemDyes||{}).some(([k,v])=>Number(change.gemDyes[k]||0)<Number(v));
+        const activity=({craft:'compressor built',compress:'compression','craft-dye':'dye crafting'})[req.params.action]||(spentDye?'dye applied':null);
+        tx.update(ref,{...change,...require('./town-hall-progress').gameplay(user.data(),activity)});
       });
       res.json({ success: true });
     } catch (error) { res.status(400).send(error.message); }

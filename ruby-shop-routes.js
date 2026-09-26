@@ -35,6 +35,8 @@ module.exports=(app,db,authenticate)=>{
   else if(req.params.action==='clear'&&body.kind==='pet')update={rubyEquipped:{...(user.data().rubyEquipped||{}),pet:null,pets:journeys.pets(user.data()).filter(p=>p!==body.itemId)}};
   else if(req.params.action==='clear'&&['pet','profile','opening'].includes(body.kind))update={rubyEquipped:{...(user.data().rubyEquipped||{}),[body.kind]:null}};
   else throw Error('Unknown action');
+  const activity=req.params.action==='buy'?'ruby purchase':req.params.action==='use'&&body.itemId==='food'?'pet treat':null;
+  if(activity)Object.assign(update,require('./town-hall-progress').gameplay(user.data(),activity));
   const result={success:true,...(journeyReward?{reward:journeyReward}:{}),...(body.itemId==='retry'?{amount:update.lastSpinAmount,balance:update.balance,baseReward:base}:{} )};
   tx.update(ref,update);tx.set(receipt,{result,createdAt:new Date()});return result;
  });res.json(result);

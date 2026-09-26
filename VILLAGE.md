@@ -23,7 +23,7 @@ Drag/swipe to pan, pinch/wheel or use the zoom buttons, and recenter with the co
 | 5 | Crystal refinery |
 | 6 | Royal hall |
 
-Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use your Town Hall progression** follows that account's XP level. The old manual level setter has been removed. Projects and gameplay fill the personal XP bar; reaching a threshold automatically upgrades the hall. See [TOWN_HALL.md](TOWN_HALL.md) for progression values. These preview navigation gates do not change access to existing app menus.
+Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use your Town Hall progression** follows that account's XP level. The old manual level setter has been removed. Everyday gameplay activities fill the personal XP bar; reaching a threshold automatically upgrades the hall. See [TOWN_HALL.md](TOWN_HALL.md) for progression values. These preview navigation gates do not change access to existing app menus.
 
 ## Shared community room
 

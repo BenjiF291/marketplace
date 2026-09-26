@@ -833,7 +833,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
       const status = isFinished ? 'finished' : 'board';
       const turnStartedAtValue = isFinished ? null : interrupted ? match.turnStartedAt : now;
       let prizePaid = match.prizePaid === true;
-      if (isFinished && !prizePaid && Number(match.prize || 0) > 0) {
+      if (isFinished && !prizePaid) {
         const firstUserRef = db.collection('users').doc(match.participantIds[0]);
         const secondUserRef = db.collection('users').doc(match.participantIds[1]);
         const firstUserDoc = await transaction.get(firstUserRef);
@@ -852,6 +852,7 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
           transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize + battleBonus });
           transaction.update(loserRef, { balance: Number(loserDoc.data().balance || 0) - prize });
         }
+        if(!timeOut){for(const [ref,doc] of [[firstUserRef,firstUserDoc],[secondUserRef,secondUserDoc]]){const xp=require('./town-hall-progress').gameplay(doc.data(),'player battle');if(Object.keys(xp).length)transaction.update(ref,xp);}}
         prizePaid = true;
       }
       transaction.update(matchRef, { board, playedCards, interruptsUsed, status, winnerId, prizePaid, turnPlayerId: nextTurn, clocks, turnStartedAt: turnStartedAtValue, updatedAt: new Date() });
@@ -2027,6 +2028,7 @@ app.post('/items', async (req, res) => {
       buyerId: null,
       purchasedAt: null,
       sourceItemId: sourceItemId || null,
+      hallBuyers: sourceItem?.hallBuyers||[],hallSellers: sourceItem?.hallSellers||[],
       imageUrl: sourceItem ? sourceItem.imageUrl || null : imageUrl || null,
       itemType: sourceItem ? sourceItem.itemType || 'card' : 'card',
       packId: sourceItem ? sourceItem.packId || null : null,
@@ -2207,16 +2209,19 @@ app.post('/buy', async (req, res) => {
         }
       }
 
+      const hallBuyers=Array.isArray(item.hallBuyers)?item.hallBuyers:[],hallSellers=Array.isArray(item.hallSellers)?item.hallSellers:[];
+      const buyerXP=!hallBuyers.includes(buyerId)&&hallBuyers.length<32?require('./town-hall-progress').gameplay(buyer,'market purchase'):{};
+      const sellerXP=!hallSellers.includes(item.sellerId)&&hallSellers.length<32?require('./town-hall-progress').gameplay(seller,'market sale'):{};
       // Perform writes (all reads must be done before these)
       if (currency === 'footy') {
-        transaction.update(buyerRef, { balance: roundFooty(buyerFunds - purchasePrice) });
-        transaction.update(sellerRef, { balance: roundFooty(Number(seller.balance || 0) + sellerPayment) });
+        transaction.update(buyerRef, { balance: roundFooty(buyerFunds - purchasePrice),...buyerXP });
+        transaction.update(sellerRef, { balance: roundFooty(Number(seller.balance || 0) + sellerPayment),...sellerXP });
       } else {
         const buyerGems = { ...(buyer.gems || {}), [currency]: buyerFunds - purchasePrice };
         const sellerGems = { ...(seller.gems || {}), [currency]: Number((seller.gems || {})[currency] || 0) + sellerPayment };
         if (!Number.isSafeInteger(sellerGems[currency])) throw new Error('Gem balance too large');
-        transaction.update(buyerRef, { gems: buyerGems });
-        transaction.update(sellerRef, { gems: sellerGems });
+        transaction.update(buyerRef, { gems: buyerGems,...buyerXP });
+        transaction.update(sellerRef, { gems: sellerGems,...sellerXP });
       }
 
       transaction.update(itemRef, {
@@ -2225,6 +2230,7 @@ app.post('/buy', async (req, res) => {
         purchasedAt: new Date(),
         purchasePrice,
         sellerPayment,
+        hallBuyers:[...new Set([...hallBuyers,buyerId])].slice(0,32),hallSellers:[...new Set([...hallSellers,item.sellerId])].slice(0,32),
         purchasedViaMarketplace: true
       });
 
@@ -2407,6 +2413,7 @@ app.post('/ascend', async (req, res) => {
       const latestCards = await transaction.getAll(...selectedCards.map(card => itemsRef.doc(card.id)));
       if (latestCards.some(doc => !doc.exists || doc.data().buyerId !== requesterId || doc.data().listedForSale === true)) throw new Error('Selected cards are no longer available');
       const ascendBonus = amuletEffects(ascendUser.data() || {}).ascend || 0;
+      const ascendXP=require('./town-hall-progress').gameplay(ascendUser.data(),'ascension');if(Object.keys(ascendXP).length)transaction.update(ascendUserRef,ascendXP);
       if (ascendBonus) transaction.update(ascendUserRef, { balance: roundFooty(Number(ascendUser.data().balance || 0) + ascendBonus) });
       selectedCards.forEach(card => {
         transaction.delete(itemsRef.doc(card.id));
@@ -2472,7 +2479,7 @@ app.post('/sell-tier-card', async (req, res) => {
       const latestUser = latestUserDoc.data() || {};
       const updatedBalance = roundFooty(Number(latestUser.balance || 0) + Number(tier.sellPrice) * (1 + (amuletEffects(latestUser).salvage || 0) / 100));
 
-      transaction.update(userRef, { balance: updatedBalance });
+      transaction.update(userRef, { balance: updatedBalance,...require('./town-hall-progress').gameplay(latestUser,'card sale') });
       transaction.delete(itemRef);
       return roundFooty(updatedBalance - Number(latestUser.balance || 0));
     });
@@ -2546,7 +2553,7 @@ app.post('/gem-converter/upgrade', async (req, res) => {
       if (!user.exists) throw new Error('User not found');
       const tiers = tierSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       const update = upgradeConverter(tiers, user.data(), req.body.tierId);
-      transaction.update(userRef, update);
+      transaction.update(userRef, {...update,...require('./town-hall-progress').gameplay(user.data(),'converter upgrade')});
       return update;
     });
     res.json(result);
@@ -2593,7 +2600,7 @@ app.post('/gem-converter', async (req, res) => {
       const gems = { ...(user.data().gems || {}) };
       gems[recipe.gemKey] = Number(gems[recipe.gemKey] || 0) + recipe.reward;
       const newBalance = Math.round((balance - recipe.cost) * 100) / 100;
-      transaction.update(userRef, { balance: newBalance, gems, ...fuelUpdate });
+      transaction.update(userRef, { balance: newBalance, gems, ...fuelUpdate,...require('./town-hall-progress').gameplay(user.data(),'conversion') });
       refs.forEach(ref => transaction.delete(ref));
       return { ...recipe, gems, balance: newBalance };
     });

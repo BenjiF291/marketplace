@@ -28,11 +28,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
    else if(b.type==='stand'){m.seat=null;}
    else if(b.type==='chat'||b.type==='emote'){if(now-(m.lastChat||0)<1200)throw Error('Please wait before speaking again.');const text=b.type==='emote'?({wave:'waves hello',cheer:'cheers!',laugh:'laughs',clap:'applauds'})[b.emote]:String(b.text||'').trim();if(!text||text.length>180)throw Error('Write a message of 1–180 characters.');m.lastChat=now;m.bubble={text,until:now+5000};messages.push({id:crypto.randomUUID(),name:m.name,text,emote:b.type==='emote',at:now});if(messages.length>40)messages.shift();}
    else if(b.type==='refresh'){const u=(await db.collection('users').doc(s.id).get()).data();accounts.set(s.id,u);cacheUntil=0;}
-   else if(b.type==='project'){
-    if(!/^[a-zA-Z0-9-]{16,80}$/.test(b.actionId||''))throw Error('Invalid project identifier.');
-    const userRef=db.collection('users').doc(s.id),receipt=db.collection('townHallActions').doc(s.id+'_'+b.actionId);
-    const updated=await db.runTransaction(async tx=>{const prior=await tx.get(receipt),doc=await tx.get(userRef);if(prior.exists)return doc.data();const user=doc.data(),update=progress.project(user,b.project,now);tx.set(userRef,{...user,...update});tx.set(receipt,{at:now,project:b.project});return {...user,...update};});accounts.set(s.id,updated);
-   }
+   else if(b.type==='project'){throw Error('Resource-for-XP projects have been retired. Earn XP by playing.');}
    else if(b.type==='character'){const character=world.character(b.character);await db.collection('users').doc(s.id).update({townHallCharacter:character});m.character=character;}
    else if(b.type==='invite'){
     const other=members.get(b.target);if(!seated(m)||!seated(other)||other.id===m.id)throw Error('Both players need to be seated at the table.');
@@ -54,7 +50,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
      const old=r.decor[b.slot];if(old?.owner&&old.owner!==s.id&&u.isAdmin!==true)throw Error('Only its owner can remove that display.');
      if(b.item!==null){if(!(u.rubyItems?.[b.item]>0))throw Error('Buy this collectible in the Ruby shop first.');if(Object.entries(r.decor).some(([slot,v])=>Number(slot)!==b.slot&&v.owner===s.id&&v.item===b.item))throw Error('That collectible is already on display.');}
      const next={revision:r.revision+1,decor:{...r.decor}};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name,owner:s.id};
-     let update={};if(b.item!==null&&!(u.townHallShowcased||[]).includes(b.item)){update={...progress.grant(u,30,'Showcase: '+DECOR.find(i=>i.id===b.item).name,now),townHallShowcased:[...(u.townHallShowcased||[]),b.item]};tx.set(userRef,{...u,...update});}
+     let update={};if(b.item!==null&&!(u.townHallShowcased||[]).includes(b.item)){update={...progress.gameplay(u,'collectible display',now),townHallShowcased:[...(u.townHallShowcased||[]),b.item]};tx.set(userRef,{...u,...update});}
      tx.set(ref,next);return {room:next,user:{...u,...update}};
     });cached=result.room;cacheUntil=now+15000;accounts.set(s.id,result.user);
    }else throw Error('Unknown room action.');
