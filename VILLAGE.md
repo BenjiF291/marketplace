@@ -1,6 +1,8 @@
-# Private village and Town Hall preview
+> Public island release: island navigation is now mandatory for every signed-in account. Admin tools and local level previews remain admin-only. All accounts earn personal Town Hall XP. The server must run as one instance for shared presence. Deploy the frontend and backend together. Earlier preview notes below describe development history.
 
-Admin accounts get **Try village** beside the header controls. This remains an admin-only, switchable preview. Nothing has been deployed or enabled for ordinary players.
+# Public island and Town Hall
+
+Every signed-in account opens directly on the island. Classic/new UI and village exit switches are hidden. Normal accounts see their own progression; only administrators can simulate Town Hall levels and enter admin tools.
 
 ## Painted island
 
@@ -23,7 +25,7 @@ Drag/swipe to pan, pinch/wheel or use the zoom buttons, and recenter with the co
 | 5 | Crystal refinery |
 | 6 | Royal hall |
 
-Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use your Town Hall progression** follows that account's XP level. The old manual level setter has been removed. Everyday gameplay activities fill the personal XP bar; reaching a threshold automatically upgrades the hall. See [TOWN_HALL.md](TOWN_HALL.md) for progression values. These preview navigation gates do not change access to existing app menus.
+Locked buildings are absent from the island and the destination picker. Increasing the Town Hall level places newly unlocked buildings with a short arrival animation (disabled for reduced motion). Lowering the preview hides them again. The map dropdown simulates levels locally without writes or purchases. **Use your Town Hall progression** follows that account's XP level. The old manual level setter has been removed. Everyday gameplay activities fill the personal XP bar; reaching a threshold automatically upgrades the hall. See [TOWN_HALL.md](TOWN_HALL.md) for progression values. Building navigation follows personal Town Hall unlocks. Existing server-side economy permissions are unchanged.
 
 ## Shared community room
 
@@ -37,13 +39,13 @@ The Town Hall is the only shared building; everyone else keeps their own village
 
 Characters save to `users/{id}.townHallCharacter`. Only shared decorations save to `communityRooms/town-hall`. Personal XP saves to each user account. Concurrent decoration changes use a transaction and revision check. Accepted invitations create a deterministic battle document transactionally, preventing duplicate matches on retries.
 
-Presence, movement, chat and pending invitations are in memory on a **single Node server process** during this preview. Polling runs every 1.5 seconds without per-poll Firestore reads; shared decoration reads are cached for 15 seconds. Presence expires after 12 seconds without contact. Room tokens last five minutes, then the client rejoins using normal account authentication. Closing the room stops polling and leaves. A process restart loses presence/chat/pending invitations; characters, shared decorations, personal XP and created games survive. Multiple backend instances would need shared presence transport before public rollout.
+Presence, movement, chat and pending invitations are in memory on a **single Node server process** with the current deployment. Polling runs every 1.5 seconds without per-poll Firestore reads; shared decoration reads are cached for 15 seconds. Presence expires after 12 seconds without contact. Room tokens last five minutes, then the client rejoins using normal account authentication. Closing the room stops polling and leaves. A process restart loses presence/chat/pending invitations; characters, shared decorations, personal XP and created games survive. Keep the deployment on one backend instance; multiple instances would need shared presence transport.
 
 Only explicit character saves, decoration changes and accepted games write persistent state. Existing Firestore default-deny rules keep the new room collection server-only. No client Firestore subscription or new index is required.
 
 ## Deployment and checks
 
-Deploy frontend and backend together, including the Town Hall routes, shared battle-match builder, world logic, room UI and local artwork. The gate remains admin-only. Public rollout is a separate change.
+Deploy frontend and backend together, including the Town Hall routes, shared battle-match builder, world logic, room UI and local artwork. The island and Town Hall endpoints now admit all authenticated accounts. The legacy `/admin/` route names remain for client compatibility and do not imply administrative access. No Firestore rule changes are required.
 
 `node --test` includes village authorization, independent forge progression, room access, two-player presence, collision routing, exclusive seats, character sanitization, decoration ownership/revisions, private XP and idempotent Skystones creation. The fixture browser harness supports `VILLAGE_CHECK_ONLY=1` and `TOWN_HALL_CHECK_ONLY=1`; both use local fixtures rather than live account writes. The Town Hall check uses two browser sessions and verifies the handoff to the existing PvP setup. Screenshots live under `.ui-tools/`.
 

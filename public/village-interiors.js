@@ -10,7 +10,7 @@
   const bar=el('nav','village-interior-bar');bar.setAttribute('aria-label','Building navigation');
   const back=el('button','village-secondary','Return to island');back.onclick=()=>options.back();
   const exit=el('button','village-secondary','Exit village mode');exit.onclick=()=>options.exit();
-  controlBox=el('div','village-interior-controls');bar.append(back,controlBox,exit);
+  controlBox=el('div','village-interior-controls');bar.append(back,controlBox);
   const heading=el('div','village-interior-heading');title=el('h1');title.tabIndex=-1;sub=el('p');heading.append(title,sub);
   tabs=el('nav','village-stations');tabs.setAttribute('aria-label','Building stations');
   root.append(art,bar,heading,tabs);document.querySelector('.container').before(root);

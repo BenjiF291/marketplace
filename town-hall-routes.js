@@ -11,7 +11,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
  function seated(m){return m&&m.seat!==null&&Math.hypot(world.position(m,clock()).x-world.SEATS[m.seat].x,world.position(m,clock()).y-world.SEATS[m.seat].y)<15;}
  app.post('/admin/town-hall/join',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
-  try{const doc=await db.collection('users').doc(id).get();const u=doc.data();if(!u||u.isAdmin!==true)return res.status(403).send('The Town Hall is currently an admin-only preview.');
+  try{const doc=await db.collection('users').doc(id).get();const u=doc.data();if(!u)return res.status(403).send('Account not found.');
    accounts.set(id,u);clean();if(members.size>=40&&!members.has(id))throw Error('The room is full. Try again shortly.');
    const token=crypto.randomBytes(32).toString('hex');tokens.set(token,{id,expires:clock()+5*60000});
    if(!members.has(id))members.set(id,{id,name:String(u.username||'Player').slice(0,40),character:world.character(u.townHallCharacter),path:[{x:450,y:510}],startedAt:clock(),seat:null,lastSeen:clock()});else members.get(id).lastSeen=clock();

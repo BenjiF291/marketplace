@@ -1,6 +1,8 @@
+> Public island release: island navigation is now mandatory for every signed-in account. Admin tools and local level previews remain admin-only. All accounts earn personal Town Hall XP. The server must run as one instance for shared presence. Deploy the frontend and backend together. Earlier preview notes below describe development history.
+
 # Town Hall: private progression, shared community room
 
-Still an admin-only preview. Frontend and backend must deploy together. No deployment has been performed. The room, table, chat and decorations are shared. Every account has its OWN Town Hall level and village building unlocks, derived only from server-owned `townHallXP`. Previous shared test levels are ignored; accounts without personal XP start at level 1. The map's simulated level dropdown changes appearance only.
+Available to all authenticated accounts. Frontend and backend must deploy together. The room, table, chat and decorations are shared. Every account has its OWN Town Hall level and village building unlocks, derived only from server-owned `townHallXP`. Previous shared test levels are ignored; accounts without personal XP start at level 1. The admin-only simulated level dropdown changes appearance only.
 
 ## XP and upgrades
 
@@ -24,7 +26,7 @@ Small activity rewards replace the former resource-for-XP projects. Existing XP 
 | Ruby-shop purchase / feed pet | 2 / 1 |
 | Claim trophy reward / first collectible display | 3 / 3 |
 
-No XP for transfers, listing/cancelling an unsold item, free cosmetic/equipment toggles, grants, opening menus, forfeits or failed actions. PvP XP requires finishing the deck, not a timeout. Marketplace records carry the rewarded buyer/seller histories through resale: each account earns each role's XP once per physical item, up to 32 distinct accounts per role. This prevents repeat back-and-forth sale XP. Activity rewards remain admin-only during the private preview.
+No XP for transfers, listing/cancelling an unsold item, free cosmetic/equipment toggles, grants, opening menus, forfeits or failed actions. PvP XP requires finishing the deck, not a timeout. Marketplace records carry the rewarded buyer/seller histories through resale: each account earns each role's XP once per physical item, up to 32 distinct accounts per role. This prevents repeat back-and-forth sale XP. Activity rewards apply to every account.
 
 XP commits alongside existing gameplay transactions. Paid PvP already reads accounts; zero-stake completed PvP now reads both accounts to award XP. No extra per-move XP reads occur. Retried pack openings, card consumption, trades, trophy/journey claims and match settlements follow existing exactly-once protections. Crafting only grants XP after successful resource consumption; XP is per action, not per resource spent. The retired project endpoint rejects old clients without spending resources.
 

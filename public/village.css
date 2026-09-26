@@ -32,3 +32,9 @@
 .village-appearing{animation:village-arrive .65s cubic-bezier(.2,.8,.2,1)}
 @keyframes village-arrive{from{opacity:0;translate:0 -24px;filter:brightness(1.8)}to{opacity:1;translate:0 0;filter:brightness(1)}}
 @media(prefers-reduced-motion:reduce){.village-appearing{animation:none}}
+
+/* Island is the only signed-in interface. The existing router powers interiors. */
+.island-app #studioShell,.island-app #uiVersionToggle,.island-app #villageModeToggle{display:none!important}
+.island-app:not(.village-interior)>.container{display:none!important}
+#islandLoading{position:fixed;inset:0;display:grid;place-content:center;text-align:center;background:#153d48;color:#fff;z-index:1000;gap:12px}
+#islandLoading[hidden]{display:none}

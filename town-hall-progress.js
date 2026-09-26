@@ -7,7 +7,7 @@ const day=now=>new Date(now).toISOString().slice(0,10);
 function profile(user={}){const xp=Math.min(8500,Math.max(0,Math.floor(Number(user.townHallXP)||0)));let level=1;while(level<10&&xp>=THRESHOLDS[level])level++;const base=THRESHOLDS[level-1],next=THRESHOLDS[level]??null;return {xp,level,progress:xp-base,required:next===null?0:next-base,next,unlock:UNLOCKS[level+1]||'Maximum level reached',history:user.townHallHistory||[]};}
 function grant(user,amount,activity,now=Date.now()){const xp=profile(user).xp,gain=Math.min(amount,8500-xp);return {townHallXP:xp+gain,townHallHistory:[{activity,amount:gain,at:now},...(user.townHallHistory||[])].slice(0,12)};}
 function gameplay(user,activity,now=Date.now()){
- if(user.isAdmin!==true||!REWARDS[activity])return {}; // Private preview until public release.
+ if(!REWARDS[activity])return {};
  const today=day(now),used=user.townHallGameplayDay===today?Number(user.townHallGameplayXP)||0:0;
  const amount=Math.max(0,Math.min(REWARDS[activity],100-used,8500-profile(user).xp));if(!amount)return {};
  return {...grant(user,amount,activity,now),townHallGameplayDay:today,townHallGameplayXP:used+amount};

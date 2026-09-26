@@ -155,7 +155,7 @@
   }
   window.showSection=function(section){if(enabled&&!routing)return navigate(section);return originalShow(section);};
   function setMode(next,initial=false){
-    enabled=next;originalHeadings.forEach(({node,text})=>{node.textContent=enabled?text.replace(/^[^\p{L}\p{N}]+/u,'').replace(/^BCM$/,'Battle cards'):text;});document.body.classList.toggle('studio-ui',enabled);
+    enabled=true;originalHeadings.forEach(({node,text})=>{node.textContent=enabled?text.replace(/^[^\p{L}\p{N}]+/u,'').replace(/^BCM$/,'Battle cards'):text;});document.body.classList.toggle('studio-ui',enabled);
     switcher.textContent=enabled?'Classic UI':'Try new UI';switcher.setAttribute('aria-label',enabled?'Switch to the classic interface':'Switch to the new interface');
     closeDrawer();
     if(enabled){$('studioControls').append(controls);gemNodes.forEach(node=>workshop.append(node));updateAdmin();navigate(initial?(location.hash.startsWith('#/')?location.hash.slice(2):'home'):active,false);}
@@ -177,7 +177,7 @@
   $('studioSearchInput').addEventListener('keydown',event=>{if(event.key==='Enter')$('studioSearchResults').querySelector('button')?.click();});
   $('studioSearch').addEventListener('click',event=>{if(event.target===$('studioSearch')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
   document.addEventListener('keydown',event=>{
-    if(!enabled)return;
+    if(!enabled||document.body.classList.contains('island-app'))return;
     if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();renderSearch();if(!$('studioSearch').open)$('studioSearch').showModal();$('studioSearchInput').focus();}
     if(event.key==='Escape'&&drawer){closeDrawer();lastFocus?.focus();}
     if(event.key==='Tab'&&drawer){const buttons=Array.from($('studioSidebar').querySelectorAll('button')).filter(b=>b.offsetParent!==null);const first=buttons[0],last=buttons.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
@@ -188,7 +188,7 @@
   const syncBalance=()=>{$('studioBalance').textContent=$('balance').textContent.replace(/^.*?([\d,.]+).*$/,'$1');};
   new MutationObserver(syncBalance).observe($('balance'),{childList:true,subtree:true,characterData:true});syncBalance();
   let preferred='studio';try{preferred=localStorage.getItem(preferenceKey)||localStorage.getItem('footy-ui-default')||'studio';}catch(_){}
-  setMode(preferred!=='classic',true);
+  setMode(true,true);
   window.footyStudio={navigate,setMode,get enabled(){return enabled;}};
   const preview=document.createElement('dialog');
   preview.className='studio-card-preview';

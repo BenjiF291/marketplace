@@ -6,9 +6,9 @@ function fixture(user,authenticate=async()=> 'admin',hall={level:1}){
  require('./village-routes')({get:(path,fn)=>{assert.equal(path,'/admin/village');handler=fn;}},db,authenticate,async()=>tiers);
  return {get reads(){return reads;},async call(){let status=200,body;const res={status(n){status=n;return res;},send(v){body=v;},json(v){body=v;}};await handler({},res);return {status,body};}};
 }
-test('village rejects missing sessions before reading an account and rejects non-admins',async()=>{
+test('village rejects missing sessions before reading an account and admits ordinary accounts',async()=>{
  const noSession=fixture({isAdmin:true},async()=>{throw Error('no session');});assert.equal((await noSession.call()).status,401);assert.equal(noSession.reads,0);
- for(const user of [undefined,{isAdmin:false},{isAdmin:'true'}])assert.equal((await fixture(user).call()).status,403);
+ assert.equal((await fixture(undefined).call()).status,403);for(const user of [{isAdmin:false},{isAdmin:'true'}]){const r=await fixture(user).call();assert.equal(r.status,200);assert.equal(r.body.isAdmin,false);}
 });
 test('admin village uses private hall progression independently of the personal gem forge',async()=>{
  const f=fixture({isAdmin:true,gemConverterLevel:3,balance:42,gemCompressor:true});const response=await f.call();assert.equal(response.status,200);assert.equal(response.body.level,0);assert.equal(response.body.forgeLevel,3);assert.equal(response.body.compressor,true);assert.equal(response.body.balance,42);assert.equal(f.reads,1);
