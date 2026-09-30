@@ -75,3 +75,13 @@
 
 /* Keep each building hit area within its plot row. */
 .village-building{width:136px;height:150px}.village-building svg.village-painted-building,.village-building[data-building="townhall"] svg,.village-building[data-building="arena"] svg{width:142px;height:142px}.village-house svg{width:132px;height:132px}
+
+/* Placement guides only exist visually while arranging. Keep the painted paths clear. */
+.village-land-plots{visibility:hidden}
+.village-arranging .village-land-plots{visibility:visible}
+.village-land-plot{width:80px;height:62px;transform:translate(-50%,-50%);border-radius:50%;box-shadow:none!important}
+.village-arranging .village-land-plot{background:#d7e3a03b!important;border:2px dashed #fff0b2!important}
+.village-arranging .village-land-plot.reserved{background:#455d463b!important}
+.village-building{width:82px;height:108px;transform:translate(-50%,-80%)}
+.village-building svg.village-painted-building,.village-building[data-building="townhall"] svg,.village-building[data-building="arena"] svg{width:108px;height:108px}
+.village-house svg{width:100px;height:100px}
