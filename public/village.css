@@ -85,3 +85,10 @@
 .village-building{width:82px;height:108px;transform:translate(-50%,-80%)}
 .village-building svg.village-painted-building,.village-building[data-building="townhall"] svg,.village-building[data-building="arena"] svg{width:108px;height:108px}
 .village-house svg{width:100px;height:100px}
+
+/* Plot coordinates describe the centre of the ground footprint, not the image box. */
+.village-building{width:80px;height:104px;transform:translate(-50%,calc(-100% + 12px));justify-content:flex-end}
+.village-building svg.village-painted-building,.village-building[data-building="townhall"] svg,.village-building[data-building="arena"] svg{width:80px;height:104px;overflow:hidden;flex-shrink:0}
+.village-house svg{width:80px;height:92px}
+.village-land-plot{width:72px;height:32px}
+.village-building:hover svg,.village-building.selected svg{translate:0 0}

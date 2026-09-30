@@ -3,13 +3,13 @@
  const LEVELS={townhall:0,archive:0,market:0,forge:0,arena:0,wheel:0,blacksmith:1,pets:2,cabinet:1,dye:3,compressor:4,vault:0,vip:5};
  // Coordinates follow the grassy parcels in island-painted.png, not a rectangular grid.
  const PLOTS=[
-  [535,235],[615,245],[730,275],[810,280],
-  [345,355],[425,360],[540,370],[635,385],
-  [845,365],[925,360],[440,450],[515,450],
-  [290,510],[365,520],[535,560],[615,575],
-  [745,530],[810,510],[915,455],[990,465],
-  [1035,565],[450,640],[700,685],[785,670]
- ].map(([x,y],id)=>({id,x,y}));
+  [530,215],[605,215],[745,255],[815,255],
+  [345,335],[420,340],[550,340],[625,365],
+  [840,345],[920,335],[445,430],[505,430],
+  [290,485],[365,495],[535,535],[615,550],
+  [735,535],[815,525],[930,455],[1005,465],
+  [1040,535],[450,610],[695,685],[785,680]
+ ].map(([x,y],id)=>({id,x,y,width:72,depth:32}));
  const DEFAULTS={townhall:8,archive:6,market:13,forge:3,arena:10,wheel:1,blacksmith:16,pets:18,cabinet:12,dye:17,compressor:21,vault:14,vip:22};
  const house=id=>/^house:([0-9]|10)$/.test(id);
  function profile(user={}){const saved=user.villageLayout||{},positions={},used=new Set();for(const id of [...Object.keys(LEVELS),...Object.keys(saved).filter(house).sort()]){const n=saved[id];if(Number.isInteger(n)&&n>=0&&n<PLOTS.length&&!used.has(n)){positions[id]=n;used.add(n);}}
