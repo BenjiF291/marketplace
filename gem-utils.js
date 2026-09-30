@@ -39,7 +39,7 @@ function requireUnlockedTier(tiers, user, tierId) {
   if (index < 0 || index > converterProgress(tiers, user).level) throw new Error('Upgrade your gem converter to unlock this tier');
 }
 
-function gemRecipe(tier, count = 1) {
+function gemRecipe(tier, count = 1, forgeLevel = 0) {
   if (!Number.isInteger(count) || count < 1 || count > 3) throw new Error('Select one to three cards');
   const price = Number(tier.sellPrice);
   if (!Number.isFinite(price) || price <= 0) throw new Error('This tier needs a sell price before conversion');
@@ -49,7 +49,7 @@ function gemRecipe(tier, count = 1) {
     gemName: GEM_NAMES[key] || `${tier.name} Crystal`,
     gemKey: GEM_NAMES[key] ? key : `tier-${tier.id}`,
     cost: Math.round(price * count * 100) / 100,
-    reward: [0, 3, 7, 12][count]
+    reward: [0, 3, 7, 12][count] + (key === 'bronze' && count >= 2 ? Math.max(0, Math.trunc(forgeLevel)||0) : 0)
   };
 }
 

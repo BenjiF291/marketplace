@@ -2500,7 +2500,7 @@ app.get('/gem-converter', async (req, res) => {
     const progress = converterProgress(tiers, user.data());
     const recipes = tiers.map((tier, index) => ({
       ...gemIdentity(tier), cards: tier.cards || [], unlocked: index <= progress.level,
-      rewards:[3,7,12+(amuletEffects(user.data()).fullbatch||0)],
+      rewards:[1,2,3].map(count=>gemRecipe({...tier,sellPrice:1},count,progress.level).reward+(count===3?(amuletEffects(user.data()).fullbatch||0):0)),
       fuelArmed: user.data().rubyFuelArmed === true,
       costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => rubyShop.fuelCost(user.data(), discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter))) : null
     }));
@@ -2582,7 +2582,7 @@ app.post('/gem-converter', async (req, res) => {
       requireUnlockedTier(tierSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })), user.data(), tierId);
       const tier = { ...tierDoc.data(), id: tierDoc.id };
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
-      const recipe = gemRecipe(tier, itemIds.length);
+      const recipe = gemRecipe(tier, itemIds.length, converterProgress(tierSnapshot.docs.map(doc=>({...doc.data(),id:doc.id})),user.data()).level);
       recipe.cost = discounted(recipe.cost, amuletEffects(user.data()).converter);
       let fuelUpdate={};
       if(user.data().rubyFuelArmed){

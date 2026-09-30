@@ -66,3 +66,11 @@ The short guide appears on the first visit after this release, saved per account
 All accounts now receive a 24-plot layout. Arrange village previews moves, swaps and house construction locally; Save layout validates and stores the entire layout in one user transaction. Cancel spends and saves nothing. Layout revisions reject stale saves from another session. Existing buildings are retained, and their future unlock plots stay reserved. There is no construction cost in this first version. Up to eleven houses fit beside the thirteen core buildings. Each saved house contributes exactly three residents; moving never duplicates them and removal removes its residents. The resident count is derived from houses, not a separate editable counter. Villagers wander and respond to clicks locally, with no periodic Firebase writes. Daily tasks and resource rewards are not introduced in this version.
 
 Building sprites now use individually traced SVG clip boundaries rather than grid-cell viewboxes, including upgraded forges. Plot positions describe ground-footprint centres; buildings align at their base with a fixed footprint, and the 24 occupied spaces have been visually reviewed together against the painted paths. Placement guides remain edit-only. Run `VILLAGE_ART_CHECK_ONLY=1 node scripts/check-studio.cjs` for the full-island and enlarged sprite review captures.
+
+
+### Homes and ruby mines
+Houses cost 10 rubies when saving the layout, capped at the personal Town Hall level (1?10). Existing homes remain free of retroactive charges and can be moved. Click each home to upgrade: 3 residents initially; 25 rubies for 5 residents; 40 rubies for 10 residents.
+
+Mines unlock automatically at Town Hall 2, 4, 5, 7, 10. Assign an available resident for a one-hour shift: one ruby per complete three minutes, maximum 20. Started shifts continue while away, and never restart automatically. Collect in the mine panel; restarting also collects any remaining output. A resident works in only one mine at once. All purchases, assignments and claims are server-validated transactions.
+
+Forge upgrades add one ruby per level to two- and three-card Ruby recipes: 7/12, 8/13, 9/14, etc. Single-card output and other gems are unchanged.

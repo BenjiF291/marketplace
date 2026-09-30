@@ -1,4 +1,4 @@
-const layout=require('./public/village-layout');
+const layout=require('./public/village-layout'),economy=require('./village-economy');
 module.exports=(app,db,authenticate,getTiers)=>{
  app.get('/admin/village',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again to visit your island.');}
@@ -8,7 +8,7 @@ module.exports=(app,db,authenticate,getTiers)=>{
    const user=doc.data(),tiers=await getTiers();
    const maxLevel=9,level=require('./town-hall-progress').profile(user).level-1;
    const forgeLevel=user.gemConverterAllUnlocked?Math.max(0,tiers.length-1):Math.min(Math.max(0,tiers.length-1),Math.max(0,Math.trunc(Number(user.gemConverterLevel)||0)));
-   res.json({level,maxLevel,forgeLevel,tiers:tiers.map(t=>({id:t.id,name:t.name})),balance:Number(user.balance)||0,compressor:!!user.gemCompressor,isAdmin:user.isAdmin===true,preview:false,layout:layout.profile(user)});
+   res.json({level,maxLevel,forgeLevel,tiers:tiers.map(t=>({id:t.id,name:t.name})),balance:Number(user.balance)||0,compressor:!!user.gemCompressor,isAdmin:user.isAdmin===true,preview:false,layout:layout.profile(user),economy:economy.profile(user)});
   }catch{res.status(500).send('Could not load your village. Please try again.');}
  });
  app.post('/village/layout',async(req,res)=>{
@@ -16,4 +16,8 @@ module.exports=(app,db,authenticate,getTiers)=>{
   try{const result=await db.runTransaction(async tx=>{const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw Error('Account not found.');const user=doc.data(),level=require('./town-hall-progress').profile(user).level-1;const update=layout.validate(user,req.body?.positions,req.body?.revision,level);tx.update(ref,update);return layout.profile({...user,...update});});res.json(result);}catch(e){res.status(400).send(e.message);}
  });
 
+ app.post('/village/action',async(req,res)=>{
+  let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
+  try{const result=await db.runTransaction(async tx=>{const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw Error('Account not found.');const user=doc.data(),update=economy.action(user,req.body||{});tx.update(ref,update);const next={...user,...update};return {layout:layout.profile(next),economy:economy.profile(next)};});res.json(result);}catch(e){res.status(400).send(e.message);}
+ });
 };

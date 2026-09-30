@@ -3169,7 +3169,7 @@ function renderGemUpgrade() {
   const button = document.getElementById('gemUpgrade');
   const available = upgrade ? Number(gemConverterData.gems[upgrade.payment.gemKey] || 0) : 0;
   document.getElementById('gemUpgradeInfo').textContent = upgrade
-    ? `Unlock ${upgrade.unlockAll ? 'all remaining gem tiers' : `${upgrade.tierName} / ${upgrade.gemName}`}. Costs 50 ${upgrade.payment.gemName} (you have ${available}).`
+    ? `Unlock ${upgrade.unlockAll ? 'all remaining gem tiers' : `${upgrade.tierName} / ${upgrade.gemName}`}. Adds +1 Ruby to two- and three-card Ruby conversions. Costs 50 ${upgrade.payment.gemName} (you have ${available}).`
     : 'Maximum level reached. All gem tiers unlocked.';
   button.textContent = upgrade ? `Upgrade - 50 ${upgrade.payment.gemName}` : 'Fully upgraded';
   button.disabled = gemBusy || gemLoading || !upgrade || available < 50;
