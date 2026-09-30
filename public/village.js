@@ -19,7 +19,7 @@
  const toggle=el('button','btn','Try village');toggle.id='villageModeToggle';toggle.hidden=true;toggle.type='button';document.getElementById('dyeHeaderControls').prepend(toggle);
  const back=el('button','village-return','← Village');back.hidden=true;back.type='button';document.body.append(back);
  let enabled=false,verified=false,data=null,simulation=null,d=null,viewport,world,inspector,levelSelect,notice,status,tiles=new Map(),selected=null,previousStudio=true,loading=false;
- let jump,entering=false;
+ let jump,entering=false,plotEditor;
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false;
  const pointers=new Map();const pref=`footy-village:${currentUserId}`;
  const level=()=>simulation===null?data.level:simulation;
@@ -35,7 +35,7 @@
  function zoom(next,cx,cy){const r=viewport.getBoundingClientRect();cx??=r.width/2;cy??=r.height/2;next=Math.max(.4,Math.min(2.4,next));const ratio=next/camera.scale;camera.x=cx-(cx-camera.x)*ratio;camera.y=cy-(cy-camera.y)*ratio;camera.scale=next;clamp();paintCamera();}
  function reset(){const r=viewport.getBoundingClientRect();camera.scale=r.width<650?.73:Math.min(1.1,r.width/1340,r.height/870);camera.x=r.width/2-720*camera.scale;camera.y=r.height/2-470*camera.scale;initialized=true;clamp();paintCamera();}
  function focusBuilding(b){const r=viewport.getBoundingClientRect();camera.x=r.width/2-b.x*camera.scale;camera.y=r.height*.4-b.y*camera.scale;clamp();paintCamera();}
- function select(b){if(travelling)return;selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;
+ function select(b){if(travelling)return;if(plotEditor?.select(b)){inspector.hidden=true;return;}selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;
   const enter=el('button','village-entrance',b.name);enter.setAttribute('aria-label',`Enter ${b.name}`);enter.onclick=()=>travel(b);inspector.append(enter);
  }
  let travelling=false,guideShown=false,lastBuilding=null;
@@ -44,7 +44,7 @@
  const guideKey=`footy-island-guide-v1:${currentUserId}`;
  function guide(force=false){if(!force){if(guideShown)return;try{if(localStorage.getItem(guideKey)==='done')return;}catch{}}guideShown=true;
   const box=el('dialog','island-guide');box.setAttribute('aria-label','Welcome to your island');
-  box.append(el('small','','A PLACE OF YOUR OWN'),el('h2','','This is your island'),el('p','','Swipe or drag to explore. Tap a building, then its name to step inside. Pinch or scroll to zoom.'),el('p','','The Town Hall is a shared meeting place: meet other players, decorate together and play Skystones at the table.'),el('p','','Your Town Hall level is yours alone. Earn XP by playing ? opening packs, trading, crafting and battling all help. As your Town Hall levels up, your island grows and new buildings appear.'));
+  box.append(el('small','','A PLACE OF YOUR OWN'),el('h2','','This is your island'),el('p','','Swipe or drag to explore. Tap a building, then its name to step inside. Pinch or scroll to zoom. Use Arrange village to move buildings between land plots and build homes for your villagers.'),el('p','','The Town Hall is a shared meeting place: meet other players, decorate together and play Skystones at the table.'),el('p','','Your Town Hall level is yours alone. Earn XP by playing ? opening packs, trading, crafting and battling all help. As your Town Hall levels up, your island grows and new buildings appear.'));
   const done=el('button','village-entrance','Explore my island');const finish=()=>{try{localStorage.setItem(guideKey,'done');}catch{}box.close();};done.onclick=finish;box.append(done);box.addEventListener('cancel',e=>{e.preventDefault();finish();});box.addEventListener('close',()=>box.remove(),{once:true});document.body.append(box);box.showModal();
  }
  async function zoomOut(b){if(!b||matchMedia('(prefers-reduced-motion: reduce)').matches)return;travelling=true;clearGesture();jump.disabled=true;const target={...camera},r=viewport.getBoundingClientRect(),scale=doorScale(),from={x:r.width/2-b.x*scale,y:r.height/2-(b.y-25)*scale,scale};camera=from;applyCamera();d.classList.add('village-returning');
@@ -60,6 +60,7 @@
   notice.textContent=simulation===null?'Your Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
   status.textContent=`${buildings.filter(unlocked).length} / ${buildings.length} buildings open`;
   jump.replaceChildren(new Option('Find a building...',''));buildings.filter(unlocked).forEach(b=>jump.append(new Option(b.name,b.id)));
+  plotEditor?.paint();
   if(selected){if(unlocked(selected))select(selected);else{selected=null;inspector.hidden=true;}}
  }
  function create(){
@@ -76,11 +77,13 @@
   const footer=el('footer','village-footer');status=el('span');jump=el('select');jump.setAttribute('aria-label','Find a building');jump.append(new Option('Find a building…',''));buildings.forEach(b=>jump.append(new Option(b.name,b.id)));jump.onchange=()=>{const b=buildings.find(b=>b.id===jump.value);if(b){focusBuilding(b);select(b);}jump.value='';};footer.append(jump);
   inspector=el('section','village-inspector');inspector.hidden=true;inspector.setAttribute('aria-label','Selected building');
   d.append(viewport,toolbar,footer,inspector);document.body.append(d);d.addEventListener('cancel',e=>{e.preventDefault();if(!inspector.hidden)inspector.hidden=true;});
+  viewport.addEventListener('click',e=>{if(moved&&e.detail!==0){e.preventDefault();e.stopImmediatePropagation();}},true);
   viewport.addEventListener('pointerdown',e=>{if(e.button>0||travelling)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;gesture={x:e.clientX,y:e.clientY,camX:camera.x,camY:camera.y};if(pointers.size===2){const [a,b]=[...pointers.values()];gesture={distance:Math.hypot(a.x-b.x,a.y-b.y),scale:camera.scale};}});
   viewport.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const [a,b]=[...pointers.values()],r=viewport.getBoundingClientRect();if(gesture.distance){moved=true;zoom(gesture.scale*Math.hypot(a.x-b.x,a.y-b.y)/gesture.distance,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top);}return;}if(gesture?.x!==undefined){const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)>7)moved=true;if(moved){viewport.setPointerCapture(e.pointerId);camera.x=gesture.camX+dx;camera.y=gesture.camY+dy;clamp();paintCamera();}}});
   const release=e=>{pointers.delete(e.pointerId);if(pointers.size===1){const p=[...pointers.values()][0];gesture={...p,camX:camera.x,camY:camera.y};}else gesture=null;};viewport.addEventListener('pointerup',release);viewport.addEventListener('pointercancel',release);
   viewport.addEventListener('wheel',e=>{e.preventDefault();if(travelling)return;const r=viewport.getBoundingClientRect();zoom(camera.scale*Math.exp(-e.deltaY*.001),e.clientX-r.left,e.clientY-r.top);},{passive:false});
   viewport.addEventListener('keydown',e=>{if(e.target!==viewport)return;const move={ArrowLeft:[70,0],ArrowRight:[-70,0],ArrowUp:[0,70],ArrowDown:[0,-70]}[e.key];if(move){e.preventDefault();camera.x+=move[0];camera.y+=move[1];clamp();paintCamera();}if(['+','=','-'].includes(e.key)){e.preventDefault();zoom(camera.scale*(e.key==='-'?1/1.2:1.2));}});
+  plotEditor=VillagePlots({world,toolbar,buildings,tiles,getData:()=>data,changed:render});
   new ResizeObserver(()=>{if(d.open&&!travelling){if(!initialized)reset();else{clamp();paintCamera();}}}).observe(viewport);
  }
  let islandPreload=null;
@@ -95,7 +98,7 @@
    // Let mobile layout settle after restoring the full-screen dialog.
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
    if(!initialized)reset();else{clamp();applyCamera();}await zoomOut(lastBuilding);lastBuilding=null;viewport.focus({preventScroll:true});guide();
-   if(refresh)refresh.then(ok=>{if(ok&&d.open&&!travelling){options();render();}});
+   if(refresh)refresh.then(ok=>{if(ok&&d.open&&!travelling&&!plotEditor?.editing){options();render();}});
   }catch(e){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.querySelector('p').textContent=e.message;
   }finally{loading=false;travelling=false;d?.classList.remove('village-travelling','village-returning');if(jump)jump.disabled=false;toggle.disabled=false;back.disabled=false;}
  }

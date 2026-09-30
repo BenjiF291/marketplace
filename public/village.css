@@ -61,3 +61,17 @@
 
 /* Avoid retaining an oversized composited island texture on mobile GPUs. */
 @media(pointer:coarse){.village-world{will-change:auto}.village-map{overscroll-behavior:none}}
+
+.village-land-plots{position:absolute;inset:0;z-index:1;pointer-events:none}
+.village-land-plot{position:absolute;transform:translate(-50%,-72%);width:132px;height:110px;padding:0!important;border:2px solid #b3b48c99!important;border-radius:18px;background:repeating-linear-gradient(115deg,#8b9e68 0 9px,#869a64 9px 18px)!important;box-shadow:0 9px 0 #5c725677,0 15px 0 4px #c5b69299;pointer-events:none}
+.village-arranging .village-land-plot{pointer-events:auto;border:2px dashed #fff0b2!important;background:#92a96aca!important;cursor:pointer}
+.village-arranging .village-land-plot:hover{background:#e8dc9cdd!important}.village-arranging .village-land-plot.reserved{background:#52644cc9!important;border-color:#90a085!important}
+.village-planning{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:2000;width:min(620px,calc(100% - 24px));box-sizing:border-box;padding:14px;background:#183638f5;border:1px solid #c3a468;border-radius:14px;box-shadow:0 8px 24px #0005;display:flex;gap:8px;flex-wrap:wrap;color:#fff0d1}
+.village-planning[hidden]{display:none}.village-planning select{min-width:180px;flex:1;padding:10px;border-radius:8px}.village-planning p{width:100%;font-size:13px;margin:2px 0;line-height:1.4}.village-planning button{padding:9px 12px}
+.village-house svg{width:155px;height:155px}.village-residents{display:contents}.island-villager{position:absolute;width:30px;height:46px;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:translate(-50%,-85%);animation:island-villager-walk var(--duration) ease-in-out infinite alternate;cursor:pointer}.island-villager svg{width:30px;height:46px;filter:drop-shadow(0 3px 2px #213e3766)}.island-villager:hover{animation-play-state:paused}.island-villager:focus-visible{outline:3px solid #ffe6a3}.village-arranging .island-villager{pointer-events:none;opacity:.5}.villager-greeting{position:absolute;z-index:1500;transform:translateX(-50%);width:210px;background:#fff4d9;color:#324c3d;border:1px solid #a58d5e;border-radius:12px;padding:12px;box-shadow:0 8px 24px #0004;font-size:13px;line-height:1.5;pointer-events:none}
+@keyframes island-villager-walk{0%,15%{translate:0 0}80%,100%{translate:var(--walk) 0}}
+@media(prefers-reduced-motion:reduce){.island-villager{animation:none}}
+@media(max-width:650px){.village-planning{bottom:8px;padding:10px}.village-planning select{flex-basis:100%}.village-toolbar{gap:6px}}
+
+/* Keep each building hit area within its plot row. */
+.village-building{width:136px;height:150px}.village-building svg.village-painted-building,.village-building[data-building="townhall"] svg,.village-building[data-building="arena"] svg{width:142px;height:142px}.village-house svg{width:132px;height:132px}

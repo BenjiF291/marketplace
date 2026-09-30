@@ -3,7 +3,7 @@ function fixture(user,authenticate=async()=> 'admin',hall={level:1}){
  let handler,reads=0;
  const db={collection:n=>({doc:()=>({get:async()=>{reads++;return {exists:n==='users'?!!user:true,data:()=>n==='users'?user:hall};}})})};
  const tiers=Array.from({length:10},(_,i)=>({id:String(i),name:'Tier '+i}));
- require('./village-routes')({get:(path,fn)=>{assert.equal(path,'/admin/village');handler=fn;}},db,authenticate,async()=>tiers);
+ require('./village-routes')({post:()=>{},get:(path,fn)=>{assert.equal(path,'/admin/village');handler=fn;}},db,authenticate,async()=>tiers);
  return {get reads(){return reads;},async call(){let status=200,body;const res={status(n){status=n;return res;},send(v){body=v;},json(v){body=v;}};await handler({},res);return {status,body};}};
 }
 test('village rejects missing sessions before reading an account and admits ordinary accounts',async()=>{
