@@ -22,8 +22,9 @@
  const toggle=el('button','btn','Try village');toggle.id='villageModeToggle';toggle.hidden=true;toggle.type='button';document.getElementById('dyeHeaderControls').prepend(toggle);
  const back=el('button','village-return','← Village');back.hidden=true;back.type='button';document.body.append(back);
  let enabled=false,verified=false,data=null,simulation=null,d=null,viewport,world,inspector,levelSelect,notice,status,tiles=new Map(),selected=null,previousStudio=true,loading=false;
- let jump,entering=false,plotEditor,returnToWalk=false;
- function walkAround(){if(plotEditor?.editing)return;IslandWalk.open({state:data,buildings,onReady:()=>d?.close(),onExit:()=>{returnToWalk=false;show();},onEnter:id=>{if(id.startsWith('house:')||id.startsWith('mine:')){plotEditor.inspect(id,walkAround);return;}returnToWalk=true;const b=buildings.find(b=>b.id===id);if(b)enterBuilding(b);}});}
+ let jump,entering=false,plotEditor;
+ function walkAround(){if(plotEditor?.editing)return;IslandWalk.open({state:data,onReady:()=>d?.close(),onExit:()=>show(),onEnter:()=>window.openTownHall(walkAround)});}
+
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false;
  const pointers=new Map();const pref=`footy-village:${currentUserId}`;
  const level=()=>simulation===null?data.level:simulation;
@@ -70,7 +71,7 @@
  function create(){
   d=el('dialog','village-map');d.id='villageMap';d.setAttribute('aria-label','Your island');
   const toolbar=el('header','village-toolbar');const brand=el('div','village-brand');brand.append(el('small','','WELCOME HOME'),el('h1','','Your island'));
-  const stats=el('div','village-resource-bar');stats.id='villageResourceBar';stats.setAttribute('aria-label','Island resources');toolbar.append(stats);const journeys=el('button','village-secondary','Pet explorations');journeys.onclick=()=>window.openPetJourneys();toolbar.append(journeys);const walkButton=el('button','village-secondary','Walk around');walkButton.onclick=()=>{if(plotEditor?.editing){notice.textContent='Save or cancel your layout before walking around.';return;}walkAround();};toolbar.append(walkButton);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings.find(b=>b.id==='townhall'),route:'admin',name:'Admin tools'});toolbar.append(admin);
+  const stats=el('div','village-resource-bar');stats.id='villageResourceBar';stats.setAttribute('aria-label','Island resources');toolbar.append(stats);const journeys=el('button','village-secondary','Pet explorations');journeys.onclick=()=>window.openPetJourneys();toolbar.append(journeys);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings.find(b=>b.id==='townhall'),route:'admin',name:'Admin tools'});toolbar.append(admin);
   const tools=el('div','village-preview-tools');levelSelect=el('select');levelSelect.setAttribute('aria-label','Preview village progression');levelSelect.onchange=()=>{simulation=levelSelect.value==='account'?null:Number(levelSelect.value);render();};
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');
@@ -125,13 +126,13 @@
    if(!initialized)reset();else{clamp();applyCamera();}IslandLoading.progress(95,'Finding your way home...');await zoomOut(lastBuilding);lastBuilding=null;IslandLoading.progress(100,'Your island is ready');await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));loadingDialog?.close();startupReady=true;await nameIsland();viewport.focus({preventScroll:true});guide();
    if(refresh)refresh.then(ok=>{if(ok&&d.open&&!travelling&&!plotEditor?.editing){options();render();}});
   }catch(e){if(startup){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.classList.add('island-load-error');panel.querySelector('.island-load-error-panel p').textContent=e.message;}else{if(d&&!d.open)d.showModal();if(notice)notice.textContent=e.message;}
-  }finally{loadingDialog?.close();loading=false;travelling=false;d?.classList.remove('village-travelling','village-returning');if(jump)jump.disabled=false;toggle.disabled=false;back.disabled=false;if(returnToWalk){returnToWalk=false;walkAround();}}
+  }finally{loadingDialog?.close();loading=false;travelling=false;d?.classList.remove('village-travelling','village-returning');if(jump)jump.disabled=false;toggle.disabled=false;back.disabled=false;}
  }
  async function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
    if(['petstation','farmhouse','jobs'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show);return;}
-   if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
+   if(b.route==='hall'){VillageInteriors.close();back.hidden=true;walkAround();return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
    VillageInteriors.open(b,{back:show,enter:enterBuilding});
    if(b.route==='ruby')document.getElementById('rubyShopButton').click();
