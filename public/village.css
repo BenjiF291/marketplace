@@ -139,3 +139,7 @@
 .island-walk-scene{background:linear-gradient(#70b5d5,#e4eed5 65%)}
 
 .island-walk-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.island-walk-labels span{position:absolute;transform:translate(-50%,-100%);max-width:190px;padding:5px 10px;background:#f2dfabea;border:1px solid #765633;border-radius:6px;color:#493522;font:bold 13px Georgia,serif;box-shadow:0 3px 8px #0003;white-space:nowrap}
+
+.island-walk-crosshair{display:none;position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);font:24px Arial;color:#fff;pointer-events:none;text-shadow:0 1px 3px #000}.island-walk.looking .island-walk-crosshair{display:block}
+
+.island-walk-scene{background:radial-gradient(ellipse at 22% 15%,#ffffffaa 0,transparent 21%),radial-gradient(ellipse at 75% 22%,#ffffff88 0,transparent 24%),linear-gradient(#76b6d3,#e1e9cf 75%)}

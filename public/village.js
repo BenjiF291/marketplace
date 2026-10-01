@@ -23,7 +23,7 @@
  const back=el('button','village-return','← Village');back.hidden=true;back.type='button';document.body.append(back);
  let enabled=false,verified=false,data=null,simulation=null,d=null,viewport,world,inspector,levelSelect,notice,status,tiles=new Map(),selected=null,previousStudio=true,loading=false;
  let jump,entering=false,plotEditor,returnToWalk=false;
- function walkAround(){if(plotEditor?.editing)return;d?.close();IslandWalk.open({state:data,buildings,onExit:()=>{returnToWalk=false;show();},onEnter:id=>{if(id.startsWith('house:')||id.startsWith('mine:')){plotEditor.inspect(id,walkAround);return;}returnToWalk=true;const b=buildings.find(b=>b.id===id);if(b)enterBuilding(b);}});}
+ function walkAround(){if(plotEditor?.editing)return;IslandWalk.open({state:data,buildings,onReady:()=>d?.close(),onExit:()=>{returnToWalk=false;show();},onEnter:id=>{if(id.startsWith('house:')||id.startsWith('mine:')){plotEditor.inspect(id,walkAround);return;}returnToWalk=true;const b=buildings.find(b=>b.id===id);if(b)enterBuilding(b);}});}
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false;
  const pointers=new Map();const pref=`footy-village:${currentUserId}`;
  const level=()=>simulation===null?data.level:simulation;

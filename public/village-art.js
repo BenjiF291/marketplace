@@ -45,5 +45,11 @@
 
  function house(tier=1){return homestead(Math.max(0,Math.min(2,tier-1)));}
  function mine(){return homestead(3);}
- window.VillageArt={building,terrain,house,mine};
+ function sprite(kind,level=0){
+  if(kind==='jobs')return {src:'assets/village/job-station-painted.png',frame:[0,0,1024,1024],size:1024};
+  if(['house','farmhouse','mine'].includes(kind)){const cell=kind==='mine'?3:kind==='farmhouse'?1:Math.max(0,Math.min(2,level-1));return {src:'assets/village/homes-mines.png',frame:[cell%2*627,Math.floor(cell/2)*627,627,627],size:1254};}
+  const cell=kind==='forge'&&level>=8?15:kind==='forge'&&level>=4?14:cells[kind]??1;
+  return {src:atlas,frame:frames[cell].slice(0,4),clip:frames[cell][4],size:1024};
+ }
+ window.VillageArt={building,terrain,house,mine,sprite};
 })();
