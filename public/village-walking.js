@@ -51,5 +51,5 @@
   }
   return {points,area,nearest,route,canTravel};
  }
- const api={create};if(typeof module!=='undefined')module.exports=api;else root.VillageWalking=api;
+ const api={create,segments};if(typeof module!=='undefined')module.exports=api;else root.VillageWalking=api;
 })(typeof window==='undefined'?globalThis:window);
