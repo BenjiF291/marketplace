@@ -71,6 +71,8 @@ Building sprites now use individually traced SVG clip boundaries rather than gri
 ### Homes and ruby mines
 Houses cost 10 rubies when saving the layout, capped at the personal Town Hall level (1?10). Existing homes remain free of retroactive charges and can be moved. Click each home to upgrade: 3 residents initially; 25 rubies for 5 residents; 40 rubies for 10 residents.
 
-Mines unlock automatically at Town Hall 2, 4, 5, 7, 10. Assign an available resident for a one-hour shift: one ruby per complete three minutes, maximum 20. Started shifts continue while away, and never restart automatically. Collect in the mine panel; restarting also collects any remaining output. A resident works in only one mine at once. All purchases, assignments and claims are server-validated transactions.
+Mines unlock automatically at Town Hall 2, 4, 5, 7, 10. Open a house and select Send household to mine to start a one-hour shift in an available unlocked mine: one ruby per complete three minutes, maximum 20. Started shifts continue while away, and never restart automatically. Collect in the mine panel; restarting also collects any remaining output. A household works in only one mine at once; the entire household goes together and output is not multiplied by resident count. All purchases, assignments and claims are server-validated transactions.
 
 Forge upgrades add one ruby per level to two- and three-card Ruby recipes: 7/12, 8/13, 9/14, etc. Single-card output and other gems are unchanged.
+
+Households are sent from their house, not from the mine. Call the household back at any time from the house or mine to end the shift and collect all unclaimed rubies from completed three-minute intervals. Recalling before the first interval earns zero, and partial intervals are discarded. Existing individual shifts remain collectible and recallable.
