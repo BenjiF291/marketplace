@@ -111,3 +111,17 @@
 .village-building[data-building="farmhouse"] svg{width:80px;height:104px;overflow:hidden;flex-shrink:0}.village-resource-bar{display:flex;flex-wrap:wrap;gap:8px;margin-right:auto;background:#fff5dfef;border:1px solid #b5a17b;border-radius:12px;padding:10px 14px;color:#304b3b;font-size:13px;font-weight:650}.village-resource-bar span+span{border-left:1px solid #b5a17b;padding-left:8px}@media(max-width:600px){.village-resource-bar{flex-basis:100%;font-size:12px;padding:8px}.village-toolbar{gap:8px;left:12px;right:12px}}
 
 .care-job{flex:1 1 260px}.care-job details{margin:10px 0}.care-job summary{cursor:pointer;padding:10px;background:#e8dfc8;border-radius:8px}.villager-going-to-work{filter:drop-shadow(0 0 2px #ffe0a0)}
+
+.island-loading-screen{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;padding:24px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 40%,#376e69 0,#153d48 65%,#102d3d 100%);color:#fff4d6;text-align:center;overflow:auto}
+.island-loading-screen[open]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.island-loading-screen::backdrop{background:#153d48}
+.island-loading-screen h1{font:600 clamp(22px,4vw,34px) Georgia,serif;margin:0;max-width:600px}
+.island-loading-screen p{color:#c6ded3;margin:0}
+.loading-vignette{position:relative;width:min(460px,85vw);height:260px;border-radius:50%;background:radial-gradient(ellipse at 50% 76%,#6d8850 0 28%,#365f52 40%,transparent 41%)}
+.loading-huts{display:flex;justify-content:center;height:190px;gap:0}.loading-huts svg{width:180px;max-width:45%;height:190px}
+.loading-friends{position:absolute;bottom:24px;left:8%;right:8%;display:flex;align-items:flex-end;justify-content:center;gap:8px}
+.loading-friends span{display:block;width:64px;height:64px;animation:island-loading-bob 2.8s ease-in-out infinite}.loading-friends span:nth-child(2n){animation-delay:-1.4s}
+.loading-friends svg{width:100%;height:100%}.loading-friends .loading-villager{width:24px;height:38px}
+.island-loading-wave{width:110px;height:4px;border-radius:8px;background:linear-gradient(90deg,transparent,#edd395,transparent);animation:island-loading-bob 1.5s ease-in-out infinite}
+@keyframes island-loading-bob{50%{transform:translateY(-5px);opacity:.75}}
+@media(prefers-reduced-motion:reduce){.loading-friends span,.island-loading-wave{animation:none}}

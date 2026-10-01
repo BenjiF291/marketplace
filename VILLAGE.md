@@ -102,3 +102,5 @@ Assignment animations route villagers from their current island positions to the
 Pet explorations is a top-bar button and each owned pet has a Send on an exploration action. Pet purchases show an exploration tutorial; the care station shows its own first-visit tutorial. Owned pet Buy buttons are removed, and the server continues to reject duplicate pet purchases.
 
 House upgrades require Town Hall 4 for tier 2 and Town Hall 7 for tier 3. Ruby costs remain 25 and 40 respectively. Existing upgraded houses are retained.
+
+Ruby mines are saved in the village layout and can be moved or swapped using Arrange village once unlocked. Existing islands receive mine plots at their previous locations. The island loading screen uses the existing pets, villagers and huts, and waits for map artwork decoding before revealing the island.

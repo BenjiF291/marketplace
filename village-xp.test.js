@@ -38,11 +38,11 @@ test('vault wages earn two XP per Footy and empty recalls earn none',()=>{
  apply(u,{action:'vault-start'},now+minute);apply(u,{action:'vault-collect'},now+241*minute);assert.equal(u.townHallXP,654);
  assert.throws(()=>apply(u,{action:'vault-collect'},now+241*minute),/No Footy/);
 });
-test('batch rewards respect shared daily and maximum XP caps without withholding output',()=>{
+test('batch rewards ignore old daily limits but respect maximum level XP',()=>{
  const u={...user(),townHallGameplayDay:'2026-10-01',townHallGameplayXP:99};
  apply(u,{action:'start-mine'});apply(u,{action:'collect-mine',mine:0},now+100*minute);
- assert.equal(u.townHallXP,651);assert.equal(u.gems.bronze,220);assert.equal(u.townHallGameplayXP,100);
+ assert.equal(u.townHallXP,670);assert.equal(u.gems.bronze,220);assert.equal(u.townHallGameplayXP,119);
  assert.equal(hall.gameplay({townHallXP:8499},'ruby mining',now,20).townHallXP,8500);
- assert.deepEqual(hall.gameplay(u,'ruby mining',now,20),{});
- assert.equal(hall.gameplay(u,'ruby mining',now+86400000,20).townHallXP,671);
+ assert.equal(hall.gameplay(u,'ruby mining',now,20).townHallXP,690);
+ assert.equal(hall.gameplay(u,'ruby mining',now+86400000,20).townHallXP,690);
 });

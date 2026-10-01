@@ -8,7 +8,7 @@ Available to all authenticated accounts. Frontend and backend must deploy togeth
 
 Cumulative thresholds for levels 1-10: **0, 100, 300, 650, 1150, 1850, 2850, 4200, 6000, 8500**. Level 2 unlocks Blacksmith/Ruby emporium, 3 companions, 4 dyes, 5 refinery, 6 Royal hall. Levels 7-10 are prestige levels for now. XP never exceeds 8500. The room shows current progress and the next unlock. Upgrades happen automatically, with a golden level-up celebration; reduced-motion preferences disable motion. Returning to the island refreshes its unlocked buildings.
 
-Small activity rewards replace the former resource-for-XP projects. Existing XP is preserved. The combined daily limit is 100 XP per UTC day, including collectible display bonuses.
+Small activity rewards replace the former resource-for-XP projects. Existing XP is preserved. There is no daily XP limit. XP stops at the maximum Town Hall level (8500 XP).
 
 | Completed activity | XP |
 |---|---:|
@@ -53,4 +53,4 @@ Presence/chat remain in server memory on one backend process. Walking/polling do
 
 `node --test` covers progression thresholds/caps, retired projects and transaction retries, independent levels, missing ownership, display duplication, one-time showcase XP, authorisation and existing game regressions. `TOWN_HALL_CHECK_ONLY=1 node scripts/check-studio.cjs` uses two local fixture sessions to check character persistence, shared owned decorations, private level-up celebration, chat, seats and the Skystones handoff. Browser fixtures do not mutate live accounts.
 
-Village work XP is awarded atomically with collected output, including recalls and mine/vault restarts that collect a previous shift. Partial collections and a single full collection earn the same XP before the daily cap. Assignments, empty recalls and already-claimed output grant no XP. These rewards share the existing 100 XP daily cap.
+Village work XP is awarded atomically with collected output, including recalls and mine/vault restarts that collect a previous shift. Partial collections and a single full collection earn the same XP . Assignments, empty recalls and already-claimed output grant no XP. These rewards have no daily XP cap.

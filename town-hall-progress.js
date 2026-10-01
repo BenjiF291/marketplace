@@ -9,7 +9,7 @@ function grant(user,amount,activity,now=Date.now()){const xp=profile(user).xp,ga
 function gameplay(user,activity,now=Date.now(),units=1){
  if(!REWARDS[activity]||!Number.isSafeInteger(units)||units<1)return {};
  const today=day(now),used=user.townHallGameplayDay===today?Number(user.townHallGameplayXP)||0:0;
- const amount=Math.max(0,Math.min(REWARDS[activity]*units,100-used,8500-profile(user).xp));if(!amount)return {};
+ const amount=Math.max(0,Math.min(REWARDS[activity]*units,8500-profile(user).xp));if(!amount)return {};
  return {...grant(user,amount,activity,now),townHallGameplayDay:today,townHallGameplayXP:used+amount};
 }
 function project(){throw Error('Resource-for-XP projects have been retired. Earn XP by playing.');}
