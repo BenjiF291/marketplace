@@ -32,13 +32,24 @@
  function create(obstacles=[]){
   const points=[],index=new Map();
   const clear=(x,y)=>!obstacles.some(b=>x>=b.x-b.width/2-5&&x<=b.x+b.width/2+5&&y>=b.y-b.depth/2-4&&y<=b.y+b.depth/2+4);
-  for(let y=174;y<=696;y+=step)for(let x=252;x<=1080;x+=step){if(clear(x,y)&&segments.some(([a,b])=>distance(x,y,a,b)<=radius)){index.set(`${x},${y}`,points.length);points.push({x,y,links:[]});}}
-  points.forEach(p=>{for(const [dx,dy] of [[step,0],[-step,0],[0,step],[0,-step]]){const id=index.get(`${p.x+dx},${p.y+dy}`);if(id!==undefined&&clear(p.x+dx/2,p.y+dy/2))p.links.push(id);}});
+  const onPath=(x,y)=>segments.some(([a,b])=>distance(x,y,a,b)<=radius);
+  // Check the entire stride, so smoothing cannot cut through buildings or across grass.
+  function canTravel(a,b){
+   for(const o of obstacles){let lo=0,hi=1;for(const [start,delta,min,max] of [[a.x,b.x-a.x,o.x-o.width/2-5,o.x+o.width/2+5],[a.y,b.y-a.y,o.y-o.depth/2-4,o.y+o.depth/2+4]]){if(delta===0){if(start<min||start>max){lo=1;hi=0;break;}}else{const t1=(min-start)/delta,t2=(max-start)/delta;lo=Math.max(lo,Math.min(t1,t2));hi=Math.min(hi,Math.max(t1,t2));}}if(lo<=hi)return false;}
+   const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)));
+   for(let i=0;i<=steps;i++){const t=i/steps;if(!onPath(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t))return false;}return true;
+  }
+  for(let y=174;y<=696;y+=step)for(let x=252;x<=1080;x+=step){if(clear(x,y)&&onPath(x,y)){index.set(`${x},${y}`,points.length);points.push({x,y,links:[]});}}
+  points.forEach(p=>{for(const [dx,dy] of [[step,0],[-step,0],[0,step],[0,-step],[step,step],[step,-step],[-step,step],[-step,-step]]){const id=index.get(`${p.x+dx},${p.y+dy}`);if(id!==undefined&&canTravel(p,points[id]))p.links.push(id);}});
   const seen=new Set();let area=[];
   for(let i=0;i<points.length;i++){if(seen.has(i))continue;const part=[i];seen.add(i);for(let j=0;j<part.length;j++)for(const next of points[part[j]].links)if(!seen.has(next)){seen.add(next);part.push(next);}if(part.length>area.length)area=part;}
   function nearest(x,y){let best=null,d=Infinity;for(const id of area){const p=points[id],n=(p.x-x)**2+(p.y-y)**2;if(n<d){d=n;best=id;}}return best;}
-  function route(from,to){if(from===null||to===null)return [];const prev=new Map([[from,null]]),queue=[from];for(let i=0;i<queue.length&&!prev.has(to);i++)for(const next of points[queue[i]].links)if(!prev.has(next)){prev.set(next,queue[i]);queue.push(next);}if(!prev.has(to))return [];const path=[];for(let at=to;at!==from;at=prev.get(at))path.push(at);return path.reverse();}
-  return {points,area,nearest,route};
+  function route(from,to){if(from===null||to===null)return [];const prev=new Map([[from,null]]),queue=[from];for(let i=0;i<queue.length&&!prev.has(to);i++)for(const next of points[queue[i]].links)if(!prev.has(next)){prev.set(next,queue[i]);queue.push(next);}if(!prev.has(to))return [];const path=[];for(let at=to;at!==from;at=prev.get(at))path.push(at);path.reverse();
+   // Collapse grid steps into long, safe strides along each bend of the painted path.
+   const smooth=[];let anchor=from,i=0;
+   while(i<path.length){let end=i;while(end+1<path.length&&canTravel(points[anchor],points[path[end+1]]))end++;smooth.push(path[end]);anchor=path[end];i=end+1;}return smooth;
+  }
+  return {points,area,nearest,route,canTravel};
  }
  const api={create};if(typeof module!=='undefined')module.exports=api;else root.VillageWalking=api;
 })(typeof window==='undefined'?globalThis:window);
