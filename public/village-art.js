@@ -25,7 +25,8 @@
  const anchors=[[132,229],[389,226],[642,231],[899,224],[139,470],[400,468],[645,472],[899,464],[130,707],[388,703],[642,703],[898,703],[132,989],[390,992],[643,989],[901,986]];
  let spriteId=0;
  function anchored(x,y,w,h,ax,ay,scale,art,cls='village-painted-building'){
-  return `<svg class="${cls}" viewBox="0 0 80 104" aria-hidden="true" data-ground-anchor="40,92"><svg x="${40-(ax-x)*scale}" y="${92-(ay-y)*scale}" width="${w*scale}" height="${h*scale}" viewBox="${x} ${y} ${w} ${h}" style="overflow:hidden;width:${w*scale}px;height:${h*scale}px">${art}</svg></svg>`;
+  const clip='sprite-frame-'+(++spriteId);
+  return `<svg class="${cls}" viewBox="0 0 80 104" aria-hidden="true" data-ground-anchor="40,92"><svg x="${40-(ax-x)*scale}" y="${92-(ay-y)*scale}" width="${w*scale}" height="${h*scale}" viewBox="${x} ${y} ${w} ${h}" style="overflow:hidden;width:${w*scale}px;height:${h*scale}px"><defs><clipPath id="${clip}" clipPathUnits="userSpaceOnUse"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath></defs><g clip-path="url(#${clip})">${art}</g></svg></svg>`;
  }
 
  function building(kind,level=0,locked=false){
