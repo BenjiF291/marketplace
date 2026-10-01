@@ -14,6 +14,7 @@ function action(user,body,now=Date.now()){
  if(body.action==='upgrade-house'){
   if(body.revision!==homes.revision)throw Error('Your village changed. Reopen the island.');
   const tier=homes.houseTiers[body.house];if(!tier||tier>=3)throw Error('Choose a house below tier 3.');
+  const requiredLevel=tier===1?4:7;if(require('./town-hall-progress').profile(user).level<requiredLevel)throw Error(`Town Hall level ${requiredLevel} is required for tier ${tier+1} houses.`);
   const cost=tier===1?25:40;if(!(Number(gems.bronze)>=cost))throw Error(`You need ${cost} rubies.`);
   gems.bronze-=cost;return {gems,villageHouseTiers:{...homes.houseTiers,[body.house]:tier+1},villageLayoutRevision:homes.revision+1};
  }

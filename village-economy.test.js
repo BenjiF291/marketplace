@@ -12,3 +12,11 @@ test('a full mine prevents another household starting, and larger households do 
 test('legacy individual shifts remain claimable and prevent splitting that household',()=>{let u={...user(),rubyMineShifts:{0:{worker:'house:0/1',started:1000,claimed:0}}};assert.throws(()=>economy.action(u,{action:'start-household',house:'house:0'},2000),/available/);u={...u,...economy.action(u,{action:'recall-mine',mine:0},301000)};assert.equal(u.gems.bronze,101);assert.equal(economy.profile(u,301000).workers.length,3);assert.ok(economy.action(u,{action:'start-household',house:'house:0'},301000).rubyMineShifts[0].workers.length===3);});
 test('recall collects only unclaimed complete intervals and frees the worker immediately',()=>{let u=user();u={...u,...economy.action(u,{action:'start-household',house:'house:0'},1000)};u={...u,...economy.action(u,{action:'collect-mine',mine:0},301000)};u={...u,...economy.action(u,{action:'recall-mine',mine:0},751000)};assert.equal(u.gems.bronze,102);assert.equal(economy.profile(u,751000).workers.length,3);assert.equal(economy.profile(u,9999999).mines[0].claimable,0);assert.throws(()=>economy.action(u,{action:'recall-mine',mine:0},751000),/no villager/);assert.throws(()=>economy.action(u,{action:'collect-mine',mine:0},751000),/No rubies/);});
 test('early recall pays zero, and completed-shift recall pays at most twenty',()=>{for(const [elapsed,earned] of [[0,0],[299999,0],[300000,1],[7200000,20]]){let u=user();u={...u,...economy.action(u,{action:'start-household',house:'house:0'},1000)};u={...u,...economy.action(u,{action:'recall-mine',mine:0},1000+elapsed)};assert.equal(u.gems.bronze,100+earned);assert.equal(economy.profile(u,1000+elapsed).workers.length,3);}});
+
+test('house tiers require Town Hall 4 and 7 at exact XP thresholds',()=>{
+ for(const [tier,before,threshold,cost] of [[1,649,650,25],[2,2849,2850,40]]){
+  const u={...user(),townHallXP:before,villageHouseTiers:{'house:0':tier}},body={action:'upgrade-house',house:'house:0',revision:0};
+  assert.throws(()=>economy.action(u,body),new RegExp(`Town Hall level ${tier===1?4:7}`));assert.equal(u.gems.bronze,100);assert.equal(u.villageHouseTiers['house:0'],tier);
+  const update=economy.action({...u,townHallXP:threshold},body);assert.equal(update.villageHouseTiers['house:0'],tier+1);assert.equal(update.gems.bronze,100-cost);
+ }
+});

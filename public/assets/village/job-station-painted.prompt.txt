@@ -1,0 +1,4 @@
+Generated with the built-in image_gen tool.
+Style reference: buildings-painted.png
+
+Use case: stylized-concept. Asset type: one transparent game building sprite. Reference image is style reference only. Create a unique modest central job station for this painted isometric fantasy island: compact timber and cream plaster dispatch office, muted blue-green tiled gable roof, prominent outdoor wooden notice board with pinned cream parchment job notices, small brass bell under roof, wooden door and warm lantern, short stone doorstep, discreet crossed tool emblem. Match reference camera, painterly material detail, warm light and grounded scale. Distinct silhouette readable when rendered 80 pixels wide. No market canopy, no goods stalls, no people, no legible text. Single centered isolated building with genuinely transparent background, small even padding, fully visible footprint and roof. Square PNG.

@@ -1,7 +1,7 @@
 /* Public island navigation. Admin unlock previews never modify accounts. */
 (() => {
  const buildings=[
-  {id:'jobs',name:'Central job station',kind:'market',level:0,route:'jobs',description:'Assign and recall workers across your island.'},
+  {id:'jobs',name:'Central job station',kind:'jobs',level:0,route:'jobs',description:'Assign and recall workers across your island.'},
   {id:'petstation',name:'Pet station',kind:'pets',level:2,route:'petstation',description:'Care for your pets with a household of villagers.'},
   {id:'farmhouse',name:'Farmhouse',kind:'farmhouse',level:1,route:'farmhouse',description:'Gather ingredients and cook pet meals.'},
   {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Display your collectibles, earn personal Town Hall XP, and play Skystones at the table.'},
