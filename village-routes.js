@@ -18,6 +18,6 @@ module.exports=(app,db,authenticate,getTiers)=>{
 
  app.post('/village/action',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
-  try{const result=await db.runTransaction(async tx=>{const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw Error('Account not found.');const user=doc.data(),update=economy.action(user,req.body||{});tx.update(ref,update);const next={...user,...update};return {balance:Number(next.balance)||0,layout:layout.profile(next),economy:economy.profile(next)};});res.json(result);}catch(e){res.status(400).send(e.message);}
+  try{const result=await db.runTransaction(async tx=>{const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw Error('Account not found.');const user=doc.data(),update=economy.action(user,req.body||{});tx.update(ref,update);const next={...user,...update};return {level:require('./town-hall-progress').profile(next).level-1,xpGained:(update.townHallXP??user.townHallXP??0)-(user.townHallXP||0),balance:Number(next.balance)||0,layout:layout.profile(next),economy:economy.profile(next)};});res.json(result);}catch(e){res.status(400).send(e.message);}
  });
 };

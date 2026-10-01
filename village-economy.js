@@ -7,7 +7,7 @@ function profile(user,now=Date.now()){
  const staff=workforce.profile(user,now);
  return {vault:require('./vault-job').profile(user,now),care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
 }
-function action(user,body,now=Date.now()){
+function perform(user,body,now=Date.now()){
  if(/^vault-/.test(body.action||''))return require('./vault-job').action(user,body,now);
  if(/^(station-|pet-|farm-)/.test(body.action||''))return require('./pet-care').action(user,body,now);
  const homes=layout.profile(user),gems={...(user.gems||{})};
@@ -37,5 +37,13 @@ function action(user,body,now=Date.now()){
  }else throw Error('Unknown village action.');
  gems.bronze=(Number(gems.bronze)||0)+mine.claimable;
  return {gems,rubyMineShifts:shifts};
+}
+function action(user,body,now=Date.now()){
+ const update=perform(user,body,now);let activity,units=1;
+ if(['start-mine','start-household','collect-mine','recall-mine'].includes(body.action)){activity='ruby mining';units=(update.gems?.bronze||0)-(user.gems?.bronze||0);}
+ else if(['farm-collect','farm-recall'].includes(body.action)){activity='farm gathering';units=(update.farmIngredients?.[body.resource]||0)-(user.farmIngredients?.[body.resource]||0);}
+ else if(/^vault-/.test(body.action)){activity='vault work';units=(update.balance||0)-(user.balance||0);}
+ else activity=({'farm-cook':'meal cooked','pet-feed':'pet treat','pet-play':'pet play','upgrade-house':'house upgrade','farm-upgrade':'farmhouse upgrade'})[body.action];
+ return {...update,...require('./town-hall-progress').gameplay(user,activity,now,units)};
 }
 module.exports={profile,action};

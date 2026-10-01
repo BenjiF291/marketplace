@@ -12,6 +12,11 @@ Small activity rewards replace the former resource-for-XP projects. Existing XP 
 
 | Completed activity | XP |
 |---|---:|
+| Collect mined ruby / farm ingredient (per unit) | 1 / 1 |
+| Cook a pet meal | 2 |
+| Collect vault wages (per Footy) | 2 |
+| Play with pet | 1 |
+| Upgrade villager house / farmhouse | 5 / 5 |
 | Wheel spin | 3 |
 | Pack opening | 5 |
 | Pet journey claim | 6 |
@@ -47,3 +52,5 @@ Presence/chat remain in server memory on one backend process. Walking/polling do
 ## Verification
 
 `node --test` covers progression thresholds/caps, retired projects and transaction retries, independent levels, missing ownership, display duplication, one-time showcase XP, authorisation and existing game regressions. `TOWN_HALL_CHECK_ONLY=1 node scripts/check-studio.cjs` uses two local fixture sessions to check character persistence, shared owned decorations, private level-up celebration, chat, seats and the Skystones handoff. Browser fixtures do not mutate live accounts.
+
+Village work XP is awarded atomically with collected output, including recalls and mine/vault restarts that collect a previous shift. Partial collections and a single full collection earn the same XP before the daily cap. Assignments, empty recalls and already-claimed output grant no XP. These rewards share the existing 100 XP daily cap.
