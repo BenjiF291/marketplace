@@ -109,3 +109,5 @@
 .care-resident:hover,.care-resident:focus{animation-play-state:paused}
 
 .village-building[data-building="farmhouse"] svg{width:80px;height:104px;overflow:hidden;flex-shrink:0}.village-resource-bar{display:flex;flex-wrap:wrap;gap:8px;margin-right:auto;background:#fff5dfef;border:1px solid #b5a17b;border-radius:12px;padding:10px 14px;color:#304b3b;font-size:13px;font-weight:650}.village-resource-bar span+span{border-left:1px solid #b5a17b;padding-left:8px}@media(max-width:600px){.village-resource-bar{flex-basis:100%;font-size:12px;padding:8px}.village-toolbar{gap:8px;left:12px;right:12px}}
+
+.care-job{flex:1 1 260px}.care-job details{margin:10px 0}.care-job summary{cursor:pointer;padding:10px;background:#e8dfc8;border-radius:8px}.villager-going-to-work{filter:drop-shadow(0 0 2px #ffe0a0)}

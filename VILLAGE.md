@@ -92,3 +92,11 @@ Exploration multiplies the odds of non-baseline outcomes (higher gem tiers versu
 
 ### Individual worker assignments
 New mine shifts reserve 3 available villagers, ingredient jobs reserve 2 per resource, and pet-station care reserves 1. Villagers are selected automatically across houses with no overlapping assignments. Multiple ingredient jobs may run concurrently. Completed timed jobs release their workers before collection. Legacy household assignments retain their original workers until recalled or finished. The island top bar shows available/total villagers, Footy and rubies; guide and logout are inside the Town Hall. Farmhouse exterior art uses the same 80 by 104 unit bounds as other buildings.
+
+
+### Job station, vault work and pet guidance
+The Central job station is available at Town Hall 1 and lists current/max staff for mines, ingredient gathering, pet care, and the vault. It uses the same assignment, collect and recall actions as the individual buildings. The vault has one staff slot, earning 1 Footy per completed 2 hours, capped at 12 after 24 hours. Recall pays completed intervals; no job restarts automatically. The vault interior also exposes a Vault staff button.
+
+Assignment animations route villagers from their current island positions to the destination approach along the obstacle-aware path graph. Job timers and worker reservations take effect immediately; animations are visual only.
+
+Pet explorations is a top-bar button and each owned pet has a Send on an exploration action. Pet purchases show an exploration tutorial; the care station shows its own first-visit tutorial. Owned pet Buy buttons are removed, and the server continues to reject duplicate pet purchases.

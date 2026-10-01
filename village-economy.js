@@ -5,9 +5,10 @@ function profile(user,now=Date.now()){
  const homes=layout.profile(user),level=require('./town-hall-progress').profile(user).level;
  const mines=unlocks.map((unlock,i)=>{const shift=user.rubyMineShifts?.[i];const earned=shift?Math.max(0,Math.min(LIMIT,Math.floor((now-shift.started)/INTERVAL))):0;return {workers:workforce.assigned(shift,workforce.residents(user)),id:i,unlock,unlocked:level>=unlock,worker:shift?.worker||null,house:shift?.house||shift?.worker?.split('/')[0]||null,household:!!shift?.house,ends:shift?shift.started+SHIFT:0,active:!!shift&&now<shift.started+SHIFT,claimable:Math.max(0,earned-(shift?.claimed||0))};});
  const staff=workforce.profile(user,now);
- return {care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
+ return {vault:require('./vault-job').profile(user,now),care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
 }
 function action(user,body,now=Date.now()){
+ if(/^vault-/.test(body.action||''))return require('./vault-job').action(user,body,now);
  if(/^(station-|pet-|farm-)/.test(body.action||''))return require('./pet-care').action(user,body,now);
  const homes=layout.profile(user),gems={...(user.gems||{})};
  if(body.action==='upgrade-house'){
