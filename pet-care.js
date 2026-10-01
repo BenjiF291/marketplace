@@ -1,4 +1,4 @@
-const layout=require('./public/village-layout');
+const layout=require('./public/village-layout'),workforce=require('./village-workforce');
 const RESOURCES={water:{minutes:5,tier:1},carrot:{minutes:10,tier:1},corn:{minutes:20,tier:2},milk:{minutes:30,tier:3},meat:{minutes:60,tier:3}};
 const PETS=['pet:fox','pet:snail','pet:dragon'];
 const MULTIPLIERS=[1,1.08,1.2,1.38,1.65,2,2.45,3,3.6,4.25,5];
@@ -10,20 +10,19 @@ function busyHouses(u,now=Date.now()){
 function profile(u,now=Date.now()){
  const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;
  const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/(RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
- return {resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation||null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
+ return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
 }
 function action(u,b,now=Date.now()){
  const state=profile(u,now);
  if(b.action==='station-send'){
   if(!state.stationUnlocked)throw Error('The pet station unlocks at Town Hall 3.');
   if(u.petStation)throw Error('The pet station is already occupied.');
-  if(!state.availableHouses.includes(b.house))throw Error('Choose an available household.');
   if(!state.pets.some(p=>p.id===b.pet&&!p.travelling))throw Error('Choose an owned pet that is not exploring.');
-  return {petStation:{house:b.house,pet:b.pet,started:now}};
+  return {petStation:{workers:workforce.allocate(u,1,now),pet:b.pet,started:now}};
  }
  if(b.action==='station-recall'){if(!u.petStation)throw Error('The pet station is empty.');return {petStation:null};}
  if(b.action==='pet-play'||b.action==='pet-feed'){
-  if(!u.petStation||u.petStation.pet!==b.pet)throw Error('Send this pet and a household to the pet station first.');
+  if(!u.petStation||u.petStation.pet!==b.pet)throw Error('Send this pet and a caretaker to the pet station first.');
   if(!state.pets.some(p=>p.id===b.pet&&!p.travelling))throw Error('This pet is unavailable.');
   const current=happiness(u,b.pet);if(current===10)throw Error('Your pet is already at maximum happiness.');
   if(b.action==='pet-play')return {petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
@@ -32,9 +31,8 @@ function action(u,b,now=Date.now()){
  }
  if(b.action==='farm-start'){
   const resource=Object.hasOwn(RESOURCES,b.resource)?RESOURCES[b.resource]:null;if(!state.farmUnlocked||!resource||resource.tier>state.farmLevel)throw Error('This ingredient is not unlocked.');
-  if(!state.availableHouses.includes(b.house))throw Error('Choose an available household.');
   if(state.farmJobs.some(j=>j.resource===b.resource))throw Error('Collect this ingredient assignment first.');
-  return {farmJobs:{...(u.farmJobs||{}),[b.resource]:{house:b.house,started:now,ends:now+3*resource.minutes*60000,claimed:0}}};
+  return {farmJobs:{...(u.farmJobs||{}),[b.resource]:{workers:workforce.allocate(u,2,now),started:now,ends:now+3*resource.minutes*60000,claimed:0}}};
  }
  if(b.action==='farm-collect'||b.action==='farm-recall'){
   const job=state.farmJobs.find(j=>j.resource===b.resource);if(!job)throw Error('Assignment not found.');

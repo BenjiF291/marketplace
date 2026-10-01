@@ -57,7 +57,7 @@
    await enterBuilding(b);
   }finally{camera=previous;applyCamera();d.classList.remove('village-travelling');travelling=false;}
  }
- function render(){if(!data||!world)return;const l=level();
+ function render(){if(!data||!world)return;updateStats(data);const l=level();
   for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);const appeared=tile.hidden&&open;tile.hidden=!open;tile.classList.toggle('village-appearing',appeared);if(!open){tile.replaceChildren();continue;}tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:l,!open);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
   notice.textContent=simulation===null?'Your Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
   status.textContent=`${buildings.filter(unlocked).length} / ${buildings.length} buildings open`;
@@ -68,7 +68,7 @@
  function create(){
   d=el('dialog','village-map');d.id='villageMap';d.setAttribute('aria-label','Your island');
   const toolbar=el('header','village-toolbar');const brand=el('div','village-brand');brand.append(el('small','','WELCOME HOME'),el('h1','','Your island'));
-  const exit=el('button','village-secondary','Log out');exit.onclick=()=>logout();toolbar.append(exit);const help=el('button','village-secondary','?');help.setAttribute('aria-label','Island guide');help.onclick=()=>guide(true);toolbar.append(help);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings[0],route:'admin',name:'Admin tools'});toolbar.append(admin);
+  const stats=el('div','village-resource-bar');stats.id='villageResourceBar';stats.setAttribute('aria-label','Island resources');toolbar.append(stats);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings[0],route:'admin',name:'Admin tools'});toolbar.append(admin);
   const tools=el('div','village-preview-tools');levelSelect=el('select');levelSelect.setAttribute('aria-label','Preview village progression');levelSelect.onchange=()=>{simulation=levelSelect.value==='account'?null:Number(levelSelect.value);render();};
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');
@@ -116,7 +116,8 @@
   }finally{entering=false;}
  }
  window.addEventListener('footy-studio-navigate',e=>{if(entering||!enabled)return;const current=VillageInteriors.active;if(current&&(e.detail===current.route||current.route==='ruby'&&e.detail==='home'))return;const route=e.detail;const next=buildings.find(b=>b.route===route&&unlocked(b))||(route==='sell'?{...buildings.find(b=>b.id==='market'),route}:null)||(['admin','battle-manager'].includes(route)&&data.isAdmin?{...buildings[0],route,name:'Admin tools'}:null);queueMicrotask(()=>{if(next)enterBuilding(next);else show();});});
- window.Island={show,preload,enter:id=>{const b=buildings.find(b=>b.id===id);if(b&&unlocked(b))enterBuilding(b);else show();}};
+ function updateStats(state){const bar=document.getElementById('villageResourceBar');if(!bar)return;const staff=state.economy?.workforce;bar.replaceChildren(el('span','',`${staff?.available.length||0}/${staff?.total??state.layout?.villagers??0} villagers available`),el('span','',`${Number(state.balance||0).toLocaleString()} Footy`),el('span','',`${Number(state.layout?.rubies||0).toLocaleString()} rubies`));}
+ window.Island={show,preload,updateStats,guide:()=>guide(true),enter:id=>{const b=buildings.find(b=>b.id===id);if(b&&unlocked(b))enterBuilding(b);else show();}};
  back.onclick=show;
  document.getElementById('islandRetry').onclick=show;
  document.getElementById('islandLogin').onclick=()=>logout();
