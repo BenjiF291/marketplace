@@ -76,3 +76,5 @@ Mines unlock automatically at Town Hall 2, 4, 5, 7, 10. Open a house and select 
 Forge upgrades add one ruby per level to two- and three-card Ruby recipes: 7/12, 8/13, 9/14, etc. Single-card output and other gems are unchanged.
 
 Households are sent from their house, not from the mine. Call the household back at any time from the house or mine to end the shift and collect all unclaimed rubies from completed three-minute intervals. Recalling before the first interval earns zero, and partial intervals are discarded. Existing individual shifts remain collectible and recallable.
+
+Villagers use 12 x 18 island-unit sprites and wander between random destinations along authored corridors following the painted paths. The navigation graph excludes terrain outside those corridors and subtracts building/mine footprints with clearance. Moving any building rebuilds routes. Villagers pause while arranging, while the island is closed/hidden, when hovered/focused, and with reduced-motion enabled.
