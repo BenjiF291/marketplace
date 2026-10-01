@@ -1,0 +1,57 @@
+const layout=require('./public/village-layout');
+const RESOURCES={water:{minutes:5,tier:1},carrot:{minutes:10,tier:1},corn:{minutes:20,tier:2},milk:{minutes:30,tier:3},meat:{minutes:60,tier:3}};
+const PETS=['pet:fox','pet:snail','pet:dragon'];
+const MULTIPLIERS=[1,1.08,1.2,1.38,1.65,2,2.45,3,3.6,4.25,5];
+const MEALS={food:{name:'Regular meal',gain:1,ingredients:{water:1,carrot:1},tier:1},'food:trail':{name:'Better meal',gain:2,ingredients:{water:1,corn:1},tier:2},'food:feast':{name:'Extraordinary meal',gain:4,ingredients:{milk:1,meat:1},tier:3}};
+const happiness=(u,id)=>Math.max(0,Math.min(10,Math.trunc(Number(u.petHappiness?.[id])||0)));
+function busyHouses(u,now=Date.now()){
+ return new Set([...Object.values(u.rubyMineShifts||{}).filter(s=>now<s.started+3600000).map(s=>s.house||s.worker?.split('/')[0]),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends).map(j=>j.house),...(u.petStation?.house?[u.petStation.house]:[])]);
+}
+function profile(u,now=Date.now()){
+ const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;
+ const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/(RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
+ return {resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation||null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
+}
+function action(u,b,now=Date.now()){
+ const state=profile(u,now);
+ if(b.action==='station-send'){
+  if(!state.stationUnlocked)throw Error('The pet station unlocks at Town Hall 3.');
+  if(u.petStation)throw Error('The pet station is already occupied.');
+  if(!state.availableHouses.includes(b.house))throw Error('Choose an available household.');
+  if(!state.pets.some(p=>p.id===b.pet&&!p.travelling))throw Error('Choose an owned pet that is not exploring.');
+  return {petStation:{house:b.house,pet:b.pet,started:now}};
+ }
+ if(b.action==='station-recall'){if(!u.petStation)throw Error('The pet station is empty.');return {petStation:null};}
+ if(b.action==='pet-play'||b.action==='pet-feed'){
+  if(!u.petStation||u.petStation.pet!==b.pet)throw Error('Send this pet and a household to the pet station first.');
+  if(!state.pets.some(p=>p.id===b.pet&&!p.travelling))throw Error('This pet is unavailable.');
+  const current=happiness(u,b.pet);if(current===10)throw Error('Your pet is already at maximum happiness.');
+  if(b.action==='pet-play')return {petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
+  const meal=Object.hasOwn(MEALS,b.food)?MEALS[b.food]:null;if(!meal||!(u.rubyItems?.[b.food]>0))throw Error('Choose a meal you own.');
+  return {petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)},rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};
+ }
+ if(b.action==='farm-start'){
+  const resource=Object.hasOwn(RESOURCES,b.resource)?RESOURCES[b.resource]:null;if(!state.farmUnlocked||!resource||resource.tier>state.farmLevel)throw Error('This ingredient is not unlocked.');
+  if(!state.availableHouses.includes(b.house))throw Error('Choose an available household.');
+  if(state.farmJobs.some(j=>j.resource===b.resource))throw Error('Collect this ingredient assignment first.');
+  return {farmJobs:{...(u.farmJobs||{}),[b.resource]:{house:b.house,started:now,ends:now+3*resource.minutes*60000,claimed:0}}};
+ }
+ if(b.action==='farm-collect'||b.action==='farm-recall'){
+  const job=state.farmJobs.find(j=>j.resource===b.resource);if(!job)throw Error('Assignment not found.');
+  const jobs={...(u.farmJobs||{})};if(b.action==='farm-recall'||!job.active)delete jobs[b.resource];else jobs[b.resource]={...u.farmJobs[b.resource],claimed:(job.claimed||0)+job.claimable};
+  return {farmJobs:jobs,farmIngredients:{...(u.farmIngredients||{}),[b.resource]:(Number(u.farmIngredients?.[b.resource])||0)+job.claimable}};
+ }
+ if(b.action==='farm-upgrade'){
+  if(!state.farmUnlocked||state.farmLevel===3)throw Error('Farmhouse upgrade unavailable.');
+  if(b.level!==state.farmLevel)throw Error('Farmhouse changed. Refresh and try again.');
+  const cost=state.farmLevel===1?50:100;if(!(u.gems?.bronze>=cost))throw Error(`You need ${cost} rubies.`);
+  return {farmLevel:state.farmLevel+1,gems:{...u.gems,bronze:u.gems.bronze-cost}};
+ }
+ if(b.action==='farm-cook'){
+  const meal=Object.hasOwn(MEALS,b.food)?MEALS[b.food]:null;if(!state.farmUnlocked||!meal||meal.tier>state.farmLevel)throw Error('Upgrade the farmhouse to cook this meal.');
+  const ingredients={...(u.farmIngredients||{})};for(const [id,n] of Object.entries(meal.ingredients)){if(!(ingredients[id]>=n))throw Error(`You need ${n} ${id}.`);ingredients[id]-=n;}
+  return {farmIngredients:ingredients,rubyItems:{...(u.rubyItems||{}),[b.food]:(Number(u.rubyItems?.[b.food])||0)+1}};
+ }
+ throw Error('Unknown pet care action.');
+}
+module.exports={RESOURCES,PETS,MEALS,MULTIPLIERS,happiness,busyHouses,profile,action};

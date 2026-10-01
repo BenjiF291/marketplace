@@ -1,6 +1,8 @@
 /* Public island navigation. Admin unlock previews never modify accounts. */
 (() => {
  const buildings=[
+  {id:'petstation',name:'Pet station',kind:'pets',level:2,route:'petstation',description:'Care for your pets with a household of villagers.'},
+  {id:'farmhouse',name:'Farmhouse',kind:'farmhouse',level:1,route:'farmhouse',description:'Gather ingredients and cook pet meals.'},
   {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Display your collectibles, earn personal Town Hall XP, and play Skystones at the table.'},
   {id:'archive',name:'Card archive',kind:'archive',x:380,y:356,level:0,route:'inventory',description:'Your cards, packs, consumables and ascensions, all under one roof.'},
   {id:'market',name:'Marketplace',kind:'market',x:488,y:469,level:0,route:'marketplace',description:'Browse player listings and the daily pack, or open your selling stall.',secondary:'sell'},
@@ -105,6 +107,7 @@
  async function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
+   if(b.route==='petstation'||b.route==='farmhouse'){VillageInteriors.close();await window.VillageCare.open(b.route,show);return;}
    if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
    VillageInteriors.open(b,{back:show,enter:enterBuilding});

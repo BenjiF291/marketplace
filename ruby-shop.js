@@ -32,7 +32,7 @@ function use(user,body,now=Date.now()){
  if(!(user.rubyItems?.[id]>0))throw Error('You do not own this item');
  if(item.kind==='pet')return {rubyEquipped:{...(user.rubyEquipped||{}),pets:[...new Set([...require('./pet-journeys').pets(user),id])]}};
  if(['opening','profile'].includes(item.kind))return {rubyEquipped:{...(user.rubyEquipped||{}),[item.kind]:id}};
- if(id==='food'){const pet=body.petId||require('./pet-journeys').pets(user)[0];if(!pet||!user.rubyItems?.[pet])throw Error('Choose a companion first');if(user.petJourneys?.[pet]?.status==='travelling')throw Error('This pet is on a journey');return {rubyItems:spend(user,id),rubyTreats:(user.rubyTreats||0)+1};}
+ if(id==='food'){const pet=body.petId||require('./pet-journeys').pets(user)[0];if(!pet||!user.rubyItems?.[pet])throw Error('Choose a companion first');if(user.petJourneys?.[pet]?.status==='travelling')throw Error('This pet is on a journey');return {rubyItems:spend(user,id),rubyTreats:(user.rubyTreats||0)+1,petHappiness:{...(user.petHappiness||{}),[pet]:Math.min(10,require('./pet-care').happiness(user,pet)+1)}};}
  if(id==='fuel')return {rubyFuelArmed:true};
  if(id==='recall'){const slots=[...(user.amuletSlots||[])],slot=slots[body.slot];if(!Number.isInteger(body.slot)||body.slot<0||!slot)throw Error('Choose an occupied amulet slot');slots[body.slot]=null;return {rubyItems:spend(user,id),amuletSlots:slots,amulets:{...(user.amulets||{}),[slot.id]:(user.amulets?.[slot.id]||0)+1}};}
  throw Error('Use this item with its matching activity');

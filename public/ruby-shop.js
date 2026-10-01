@@ -1,5 +1,6 @@
 ﻿(() => {
  let itemsOnly=false;
+ window.addEventListener('pet-care-changed',()=>{journeyTables=null;refresh().then(()=>journeyPanel.open?loadJourneyTables():null).catch(()=>{});});
  let state=null,busy=false,journeyTables=null,journeyClockOffset=0;
  const extraCompanions=new Map();
  const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -48,14 +49,14 @@
  const journeyButton=el('button','Companion journeys','btn');journeyButton.onclick=()=>openJourneys();filter.before(journeyButton);
  async function openJourneys(){dialog.close();if(document.body.classList.contains('studio-ui'))footyStudio.navigate('home');else{journeyDialog.append(journeyPanel);journeyDialog.showModal();}journeyPanel.open=true;await loadJourneyTables();journeyPanel.scrollIntoView({behavior:'smooth',block:'start'});}
  function lootRows(rows,table){
-  rows.replaceChildren();if(table.perk)rows.append(el('p',table.perk));rows.append(el('p','One gem type, 1-5 gems, plus an independent bonus roll. All tiers can drop, even locked ones.'));
+  rows.replaceChildren();if(table.multiplier)rows.append(el('p',`Happiness ${table.happiness}/10 - ${table.multiplier}x better-outcome odds (relative to baseline outcomes).`));if(table.perk)rows.append(el('p',table.perk));rows.append(el('p','One gem type, 1-5 gems, plus an independent bonus roll. All tiers can drop, even locked ones.'));
   for(const [title,entries] of [['Gem type',table.gems.map(g=>({name:g.gemName,percent:g.percent}))],['Number of gems',table.quantities.map(q=>({name:`${q.amount} gems`,percent:q.percent}))],['Bonus item',table.rewards]]){
    rows.append(el('h4',title));const t=el('table');const head=el('tr');head.append(el('th','Reward'),el('th','Chance'));t.append(head);
    for(const reward of entries){const row=el('tr');row.append(el('td',reward.name),el('td',`${Number(reward.percent.toFixed(4))}%`));t.append(row);}rows.append(t);
   }
  }
  journeyPanel.addEventListener('toggle',()=>{if(journeyPanel.open)loadJourneyTables();});
- async function loadJourneyTables(){try{if(!journeyTables)journeyTables=await call('/pet-journeys');renderJourneys();}catch(e){journeyContent.textContent=e.message;}}
+ async function loadJourneyTables(){try{await refresh();journeyTables=await call('/pet-journeys');renderJourneys();}catch(e){journeyContent.textContent=e.message;}}
  function renderJourneys(){
   if(!state||!journeyTables)return;journeyContent.replaceChildren();
   const ownedPets=state.catalog.filter(x=>x.kind==='pet'&&state.owned[x.id]>0);

@@ -7,12 +7,15 @@ const PET_PERKS={
  'pet:snail':'Crystal Collector: 25% chance to add one gem to its haul, capped at 5.',
  'pet:dragon':'Treasure Hunter: the same extra-gem chance as the snail, better high-tier gem odds, and double the rare bonus chance.'
 };
-function petOdds(table,petId){
+function petOdds(table,petId,happiness=0){
  const collector=petId==='pet:snail'||petId==='pet:dragon',dragon=petId==='pet:dragon';
  const quantities=table.quantities.map((q,i,all)=>{const weight=collector?Math.round(q.weight*(i===4?1:.75)+(i?all[i-1].weight*.25:0)):q.weight;return {...q,weight,percent:weight/10000};});
  const gw=dragon?weights(table.gems.map((_,i)=>Math.pow(Math.min(.98,table.decay+.04),i))):table.gems.map(g=>g.weight);
  const rewards=table.rewards.map(r=>{const weight=dragon?(r.kind==='none'?1000000-(1000000-r.weight)*2:r.weight*2):r.weight;return {...r,weight,percent:weight/10000};});
- return {perk:PET_PERKS[petId],gems:table.gems.map((g,i)=>({...g,weight:gw[i],percent:gw[i]/10000})),quantities,rewards};
+ const multiplier=require('./pet-care').MULTIPLIERS[Math.max(0,Math.min(10,Math.trunc(happiness)||0))];
+ // Multiply the odds of better outcomes relative to the baseline outcome, then normalize.
+ const boost=rows=>{if(multiplier===1)return rows.map(r=>({...r,percent:r.weight/10000}));const adjusted=weights(rows.map((r,i)=>r.weight*(i?multiplier:1)));return rows.map((r,i)=>({...r,weight:adjusted[i],percent:adjusted[i]/10000}));};
+ return {perk:PET_PERKS[petId],happiness,multiplier,gems:boost(table.gems.map((g,i)=>({...g,weight:gw[i]}))),quantities:boost(quantities),rewards:boost(rewards)};
 }
 const FOODS=[
  {id:'food',name:'Crystal Crunch',price:2,decay:.62,amounts:[45,30,15,8,2],bonus:1000},
@@ -39,10 +42,11 @@ function start(user,petId,foodId,loot,journeyId,now=Date.now(),rolls){
  if(!['pet:fox','pet:snail','pet:dragon'].includes(petId)||!user.rubyItems?.[petId])throw Error('You do not own that pet');
  if(user.petJourneys?.[petId]?.status==='travelling')throw Error('This pet already has a journey. Claim its rewards first.');
  const food=loot.find(t=>t.id===foodId);if(!food||!food.gems.length)throw Error('Journey food or gem tiers unavailable');
- const table=petOdds(food,petId);
+ if(user.petStation?.pet===petId)throw Error('Call your pet home from the pet station before exploring.');
+ const table=petOdds(food,petId,require('./pet-care').happiness(user,petId));
  if(!(user.rubyItems?.[foodId]>0))throw Error('You need one serving of this food');
  const gem=draw(table.gems,rolls?.[0]),amount=draw(table.quantities,rolls?.[1]).amount,bonus=draw(table.rewards,rolls?.[2]);
- const journey={id:journeyId,petId,foodId,startedAt:now,endsAt:now+HOURS,status:'travelling',reward:{gemKey:gem.gemKey,gemName:gem.gemName,amount,bonus}};
+ const journey={id:journeyId,petId,foodId,happiness:table.happiness,happinessMultiplier:table.multiplier,startedAt:now,endsAt:now+HOURS,status:'travelling',reward:{gemKey:gem.gemKey,gemName:gem.gemName,amount,bonus}};
  return {rubyItems:{...user.rubyItems,[foodId]:user.rubyItems[foodId]-1},petJourneys:{...(user.petJourneys||{}),[petId]:journey}};
 }
 function claim(user,petId,journeyId,now=Date.now()){

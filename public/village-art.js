@@ -23,6 +23,7 @@
  ];
  let spriteId=0;
  function building(kind,level=0,locked=false){
+  if(kind==='farmhouse')return house(2);
   const cell=locked?13:kind==='forge'&&level>=8?15:kind==='forge'&&level>=4?14:cells[kind]??1;
   const [x,y,w,h,points]=frames[cell],id='building-cutout-'+(++spriteId);
   // A nested, explicitly clipped frame prevents SVG letterboxing from showing other cells.
