@@ -52,7 +52,7 @@ function start(user,petId,foodId,loot,journeyId,now=Date.now(),rolls){
 function claim(user,petId,journeyId,now=Date.now()){
  const journey=user.petJourneys?.[petId];if(!journey||journey.id!==journeyId)throw Error('Journey not found');
  if(journey.status!=='travelling')throw Error('Rewards already claimed');if(now<journey.endsAt)throw Error('Your pet is still travelling');
- const reward=journey.reward,update={gems:{...(user.gems||{}),[reward.gemKey]:(user.gems?.[reward.gemKey]||0)+reward.amount},petJourneys:{...user.petJourneys,[petId]:{...journey,status:'claimed',claimedAt:now}}};
+ const reward=journey.reward,update={petHappiness:{...(user.petHappiness||{}),[petId]:1},gems:{...(user.gems||{}),[reward.gemKey]:(user.gems?.[reward.gemKey]||0)+reward.amount},petJourneys:{...user.petJourneys,[petId]:{...journey,status:'claimed',claimedAt:now}}};
  if(reward.bonus.kind==='amulet')update.amulets={...(user.amulets||{}),[reward.bonus.id]:(user.amulets?.[reward.bonus.id]||0)+1};
  return {update,reward};
 }

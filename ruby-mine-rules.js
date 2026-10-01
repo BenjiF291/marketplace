@@ -1,0 +1,4 @@
+const INTERVAL=5*60*1000;
+const LIMIT=20;
+const SHIFT=INTERVAL*LIMIT;
+module.exports={INTERVAL,LIMIT,SHIFT};

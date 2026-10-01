@@ -1,3 +1,4 @@
+const {SHIFT:MINE_SHIFT}=require('./ruby-mine-rules');
 const layout=require('./public/village-layout'),workforce=require('./village-workforce');
 const RESOURCES={water:{minutes:5,tier:1},carrot:{minutes:10,tier:1},corn:{minutes:20,tier:2},milk:{minutes:30,tier:3},meat:{minutes:60,tier:3}};
 const PETS=['pet:fox','pet:snail','pet:dragon'];
@@ -5,7 +6,7 @@ const MULTIPLIERS=[1,1.08,1.2,1.38,1.65,2,2.45,3,3.6,4.25,5];
 const MEALS={food:{name:'Regular meal',gain:1,ingredients:{water:1,carrot:1},tier:1},'food:trail':{name:'Better meal',gain:2,ingredients:{water:1,corn:1},tier:2},'food:feast':{name:'Extraordinary meal',gain:4,ingredients:{milk:1,meat:1},tier:3}};
 const happiness=(u,id)=>Math.max(0,Math.min(10,Math.trunc(Number(u.petHappiness?.[id])||0)));
 function busyHouses(u,now=Date.now()){
- return new Set([...Object.values(u.rubyMineShifts||{}).filter(s=>now<s.started+3600000).map(s=>s.house||s.worker?.split('/')[0]),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends).map(j=>j.house),...(u.petStation?.house?[u.petStation.house]:[])]);
+ return new Set([...Object.values(u.rubyMineShifts||{}).filter(s=>now<s.started+MINE_SHIFT).map(s=>s.house||s.worker?.split('/')[0]),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends).map(j=>j.house),...(u.petStation?.house?[u.petStation.house]:[])]);
 }
 function profile(u,now=Date.now()){
  const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;

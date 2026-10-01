@@ -92,3 +92,14 @@ test('rare pack and amulet claims mint exactly once, even with different retry a
   else {const minted=Object.entries(records).filter(([k])=>k.startsWith('items/'));assert.equal(minted.length,1);assert.equal(minted[0][1].buyerId,'u');assert.deepEqual(records['packs/'+minted[0][1].packId].cardIds,bonus.pack.cardIds);}
  }
 });
+
+test('exploration claims reset only the returning pet to one, without changing earned rewards',()=>{
+ const u={...user(),petHappiness:{'pet:fox':10,'pet:snail':7}};
+ Object.assign(u,j.start(u,'pet:fox','food',loot,'happy-trip',1000,[400000,400000,0]));
+ const trip=u.petJourneys['pet:fox'];assert.equal(trip.happinessMultiplier,5);assert.equal(u.petHappiness['pet:fox'],10);
+ assert.throws(()=>j.claim(u,'pet:fox','happy-trip',1000+j.HOURS-1),/still travelling/);
+ assert.equal(u.petHappiness['pet:fox'],10);
+ const result=j.claim(u,'pet:fox','happy-trip',1000+j.HOURS);assert.deepEqual(result.reward,trip.reward);Object.assign(u,result.update);
+ assert.deepEqual(u.petHappiness,{'pet:fox':1,'pet:snail':7});
+ u.petHappiness['pet:fox']=4;assert.throws(()=>j.claim(u,'pet:fox','happy-trip',1000+j.HOURS),/already claimed/);assert.equal(u.petHappiness['pet:fox'],4);
+});
