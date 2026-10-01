@@ -92,29 +92,38 @@
 
  let loadingDialog;
  function showLoading(){
-  if(!loadingDialog){loadingDialog=document.createElement('dialog');loadingDialog.className='island-loading-screen';loadingDialog.setAttribute('aria-label','Preparing your island');loadingDialog.innerHTML='<img class="island-loading-wallpaper" src="assets/village/loading-wallpaper.jpg" alt="Preparing your island: pets and villagers in their seaside village" fetchpriority="high">';loadingDialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(loadingDialog);}
-  if(!loadingDialog.open)loadingDialog.showModal();
+  if(!loadingDialog){loadingDialog=document.createElement('dialog');loadingDialog.className='island-loading-screen';loadingDialog.setAttribute('aria-label','Preparing your island');loadingDialog.append(IslandLoading.content());loadingDialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(loadingDialog);}
+  IslandLoading.reset();if(!loadingDialog.open)loadingDialog.showModal();
+ }
+
+ async function nameIsland(){
+  if(data.islandName)return;
+  const box=el('dialog','island-naming');box.setAttribute('aria-labelledby','islandNamingTitle');
+  const form=el('form'),title=el('h1','','What is your island called?');title.id='islandNamingTitle';
+  const intro=el('p','','Give your little corner of the world a name. It will appear on your welcome poster.'),label=el('label','','Island name'),input=el('input');input.required=true;input.minLength=2;input.maxLength=32;input.placeholder='Willow Bay';input.autocomplete='off';label.append(input);
+  const status=el('p');status.setAttribute('role','status');const submit=el('button','village-primary','Make it home');submit.type='submit';form.append(title,intro,label,status,submit);box.append(form);document.body.append(box);box.addEventListener('cancel',e=>e.preventDefault());box.showModal();input.focus();
+  await new Promise(resolve=>{form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;try{const response=await fetch(API_URL+'/village/name',{method:'POST',headers:resourceHeaders(),body:JSON.stringify({name:input.value})});if(!response.ok)throw Error(await response.text());const result=await response.json();data.islandName=result.islandName;IslandLoading.title(result.islandName);box.close();box.remove();resolve();}catch(error){status.textContent=error.message;}finally{submit.disabled=false;}};});
  }
  async function readyArtwork(){
   const urls=new Set(['assets/village/island-painted.png']);
   for(const n of world.querySelectorAll('image,img')){const url=n.getAttribute('href')||n.getAttribute('src');if(url)urls.add(url);}
-  await Promise.all([...urls].map(url=>new Promise(resolve=>{const img=new Image();img.onload=()=>{if(img.decode)img.decode().catch(()=>{}).then(resolve);else resolve();};img.onerror=resolve;img.src=url;})));
+  let completed=0;await Promise.all([...urls].map(url=>new Promise(resolve=>{const img=new Image();img.onload=()=>{if(img.decode)img.decode().catch(()=>{}).then(resolve);else resolve();};img.onerror=resolve;img.src=url;}).then(()=>{IslandLoading.progress(25+65*++completed/urls.size,'Preparing the village...');})));
   if(document.fonts)await document.fonts.ready;
  }
  let islandPreload=null;
  function preload(){if(!islandPreload)islandPreload=load().then(()=>true,()=>false);return islandPreload;}
- async function load(){const res=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!res.ok)throw Error(await res.text());data=await res.json();verified=true;}
+ async function load(){const res=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!res.ok)throw Error(await res.text());data=await res.json();IslandLoading.title(data.islandName);verified=true;}
  function options(){levelSelect.hidden=!data.isAdmin;if(!data.isAdmin)simulation=null;levelSelect.replaceChildren(new Option('Use your Town Hall progression','account'));for(let i=0;i<=9;i++)levelSelect.append(new Option(`Preview: Town Hall ${i+1}`,String(i)));levelSelect.value=simulation===null?'account':String(simulation);}
  async function show(){if(loading)return;loading=true;toggle.disabled=true;back.disabled=true;let refresh;
   try{showLoading();const ready=islandPreload;islandPreload=null;
    if(data){refresh=ready||load().then(()=>true,()=>false);}else if(!ready||!await ready)await load();
-   clearGesture();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();enabled=true;document.getElementById('islandLoading').hidden=true;saved(true);back.hidden=true;options();render();
+   IslandLoading.progress(25,'Unpacking your island...');clearGesture();window.VillageInteriors.close();document.getElementById('rubyShopDialog')?.close();if(!d)create();enabled=true;document.getElementById('islandLoading').hidden=true;saved(true);back.hidden=true;options();render();
    d.classList.remove('village-travelling','village-returning');if(!d.open)d.showModal();loadingDialog.close();loadingDialog.showModal();await readyArtwork();d.scrollTop=0;d.scrollLeft=0;viewport.scrollTop=0;viewport.scrollLeft=0;
    // Let mobile layout settle after restoring the full-screen dialog.
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-   if(!initialized)reset();else{clamp();applyCamera();}await zoomOut(lastBuilding);lastBuilding=null;loadingDialog.close();viewport.focus({preventScroll:true});guide();
+   if(!initialized)reset();else{clamp();applyCamera();}IslandLoading.progress(95,'Finding your way home...');await zoomOut(lastBuilding);lastBuilding=null;IslandLoading.progress(100,'Your island is ready');await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));loadingDialog.close();await nameIsland();viewport.focus({preventScroll:true});guide();
    if(refresh)refresh.then(ok=>{if(ok&&d.open&&!travelling&&!plotEditor?.editing){options();render();}});
-  }catch(e){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.classList.add('island-load-error');panel.querySelector('p').textContent=e.message;
+  }catch(e){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.classList.add('island-load-error');panel.querySelector('.island-load-error-panel p').textContent=e.message;
   }finally{loadingDialog?.close();loading=false;travelling=false;d?.classList.remove('village-travelling','village-returning');if(jump)jump.disabled=false;toggle.disabled=false;back.disabled=false;}
  }
  async function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;

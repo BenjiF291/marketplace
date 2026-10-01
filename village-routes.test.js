@@ -18,3 +18,17 @@ test('admin village uses private hall progression independently of the personal 
  assert.equal((await fixture({isAdmin:true,gemConverterLevel:5000}).call()).body.forgeLevel,9);
  assert.equal((await fixture({isAdmin:true,gemConverterAllUnlocked:true}).call()).body.forgeLevel,9);
 });
+
+test('island naming is authenticated, validated, account-owned and safe to retry',async()=>{
+ const records={a:{},b:{islandName:'Other Island'}},handlers={};let writes=0;
+ const db={collection:()=>({doc:id=>({id})}),runTransaction:async fn=>fn({get:async ref=>({exists:!!records[ref.id],data:()=>records[ref.id]}),update:(ref,update)=>{writes++;Object.assign(records[ref.id],update);}})};
+ require('./village-routes')({get:()=>{},post:(path,fn)=>handlers[path]=fn},db,async req=>{if(!req.identity)throw Error();return req.identity;},async()=>[]);
+ async function call(identity,name){let status=200,body;const res={status(n){status=n;return this;},send(v){body=v;},json(v){body=v;}};await handlers['/village/name']({identity,body:{name,userId:'b'}},res);return {status,body};}
+ assert.equal((await call(null,'Willow Bay')).status,401);
+ for(const name of ['', 'a', 'x'.repeat(33),'<script>',{},'Bay\u202e'])assert.equal((await call('a',name)).status,400);
+ assert.equal(writes,0);
+ const saved=await call('a','  Willow   Bay  ');assert.equal(saved.status,200);assert.equal(saved.body.islandName,'Willow Bay');assert.equal(records.a.islandName,'Willow Bay');assert.equal(records.b.islandName,'Other Island');
+ assert.equal((await call('a','Changed')).body.islandName,'Willow Bay');assert.equal(writes,1);
+ assert.equal((await call('missing','Willow Bay')).status,400);
+});
+test('island profile returns the account name for other devices',async()=>{assert.equal((await fixture({islandName:'Willow Bay'}).call()).body.islandName,'Willow Bay');assert.equal((await fixture({}).call()).body.islandName,null);});

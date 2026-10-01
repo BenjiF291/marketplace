@@ -21,19 +21,27 @@
   [514,722,254,302,'529,845 571,802 591,746 618,744 639,777 685,795 705,727 734,722 751,741 742,799 759,845 767,975 705,1016 624,1024 515,985'],
   [774,734,250,290,'789,871 824,819 837,774 855,742 901,734 944,752 966,805 974,849 1010,833 1024,854 1011,921 1023,976 963,1017 885,1024 775,984']
  ];
+ // Source-space centre of each building's ground footprint (not its roof or canvas).
+ const anchors=[[132,229],[389,226],[642,231],[899,224],[139,470],[400,468],[645,472],[899,464],[130,707],[388,703],[642,703],[898,703],[132,989],[390,992],[643,989],[901,986]];
  let spriteId=0;
+ function anchored(x,y,w,h,ax,ay,scale,art,cls='village-painted-building'){
+  return `<svg class="${cls}" viewBox="0 0 80 104" aria-hidden="true" data-ground-anchor="40,92"><svg x="${40-(ax-x)*scale}" y="${92-(ay-y)*scale}" width="${w*scale}" height="${h*scale}" viewBox="${x} ${y} ${w} ${h}" style="overflow:hidden;width:${w*scale}px;height:${h*scale}px">${art}</svg></svg>`;
+ }
+
  function building(kind,level=0,locked=false){
-  if(kind==='jobs'&&!locked)return `<svg class="village-painted-building" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><image href="assets/village/job-station-painted.png" width="1024" height="1024"/></svg>`;
+  if(kind==='jobs'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/job-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='farmhouse')return house(2);
   const cell=locked?13:kind==='forge'&&level>=8?15:kind==='forge'&&level>=4?14:cells[kind]??1;
   const [x,y,w,h,points]=frames[cell],id='building-cutout-'+(++spriteId);
-  // A nested, explicitly clipped frame prevents SVG letterboxing from showing other cells.
-  return `<svg class="village-painted-building" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax meet" aria-hidden="true" data-art-cell="${cell}"><defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><polygon points="${points}"/></clipPath></defs><g transform="translate(${-x} ${-y})"><image clip-path="url(#${id})" href="${atlas}" width="1024" height="1024" preserveAspectRatio="none"/></g></svg>`;
+  const [ax,ay]=anchors[cell];
+  return anchored(x,y,w,h,ax,ay,Math.min(80/w,100/h),`<defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><polygon points="${points}"/></clipPath></defs><image clip-path="url(#${id})" href="${atlas}" width="1024" height="1024" preserveAspectRatio="none"/>`);
+
  }
  function terrain(){
   return `<svg class="village-terrain" viewBox="0 0 1440 1000" aria-hidden="true"><image href="assets/village/island-painted.png" width="1440" height="1000" preserveAspectRatio="none"/><g class="village-water-glints" fill="none" stroke="#e5fff9" stroke-width="1.5" stroke-linecap="round" opacity=".5"><path d="m1160 847 20-2m-35 9 11-1M118 745l16-3m-4 8 22-3M1073 956l26-4M1234 87l28-3"/></g><g class="village-fireflies" fill="#fff4ae"><circle cx="424" cy="576" r="1.5"/><circle cx="890" cy="590" r="1.4"/><circle cx="1030" cy="428" r="1.5"/><circle cx="373" cy="339" r="1.2"/></g></svg>`;
  }
- function homestead(cell){const x=cell%2*627,y=Math.floor(cell/2)*627;return `<svg class="village-house-art" viewBox="${x} ${y} 627 627" style="overflow:hidden" aria-hidden="true"><image href="assets/village/homes-mines.png" width="1254" height="1254"/></svg>`;}
+ function homestead(cell){const x=cell%2*627,y=Math.floor(cell/2)*627,anchors=[[315,505],[945,505],[317,1120],[940,1110]],[ax,ay]=anchors[cell];return anchored(x,y,627,627,ax,ay,(cell===3?100:80)/627,`<image href="assets/village/homes-mines.png" width="1254" height="1254"/>`,'village-house-art');}
+
  function house(tier=1){return homestead(Math.max(0,Math.min(2,tier-1)));}
  function mine(){return homestead(3);}
  window.VillageArt={building,terrain,house,mine};

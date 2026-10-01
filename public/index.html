@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Marketplace</title>
-  <link rel="preload" as="image" href="assets/village/loading-wallpaper.jpg" fetchpriority="high">
+  <link rel="preload" as="image" media="(orientation: landscape)" href="assets/village/loading-wallpaper.jpg" fetchpriority="high">
+  <link rel="preload" as="image" media="(orientation: portrait)" href="assets/village/loading-wallpaper-mobile.jpg" fetchpriority="high">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="studio.css">
   <link rel="stylesheet" href="ruby-shop.css">
@@ -14,7 +15,15 @@
 <link rel="stylesheet" href="town-hall.css">
 </head>
 <body class="island-app">
-<section id="islandLoading" role="status"><img class="island-loading-wallpaper" src="assets/village/loading-wallpaper.jpg" alt="Preparing your island" fetchpriority="high"><h1>Your island</h1><p>Preparing your island...</p><button id="islandRetry" class="btn">Retry</button> <button id="islandLogin" class="btn">Log out</button></section>
+<section id="islandLoading" role="status">
+<div class="island-loader-content">
+<picture><source media="(orientation: portrait)" srcset="assets/village/loading-wallpaper-mobile.jpg"><img class="island-loading-wallpaper" src="assets/village/loading-wallpaper.jpg" alt="Pets and villagers in their seaside village" fetchpriority="high"></picture>
+<div class="island-name-sign"><span class="island-sign-caption">WELCOME TO</span><span data-island-name>Your island</span></div>
+<div class="island-loading-bottom"><label>Preparing your island <span data-load-percent>0%</span></label><progress max="100" value="0" aria-label="Island loading progress"></progress><small data-load-stage>Setting sail...</small></div>
+</div>
+<div class="island-load-error-panel"><h1>We couldn't reach your island</h1><p>Try again in a moment.</p><button id="islandRetry" class="btn">Retry</button> <button id="islandLogin" class="btn">Log out</button></div>
+</section>
+<script src="island-loading.js"></script>
 <script src="ascend-utils.js"></script>
 <script src="gem-colors.js"></script>
 

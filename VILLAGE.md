@@ -104,3 +104,8 @@ Pet explorations is a top-bar button and each owned pet has a Send on an explora
 House upgrades require Town Hall 4 for tier 2 and Town Hall 7 for tier 3. Ruby costs remain 25 and 40 respectively. Existing upgraded houses are retained.
 
 Ruby mines are saved in the village layout and can be moved or swapped using Arrange village once unlocked. Existing islands receive mine plots at their previous locations. The island loading screen uses the existing pets, villagers and huts, and waits for map artwork decoding before revealing the island.
+
+### Welcome posters and island names
+Landscape and portrait devices load separate wallpaper illustrations via a picture source and orientation-specific preload. The welcome sign uses a local serif font and an account-keyed name cache before app startup, avoiding web-font swaps. Unnamed accounts are prompted on their next island visit; `/village/name` validates and saves the name transactionally to the authenticated account. Repeat requests retain the first saved name. Other devices read it from `/admin/village`.
+The loading bar reports approximate completed stages: account data, decoded map artwork, fonts and camera preparation. It reaches 100 only when the island is ready; it does not advance on a timer. Failed account loads retain retry/logout controls.
+Building sprites use explicit source-space ground anchors mapped to the same plot coordinate, including house tiers, mines, the job station and forge variants. Plot markers are centered on those coordinates.

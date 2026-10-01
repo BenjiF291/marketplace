@@ -8,8 +8,14 @@ module.exports=(app,db,authenticate,getTiers)=>{
    const user=doc.data(),tiers=await getTiers();
    const maxLevel=9,level=require('./town-hall-progress').profile(user).level-1;
    const forgeLevel=user.gemConverterAllUnlocked?Math.max(0,tiers.length-1):Math.min(Math.max(0,tiers.length-1),Math.max(0,Math.trunc(Number(user.gemConverterLevel)||0)));
-   res.json({level,maxLevel,forgeLevel,tiers:tiers.map(t=>({id:t.id,name:t.name})),balance:Number(user.balance)||0,compressor:!!user.gemCompressor,isAdmin:user.isAdmin===true,preview:false,layout:layout.profile(user),economy:economy.profile(user)});
+   res.json({islandName:user.islandName||null,level,maxLevel,forgeLevel,tiers:tiers.map(t=>({id:t.id,name:t.name})),balance:Number(user.balance)||0,compressor:!!user.gemCompressor,isAdmin:user.isAdmin===true,preview:false,layout:layout.profile(user),economy:economy.profile(user)});
   }catch{res.status(500).send('Could not load your village. Please try again.');}
+ });
+ app.post('/village/name',async(req,res)=>{
+  let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
+  const name=typeof req.body?.name==='string'?req.body.name.trim().replace(/\s+/gu,' '):'';
+  if(name.length<2||name.length>32||!/^[\p{L}\p{M}\p{N} '&.()-]+$/u.test(name))return res.status(400).send('Use 2-32 letters, numbers, spaces or simple punctuation.');
+  try{const islandName=await db.runTransaction(async tx=>{const ref=db.collection('users').doc(id),doc=await tx.get(ref);if(!doc.exists)throw Error('Account not found.');const existing=doc.data().islandName;if(existing)return existing;tx.update(ref,{islandName:name});return name;});res.json({islandName});}catch(e){res.status(400).send(e.message);}
  });
  app.post('/village/layout',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}

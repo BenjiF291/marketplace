@@ -115,5 +115,22 @@
 .island-loading-screen{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;padding:0;overflow:hidden;background:#153d48}
 .island-loading-screen::backdrop{background:#153d48}
 .island-loading-wallpaper{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-#islandLoading:not(.island-load-error)>:not(.island-loading-wallpaper){display:none}
-#islandLoading.island-load-error>:not(.island-loading-wallpaper){position:relative;z-index:1;background:#153d48;padding:12px;border-radius:8px}
+
+.island-loader-content{position:absolute;inset:0;overflow:hidden}
+.island-name-sign{position:absolute;top:max(24px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(540px,calc(100% - 56px));min-height:94px;box-sizing:border-box;padding:14px 24px 18px;text-align:center;background:linear-gradient(170deg,#fff1c8,#e8cc91);border:3px solid #805b32;outline:1px solid #f6e2af;outline-offset:-7px;border-radius:10px 10px 28px 28px;box-shadow:0 8px 0 #654829,0 14px 24px #173d4655;color:#4b3926;font-family:Georgia,'Times New Roman',serif}
+.island-name-sign:before,.island-name-sign:after{content:'';position:absolute;top:14px;width:7px;height:7px;border-radius:50%;background:#8f6937;box-shadow:inset 0 1px 2px #44321f}.island-name-sign:before{left:13px}.island-name-sign:after{right:13px}
+.island-sign-caption{display:block;font-size:10px;letter-spacing:.25em;margin-bottom:6px;color:#846640}
+[data-island-name]{display:block;font-size:clamp(20px,3.2vw,34px);font-weight:bold;line-height:1.12;overflow-wrap:anywhere}
+.island-loading-bottom{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 48px));padding:14px 20px;box-sizing:border-box;border:1px solid #efd7a2aa;border-radius:16px;background:#153d48e8;box-shadow:0 6px 24px #163c4655;color:#fff0c9;text-align:center;font:15px Georgia,serif}
+.island-loading-bottom label{display:flex;justify-content:space-between;gap:12px;margin:0 0 8px}.island-loading-bottom small{display:block;margin-top:7px;color:#d4dfca;font:12px Georgia,serif}
+.island-loading-bottom progress{appearance:none;display:block;width:100%;height:12px;border:1px solid #bca06d;border-radius:12px;overflow:hidden;background:#0d2b31}
+.island-loading-bottom progress::-webkit-progress-bar{background:#0d2b31;border-radius:12px}.island-loading-bottom progress::-webkit-progress-value{background:linear-gradient(#f5e3a4,#c59c53);border-radius:12px}.island-loading-bottom progress::-moz-progress-bar{background:linear-gradient(#f5e3a4,#c59c53);border-radius:12px}
+.island-load-error-panel{display:none;position:relative;z-index:1;max-width:400px;margin:24px;padding:24px;border-radius:16px;background:#153d48f5}.island-load-error .island-load-error-panel{display:block}
+.island-naming{width:min(420px,calc(100% - 48px));box-sizing:border-box;border:3px solid #997341;border-radius:20px;background:#fff2d1;color:#493c2d;padding:28px;box-shadow:0 20px 80px #0006}.island-naming::backdrop{background:#153d48b8}.island-naming h1{font:28px Georgia,serif}.island-naming p{line-height:1.5}.island-naming label{display:block}.island-naming input{display:block;box-sizing:border-box;width:100%;margin-top:8px;padding:12px;border:1px solid #987a48;border-radius:8px;font:20px Georgia,serif}.island-naming button{width:100%;padding:12px}
+@media(orientation:portrait){.island-name-sign{top:max(28px,env(safe-area-inset-top));min-height:84px}.island-loading-bottom{bottom:max(22px,env(safe-area-inset-bottom))}}
+
+/* Every sprite maps its ground centre to (40,92), matching the saved plot coordinate. */
+.village-building{width:80px;height:104px;transform:translate(-50%,-92px)}
+.village-building>svg,.village-building svg.village-painted-building,.village-building[data-building="townhall"]>svg,.village-building[data-building="arena"]>svg,.village-building[data-building="farmhouse"]>svg,.village-house>svg,.village-mine>svg{width:80px;height:104px;overflow:visible}
+.village-building svg svg{width:revert;height:revert;filter:none;transition:none}
+.village-land-plot{transform:translate(-50%,-50%)}
