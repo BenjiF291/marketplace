@@ -92,7 +92,7 @@
 
  let loadingDialog;
  function showLoading(){
-  if(!loadingDialog){loadingDialog=document.createElement('dialog');loadingDialog.className='island-loading-screen';loadingDialog.setAttribute('aria-label','Preparing your island');loadingDialog.innerHTML='<div class="loading-vignette"><div class="loading-huts">'+VillageArt.house(1)+VillageArt.house(2)+'</div><div class="loading-friends">'+['pet:fox','pet:snail','pet:dragon'].map(id=>'<span>'+companionArt(id)+'</span>').join('')+[0,1,2].map(i=>'<span class="loading-villager">'+HallArt.avatar(HallWorld.character({coat:HallWorld.COATS[i],hair:HallWorld.HAIR[i],skin:HallWorld.SKINS[i],style:HallWorld.STYLES[i]}))+'</span>').join('')+'</div></div><h1>A little island, a world of adventures</h1><p role="status">Getting your village ready...</p><div class="island-loading-wave" aria-hidden="true"></div>';loadingDialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(loadingDialog);}
+  if(!loadingDialog){loadingDialog=document.createElement('dialog');loadingDialog.className='island-loading-screen';loadingDialog.setAttribute('aria-label','Preparing your island');loadingDialog.innerHTML='<img class="island-loading-wallpaper" src="assets/village/loading-wallpaper.jpg" alt="Preparing your island: pets and villagers in their seaside village" fetchpriority="high">';loadingDialog.addEventListener('cancel',e=>e.preventDefault());document.body.append(loadingDialog);}
   if(!loadingDialog.open)loadingDialog.showModal();
  }
  async function readyArtwork(){
@@ -114,7 +114,7 @@
    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
    if(!initialized)reset();else{clamp();applyCamera();}await zoomOut(lastBuilding);lastBuilding=null;loadingDialog.close();viewport.focus({preventScroll:true});guide();
    if(refresh)refresh.then(ok=>{if(ok&&d.open&&!travelling&&!plotEditor?.editing){options();render();}});
-  }catch(e){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.querySelector('p').textContent=e.message;
+  }catch(e){if(d?.open)d.close();const panel=document.getElementById('islandLoading');panel.hidden=false;panel.classList.add('island-load-error');panel.querySelector('p').textContent=e.message;
   }finally{loadingDialog?.close();loading=false;travelling=false;d?.classList.remove('village-travelling','village-returning');if(jump)jump.disabled=false;toggle.disabled=false;back.disabled=false;}
  }
  async function enterBuilding(b){if(!verified||!enabled||!unlocked(b))return;entering=true;
