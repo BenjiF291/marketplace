@@ -23,7 +23,6 @@
  const back=el('button','village-return','← Village');back.hidden=true;back.type='button';document.body.append(back);
  let enabled=false,verified=false,data=null,simulation=null,d=null,viewport,world,inspector,levelSelect,notice,status,tiles=new Map(),selected=null,previousStudio=true,loading=false;
  let jump,entering=false,plotEditor;
- function walkAround(){if(plotEditor?.editing)return;IslandWalk.open({state:data,onReady:()=>d?.close(),onExit:()=>show(),onEnter:()=>window.openTownHall(walkAround)});}
 
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false;
  const pointers=new Map();const pref=`footy-village:${currentUserId}`;
@@ -132,7 +131,7 @@
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
    if(['petstation','farmhouse','jobs'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show);return;}
-   if(b.route==='hall'){VillageInteriors.close();back.hidden=true;walkAround();return;}
+   if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
    VillageInteriors.open(b,{back:show,enter:enterBuilding});
    if(b.route==='ruby')document.getElementById('rubyShopButton').click();

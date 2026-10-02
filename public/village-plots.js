@@ -58,8 +58,8 @@
    paintResidents();paintMines();
   }
 
-  let actionBusy=false,activeDetail=null,detailReturn=null;
-  const detail=el('dialog','village-detail');toolbar.parentNode.append(detail);detail.addEventListener('close',()=>{const callback=detailReturn;detailReturn=null;callback?.();});
+  let actionBusy=false,activeDetail=null;
+  const detail=el('dialog','village-detail');toolbar.parentNode.append(detail);
   async function act(body){if(actionBusy)return;actionBusy=true;try{const response=await fetch(API_URL+'/village/action',{method:'POST',headers:resourceHeaders(),body:JSON.stringify(body)});if(!response.ok)throw Error(await response.text());Object.assign(getData(),await response.json());changed();paint();if(activeDetail?.house)openHouse(activeDetail.house);else if(activeDetail?.mine!==undefined)openMine(activeDetail.mine);if(getData().xpGained)detail.querySelector('[role="status"]').textContent+=` | +${getData().xpGained} Town Hall XP`;}catch(e){detail.querySelector('[role="status"]').textContent=e.message;}finally{actionBusy=false;}}
   function base(title){detail.replaceChildren(el('h2','',title));const close=el('button','village-secondary','Close');close.onclick=()=>detail.close();detail.append(close);const status=el('p','',`${layout().rubies||0} rubies available`);status.setAttribute('role','status');detail.append(status);if(!detail.open)detail.showModal();}
   function openHouse(id){activeDetail={house:id};const tier=layout().houseTiers?.[id]||1;base(`Villager house - Tier ${tier}`);detail.append(el('p','',`${[0,3,5,10][tier]} villagers call this hut home.`));if(tier<3){const cost=tier===1?25:40,requiredLevel=tier===1?4:7,locked=getData().level+1<requiredLevel,button=el('button','village-primary',`Upgrade to tier ${tier+1} - ${cost} rubies - ${tier===1?5:10} villagers`);button.disabled=locked||layout().rubies<cost;if(locked)detail.append(el('p','',`Requires Town Hall level ${requiredLevel}.`));button.onclick=()=>act({action:'upgrade-house',house:id,revision:layout().revision});detail.append(button);}else detail.append(el('p','','Fully upgraded'));
@@ -78,6 +78,6 @@
   function updateTimers(){const now=Date.now()+serverOffset;for(const n of detail.querySelectorAll('.mine-timer')){const seconds=Math.max(0,Math.ceil((Number(n.dataset.ends)-now)/1000));n.textContent=seconds?`Villagers working - ${Math.floor(seconds/60)}m ${seconds%60}s remaining`:'Shift complete';}}
   setInterval(updateTimers,1000);
   setInterval(async()=>{if(document.hidden||draft||actionBusy||!toolbar.parentNode.open)return;try{const r=await fetch(API_URL+'/admin/village',{headers:resourceHeaders()});if(!r.ok)return;const fresh=await r.json();if(actionBusy||draft)return;getData().balance=fresh.balance;getData().layout=fresh.layout;getData().economy=fresh.economy;serverOffset=fresh.economy.serverNow-Date.now();paint();if(detail.open){if(activeDetail?.mine!==undefined)openMine(activeDetail.mine);else if(activeDetail?.house)openHouse(activeDetail.house);}}catch{}},15000);
-  return {paint,inspect:(id,onClose)=>{detailReturn=onClose;if(id.startsWith('mine:'))openMine(Number(id.split(':')[1]));else openHouse(id);},select:b=>{if(!draft)return false;if(chosen&&chosen!==b.id)place(draft[b.id]);else choose(b.id);return true;},get editing(){return !!draft;}};
+  return {paint,select:b=>{if(!draft)return false;if(chosen&&chosen!==b.id)place(draft[b.id]);else choose(b.id);return true;},get editing(){return !!draft;}};
  };
 })();
