@@ -140,7 +140,15 @@
   }finally{entering=false;}
  }
  window.addEventListener('footy-studio-navigate',e=>{if(entering||!enabled)return;const current=VillageInteriors.active;if(current&&(e.detail===current.route||current.route==='ruby'&&e.detail==='home'))return;const route=e.detail;const next=buildings.find(b=>b.route===route&&unlocked(b))||(route==='sell'?{...buildings.find(b=>b.id==='market'),route}:null)||(['admin','battle-manager'].includes(route)&&data.isAdmin?{...buildings.find(b=>b.id==='townhall'),route,name:'Admin tools'}:null);queueMicrotask(()=>{if(next)enterBuilding(next);else show();});});
- function updateStats(state){const bar=document.getElementById('villageResourceBar');if(!bar)return;const staff=state.economy?.workforce;bar.replaceChildren(el('span','',`${staff?.available.length||0}/${staff?.total??state.layout?.villagers??0} villagers available`),el('span','',`${Number(state.balance||0).toLocaleString()} Footy`),el('span','',`${Number(state.layout?.rubies||0).toLocaleString()} rubies`));}
+ function updateStats(state){
+  const bar=document.getElementById('villageResourceBar');if(!bar)return;const staff=state.economy?.workforce;
+  const icons={villagers:'<circle cx="12" cy="8" r="4" fill="#d9b18b"/><path d="M4 23v-5a8 8 0 0 1 16 0v5" fill="#47796a"/><path d="M8 6q4-6 8 0" fill="#705038"/>',footy:'<circle cx="12" cy="12" r="10" fill="#e7bb58" stroke="#997332" stroke-width="2"/><path d="M9 18V6h8v3h-5v3h4v3h-4v3z" fill="#765027"/>',rubies:'<path d="M6 3h12l5 7-11 13L1 10z" fill="#bd354b" stroke="#842c43"/><path d="M6 3l6 7 6-7M1 10h22M12 10v13" fill="none" stroke="#ffb0a8" stroke-width="1.5"/>'};
+  const counters=el('div','village-resource-counters');
+  for(const [key,value,label] of [['villagers',`${staff?.available.length||0}/${staff?.total??state.layout?.villagers??0}`,'Villagers available'],['footy',Number(state.balance||0).toLocaleString(),'Footy'],['rubies',Number(state.layout?.rubies||0).toLocaleString(),'Rubies']]){const counter=el('div','village-resource-counter');counter.title=label;counter.setAttribute('aria-label',`${label}: ${value}`);const icon=el('span','village-resource-icon');icon.innerHTML=`<svg viewBox="0 0 24 26" aria-hidden="true">${icons[key]}</svg>`;counter.append(icon,el('strong','',value));counters.append(counter);}
+  bar.replaceChildren(counters);
+  const p=state.progress;if(p){const xp=el('div','village-island-xp'),label=el('div','village-xp-label');label.append(el('span','',`Town Hall ${p.level}`),el('span','',p.next===null?'MAX LEVEL':`${p.progress} / ${p.required} XP`));const meter=el('progress');meter.max=p.required||1;meter.value=p.next===null?1:p.progress;meter.setAttribute('aria-label','Town Hall experience');xp.title=p.unlock;xp.append(label,meter);bar.append(xp);}
+ }
+
  window.addEventListener('village-state-changed',e=>{if(!data)return;Object.assign(data,e.detail);plotEditor?.paint();updateStats(data);});
  window.Island={show,preload,updateStats,guide:()=>guide(true),enter:id=>{const b=buildings.find(b=>b.id===id);if(b&&unlocked(b))enterBuilding(b);else show();}};
  back.onclick=show;

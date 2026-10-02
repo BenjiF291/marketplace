@@ -132,3 +132,10 @@
 .village-building>svg,.village-building svg.village-painted-building,.village-building[data-building="townhall"]>svg,.village-building[data-building="arena"]>svg,.village-building[data-building="farmhouse"]>svg,.village-house>svg,.village-mine>svg{width:80px;height:104px;overflow:visible}
 .village-building svg svg{width:revert;height:revert;filter:none;transition:none}
 .village-land-plot{transform:translate(-50%,-50%)}
+
+/* Separate resource counters, with account progression underneath. */
+.village-resource-bar{display:flex;flex-direction:column;gap:7px;background:none;border:0;padding:0;min-width:280px;color:#304b3b}
+.village-resource-counters{display:flex;gap:8px}.village-resource-counter{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:0;padding:7px 12px;background:#fff5dfef;border:1px solid #b5a17b;border-radius:12px;box-shadow:0 2px 6px #283c3020;white-space:nowrap;font-variant-numeric:tabular-nums}
+.village-resource-icon{display:flex;width:24px;height:26px;flex-shrink:0}.village-resource-icon svg{width:100%;height:100%}.village-resource-bar span+span{border:0;padding:0}
+.village-island-xp{padding:7px 10px;background:#fff5dfef;border:1px solid #b5a17b;border-radius:10px}.village-xp-label{display:flex;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:4px}.village-island-xp progress{display:block;width:100%;height:8px;border:0;border-radius:6px;overflow:hidden;background:#d7ccb2;accent-color:#47796a}.village-island-xp progress::-webkit-progress-bar{background:#d7ccb2;border-radius:6px}.village-island-xp progress::-webkit-progress-value{background:linear-gradient(90deg,#386b5c,#80a966);border-radius:6px}.village-island-xp progress::-moz-progress-bar{background:#47796a;border-radius:6px}
+@media(max-width:600px){.village-resource-bar{min-width:0;padding:0}.village-resource-counter{padding:6px 8px;gap:5px}.village-resource-counters{gap:6px}}
