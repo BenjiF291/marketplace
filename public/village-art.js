@@ -31,6 +31,7 @@
 
  function building(kind,level=0,locked=false){
   if(kind==='jobs'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/job-station-painted.png" width="1024" height="1024"/>`);
+  if(kind==='petstation')return anchored(0,0,1024,1024,512,850,80/1024,`<image href="assets/village/pet-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='farmhouse')return house(2);
   const cell=locked?13:kind==='forge'&&level>=8?15:kind==='forge'&&level>=4?14:cells[kind]??1;
   const [x,y,w,h,points]=frames[cell],id='building-cutout-'+(++spriteId);

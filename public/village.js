@@ -2,7 +2,7 @@
 (() => {
  const buildings=[
   {id:'jobs',name:'Central job station',kind:'jobs',level:0,route:'jobs',description:'Assign and recall workers across your island.'},
-  {id:'petstation',name:'Pet station',kind:'pets',level:2,route:'petstation',description:'Care for your pets with a household of villagers.'},
+  {id:'petstation',name:'Pet station',kind:'petstation',level:2,route:'petstation',description:'Care for your pets with a household of villagers.'},
   {id:'farmhouse',name:'Farmhouse',kind:'farmhouse',level:1,route:'farmhouse',description:'Gather ingredients and cook pet meals.'},
   {id:'townhall',name:'Town hall',kind:'townhall',x:620,y:377,level:0,route:'hall',secondary:'admin',secondaryLabel:'Admin tools',description:'Our shared community centre. Display your collectibles, earn personal Town Hall XP, and play Skystones at the table.'},
   {id:'archive',name:'Card archive',kind:'archive',x:380,y:356,level:0,route:'inventory',description:'Your cards, packs, consumables and ascensions, all under one roof.'},
@@ -70,7 +70,7 @@
  function create(){
   d=el('dialog','village-map');d.id='villageMap';d.setAttribute('aria-label','Your island');
   const toolbar=el('header','village-toolbar');const brand=el('div','village-brand');brand.append(el('small','','WELCOME HOME'),el('h1','','Your island'));
-  const stats=el('div','village-resource-bar');stats.id='villageResourceBar';stats.setAttribute('aria-label','Island resources');toolbar.append(stats);const journeys=el('button','village-secondary','Pet explorations');journeys.onclick=()=>window.openPetJourneys();toolbar.append(journeys);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings.find(b=>b.id==='townhall'),route:'admin',name:'Admin tools'});toolbar.append(admin);
+  const stats=el('div','village-resource-bar');stats.id='villageResourceBar';stats.setAttribute('aria-label','Island resources');toolbar.append(stats);const admin=el('button','village-secondary','Admin tools');admin.hidden=!data.isAdmin;admin.onclick=()=>enterBuilding({...buildings.find(b=>b.id==='townhall'),route:'admin',name:'Admin tools'});toolbar.append(admin);
   const tools=el('div','village-preview-tools');levelSelect=el('select');levelSelect.setAttribute('aria-label','Preview village progression');levelSelect.onchange=()=>{simulation=levelSelect.value==='account'?null:Number(levelSelect.value);render();};
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');

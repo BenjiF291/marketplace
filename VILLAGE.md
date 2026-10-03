@@ -111,3 +111,8 @@ The loading bar reports approximate completed stages: account data, decoded map 
 Building sprites use explicit source-space ground anchors mapped to the same plot coordinate, including house tiers, mines, the job station and forge variants. Plot markers are centered on those coordinates.
 
 The welcome wallpaper is shown only until the first successful island startup in a page session. Pet visits, building returns and background refreshes reuse the island without reopening it. All 32 plot footprints have been retraced onto grass in the original painting and scaled to world coordinates; their IDs are preserved so existing layouts migrate without deleting buildings or changing jobs.
+
+### Care room and progression updates
+Hut and mine clicks show compact map actions. Upgrade restrictions and prices remain available on the upgrade control; mine collection only appears when a ruby is ready.
+Farmhouse tiers 2 and 3 require Town Hall 5 and 6 respectively, with unchanged costs of 50 and 100 rubies. Existing purchased tiers remain usable. The Town Hall progression road lists each level's XP threshold and unlocks.
+The farmhouse and job centre have dedicated painted interior backdrops. The pet station has its own exterior and overhead room with locally animated caretaker and pet. Meals and the ball support pointer dragging onto the pet or tapping the item. Pet play has a one-hour cooldown and feeding has a two-hour cooldown, independently per pet and persisted server-side. Failed actions do not consume food or start cooldowns. The island exploration shortcut is removed; journeys remain in the companion lodge.

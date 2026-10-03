@@ -11,7 +11,7 @@ function busyHouses(u,now=Date.now()){
 function profile(u,now=Date.now()){
  const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;
  const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/(RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
- return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
+ return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,playReadyAt:Number(u.petCareCooldowns?.[id]?.play)||0,feedReadyAt:Number(u.petCareCooldowns?.[id]?.feed)||0,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
 }
 function action(u,b,now=Date.now()){
  const state=profile(u,now);
@@ -26,9 +26,11 @@ function action(u,b,now=Date.now()){
   if(!u.petStation||u.petStation.pet!==b.pet)throw Error('Send this pet and a caretaker to the pet station first.');
   if(!state.pets.some(p=>p.id===b.pet&&!p.travelling))throw Error('This pet is unavailable.');
   const current=happiness(u,b.pet);if(current===10)throw Error('Your pet is already at maximum happiness.');
-  if(b.action==='pet-play')return {petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
+  const key=b.action==='pet-play'?'play':'feed',ready=Number(u.petCareCooldowns?.[b.pet]?.[key])||0;if(now<ready)throw Error(`${key==='play'?'Play':'Feeding'} is available in ${Math.ceil((ready-now)/60000)} minutes.`);
+  const petCareCooldowns={...(u.petCareCooldowns||{}),[b.pet]:{...(u.petCareCooldowns?.[b.pet]||{}),[key]:now+(key==='play'?3600000:7200000)}};
+  if(b.action==='pet-play')return {petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
   const meal=Object.hasOwn(MEALS,b.food)?MEALS[b.food]:null;if(!meal||!(u.rubyItems?.[b.food]>0))throw Error('Choose a meal you own.');
-  return {petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)},rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};
+  return {petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)},rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};
  }
  if(b.action==='farm-start'){
   const resource=Object.hasOwn(RESOURCES,b.resource)?RESOURCES[b.resource]:null;if(!state.farmUnlocked||!resource||resource.tier>state.farmLevel)throw Error('This ingredient is not unlocked.');
@@ -43,6 +45,7 @@ function action(u,b,now=Date.now()){
  if(b.action==='farm-upgrade'){
   if(!state.farmUnlocked||state.farmLevel===3)throw Error('Farmhouse upgrade unavailable.');
   if(b.level!==state.farmLevel)throw Error('Farmhouse changed. Refresh and try again.');
+  const required=state.farmLevel===1?5:6;if(require('./town-hall-progress').profile(u).level<required)throw Error(`Town Hall level ${required} is required.`);
   const cost=state.farmLevel===1?50:100;if(!(u.gems?.bronze>=cost))throw Error(`You need ${cost} rubies.`);
   return {farmLevel:state.farmLevel+1,gems:{...u.gems,bronze:u.gems.bronze-cost}};
  }
