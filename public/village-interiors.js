@@ -18,7 +18,7 @@
  function station(label,fn,selected=false){const b=el('button','',label);b.setAttribute('aria-pressed',String(selected));b.onclick=fn;tabs.append(b);}
  function focusTool(id){const tool=document.getElementById(id);if(tool){if(tool.tagName==='DETAILS')tool.open=true;tool.scrollIntoView({behavior:'smooth',block:'start'});}}
  function open(b,handlers){
-  if(!root)build();restoreForge();active=b;options=handlers;root.hidden=false;
+  if(!root)build();restoreForge();active=b;options=handlers;root.hidden=false;root.querySelector('.village-interior-bar>button').textContent=b.id==='market'?'Return to marketplace':'Return to island';
   document.body.classList.add('village-interior');document.body.dataset.villageBuilding=b.id;
   const [cell,label,copy]=scenes[b.id]||scenes.townhall;
   art.innerHTML=`<svg viewBox="${cell%4*256} ${Math.floor(cell/4)*256} 256 256" preserveAspectRatio="xMidYMid slice"><image href="assets/village/interiors-painted.png" width="1024" height="1024"/></svg>`;

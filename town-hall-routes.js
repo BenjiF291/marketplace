@@ -14,7 +14,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
   try{const doc=await db.collection('users').doc(id).get();const u=doc.data();if(!u)return res.status(403).send('Account not found.');
    accounts.set(id,u);clean();if(members.size>=40&&!members.has(id))throw Error('The room is full. Try again shortly.');
    const token=crypto.randomBytes(32).toString('hex');tokens.set(token,{id,expires:clock()+5*60000});
-   if(!members.has(id))members.set(id,{id,name:String(u.username||'Player').slice(0,40),character:world.character(u.townHallCharacter),path:[{x:450,y:510}],startedAt:clock(),seat:null,lastSeen:clock()});else members.get(id).lastSeen=clock();
+   if(!members.has(id))members.set(id,{id,name:String(u.username||'Player').slice(0,40),character:world.character(u.townHallCharacter),path:[{x:450,y:510}],startedAt:clock(),seat:null,lastSeen:clock()});else{members.get(id).lastSeen=clock();members.get(id).character=world.character(u.townHallCharacter);}
    res.json({token,...await snapshot(id)});
   }catch(e){res.status(400).send(e.message);}
  });
@@ -29,7 +29,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
    else if(b.type==='chat'||b.type==='emote'){if(now-(m.lastChat||0)<1200)throw Error('Please wait before speaking again.');const text=b.type==='emote'?({wave:'waves hello',cheer:'cheers!',laugh:'laughs',clap:'applauds'})[b.emote]:String(b.text||'').trim();if(!text||text.length>180)throw Error('Write a message of 1–180 characters.');m.lastChat=now;m.bubble={text,until:now+5000};messages.push({id:crypto.randomUUID(),name:m.name,text,emote:b.type==='emote',at:now});if(messages.length>40)messages.shift();}
    else if(b.type==='refresh'){const u=(await db.collection('users').doc(s.id).get()).data();accounts.set(s.id,u);cacheUntil=0;}
    else if(b.type==='project'){throw Error('Resource-for-XP projects have been retired. Earn XP by playing.');}
-   else if(b.type==='character'){const character=world.character(b.character);await db.collection('users').doc(s.id).update({townHallCharacter:character});m.character=character;}
+   else if(b.type==='character'){const character=world.character(b.character);if(['mariner','botanist','starlight'].includes(character.outfit)){const owner=(await db.collection('users').doc(s.id).get()).data();if(!(owner.rubyItems?.['outfit:'+character.outfit]>0))throw Error('Buy this outfit at the clothing stall first.');}await db.collection('users').doc(s.id).update({townHallCharacter:character});m.character=character;}
    else if(b.type==='invite'){
     const other=members.get(b.target);if(!seated(m)||!seated(other)||other.id===m.id)throw Error('Both players need to be seated at the table.');
     if(!Number.isInteger(b.averageLimit)||b.averageLimit<1||b.averageLimit>99||!Number.isInteger(b.timeControlSeconds)||b.timeControlSeconds<15||b.timeControlSeconds>3600)throw Error('Choose a valid deck limit and time control.');

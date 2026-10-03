@@ -2,7 +2,7 @@
  const SEATS=[{x:290,y:218},{x:395,y:218},{x:505,y:218},{x:610,y:218},{x:290,y:418},{x:395,y:418},{x:505,y:418},{x:610,y:418}];
  const SKINS=['#efc9a1','#d9a278','#ad7150','#754c38'],HAIR=['#382b27','#855336','#d8b46e','#d8d5cd'],COATS=['#486f89','#a35c60','#587b58','#8b6d9f','#bd9650'];
  const EYES=['#3e7180','#5d7241','#694832','#74799b'],TRIMS=['#deb56d','#c2cbd0','#b16f59','#528c89'],PANTS=['#384650','#61503f','#413651','#62715d'];
- const STYLES=['short','long','curly','braids','ponytail','shaved'],OUTFITS=['tunic','coat','armour'],HEADWEAR=['none','cap','circlet','goggles'],CAPES=['none','short','long'],ACCESSORIES=['none','satchel','pendant','scarf'],BEARDS=['none','short','full'];
+ const STYLES=['short','long','curly','braids','ponytail','shaved'],OUTFITS=['tunic','coat','armour','mariner','botanist','starlight'],HEADWEAR=['none','cap','circlet','goggles'],CAPES=['none','short','long'],ACCESSORIES=['none','satchel','pendant','scarf'],BEARDS=['none','short','full'];
  function character(value={}){if(!value||typeof value!=='object')value={};const pick=(key,list)=>list.includes(value[key])?value[key]:list[0];return Object.fromEntries(Object.entries({skin:SKINS,hair:HAIR,coat:COATS,eyes:EYES,trim:TRIMS,pants:PANTS,style:STYLES,outfit:OUTFITS,headwear:HEADWEAR,cape:CAPES,accessory:ACCESSORIES,beard:BEARDS}).map(([key,list])=>[key,pick(key,list)]));}
 
  const blocked=(x,y)=>x<60||x>840||y<150||y>550||(x>230&&x<675&&y>232&&y<390);

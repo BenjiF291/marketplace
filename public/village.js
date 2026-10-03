@@ -131,9 +131,10 @@
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
    if(['petstation','farmhouse','jobs'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show);return;}
+   if(b.id==='market'&&b.route==='marketplace'&&!b.marketStall){VillageInteriors.close();await MarketStreet.open({onExit:show,onCards:()=>enterBuilding({...b,marketStall:true})});return;}
    if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
-   VillageInteriors.open(b,{back:show,enter:enterBuilding});
+   VillageInteriors.open(b,{back:b.id==='market'?()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:false}):show,enter:enterBuilding});
    if(b.route==='ruby')document.getElementById('rubyShopButton').click();
    if(b.id==='vault')window.VillageCare.addVaultButton();
    if(b.target){const target=document.getElementById(b.target);if(target?.tagName==='DETAILS')target.open=true;}
