@@ -2659,6 +2659,7 @@ app.get('/inventory', async (req, res) => {
 
 require('./amulet-routes')(app, db, getAscendTierConfig);
 require('./village-routes')(app, db, brawlAuth.authenticate, getAscendTierConfig);
+require('./player-stall-routes')(app, db, brawlAuth.authenticate, getAscendTierConfig);
 require('./town-hall-routes')(app, db, brawlAuth.authenticate);
 require('./trophy-routes')(app, db, getBattleCardsForUser, brawlAuth.authenticate);
 require('./gem-workshop-routes')(app, db, getAscendTierConfig);

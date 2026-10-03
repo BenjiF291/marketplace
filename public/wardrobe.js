@@ -1,0 +1,12 @@
+/* Shared wardrobe catalogue and ownership rules. Body and hair choices remain free. */
+(function(root){
+ const world=typeof module!=='undefined'?require('./hall-world'):root.HallWorld;
+ const SLOTS={outfit:'Outfits',headwear:'Headwear',cape:'Capes',accessory:'Accessories',jewellery:'Jewellery',boots:'Footwear',gloves:'Gloves',pants:'Trousers',coat:'Clothing colours',trim:'Trim colours'};
+ const lists={outfit:world.OUTFITS,headwear:world.HEADWEAR,cape:world.CAPES,accessory:world.ACCESSORIES,jewellery:world.JEWELLERY,boots:world.BOOTS,gloves:world.GLOVES,pants:world.PANTS,coat:world.COATS,trim:world.TRIMS};
+ const labels={mariner:'Mariner jacket',botanist:'Botanist apron',starlight:'Starlight robe',ranger:'Woodland ranger',festival:'Festival waistcoat',scholar:'Scholar robes',sunhat:'Sun hat',tiara:'Moonstone tiara',feather:'Feathered hat',embroidered:'Embroidered cape',royal:'Royal mantle',beltpouch:'Belt pouch',mapcase:'Map case',flower:'Flower brooch',pearls:'Pearl necklace',ruby:'Ruby necklace',moonstone:'Moonstone pendant',goldchain:'Golden chain',leather:'Leather boots',riding:'Riding boots',golden:'Gilded shoes',work:'Work gloves',silk:'Silk gloves',bracers:'Leather bracers'};
+ const defaults=world.character(),catalog=[];
+ for(const [slot,values] of Object.entries(lists))for(const [i,value] of values.entries()){if(value==='none')continue;const price=({mariner:25,botanist:15,starlight:40,royal:45,tiara:45,ruby:40,moonstone:35,pearls:25,goldchain:30,scholar:35,festival:25,ranger:30})[value]??(value.startsWith('#')?5:8+i*4);catalog.push({id:slot==='outfit'?'outfit:'+value:'wardrobe:'+slot+':'+value,slot,value,...(slot==='outfit'?{outfit:value}:{}),name:labels[value]||(value.startsWith('#')?(slot==='pants'?['Slate','Leather brown','Plum','Sage']:slot==='coat'?['Ocean blue','Rose','Forest green','Amethyst','Ochre']:['Gold','Silver','Copper','Teal'])[i]:value[0].toUpperCase()+value.slice(1)),price,currency:'Footy',kind:'clothing',description:'Permanent wardrobe item.'});}
+ function owns(user,item){return user.rubyItems?.[item.id]>0||defaults[item.slot]===item.value||world.character(user.townHallCharacter)[item.slot]===item.value;}
+ function validate(user,value){const next=world.character(value);for(const item of catalog)if(next[item.slot]===item.value&&!owns(user,item))throw Error('Buy '+item.name+' at the clothing stall first.');return next;}
+ const api={SLOTS,catalog,owns,validate};if(typeof module!=='undefined')module.exports=api;else root.Wardrobe=api;
+})(typeof window==='undefined'?globalThis:window);

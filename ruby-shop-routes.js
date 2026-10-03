@@ -10,7 +10,7 @@ module.exports=(app,db,authenticate)=>{
  }).catch(e=>{lootCache=null;throw e;});}return lootCache;};
  app.get('/pet-journeys',async(req,res)=>{try{const id=await authenticate(req),doc=await db.collection('users').doc(id).get();if(!doc.exists)throw Error('User not found');const user=doc.data(),tables=await loot();const clean=t=>({...t,rewards:t.rewards.map(({pack,...r})=>r)});res.json(tables.map(t=>({...clean(t),petOdds:Object.fromEntries(Object.keys(t.petOdds).map(id=>[id,clean(journeys.petOdds(t,id,require('./pet-care').happiness(user,id)))]))})));}catch(e){res.status(400).send(e.message);}});
 
- app.get('/ruby-shop',async(req,res)=>{try{const id=await authenticate(req),doc=await db.collection('users').doc(id).get();if(!doc.exists)throw Error('User not found');const u=doc.data();res.json({character:u.townHallCharacter||{},catalog:shop.CATALOG,owned:u.rubyItems||{},equipped:{...(u.rubyEquipped||{}),pets:journeys.pets(u)},journeys:Object.values(u.petJourneys||{}).map(({reward,...j})=>({...j,...(j.status==='claimed'?{reward}: {})})),serverNow:Date.now(),rubies:u.gems?.bronze||0,fuelArmed:!!u.rubyFuelArmed,treats:u.rubyTreats||0,slots:u.amuletSlots||[]});}catch(e){res.status(400).send(e.message);}});
+ app.get('/ruby-shop',async(req,res)=>{try{const id=await authenticate(req),doc=await db.collection('users').doc(id).get();if(!doc.exists)throw Error('User not found');const u=doc.data();res.json({balance:Number(u.balance)||0,character:u.townHallCharacter||{},catalog:shop.CATALOG,owned:u.rubyItems||{},equipped:{...(u.rubyEquipped||{}),pets:journeys.pets(u)},journeys:Object.values(u.petJourneys||{}).map(({reward,...j})=>({...j,...(j.status==='claimed'?{reward}: {})})),serverNow:Date.now(),rubies:u.gems?.bronze||0,fuelArmed:!!u.rubyFuelArmed,treats:u.rubyTreats||0,slots:u.amuletSlots||[]});}catch(e){res.status(400).send(e.message);}});
  app.post('/ruby-shop/:action',async(req,res)=>{try{
  const id=await authenticate(req),body=req.body;
  if(!/^[a-zA-Z0-9-]{16,80}$/.test(body.actionId||''))throw Error('Invalid action identifier');
@@ -30,6 +30,7 @@ module.exports=(app,db,authenticate)=>{
       tx.set(db.collection('items').doc(packId),{name:pack.name+' Pack',itemType:'pack',packId,packColor:pack.color,price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,imageUrl:null,sourceItemId:null,purchasedAt:new Date(),createdAt:new Date()});
     }
   }
+  else if(req.params.action==='wardrobe')update={townHallCharacter:require('./public/wardrobe').validate(user.data(),body.character)};
   else if(req.params.action==='buy')update=shop.purchase(user.data(),body.itemId);
   else if(req.params.action==='use')update=body.itemId==='retry'?shop.retryWheel(user.data(),base):shop.use(user.data(),body);
   else if(req.params.action==='clear'&&body.kind==='pet')update={rubyEquipped:{...(user.data().rubyEquipped||{}),pet:null,pets:journeys.pets(user.data()).filter(p=>p!==body.itemId)}};

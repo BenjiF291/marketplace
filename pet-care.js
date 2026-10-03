@@ -1,6 +1,6 @@
 const {SHIFT:MINE_SHIFT}=require('./ruby-mine-rules');
 const layout=require('./public/village-layout'),workforce=require('./village-workforce');
-const RESOURCES={water:{minutes:5,tier:1},carrot:{minutes:10,tier:1},corn:{minutes:20,tier:2},milk:{minutes:30,tier:3},meat:{minutes:60,tier:3}};
+const RESOURCES={water:{minutes:20,tier:1},carrot:{minutes:40,tier:1},corn:{minutes:80,tier:2},milk:{minutes:120,tier:3},meat:{minutes:240,tier:3}};
 const PETS=['pet:fox','pet:snail','pet:dragon'];
 const MULTIPLIERS=[1,1.08,1.2,1.38,1.65,2,2.45,3,3.6,4.25,5];
 const MEALS={food:{name:'Regular meal',gain:1,ingredients:{water:1,carrot:1},tier:1},'food:trail':{name:'Better meal',gain:2,ingredients:{water:1,corn:1},tier:2},'food:feast':{name:'Extraordinary meal',gain:4,ingredients:{milk:1,meat:1},tier:3}};
@@ -10,7 +10,7 @@ function busyHouses(u,now=Date.now()){
 }
 function profile(u,now=Date.now()){
  const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;
- const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/(RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
+ const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/((j.ends-j.started)/3||RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
  return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3,farmUnlocked:level>=2,farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,playReadyAt:Number(u.petCareCooldowns?.[id]?.play)||0,feedReadyAt:Number(u.petCareCooldowns?.[id]?.feed)||0,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:u.petStation?.pet===id})),serverNow:now};
 }
 function action(u,b,now=Date.now()){
