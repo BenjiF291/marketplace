@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict');const shop=require('./ruby-shop');
 const tiers=['Bronze','Rare Bronze','Silver','Rare Silver','Gold','Rare Gold','Platinum','Lightning','Ultra','Special','Mythic'].map((name,order)=>({name,order,packs:[`p${order}`]}));
-test('shop spends only Ruby, forbids duplicate collectibles and invalid goods',()=>{
+test('shop spends only Ruby, forbids duplicate pets and invalid goods',()=>{
  const user={gems:{bronze:150,gold:20}};const update=shop.purchase(user,'pet:fox');assert.equal(update.gems.bronze,50);assert.equal(update.gems.gold,20);assert.equal(user.gems.bronze,150);
  assert.throws(()=>shop.purchase({...user,...update},'pet:fox'),/Already/);assert.throws(()=>shop.purchase({gems:{bronze:1}},'fuel'),/enough/);assert.throws(()=>shop.purchase(user,'forged'));
 });
@@ -38,3 +38,5 @@ test('Ruby transactions authenticate and deduplicate retries of purchases',async
 
 test('food purchases require the matching farmhouse tier',()=>{const shop=require('./ruby-shop'),u={gems:{bronze:100},townHallXP:0};assert.throws(()=>shop.purchase(u,'food'),/farmhouse/);u.townHallXP=100;assert.equal(shop.purchase(u,'food').rubyItems.food,1);assert.throws(()=>shop.purchase(u,'food:trail'),/farmhouse/);u.farmLevel=2;assert.equal(shop.purchase(u,'food:trail').rubyItems['food:trail'],1);assert.throws(()=>shop.purchase(u,'food:feast'),/farmhouse/);u.farmLevel=3;assert.equal(shop.purchase(u,'food:feast').rubyItems['food:feast'],1);});
 test('extra outfits have distinct prices, require ownership and persist when equipped',()=>{const shop=require('./ruby-shop');for(const [outfit,cost] of [['botanist',15],['mariner',25],['starlight',40]]){const id='outfit:'+outfit,u={balance:100,gems:{bronze:100}};assert.throws(()=>shop.use(u,{itemId:id}),/own/);Object.assign(u,shop.purchase(u,id));assert.equal(u.balance,100-cost);assert.equal(u.gems.bronze,100);assert.throws(()=>shop.purchase(u,id),/Already owned/);const update=shop.use(u,{itemId:id});assert.equal(update.townHallCharacter.outfit,outfit);}});
+
+test('collectibles can be purchased repeatedly for full price, including from player stalls',()=>{let u={gems:{bronze:500},rubyItems:{'relic:rose':1}};Object.assign(u,shop.purchase(u,'relic:rose'));assert.equal(u.rubyItems['relic:rose'],2);assert.equal(u.gems.bronze,350);const rules=require('./player-stall'),item=rules.catalog().find(i=>i.id==='relic:rose'),stall={entries:[{...item,unique:true,price:135,quantity:1}],history:[]};rules.buy(u,{gems:{}},stall,item.key,0);assert.equal(u.rubyItems['relic:rose'],3);assert.equal(u.gems.bronze,215);});

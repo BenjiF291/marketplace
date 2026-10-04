@@ -1,17 +1,17 @@
 ﻿(() => {
- let itemsOnly=false;
+ let itemsOnly=false,stallCategory=null;
  window.addEventListener('pet-care-changed',()=>{journeyTables=null;refresh().then(()=>journeyPanel.open?loadJourneyTables():null).catch(()=>{});});
  let state=null,busy=false,journeyTables=null,journeyClockOffset=0;
  const extraCompanions=new Map();
  const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  const call=async(path,body)=>{const res=await fetch(API_URL+path,{method:body?'POST':'GET',headers:resourceHeaders(),...(body?{body:JSON.stringify(body)}:{})});if(!res.ok)throw Error(await res.text());return res.json();};
- const dialog=el('dialog',undefined,'ruby-dialog');dialog.id='rubyShopDialog';
+ const dialog=el('dialog',undefined,'ruby-dialog');dialog.id='rubyShopDialog';dialog.addEventListener('close',()=>window.dispatchEvent(new Event('market-stock-changed')));
  const close=el('button','Close','btn');close.onclick=()=>dialog.close();
  const title=el('h2','The Ruby Cabinet');const status=el('p');status.setAttribute('role','status');
  const filter=el('select');filter.setAttribute('aria-label','Shop category');
  for(const [key,name] of [['all','Everything'],['pet','Companions'],['relic','Collectibles'],['opening','Pack effects'],['profile','Profile styles'],['supply','Utilities & food']]){const option=el('option',name);option.value=key;filter.append(option);}
  const list=el('div',undefined,'ruby-grid');dialog.append(close,title,status,filter,list);document.body.append(dialog);
- const trigger=el('button','Ruby shop','btn');trigger.id='rubyShopButton';trigger.onclick=()=>open();document.getElementById('dyeHeaderControls').prepend(trigger);
+ const trigger=el('button','Ruby shop','btn');trigger.id='rubyShopButton';trigger.onclick=()=>window.MarketStreet.open({onExit:()=>{},onCards:()=>footyStudio.navigate('marketplace')});document.getElementById('dyeHeaderControls').prepend(trigger);
  const grantSelect=el('select');grantSelect.className='input-field';grantSelect.setAttribute('aria-label','Ruby shop item to grant');
  const grantQty=el('input');grantQty.className='input-field';grantQty.type='number';grantQty.min='1';grantQty.value='1';grantQty.setAttribute('aria-label','Ruby shop item quantity');
  const grantBtn=el('button','Grant Ruby shop item','btn btn-primary');
@@ -140,11 +140,12 @@
  }
  async function refresh(){state=await call('/ruby-shop');journeyClockOffset=(state.serverNow||Date.now())-Date.now();grantSelect.replaceChildren();for(const item of state.catalog){const option=el('option',item.name);option.value=item.id;grantSelect.append(option);}paintHome();render();renderJourneys();return state;}
  function render(){if(!state)return;status.textContent=`${state.rubies} Rubies • ${state.fuelArmed?'Fuel armed for next conversion':'Choose something special'}`;list.replaceChildren();
- for(const item of state.catalog.filter(x=>(!itemsOnly||state.owned[x.id]>0)&&(filter.value==='all'||x.kind===filter.value))){
-  const tile=el('article',undefined,'ruby-tile');tile.append(el('div',emoji[item.id]||({'opening':'✦','profile':'♛','supply':'◇'}[item.kind]||'◆'),'ruby-art'),el('h3',item.name),el('p',item.description),el('strong',`${item.price} ${item.currency||'Rubies'}`),el('small',`Owned: ${state.owned[item.id]||0}`));
+ for(const item of state.catalog.filter(x=>(!itemsOnly||state.owned[x.id]>0)&&(filter.value==='all'||x.kind===filter.value)&&(!stallCategory||stallCategory!=='supply'||!(x.id==='food'||x.id.startsWith('food:'))))){
+  const tile=el('article',undefined,'ruby-tile');tile.append(el('div',emoji[item.id]||({'opening':'✦','profile':'♛','supply':'◇'}[item.kind]||'◆'),'ruby-art'),el('h3',item.name),...(item.kind==='relic'?[]:[el('p',item.description)]),el('strong',`${item.price} ${item.currency||'Rubies'}`),el('small',`Owned: ${state.owned[item.id]||0}`));
   if(item.kind==='pet'){const portrait=tile.querySelector('.ruby-art');portrait.classList.add('companion-portrait');portrait.innerHTML=window.companionArt(item.id);}
   if(item.kind==='opening'){const preview=el('button','Preview animation','btn');preview.onclick=()=>window.playSpecialPackOpening({preview:true},item.id.split(':')[1]);tile.append(preview);}
-  const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||(item.currency==='Footy'?state.balance:state.rubies)<item.price||(item.kind!=='supply'&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);if(!itemsOnly&&!(item.kind==='pet'&&state.owned[item.id]>0))tile.append(buy);if(item.kind==='pet'&&state.owned[item.id]>0){const explore=el('button','Send on an exploration','btn btn-primary');explore.onclick=()=>openJourneys();tile.append(explore);}
+  const buy=el('button','Buy','btn btn-primary');buy.disabled=busy||(item.currency==='Footy'?state.balance:state.rubies)<item.price||(!['supply','relic'].includes(item.kind)&&state.owned[item.id]>0);buy.onclick=()=>act('buy',item.id);if(!itemsOnly&&!(item.kind==='pet'&&state.owned[item.id]>0))tile.append(buy);if(item.kind==='pet'&&state.owned[item.id]>0){const explore=el('button','Send on an exploration','btn btn-primary');explore.onclick=()=>openJourneys();tile.append(explore);}
+  if(item.kind==='relic'){const stats=el('button','Stats','btn');stats.setAttribute('aria-label','Stats for '+item.name);stats.onclick=()=>{const d=el('dialog',undefined,'ruby-dialog collectible-stats');d.setAttribute('aria-label',item.name+' stats');const r=item.displayRewards;d.append(el('h2',item.name),el('p',r.focus));const table=el('dl');for(const [label,value] of [['Passive XP',`${r.periodic} XP every ${r.hours} hours`],['First-time visitor',`${r.visitor} XP`],['Cleanup reward',`${r.cleanup} XP to whoever cleans up`],['Display lifespan','3-7 days; usually 5']])table.append(el('dt',label),el('dd',value));d.append(table,el('p','Maximum 3 displays per player. Once displayed, it cannot be removed or replaced. It breaks permanently at the end of its lifespan.'));const close=el('button','Close','btn');close.onclick=()=>d.close();d.append(close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();};tile.append(stats);}
   if(item.kind==='relic'&&window.HallArt)tile.querySelector('.ruby-art').innerHTML=HallArt.decor(item.id);
   if(item.id.startsWith('compass:')&&state.owned[item.id]>0){const use=el('button','Use on a pack','btn btn-primary');use.onclick=async()=>{use.disabled=true;try{const packs=(await call('/inventory')).filter(p=>p.itemType==='pack'&&!p.listedForSale);if(!packs.length){status.textContent='You have no packs to open.';return;}const packId=await choose('Choose a pack for '+item.name,packs.map(p=>({id:p.id,name:p.name})));if(packId){dialog.close();await openPack(packId,item.id,packs.find(p=>p.id===packId));}}catch(e){status.textContent=e.message;}finally{use.disabled=false;}};tile.append(use);}
   if(state.owned[item.id]>0&&item.kind!=='relic'&&!item.id.startsWith('compass:')&&!item.id.startsWith('food:')){
@@ -161,7 +162,8 @@
  window.petJourneyTutorial=()=>{const d=el('dialog',undefined,'ruby-dialog');d.append(el('h2','Your first pet exploration'),el('p','Open Pet explorations on the island or Send on an exploration on your pet in the Ruby shop. Choose your pet and one serving of food, inspect the odds, then send it on a four-hour trip. Return to collect the rewards. Happiness improves the odds and resets to 1 when you collect. Recall pets from the care station before sending them.'));const go=el('button','Open explorations','btn btn-primary'),close=el('button','Got it','btn');go.onclick=()=>{d.close();openJourneys();};close.onclick=()=>d.close();d.append(go,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();};
  window.refreshRubyItems=refresh;
  window.openRubyItemInventory=()=>open(true);
- async function open(owned=false){itemsOnly=owned;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=owned?'supply':'all';if(!dialog.open){if(document.body.dataset.villageBuilding==='cabinet')dialog.show();else dialog.showModal();}status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
+ window.openRubyStall=(kind)=>open(false,kind);
+ async function open(owned=false,category=null){itemsOnly=owned;stallCategory=category;filter.hidden=!!category;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=category||(owned?'supply':'all');if(category)title.textContent=({pet:'Companion stall',relic:'Collectibles stall',opening:'Pack effects stall',profile:'Profile styles stall',supply:'Utilities stall'})[category];if(!dialog.open){if(document.body.dataset.villageBuilding==='cabinet')dialog.show();else dialog.showModal();}status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
  filter.onchange=render;
 
  function choose(title,options,images=false){return new Promise(resolve=>{const d=el('dialog',undefined,'ruby-dialog');d.append(el('h2',title));const grid=el('div',undefined,'ruby-grid');d.append(grid);let selected;

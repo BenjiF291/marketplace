@@ -132,7 +132,7 @@
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
    if(['petstation','farmhouse','jobs','timebank'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show);return;}
-   if(b.id==='market'&&b.route==='marketplace'&&!b.marketStall){VillageInteriors.close();await MarketStreet.open({onExit:show,onCards:()=>enterBuilding({...b,marketStall:true})});return;}
+   if((b.id==='market'&&b.route==='marketplace'&&!b.marketStall)||b.id==='cabinet'){VillageInteriors.close();await MarketStreet.open({onExit:show,onCards:()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:true})});return;}
    if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
    VillageInteriors.open(b,{back:b.id==='market'?()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:false}):show,enter:enterBuilding});

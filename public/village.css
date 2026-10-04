@@ -209,3 +209,5 @@
 .village-world .village-square-grid{width:1440px!important;height:1000px!important;max-width:none!important;max-height:none!important}
 
 .village-square-grid ellipse{fill:#f8e9af33;stroke:#fff0b9;stroke-width:1.5}.village-square-grid ellipse.village-grid-preview{fill:#91e4a377;stroke:#c8ffd0;stroke-width:3}.village-square-grid ellipse.invalid{fill:#e96e6e77;stroke:#ffb4a4}
+
+.market-street-stage{width:2025px;background-size:900px 600px;background-position:left top;background-repeat:repeat-x}.market-directory{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px}.market-directory button{font-size:12px}.collectible-stats dl{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:18px;background:#f2e5c8;border-radius:12px}.collectible-stats dt{font-weight:bold}.collectible-stats dd{margin:0}
