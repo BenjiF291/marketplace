@@ -1,7 +1,12 @@
 const { gemIdentity } = require('./gem-utils');
 const DYE_AREAS = { background: 'Page background', header: 'Header', panels: 'Section panels', navigation: 'Navigation tabs', buttons: 'Primary buttons', success: 'Buy and success buttons', borders: 'Panel borders', inputs: 'Input fields', balance: 'Footy balance', converter: 'Gem converter', machine: 'Conversion chamber', amulets: 'Amulet shop background', slots: 'Empty amulet slots', notices: 'Status messages' };
 const { effects } = require('./amulet-utils');
-const CRAFT_COST = { 'rare-silver': 10, gold: 5, 'rare-gold': 2 };
+function refineryProgress(user,tiers){
+ const identities=tiers.map(gemIdentity),max=Math.max(0,identities.length-1);
+ // Players who paid for the old all-tier machine keep its unlocked recipes.
+ const level=Number.isSafeInteger(user.gemRefineryLevel)?Math.max(0,Math.min(max,user.gemRefineryLevel)):(user.gemCompressor===true?max:0);
+ const next=identities[level+1];return {level,max,current:identities[level]||null,nextUpgrade:next?{...next,costs:identities.slice(0,level+2).map((g,i)=>({...g,amount:i===level+1?5:10}))}:null};
+}
 function dyeInventory(user) {
   // Convert each previously purchased permanent color into one batch of five dyes.
   if (Array.isArray(user.gemDyes)) return Object.fromEntries(user.gemDyes.map(key => [key, 5]));
@@ -10,16 +15,18 @@ function dyeInventory(user) {
 function workshopAction(user, tiers, action, body) {
   const gems = require('./gem-wallet').wallet(user.gems);
   const identities = tiers.map(gemIdentity);
-  if (action === 'craft') {
-    if (user.gemCompressor === true) throw new Error('You already own a gem compressor');
-    for (const [key, cost] of Object.entries(CRAFT_COST)) if (!(gems[key] >= cost)) throw new Error('Crafting requires 10 Opals, 5 Citrine and 2 Emeralds');
-    for (const [key, cost] of Object.entries(CRAFT_COST)) gems[key] -= cost;
-    return { gems, gemCompressor: true };
+  if(action==='craft')throw Error('The refinery no longer needs crafting. Upgrade it to unlock the next gem tier.');
+  if(action==='upgrade'){
+    const next=refineryProgress(user,tiers).nextUpgrade;
+    if(!next||body.tierId!==next.tierId)throw Error('That refinery upgrade is no longer available. Refresh and try again.');
+    for(const cost of next.costs)if((gems[cost.gemKey]||0)<cost.amount)throw Error(`You need ${cost.amount} ${cost.gemName} for this upgrade.`);
+    for(const cost of next.costs)gems[cost.gemKey]-=cost.amount;
+    return {gems,gemRefineryLevel:refineryProgress(user,tiers).level+1};
   }
   if (action === 'compress') {
-    if (user.gemCompressor !== true) throw new Error('Craft a gem compressor first');
     const index = identities.findIndex(gem => gem.gemKey === body.gemKey);
     if (index < 0 || index >= identities.length - 1) throw new Error('This gem has no next tier');
+    if(index+1>refineryProgress(user,tiers).level)throw Error('Upgrade your refinery to unlock this output gem.');
     if (!Number.isSafeInteger(body.quantity) || body.quantity < 1 || !Number.isSafeInteger(body.quantity * 4)) throw new Error('Enter a positive whole output quantity');
     if (!(gems[body.gemKey] >= body.quantity * 4)) throw new Error('Not enough gems');
     const next = identities[index + 1].gemKey;
@@ -71,4 +78,4 @@ function workshopAction(user, tiers, action, body) {
   }
   throw new Error('Unknown workshop action');
 }
-module.exports = { workshopAction, dyeInventory, DYE_AREAS, CRAFT_COST };
+module.exports = { workshopAction, dyeInventory, DYE_AREAS, refineryProgress };

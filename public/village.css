@@ -211,3 +211,7 @@
 .village-square-grid ellipse{fill:#f8e9af33;stroke:#fff0b9;stroke-width:1.5}.village-square-grid ellipse.village-grid-preview{fill:#91e4a377;stroke:#c8ffd0;stroke-width:3}.village-square-grid ellipse.invalid{fill:#e96e6e77;stroke:#ffb4a4}
 
 .market-street-stage{width:2025px;background-size:900px 600px;background-position:left top;background-repeat:repeat-x}.market-directory{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px}.market-directory button{font-size:12px}.collectible-stats dl{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:18px;background:#f2e5c8;border-radius:12px}.collectible-stats dt{font-weight:bold}.collectible-stats dd{margin:0}
+
+.village-building[data-building="compressor"] svg.village-painted-building{overflow:visible}.refinery-preview{height:280px;display:flex;justify-content:center;align-items:center;margin:20px 0 6px}.refinery-preview>svg{width:210px;height:273px;overflow:visible}.refinery-preview svg{overflow:visible}#refineryUpgradeCost{font-weight:650;line-height:1.8}
+
+.refinery-preview>img{height:280px;width:280px;max-width:100%;object-fit:contain}

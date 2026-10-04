@@ -16,9 +16,13 @@ function workshopOptions(id, choices) {
 function renderGemWorkshop() {
   const data = workshopState;
   const craft = document.getElementById('craftCompressor');
-  craft.textContent = data.compressor ? 'Compressor crafted' : 'Craft compressor';
-  craft.disabled = workshopBusy || data.compressor || (data.gems['rare-silver'] || 0) < 10 || (data.gems.gold || 0) < 5 || (data.gems['rare-gold'] || 0) < 2;
-  workshopOptions('compressGem', data.tiers.slice(0, -1).filter(gem => data.gems[gem.gemKey] > 0).map(gem => [gem.gemKey, `${gem.gemName} (${data.gems[gem.gemKey]})`]));
+  const refinery=data.refinery||{level:0,nextUpgrade:null},next=refinery.nextUpgrade;
+  craft.textContent=next?`Upgrade to ${next.gemName}`:'Refinery fully upgraded';
+  craft.disabled=workshopBusy||!next||next.costs.some(c=>(data.gems[c.gemKey]||0)<c.amount);
+  document.getElementById('refineryUpgradeCost').textContent=next?next.costs.map(c=>`${c.amount} ${c.gemName}`).join(' + '):'Every gem tier is unlocked.';
+  document.getElementById('refineryTier').textContent=`${refinery.current?.gemName||'Ruby'} refinery`;
+  const picture=document.createElement('img');picture.src=`assets/village/refinery/tier-${Math.min(13,refinery.level)}.png`;picture.alt='Crystal refinery laboratory';document.getElementById('refineryPreview').replaceChildren(picture);
+  workshopOptions('compressGem', data.tiers.slice(0,refinery.level).filter(gem=>data.gems[gem.gemKey]>0).map(gem=>[gem.gemKey,`${gem.gemName} (${data.gems[gem.gemKey]})`]));
   const palette = document.getElementById('gemDyePalette'); palette.replaceChildren();
   for (const gem of data.tiers.filter(gem => data.gems[gem.gemKey] > 0 || (data.dyes[gem.gemKey] || 0) > 0)) {
     const tile = amuletNode('div', undefined, 'gem-balance-tile');
@@ -43,8 +47,8 @@ function updateCompressionQuote() {
   const next = index >= 0 ? workshopState.tiers[index + 1] : null;
   const count = Number(document.getElementById('compressQuantity').value);
   const valid = Number.isSafeInteger(count) && count > 0 && Number.isSafeInteger(count * 4);
-  document.getElementById('compressionQuote').textContent = next && valid ? `${count * 4} ${workshopState.tiers[index].gemName} ? ${count} ${next.gemName}` : 'Choose a source gem and positive whole output quantity.';
-  document.getElementById('compressGems').disabled = workshopBusy || !workshopState.compressor || !next || !valid || (workshopState.gems[key] || 0) < count * 4;
+  document.getElementById('compressionQuote').textContent = !(workshopState.refinery?.level>0) ? 'Upgrade to Garnet to unlock Ruby refinement.' : next && valid ? `${count * 4} ${workshopState.tiers[index].gemName} → ${count} ${next.gemName}` : 'Choose a source gem and positive whole output quantity.';
+  document.getElementById('compressGems').disabled = workshopBusy || index+1>(workshopState.refinery?.level||0) || !next || !valid || (workshopState.gems[key] || 0) < count * 4;
 }
 async function workshopAction(action, body) {
   if (workshopBusy || !workshopState) return;
@@ -52,7 +56,7 @@ async function workshopAction(action, body) {
   let message;
   try {
     await resourceRequest(`/gem-workshop/${action}`, body);
-    message = { craft: 'Gem compressor crafted!', compress: 'Gems compressed!', 'craft-dye': 'Dyes crafted for 1 gem, including equipped amulet bonuses.', dye: 'Interface colors saved.' }[action];
+    message = { upgrade: 'Crystal refinery upgraded!', compress: 'Gems compressed!', 'craft-dye': 'Dyes crafted for 1 gem, including equipped amulet bonuses.', dye: 'Interface colors saved.' }[action];
   } catch (error) { message = error.message; }
   finally {
     workshopBusy = false;

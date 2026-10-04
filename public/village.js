@@ -15,7 +15,7 @@
   {id:'pets',name:'Companion lodge',kind:'pets',x:477,y:625,level:2,route:'home',target:'petJourneys',description:'Visit your companions, send them exploring, and collect their discoveries.'},
   {id:'cabinet',name:'Ruby emporium',kind:'cabinet',x:290,y:495,level:1,route:'ruby',description:'Adopt companions, buy food and useful items, and choose your pack-opening effects.'},
   {id:'dye',name:'Colour studio',kind:'dye',x:1031,y:599,level:3,route:'workshop',target:'gemWorkshop',description:'Craft dyes and bring your colours into the club.'},
-  {id:'compressor',name:'Crystal refinery',kind:'compressor',x:701,y:742,level:4,route:'workshop',target:'gemWorkshop',description:'Craft your compressor and combine gems into higher tiers.'},
+  {id:'compressor',name:'Crystal refinery',kind:'compressor',x:701,y:742,level:4,route:'workshop',target:'gemWorkshop',description:'Upgrade your refinery to unlock higher gem tiers.'},
   {id:'vault',name:'Footy vault',kind:'vault',x:621,y:572,level:0,route:'wallet',description:'Your balance, transfers and account history.'},
   {id:'vip',name:'Royal hall',kind:'vip',x:811,y:604,level:5,route:'vip',description:'Your VIP membership and its benefits.'}
  ];
@@ -61,7 +61,7 @@
   }finally{camera=previous;applyCamera();d.classList.remove('village-travelling');travelling=false;}
  }
  function render(){if(!data||!world)return;updateStats(data);const l=level();
-  for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);const appeared=tile.hidden&&open;tile.hidden=!open;tile.classList.toggle('village-appearing',appeared);if(!open){tile.replaceChildren();continue;}tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:l,!open);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
+  for(const b of buildings){const tile=tiles.get(b.id),open=unlocked(b);const appeared=tile.hidden&&open;tile.hidden=!open;tile.classList.toggle('village-appearing',appeared);if(!open){tile.replaceChildren();continue;}tile.innerHTML=VillageArt.building(b.kind,b.id==='forge'?data.forgeLevel||0:b.id==='compressor'?data.refineryLevel||0:l,!open);tile.classList.toggle('locked',!open);tile.setAttribute('aria-label',`${b.name}, ${open?'available':`locked until Town Hall level ${b.level+1}`}`);}
   notice.textContent=simulation===null?'Your Town Hall progression':`Previewing Town Hall level ${l+1} — no account changes`;
   status.textContent=`${buildings.filter(unlocked).length} / ${buildings.length} buildings open`;
   jump.replaceChildren(new Option('Find a building...',''));buildings.filter(b=>unlocked(b)&&data.layout?.positions[b.id]!==undefined).forEach(b=>jump.append(new Option(b.name,b.id)));

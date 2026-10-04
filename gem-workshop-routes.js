@@ -1,6 +1,6 @@
 const { effects } = require('./amulet-utils');
 const { gemIdentity } = require('./gem-utils');
-const { workshopAction, dyeInventory, DYE_AREAS } = require('./gem-workshop-utils');
+const { workshopAction, dyeInventory, DYE_AREAS, refineryProgress } = require('./gem-workshop-utils');
 module.exports = (app, db, getTiers) => {
   app.get('/gem-workshop', async (req, res) => {
     const id = req.header('X-User-Id');
@@ -9,7 +9,7 @@ module.exports = (app, db, getTiers) => {
       const [doc, tiers] = await Promise.all([db.collection('users').doc(id).get(), getTiers()]);
       if (!doc.exists) return res.status(404).send('User not found');
       const user = doc.data();
-      res.json({ dyeYield:5+(effects(user).pigment||0), gems: require('./gem-wallet').wallet(user.gems), tiers: tiers.map(gemIdentity), compressor: user.gemCompressor === true, dyes: dyeInventory(user), theme: user.gemTheme || {}, areas: DYE_AREAS });
+      res.json({ dyeYield:5+(effects(user).pigment||0), gems: require('./gem-wallet').wallet(user.gems), tiers: tiers.map(gemIdentity), compressor: true, refinery: refineryProgress(user,tiers), dyes: dyeInventory(user), theme: user.gemTheme || {}, areas: DYE_AREAS });
     } catch (error) { res.status(500).send('Could not load gem workshop'); }
   });
   app.post('/gem-workshop/:action', async (req, res) => {
@@ -23,7 +23,7 @@ module.exports = (app, db, getTiers) => {
         if (!user.exists) throw new Error('User not found');
         const change=workshopAction(user.data(), tiers.docs.map(doc => ({ ...doc.data(), id: doc.id })), req.params.action, req.body);
         const spentDye=change.gemDyes&&Object.entries(user.data().gemDyes||{}).some(([k,v])=>Number(change.gemDyes[k]||0)<Number(v));
-        const activity=({craft:'compressor built',compress:'compression','craft-dye':'dye crafting'})[req.params.action]||(spentDye?'dye applied':null);
+        const activity=({upgrade:'refinery upgrade',compress:'compression','craft-dye':'dye crafting'})[req.params.action]||(spentDye?'dye applied':null);
         tx.update(ref,{...change,...require('./town-hall-progress').gameplay(user.data(),activity)});
       });
       res.json({ success: true });

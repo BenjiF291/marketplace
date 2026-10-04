@@ -30,6 +30,7 @@
  }
 
  function building(kind,level=0,locked=false){
+  if(kind==='compressor'&&!locked){const tier=Math.max(0,Math.min(13,Math.trunc(level)||0)),size=90+tier*4;return anchored(0,0,1024,1024,512,860,size/1024,`<image href="assets/village/refinery/tier-${tier}.png" width="1024" height="1024"/>`);}
   if(kind==='timebank'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/time-bank-painted.png" width="1024" height="1024"/>`);
   if(kind==='jobs'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/job-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='petstation')return anchored(0,0,1024,1024,512,850,80/1024,`<image href="assets/village/pet-station-painted.png" width="1024" height="1024"/>`);

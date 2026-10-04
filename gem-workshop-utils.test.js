@@ -2,16 +2,16 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { workshopAction, DYE_AREAS } = require('./gem-workshop-utils');
 const tiers = ['Bronze', 'Rare Bronze', 'Silver', 'Rare Silver', 'Gold', 'Rare Gold', 'Platinum', 'Lightning', 'Ultra', 'Special'].map((name, i) => ({ name, id: String(i) }));
-test('craft consumes exact recipe once and rejects insufficient materials', () => {
-  const user = { gems: { 'rare-silver': 10, gold: 5, 'rare-gold': 2, bronze: 12 } };
-  const result = workshopAction(user, tiers, 'craft', {});
-  assert.equal(result.gemCompressor, true);
-  assert.deepEqual(result.gems, { 'rare-silver': 0, gold: 0, 'rare-gold': 0, bronze: 12 });
-  assert.throws(() => workshopAction(result, tiers, 'craft', {}));
-  assert.throws(() => workshopAction({ gems: { ...user.gems, gold: 4 } }, tiers, 'craft', {}));
-  assert.equal(user.gems.gold, 5);
+test('refinery starts at Ruby and upgrades with five new gems and ten of every lower tier',()=>{
+ let user={gems:Object.fromEntries(tiers.map(t=>[require('./gem-utils').gemIdentity(t).gemKey,200]))};
+ const {refineryProgress}=require('./gem-workshop-utils');assert.equal(refineryProgress(user,tiers).level,0);
+ assert.throws(()=>workshopAction(user,tiers,'compress',{gemKey:'bronze',quantity:1}),/Upgrade/);
+ for(let level=1;level<tiers.length;level++){const next=refineryProgress(user,tiers).nextUpgrade,old={...user.gems};assert.equal(next.costs.length,level+1);const update=workshopAction(user,tiers,'upgrade',{tierId:next.tierId});assert.equal(update.gemRefineryLevel,level);for(let i=0;i<=level;i++){const key=require('./gem-utils').gemIdentity(tiers[i]).gemKey;assert.equal(update.gems[key],old[key]-(i===level?5:10));}user={...user,...update};assert.throws(()=>workshopAction(user,tiers,'upgrade',{tierId:next.tierId}),/no longer/);}
+ assert.equal(refineryProgress(user,tiers).nextUpgrade,null);assert.throws(()=>workshopAction({gems:{bronze:10,'rare-bronze':4}},tiers,'upgrade',{tierId:'1'}),/5 Garnet/);assert.throws(()=>workshopAction(user,tiers,'craft',{}),/no longer/);
 });
-test('compression requires machine, spends 4 per output and follows next configured tier', () => {
+test('a refinery upgrade only unlocks the new output, not later gems',()=>{const u={gemRefineryLevel:1,gems:{bronze:8,'rare-bronze':8}};assert.equal(workshopAction(u,tiers,'compress',{gemKey:'bronze',quantity:2}).gems['rare-bronze'],10);assert.throws(()=>workshopAction(u,tiers,'compress',{gemKey:'rare-bronze',quantity:1}),/Upgrade/);});
+
+test('legacy all-tier machines retain recipes, refinement spends 4 per output and follows next configured tier', () => {
   const user = { gemCompressor: true, gems: { bronze: 11, 'rare-bronze': 1, ultra: 4 } };
   const result = workshopAction(user, tiers, 'compress', { gemKey: 'bronze', quantity: 2 });
   assert.equal(result.gems.bronze, 3); assert.equal(result.gems['rare-bronze'], 3);
