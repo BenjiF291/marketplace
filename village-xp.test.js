@@ -24,13 +24,13 @@ test('farm XP is per ingredient, independent of collection frequency and resourc
  }
 });
 test('cooking, care and upgrades award XP only after successful actions',()=>{
- const u={...user(),farmIngredients:{water:1,carrot:1}};
- apply(u,{action:'farm-cook',food:'food'});assert.equal(u.townHallXP,652);
- assert.throws(()=>apply(u,{action:'farm-cook',food:'food'}),/need/);assert.equal(u.townHallXP,652);
- apply(u,{action:'station-send',pet:'pet:fox'});assert.equal(u.townHallXP,652);
- apply(u,{action:'pet-feed',pet:'pet:fox',food:'food'});apply(u,{action:'pet-play',pet:'pet:fox'});assert.equal(u.townHallXP,654);
- apply(u,{action:'farm-upgrade',level:1});assert.equal(u.townHallXP,659);
- apply(u,{action:'upgrade-house',house:'house:0',revision:0});assert.equal(u.townHallXP,664);
+ const u={...user(),townHallXP:1150,farmIngredients:{water:1,carrot:1}};
+ apply(u,{action:'farm-cook',food:'food'});assert.equal(u.townHallXP,1152);
+ assert.throws(()=>apply(u,{action:'farm-cook',food:'food'}),/need/);assert.equal(u.townHallXP,1152);
+ apply(u,{action:'station-send',pet:'pet:fox'});assert.equal(u.townHallXP,1152);
+ apply(u,{action:'pet-feed',pet:'pet:fox',food:'food'});apply(u,{action:'pet-play',pet:'pet:fox'});assert.equal(u.townHallXP,1154);
+ apply(u,{action:'farm-upgrade',level:1});assert.equal(u.townHallXP,1159);
+ apply(u,{action:'upgrade-house',house:'house:0',revision:0});assert.equal(u.townHallXP,1164);
 });
 test('vault wages earn two XP per Footy and empty recalls earn none',()=>{
  const u=user();apply(u,{action:'vault-start'});assert.equal(u.townHallXP,650);

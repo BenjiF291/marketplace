@@ -20,7 +20,7 @@ module.exports = function(app, db, getTiers) {
       const buffs = effects(data);
       res.json({ wheelSpinCount:Number(data.wheelSpinCount)||0, catalog: entries, owned: data.amulets || {}, slots: (data.amuletSlots || []).map(rebalanceAmulet),
         slotCount: data.amuletSlotCount || 1, slotPrices: SLOT_PRICES,
-        gems: data.gems || {}, balance: data.balance || 0, isAdmin: data.isAdmin === true, effects: buffs, vipPrice: discounted(300, buffs.vip), vipDays: 30 + (buffs.vipdays || 0), serverNow: Date.now() });
+        gems: require('./gem-wallet').wallet(data.gems), balance: data.balance || 0, isAdmin: data.isAdmin === true, effects: buffs, vipPrice: discounted(300, buffs.vip), vipDays: 30 + (buffs.vipdays || 0), serverNow: Date.now() });
     } catch (error) { res.status(500).send('Could not load amulets'); }
   });
   app.post('/amulets/:action', async (req, res) => {

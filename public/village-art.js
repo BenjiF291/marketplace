@@ -30,6 +30,7 @@
  }
 
  function building(kind,level=0,locked=false){
+  if(kind==='timebank'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/time-bank-painted.png" width="1024" height="1024"/>`);
   if(kind==='jobs'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/job-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='petstation')return anchored(0,0,1024,1024,512,850,80/1024,`<image href="assets/village/pet-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='farmhouse')return anchored(0,0,1024,1024,512,850,80/1024,`<image href="assets/village/farmhouse-painted.png" width="1024" height="1024"/>`);

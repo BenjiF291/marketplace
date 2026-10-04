@@ -1,13 +1,14 @@
 const layout=require('./public/village-layout'),workforce=require('./village-workforce');
 const unlocks=[2,4,5,7,10];
 const {INTERVAL,LIMIT,SHIFT}=require('./ruby-mine-rules');
-function profile(user,now=Date.now()){
+function profile(user,now=Date.now()){user=require('./gem-wallet').user(user);
  const homes=layout.profile(user),level=require('./town-hall-progress').profile(user).level;
  const mines=unlocks.map((unlock,i)=>{const shift=user.rubyMineShifts?.[i];const earned=shift?Math.max(0,Math.min(LIMIT,Math.floor((now-shift.started)/INTERVAL))):0;return {workers:workforce.assigned(shift,workforce.residents(user)),id:i,unlock,unlocked:level>=unlock,worker:shift?.worker||null,house:shift?.house||shift?.worker?.split('/')[0]||null,household:!!shift?.house,ends:shift?shift.started+SHIFT:0,active:!!shift&&now<shift.started+SHIFT,claimable:Math.max(0,earned-(shift?.claimed||0))};});
  const staff=workforce.profile(user,now);
- return {vault:require('./vault-job').profile(user,now),care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
+ return {timeBank:require('./time-bank').profile(user,now),vault:require('./vault-job').profile(user,now),care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
 }
 function perform(user,body,now=Date.now()){
+ if(/^(bank-|time-)/.test(body.action||''))return require('./time-bank').action(user,body,now);
  if(/^vault-/.test(body.action||''))return require('./vault-job').action(user,body,now);
  if(/^(station-|pet-|farm-)/.test(body.action||''))return require('./pet-care').action(user,body,now);
  const homes=layout.profile(user),gems={...(user.gems||{})};
@@ -38,10 +39,11 @@ function perform(user,body,now=Date.now()){
  gems.bronze=(Number(gems.bronze)||0)+mine.claimable;
  return {gems,rubyMineShifts:shifts};
 }
-function action(user,body,now=Date.now()){
+function action(user,body,now=Date.now()){user=require('./gem-wallet').user(user);
  const update=perform(user,body,now);let activity,units=1;
  if(['start-mine','start-household','collect-mine','recall-mine'].includes(body.action)){activity='ruby mining';units=(update.gems?.bronze||0)-(user.gems?.bronze||0);}
  else if(['farm-collect','farm-recall'].includes(body.action)){activity='farm gathering';units=(update.farmIngredients?.[body.resource]||0)-(user.farmIngredients?.[body.resource]||0);}
+ else if(body.action==='bank-collect'){activity='time bank work';units=(update.timeBoosts?.skip||0)+(update.timeBoosts?.leap||0)-(user.timeBoosts?.skip||0)-(user.timeBoosts?.leap||0);}
  else if(/^vault-/.test(body.action)){activity='vault work';units=(update.balance||0)-(user.balance||0);}
  else activity=({'farm-cook':'meal cooked','pet-feed':'pet treat','pet-play':'pet play','upgrade-house':'house upgrade','farm-upgrade':'farmhouse upgrade'})[body.action];
  return {...update,...require('./town-hall-progress').gameplay(user,activity,now,units)};

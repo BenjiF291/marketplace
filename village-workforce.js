@@ -4,7 +4,7 @@ function residents(u){return Object.entries(layout.profile(u).houseTiers).flatMa
 function assigned(job,all){if(!job)return [];return Array.isArray(job.workers)?job.workers:job.worker?[job.worker]:all.filter(id=>id.startsWith(job.house+'/'));}
 function profile(u,now=Date.now()){
  const all=residents(u),busy=new Set();
- const jobs=[...Object.values(u.rubyMineShifts||{}).filter(j=>now<j.started+MINE_SHIFT),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends),...(u.petStation?[u.petStation]:[]),...(u.vaultJob&&now<u.vaultJob.started+86400000?[u.vaultJob]:[])];
+ const jobs=[...Object.values(u.rubyMineShifts||{}).filter(j=>now<j.started+MINE_SHIFT),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends),...require('./pet-stations').stations(u),...(u.timeBank?[u.timeBank]:[]),...(u.vaultJob&&now<u.vaultJob.started+86400000?[u.vaultJob]:[])];
  for(const job of jobs)for(const id of assigned(job,all))if(all.includes(id))busy.add(id);
  return {total:all.length,available:all.filter(id=>!busy.has(id)),busy:[...busy]};
 }

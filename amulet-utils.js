@@ -85,7 +85,7 @@ function changeAmulets(user, action, body, entries, now = Date.now()) {
     if (!entry) throw new Error('Amulet not found');
     if(entry.exclusive)throw new Error('This amulet is only earned on the trophy road');
     const price = Math.ceil(entry.price * (1 - (buffs.gemshop || 0) / 100));
-    const gems = { ...(user.gems || {}) };
+    const gems = require('./gem-wallet').wallet(user.gems);
     if ((gems[entry.gemKey] || 0) < price) throw new Error(`Not enough ${entry.gemName}`);
     gems[entry.gemKey] -= price;
     owned[entry.id] = (owned[entry.id] || 0) + 1;

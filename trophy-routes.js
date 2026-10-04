@@ -90,7 +90,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const footy=isSkill&&result.result>0?activeBooster.footy:0;
     if(isSkill&&result.result>0){update.trophies+=Math.round(25*activeBooster.trophyPercent/100)+(amuletEffects(user.data()).trophybonus||0);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);}
     const ruby=isSkill&&result.result>0?activeBooster.ruby:0;
-    if(ruby)update.gems={...(user.data().gems||{}),bronze:(user.data().gems?.bronze||0)+ruby};
+    if(ruby)update.gems={...require('./gem-wallet').wallet(user.data().gems),bronze:require('./gem-wallet').whole(user.data().gems?.bronze)+ruby};
     if(footy)update.balance=(user.data().balance||0)+footy;
     if(isSkill)tx.set(profileRef,{...profileDoc.data(),...settled.state,activeComputerBattle:null});
     const delta=update.trophies-(user.data().trophies||0);
@@ -109,7 +109,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const user=doc.data(),claims=user.trophyClaims||[];
     if((user.trophyPeak||0)<reward.at)throw new Error('Reach this trophy milestone first');
     if(claims.includes(reward.at))throw new Error('Reward already claimed');
-    const gems={...(user.gems||{})};for(const [key,count] of Object.entries(reward.gems))gems[key]=(gems[key]||0)+count;
+    const gems=require('./gem-wallet').wallet(user.gems);for(const [key,count] of Object.entries(reward.gems))gems[key]=(gems[key]||0)+count;
     const amulets={...(user.amulets||{})};if(reward.amulet)amulets[reward.amulet]=(amulets[reward.amulet]||0)+1;
     const dyes=dyeInventory(user);for(const [key,count] of Object.entries(reward.dyes||{}))dyes[key]=(dyes[key]||0)+count;
     if(reward.pack){

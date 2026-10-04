@@ -1241,9 +1241,15 @@ app.get('/items', async (req, res) => {
     const now = Date.now();
     const items = [];
     const groupedListings = new Map();
+    const visibility=require('./marketplace-visibility');
+    const priorPurchases=visibility.purchases(snapshot.docs.map(d=>d.data()),viewerId);for(const key of viewer.marketPurchaseKeys||[])priorPurchases.add(key);
+    const groupIds=[...new Set(snapshot.docs.map(d=>d.data()).filter(i=>i.sold!==true&&i.listingGroupId).map(i=>i.listingGroupId))];
+    const groupDocs=viewerId?await Promise.all(groupIds.map(id=>db.collection('marketListingGroups').doc(id).get())):[];
+    const purchaseGroups=new Map(groupDocs.filter(d=>d.exists).map(d=>[d.id,d.data()]));
     snapshot.forEach(doc => {
       const data = doc.data();
       if (data.sold !== true && data.itemType !== 'battle-card') {
+        if(!visibility.visible(data,viewerId,purchaseGroups,priorPurchases))return;
         const scheduledAt = data.scheduledAt ? (data.scheduledAt.toDate ? data.scheduledAt.toDate() : new Date(data.scheduledAt)) : null;
         const expiresAt = data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null;
 
@@ -1253,7 +1259,7 @@ app.get('/items', async (req, res) => {
         const item = {
           id: doc.id,
           name: data.name || 'Unknown Item',
-          price: data.price || 0,
+          price: data.currency&&data.currency!=='footy'&&Number(data.price)>0?require('./gem-wallet').price(data.price,data.currency):data.price||0,
           currency: data.currency || 'footy', currencyName: data.currencyName || 'Footy',
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
@@ -1711,7 +1717,7 @@ app.post('/open-pack', async (req, res) => {
       const hallXP=require('./town-hall-progress').gameplay(opener.data(),'pack');if(Object.keys(hallXP).length)transaction.update(openerRef,hallXP);
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
       const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
-      if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...(opener.data().gems||{}),bronze:Number(opener.data().gems?.bronze||0)+rubyBonus}});
+      if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...require('./gem-wallet').wallet(opener.data().gems),bronze:require('./gem-wallet').whole(opener.data().gems?.bronze)+rubyBonus}});
       transaction.set(cardRef, {
         name: `Card ${cardId}`,
         itemType: 'card',
@@ -2165,7 +2171,7 @@ app.post('/buy', async (req, res) => {
         throw new Error('Buyer not found');
       }
 
-      const buyer = buyerDoc.data();
+      const buyer = require('./gem-wallet').user(buyerDoc.data());
 
       const sellerRef = usersRef.doc(item.sellerId);
       const sellerDoc = await transaction.get(sellerRef);
@@ -2174,12 +2180,13 @@ app.post('/buy', async (req, res) => {
         throw new Error('Seller not found');
       }
 
-      const seller = sellerDoc.data();
+      const seller = require('./gem-wallet').user(sellerDoc.data());
       const vipUntil = buyer.vipUntil ? (buyer.vipUntil.toDate ? buyer.vipUntil.toDate() : new Date(buyer.vipUntil)) : null;
       const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
       const currency = item.currency || 'footy';
       const hasHostDiscount = hasActiveVip && seller.isAdmin === true && vipPercent(item.vipDiscountPercent)>0;
-      const sellerPayment = hasHostDiscount ? vipPrice(item.price,item.vipDiscountPercent,item.currency) : item.price;
+      const basePrice=currency==='footy'?item.price:require('./gem-wallet').price(item.price,currency);
+      const sellerPayment = hasHostDiscount ? vipPrice(basePrice,item.vipDiscountPercent,item.currency) : basePrice;
       const purchasePrice = currency === 'footy' && seller.isAdmin === true ? discounted(sellerPayment, amuletEffects(buyer).market) : sellerPayment;
       if(req.body.expectedPrice!==undefined && req.body.expectedPrice!==purchasePrice)throw new Error('Price changed. Refresh the marketplace before buying.');
       const buyerFunds = currency === 'footy' ? Number(buyer.balance || 0) : Number((buyer.gems || {})[currency] || 0);
@@ -2198,8 +2205,9 @@ app.post('/buy', async (req, res) => {
       }
 
       if (item.limitOnePerUser === true) {
+        if((buyer.marketPurchaseKeys||[]).includes(item.purchaseLimitKey||require('./marketplace-visibility').key(item)))throw new Error('You may only buy this item once');
         const previousPurchases = await transaction.get(itemsRef.where('buyerId', '==', buyerId));
-        const purchaseLimitKey = item.purchaseLimitKey || purchaseLimitKeyForItem(item);
+        const purchaseLimitKey = item.purchaseLimitKey || require('./marketplace-visibility').key(item);
         const alreadyPurchased = previousPurchases.docs.some(doc => {
           const previousItem = doc.data();
           return previousItem.purchasedViaMarketplace === true && previousItem.purchaseLimitKey === purchaseLimitKey;
@@ -2212,6 +2220,7 @@ app.post('/buy', async (req, res) => {
       const hallBuyers=Array.isArray(item.hallBuyers)?item.hallBuyers:[],hallSellers=Array.isArray(item.hallSellers)?item.hallSellers:[];
       const buyerXP=!hallBuyers.includes(buyerId)&&hallBuyers.length<32?require('./town-hall-progress').gameplay(buyer,'market purchase'):{};
       const sellerXP=!hallSellers.includes(item.sellerId)&&hallSellers.length<32?require('./town-hall-progress').gameplay(seller,'market sale'):{};
+      if(item.limitOnePerUser===true)buyerXP.marketPurchaseKeys=[...new Set([...(buyer.marketPurchaseKeys||[]),item.purchaseLimitKey||require('./marketplace-visibility').key(item)])];
       // Perform writes (all reads must be done before these)
       if (currency === 'footy') {
         transaction.update(buyerRef, { balance: roundFooty(buyerFunds - purchasePrice),...buyerXP });
@@ -2228,6 +2237,7 @@ app.post('/buy', async (req, res) => {
         sold: true,
         buyerId: buyerId,
         purchasedAt: new Date(),
+        price:basePrice,
         purchasePrice,
         sellerPayment,
         hallBuyers:[...new Set([...hallBuyers,buyerId])].slice(0,32),hallSellers:[...new Set([...hallSellers,item.sellerId])].slice(0,32),
@@ -2248,7 +2258,7 @@ app.post('/buy', async (req, res) => {
         transaction.delete(sourceItemRef);
       }
 
-      return { purchasePrice, hasHostDiscount, listedPrice: item.price, currencyName: item.currencyName || 'Footy' };
+      return { purchasePrice, hasHostDiscount, listedPrice: basePrice, currencyName: item.currencyName || 'Footy' };
     });
     res.json({
       success: true,
@@ -2504,7 +2514,7 @@ app.get('/gem-converter', async (req, res) => {
       fuelArmed: user.data().rubyFuelArmed === true,
       costs: Number(tier.sellPrice) > 0 ? [1, 2, 3].map(count => rubyShop.fuelCost(user.data(), discounted(gemRecipe(tier, count).cost, amuletEffects(user.data()).converter))) : null
     }));
-    res.json({ ...progress, recipes, gems: user.data().gems || {}, balance: Number(user.data().balance || 0) });
+    res.json({ ...progress, recipes, gems: require('./gem-wallet').wallet(user.data().gems), balance: Number(user.data().balance || 0) });
   } catch (error) {
     console.error('Error loading gem converter:', error);
     res.status(500).send('Could not load gem converter');
@@ -2528,7 +2538,7 @@ app.post('/grant-gems', async (req, res) => {
       }
       if (!target.exists || !tier.exists) throw new Error('Player or gem tier not found');
       const gem = gemIdentity({ ...tier.data(), id: tier.id });
-      const gems = { ...(target.data().gems || {}) };
+      const gems = require('./gem-wallet').wallet(target.data().gems);
       const total = Number(gems[gem.gemKey] || 0) + quantity;
       if (!Number.isSafeInteger(total) || total < 0) throw new Error('Gem balance exceeds the supported amount');
       gems[gem.gemKey] = total;
@@ -2597,7 +2607,7 @@ app.post('/gem-converter', async (req, res) => {
       recipe.reward+=recipe.vipBonus+recipe.amuletBonus;
       const balance = Number(user.data().balance || 0);
       if (!Number.isFinite(balance) || balance < recipe.cost) throw new Error('Not enough Footy');
-      const gems = { ...(user.data().gems || {}) };
+      const gems = require('./gem-wallet').wallet(user.data().gems);
       gems[recipe.gemKey] = Number(gems[recipe.gemKey] || 0) + recipe.reward;
       const newBalance = Math.round((balance - recipe.cost) * 100) / 100;
       transaction.update(userRef, { balance: newBalance, gems, ...fuelUpdate,...require('./town-hall-progress').gameplay(user.data(),'conversion') });

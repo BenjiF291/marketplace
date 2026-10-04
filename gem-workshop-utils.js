@@ -8,7 +8,7 @@ function dyeInventory(user) {
   return { ...(user.gemDyes || {}) };
 }
 function workshopAction(user, tiers, action, body) {
-  const gems = { ...(user.gems || {}) };
+  const gems = require('./gem-wallet').wallet(user.gems);
   const identities = tiers.map(gemIdentity);
   if (action === 'craft') {
     if (user.gemCompressor === true) throw new Error('You already own a gem compressor');

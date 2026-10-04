@@ -42,14 +42,14 @@ function start(user,petId,foodId,loot,journeyId,now=Date.now(),rolls){
  if(!['pet:fox','pet:snail','pet:dragon'].includes(petId)||!user.rubyItems?.[petId])throw Error('You do not own that pet');
  if(user.petJourneys?.[petId]?.status==='travelling')throw Error('This pet already has a journey. Claim its rewards first.');
  const food=loot.find(t=>t.id===foodId);if(!food||!food.gems.length)throw Error('Journey food or gem tiers unavailable');
- if(user.petStation?.pet===petId)throw Error('Call your pet home from the pet station before exploring.');
+ if(require('./pet-stations').has(user,petId))throw Error('Call your pet home from the pet station before exploring.');
  const table=petOdds(food,petId,require('./pet-care').happiness(user,petId));
  if(!(user.rubyItems?.[foodId]>0))throw Error('You need one serving of this food');
  const gem=draw(table.gems,rolls?.[0]),amount=draw(table.quantities,rolls?.[1]).amount,bonus=draw(table.rewards,rolls?.[2]);
  const journey={id:journeyId,petId,foodId,happiness:table.happiness,happinessMultiplier:table.multiplier,startedAt:now,endsAt:now+HOURS,status:'travelling',reward:{gemKey:gem.gemKey,gemName:gem.gemName,amount,bonus}};
  return {rubyItems:{...user.rubyItems,[foodId]:user.rubyItems[foodId]-1},petJourneys:{...(user.petJourneys||{}),[petId]:journey}};
 }
-function claim(user,petId,journeyId,now=Date.now()){
+function claim(user,petId,journeyId,now=Date.now()){user=require('./gem-wallet').user(user);
  const journey=user.petJourneys?.[petId];if(!journey||journey.id!==journeyId)throw Error('Journey not found');
  if(journey.status!=='travelling')throw Error('Rewards already claimed');if(now<journey.endsAt)throw Error('Your pet is still travelling');
  const reward=journey.reward,update={petHappiness:{...(user.petHappiness||{}),[petId]:1},gems:{...(user.gems||{}),[reward.gemKey]:(user.gems?.[reward.gemKey]||0)+reward.amount},petJourneys:{...user.petJourneys,[petId]:{...journey,status:'claimed',claimedAt:now}}};

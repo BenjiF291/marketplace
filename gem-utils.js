@@ -25,7 +25,7 @@ function converterProgress(tiers, user) {
 function upgradeConverter(tiers, user, targetTierId) {
   const { level, nextUpgrade } = converterProgress(tiers, user);
   if (!nextUpgrade || nextUpgrade.tierId !== targetTierId) throw new Error('That upgrade is no longer available. Refresh the converter.');
-  const gems = { ...(user.gems || {}) };
+  const gems = require('./gem-wallet').wallet(user.gems);
   const available = Number(gems[nextUpgrade.payment.gemKey] || 0);
   if (!Number.isFinite(available) || available < 50) throw new Error(`You need 50 ${nextUpgrade.payment.gemName} gems`);
   gems[nextUpgrade.payment.gemKey] = available - 50;
