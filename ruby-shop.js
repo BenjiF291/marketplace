@@ -5,10 +5,10 @@ const GOODS=[
  ['pet:snail','Crystal Snail',150,'pet','A tiny roaming crystal collector.'],
  ['pet:dragon','Pocket Dragon',250,'pet','A playful dragon that peeks around your home.'],
  ['food','Crystal Crunch',2,'supply','Feed for fun, or use one serving for a four-hour gem journey. View exact journey loot odds below.'],
- ['relic:rose','Petrified Ruby Rose',150,'relic','A permanent collectible for your display shelf.'],
+ ['relic:rose','Petrified Ruby Rose',150,'relic','A collectible for your shelf. Shared Town Hall displays earn XP but eventually break.'],
  ['relic:moon','Crimson Moon',250,'relic','A rare carved moon for your display shelf.'],
  ['relic:crown','Ancient Geode Crown',400,'relic','The centrepiece of a ruby collection.'],
- ['relic:books','Archivist Books',60,'relic','A permanent collectible to lend to the shared Town Hall.'],
+ ['relic:books','Archivist Books',60,'relic','A collectible for the shared Town Hall. Displays earn XP but eventually break.'],
  ['relic:fern','Carved Fern Planter',75,'relic','A living display for your collection and the shared Town Hall.'],
  ['relic:pennant','Community Pennant',100,'relic','An embroidered pennant to display in the shared Town Hall.'],
  ['relic:skystones','Skystones Trophy',300,'relic','An ornate trophy to lend to the shared Town Hall.'],
@@ -23,7 +23,7 @@ const GOODS=[
 ].map(([id,name,price,kind,description])=>({id,name,price,kind,description}));
 const COMPASSES=[['common',12,2,'Silver'],['uncommon',25,5,'Rare Gold'],['rare',45,7,'Lightning'],['ultra',80,8,'Ultra'],['mythical',140,Infinity,'all configured special tiers'],['legendary',220,Infinity,'every pack, including unclassified packs']].map(([key,price,maxRank,limit])=>({id:`compass:${key}`,name:`${key==='ultra'?'Ultra Rare':key[0].toUpperCase()+key.slice(1)} Compass`,price,maxRank,kind:'supply',description:`Choose one of up to three different cards from your next selected pack, up to ${limit}.`}));
 const wardrobe=require('./public/wardrobe'),CLOTHES=wardrobe.catalog;
-const CATALOG=[...CLOTHES,...GOODS.map(item=>item.kind==='pet'?{...item,description:require('./pet-journeys').PET_PERKS[item.id]}:item),...require('./pet-journeys').FOODS.filter(f=>f.id!=='food').map(f=>({id:f.id,name:f.name,price:f.price,kind:'supply',description:'One serving for a four-hour pet journey. View exact loot odds before sending.'})),...COMPASSES];
+const CATALOG=[...CLOTHES,...GOODS.map(item=>item.kind==='relic'?{...item,displayRewards:require('./collectible-rewards').rates(item.id),description:item.description+' '+require('./collectible-rewards').description(item.id)}:item.kind==='pet'?{...item,description:require('./pet-journeys').PET_PERKS[item.id]}:item),...require('./pet-journeys').FOODS.filter(f=>f.id!=='food').map(f=>({id:f.id,name:f.name,price:f.price,kind:'supply',description:'One serving for a four-hour pet journey. View exact loot odds before sending.'})),...COMPASSES];
 function spend(user,id){const owned={...(user.rubyItems||{})};if(!(owned[id]>0))throw Error('You do not own this item');owned[id]--;return owned;}
 function purchase(user,id){const item=CATALOG.find(item=>item.id===id);if(!item)throw Error('Unknown Ruby item');const meal=require('./pet-care').MEALS[id];if(meal){const care=require('./pet-care').profile(user);if(!care.farmUnlocked||care.farmLevel<meal.tier)throw Error('Unlock this food in the farmhouse first.');}if(item.kind==='clothing'){if(wardrobe.owns(user,item))throw Error('Already owned');if(!(Number(user.balance)>=item.price))throw Error('Not enough Footy');return {balance:Math.round((Number(user.balance)-item.price)*100)/100,rubyItems:{...(user.rubyItems||{}),[id]:1}};}if(item.kind!=='supply'&&(user.rubyItems?.[id]||0)>0)throw Error('Already owned');const gems=require('./gem-wallet').wallet(user.gems);if(!(gems.bronze>=item.price))throw Error('Not enough Rubies');gems.bronze-=item.price;return {gems,rubyItems:{...(user.rubyItems||{}),[id]:(user.rubyItems?.[id]||0)+1}};}
 function compassAllowed(id,packId,tiers){const compass=COMPASSES.find(c=>c.id===id);if(!compass)return false;if(id==='compass:legendary')return true;const ordered=[...tiers].sort((a,b)=>a.order-b.order);const rank=ordered.findIndex(t=>(t.packs||[]).includes(packId)||packId===`trophy-${String(t.name).toLowerCase().replace(/\s+/g,'-')}`);return rank>=0&&rank<=compass.maxRank;}

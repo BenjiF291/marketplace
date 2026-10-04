@@ -207,3 +207,5 @@
 .village-tool-icon{position:relative}.village-tool-icon[data-pending]:not([data-pending=""]):after{content:attr(data-pending);position:absolute;top:-6px;right:-5px;background:#b84937;color:#fff4dd;border-radius:20px;padding:2px 5px;font:10px sans-serif}
 
 .village-world .village-square-grid{width:1440px!important;height:1000px!important;max-width:none!important;max-height:none!important}
+
+.village-square-grid ellipse{fill:#f8e9af33;stroke:#fff0b9;stroke-width:1.5}.village-square-grid ellipse.village-grid-preview{fill:#91e4a377;stroke:#c8ffd0;stroke-width:3}.village-square-grid ellipse.invalid{fill:#e96e6e77;stroke:#ffb4a4}

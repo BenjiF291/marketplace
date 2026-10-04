@@ -1,13 +1,37 @@
 const crypto=require('node:crypto');const world=require('./public/hall-world');
-const progress=require('./town-hall-progress');
+const progress=require('./town-hall-progress');const displays=require('./hall-displays');
 const DECOR=require('./ruby-shop').CATALOG.filter(x=>x.kind==='relic');
 module.exports=(app,db,authenticate,clock=Date.now)=>{
  const tokens=new Map(),members=new Map(),accounts=new Map(),messages=[],invites=new Map();let cached=null,cacheUntil=0;
  const ref=db.collection('communityRooms').doc('town-hall');
- async function room(){if(!cached||clock()>cacheUntil){const doc=await ref.get();cached={level:1,revision:0,decor:{},...(doc.data()||{})};cacheUntil=clock()+15000;}return cached;}
+ const seen=new Map();
+ async function room(viewer){
+  if(!cached||clock()>cacheUntil){const doc=await ref.get();cached={level:1,revision:0,decor:{},...(doc.data()||{})};cacheUntil=clock()+15000;}
+  // One-time, deployment-safe reset requested by the owner. Clear old shelves without awarding XP or destroying inventory.
+  if(cached.displayRulesVersion!==2){cached=await db.runTransaction(async tx=>{const r={revision:0,decor:{},...((await tx.get(ref)).data()||{})};if(r.displayRulesVersion===2)return r;const next={...r,decor:{},displayRulesVersion:2,revision:r.revision+(Object.keys(r.decor).length?1:0)};tx.set(ref,next);return next;});seen.clear();}
+  const now=clock(),known=seen.get(viewer)||new Set(),entries=Object.values(cached.decor||{});
+  if(!entries.some(d=>!d.broken&&(!d.id||now>=Math.min(d.breakAt,d.startedAt+displays.rates(d.item).period-(d.elapsed%displays.rates(d.item).period))||d.owner!==viewer&&!known.has(d.id))))return cached;
+  const result=await db.runTransaction(async tx=>{
+   const r={revision:0,decor:{},...((await tx.get(ref)).data()||{})},users=new Map(),receipts=new Map(),changedUsers=new Set(),observed=[];let changed=false;
+   for(const owner of new Set(Object.values(r.decor).map(d=>d.owner))){const ur=db.collection('users').doc(owner);users.set(owner,{ref:ur,user:(await tx.get(ur)).data()||{}});}
+   for(const d of Object.values(r.decor))if(!d.id&&!d.broken){Object.assign(d,displays.resume(displays.cycle(now),now));changed=true;}
+   for(const d of Object.values(r.decor)){if(d.id&&!d.broken&&d.owner!==viewer&&!known.has(d.id)){const rr=db.collection('hallDisplayViews').doc(crypto.createHash('sha256').update(d.id+':'+viewer).digest('hex'));receipts.set(d.id,{ref:rr,exists:(await tx.get(rr)).exists});}}
+   for(const [slot,raw] of Object.entries(r.decor)){
+    let d=raw;if(d.broken)continue;
+    if(!d.id){d={...d,...displays.resume(displays.cycle(now),now)};changed=true;}
+    const owner=users.get(d.owner),step=displays.advance(d,now);let gain=step.xp;
+    if(step.display.broken){d=step.display;owner.user.rubyItems={...owner.user.rubyItems,[d.item]:Math.max(0,(owner.user.rubyItems?.[d.item]||0)-1)};owner.user.hallDisplayCycles={...owner.user.hallDisplayCycles};delete owner.user.hallDisplayCycles[d.item];changedUsers.add(d.owner);changed=true;}
+    else {if(gain){d=step.display;changed=true;}if(d.owner!==viewer&&!known.has(d.id)){const receipt=receipts.get(d.id);if(receipt&&!receipt.exists){gain+=displays.rates(d.item).visitor;tx.set(receipt.ref,{display:d.id,viewer,at:now});}if(receipt)observed.push(d.id);}}
+    if(gain){Object.assign(owner.user,progress.grant(owner.user,gain,'Town Hall display',now));changedUsers.add(d.owner);}r.decor[slot]=d;
+   }
+   if(changed){r.revision++;tx.set(ref,r);}for(const id of changedUsers){const u=users.get(id);tx.set(u.ref,u.user);}return {room:r,users,observed};
+  });
+  cached=result.room;for(const [id,u] of result.users)if(accounts.has(id))accounts.set(id,u.user);for(const id of result.observed)known.add(id);seen.set(viewer,known);return cached;
+ }
+
  function clean(){const now=clock();for(const [token,s] of tokens)if(s.expires<=now)tokens.delete(token);for(const [id,m] of members)if(now-m.lastSeen>12000)members.delete(id);for(const [id,v] of invites)if(v.expires<now)invites.delete(id);}
  function session(req){clean();const s=tokens.get(req.header('X-Hall-Token'));if(!s)throw Error('Your room session ended. Re-enter the Town Hall.');return s;}
- async function snapshot(id){const r=await room();clean();return {self:id,serverNow:clock(),members:[...members.values()].map(({lastSeen,lastAction,lastChat,...m})=>m),invites:[...invites.values()].filter(v=>v.to===id||v.from===id),messages:messages.slice(-30),room:{revision:r.revision,decor:Object.fromEntries(Object.entries(r.decor||{}).filter(([,v])=>v.owner&&DECOR.some(i=>i.id===v.item)))},progress:progress.profile(accounts.get(id)),owned:accounts.get(id)?.rubyItems||{},resources:require('./gem-wallet').wallet(accounts.get(id)?.gems),projects:progress.PROJECTS,rewards:progress.REWARDS,catalog:DECOR,seats:world.SEATS};}
+ async function snapshot(id){const r=await room(id);clean();return {self:id,serverNow:clock(),members:[...members.values()].map(({lastSeen,lastAction,lastChat,...m})=>m),invites:[...invites.values()].filter(v=>v.to===id||v.from===id),messages:messages.slice(-30),room:{revision:r.revision,decor:Object.fromEntries(Object.entries(r.decor||{}).filter(([,v])=>v.owner&&DECOR.some(i=>i.id===v.item)))},progress:progress.profile(accounts.get(id)),owned:accounts.get(id)?.rubyItems||{},resources:require('./gem-wallet').wallet(accounts.get(id)?.gems),projects:progress.PROJECTS,rewards:progress.REWARDS,catalog:DECOR,seats:world.SEATS};}
  function seated(m){return m&&m.seat!==null&&Math.hypot(world.position(m,clock()).x-world.SEATS[m.seat].x,world.position(m,clock()).y-world.SEATS[m.seat].y)<15;}
  app.post('/admin/town-hall/join',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again.');}
@@ -42,16 +66,25 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
     await db.runTransaction(async tx=>{const existing=await tx.get(matchRef);if(!existing.exists)tx.set(matchRef,require('./battle-match-create')(other,m,invite.averageLimit,0,invite.timeControlSeconds,new Date(now)));});
     invite.matchId=matchRef.id;m.matchId=matchRef.id;other.matchId=matchRef.id;
    }else if(b.type==='decline'){const invite=invites.get(b.inviteId);if(invite&&(invite.to===m.id||invite.from===m.id))invites.delete(invite.id);}
-   else if(b.type==='decorate'){
-    if(!Number.isInteger(b.slot)||b.slot<0||b.slot>7||b.item!==null&&!DECOR.some(d=>d.id===b.item))throw Error('Choose an owned collectible and shelf.');
+   else if(b.type==='decorate'||b.type==='clean-display'){
+    await room(s.id);
+    if(!Number.isInteger(b.slot)||b.slot<0||b.slot>7||b.type==='decorate'&&b.item!==null&&!DECOR.some(d=>d.id===b.item))throw Error('Choose an owned collectible and shelf.');
     const userRef=db.collection('users').doc(s.id);
     const result=await db.runTransaction(async tx=>{const doc=await tx.get(ref),userDoc=await tx.get(userRef),u=userDoc.data(),r={revision:0,decor:{},...(doc.data()||{})};
      if(b.revision!==r.revision){cacheUntil=0;throw Error('The hall changed. Refresh and try again.');}
-     const old=r.decor[b.slot];if(old?.owner&&old.owner!==s.id&&u.isAdmin!==true)throw Error('Only its owner can remove that display.');
-     if(b.item!==null){if(!(u.rubyItems?.[b.item]>0))throw Error('Buy this collectible in the Ruby shop first.');if(Object.entries(r.decor).some(([slot,v])=>Number(slot)!==b.slot&&v.owner===s.id&&v.item===b.item))throw Error('That collectible is already on display.');}
-     const next={revision:r.revision+1,decor:{...r.decor}};if(b.item===null)delete next.decor[b.slot];else next.decor[b.slot]={item:b.item,by:m.name,owner:s.id};
-     let update={};if(b.item!==null&&!(u.townHallShowcased||[]).includes(b.item)){update={...progress.gameplay(u,'collectible display',now),townHallShowcased:[...(u.townHallShowcased||[]),b.item]};tx.set(userRef,{...u,...update});}
-     tx.set(ref,next);return {room:next,user:{...u,...update}};
+     const old=r.decor[b.slot],next={...r,revision:r.revision+1,decor:{...r.decor}};
+     if(b.type==='clean-display'){
+      if(!old?.broken)throw Error('This display does not need cleaning.');
+      Object.assign(u,progress.grant(u,displays.rates(old.item).cleanup,'Display cleanup',now));delete next.decor[b.slot];
+     }else{
+      if(old)throw Error('This shelf is occupied. Displays stay until they break and are cleaned up.');
+      if(b.item===null)throw Error('Displays cannot be taken down. They stay until they break.');
+      if(!(u.rubyItems?.[b.item]>0))throw Error('Buy this collectible in the Ruby shop first.');
+      if(Object.values(r.decor).some(v=>v.owner===s.id&&v.item===b.item&&!v.broken))throw Error('That collectible is already on display.');
+      if(Object.values(r.decor).filter(v=>v.owner===s.id&&!v.broken).length>=3)throw Error('You can display at most three collectibles.');
+      next.decor[b.slot]={...displays.resume(displays.cycle(now),now),item:b.item,by:m.name,owner:s.id};
+     }
+     tx.set(userRef,u);tx.set(ref,next);return {room:next,user:u};
     });cached=result.room;cacheUntil=now+15000;accounts.set(s.id,result.user);
    }else throw Error('Unknown room action.');
    res.json(await snapshot(s.id));
