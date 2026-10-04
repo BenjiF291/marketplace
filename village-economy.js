@@ -3,7 +3,7 @@ const unlocks=[2,4,5,7,10];
 const {INTERVAL,LIMIT,SHIFT}=require('./ruby-mine-rules');
 function profile(user,now=Date.now()){user=require('./gem-wallet').user(user);
  const homes=layout.profile(user),level=require('./town-hall-progress').profile(user).level;
- const mines=unlocks.map((unlock,i)=>{const shift=user.rubyMineShifts?.[i];const earned=shift?Math.max(0,Math.min(LIMIT,Math.floor((now-shift.started)/INTERVAL))):0;return {workers:workforce.assigned(shift,workforce.residents(user)),id:i,unlock,unlocked:level>=unlock,worker:shift?.worker||null,house:shift?.house||shift?.worker?.split('/')[0]||null,household:!!shift?.house,ends:shift?shift.started+SHIFT:0,active:!!shift&&now<shift.started+SHIFT,claimable:Math.max(0,earned-(shift?.claimed||0))};});
+ const mines=unlocks.map((unlock,i)=>{const shift=user.rubyMineShifts?.[i];const earned=shift?Math.max(0,Math.min(LIMIT,Math.floor((now-shift.started)/INTERVAL))):0;return {workers:workforce.assigned(shift,workforce.residents(user)),id:i,unlock,unlocked:level>=unlock&&(user.villageGridVersion!==2||user.villageLayout?.['mine:'+i]!==undefined),worker:shift?.worker||null,house:shift?.house||shift?.worker?.split('/')[0]||null,household:!!shift?.house,ends:shift?shift.started+SHIFT:0,active:!!shift&&now<shift.started+SHIFT,claimable:Math.max(0,earned-(shift?.claimed||0))};});
  const staff=workforce.profile(user,now);
  return {timeBank:require('./time-bank').profile(user,now),vault:require('./vault-job').profile(user,now),care:require('./pet-care').profile(user,now),mines,workforce:staff,workers:staff.available.map(id=>({id})),serverNow:now};
 }

@@ -966,6 +966,7 @@ app.post('/signup', async (req, res) => {
     }
 
     const newUser = await usersRef.add({
+      ...require('./public/village-layout').initial(),
       username: cleanUsername,
       passwordHash: hashPassword(password),
       balance: 0,

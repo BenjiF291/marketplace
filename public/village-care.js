@@ -49,6 +49,7 @@
    if(data.economy.timeBank?.unlocked){const bank=data.economy.timeBank,n=row(`Time Bank - ${bank.workers.length}/10 villagers`,`${bank.stored.length}/3 boosts ready`);button(n,'Manage Time Bank',()=>{kind='timebank';render();});}
 
   }
+  if(data.layout.positions.vault===undefined)return;
   const v=data.economy.vault,n=row(`Footy vault - ${v.active?v.workers.length:0}/1 villagers`,'Earn 1 Footy every 2 hours. Stops after 24 hours (12 Footy).');if(v.active)button(n,'Call bank worker back and collect',()=>act({action:'vault-recall'}));else button(n,'Send 1 bank worker',()=>act({action:'vault-start'}),free<1);button(n,`Collect ${v.claimable} Footy`,()=>act({action:'vault-collect'}),!v.claimable);
  }
  function renderTimeBank(){

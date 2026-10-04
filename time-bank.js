@@ -25,7 +25,7 @@ function targets(u,now){
 }
 function profile(u,now=Date.now()){
  const b=settle(u,now),n=b.workers.length;
- return {unlocked:require('./town-hall-progress').profile(u).level>=4,workers:b.workers,stored:b.stored,capacity:CAPACITY,interval:interval(n),chance:chance(n),nextAt:n&&b.stored.length<CAPACITY?now+(1-b.progress)*interval(n):0,inventory:{skip:Number(u.timeBoosts?.skip)||0,leap:Number(u.timeBoosts?.leap)||0},targets:targets(u,now)};
+ return {unlocked:require('./town-hall-progress').profile(u).level>=4&&(u.villageGridVersion!==2||u.villageLayout?.timebank!==undefined),workers:b.workers,stored:b.stored,capacity:CAPACITY,interval:interval(n),chance:chance(n),nextAt:n&&b.stored.length<CAPACITY?now+(1-b.progress)*interval(n):0,inventory:{skip:Number(u.timeBoosts?.skip)||0,leap:Number(u.timeBoosts?.leap)||0},targets:targets(u,now)};
 }
 function action(u,b,now=Date.now()){
  const state=settle(u,now);
@@ -45,6 +45,7 @@ function action(u,b,now=Date.now()){
   if(type==='spin'){const end=now+target.remaining-7*HOUR;update.lastSpin=new Date(end-amount);}
   return update;
  }
+ if(u.villageGridVersion===2&&u.villageLayout?.timebank===undefined)throw Error('Place the Time Bank on your island first.');
  if(require('./town-hall-progress').profile(u).level<4)throw Error('The Time Bank unlocks at Town Hall 4.');
  if(b.action==='bank-set'){
   if(!Number.isInteger(b.count)||b.count<0||b.count>10)throw Error('Choose between 0 and 10 villagers.');

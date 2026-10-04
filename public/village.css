@@ -186,3 +186,24 @@
 .care-room.petstation .care-scene-scroll .care-resident{z-index:20}
 
 @media(min-width:1000px){.care-room.petstation{grid-template-rows:auto auto 48px auto}.care-room.petstation>.care-controls{max-height:calc(78dvh + 48px);overflow:auto;box-sizing:border-box}}
+
+/* Drag editor: world-space grass cells and a separate illustrated building tray. */
+.village-land-plots{position:absolute!important;inset:0;display:none!important;pointer-events:none!important;z-index:1}
+.village-arranging .village-land-plots{display:block!important}
+.village-square-grid{width:1440px;height:1000px;overflow:visible;pointer-events:none}
+.village-square-grid rect{fill:#e8f5ad2b;stroke:#ecf4b6a3;stroke-width:.6}
+.village-square-grid .village-grid-preview{fill:#a6ed7899;stroke:#edfbc7;stroke-width:2}
+.village-square-grid .village-grid-preview.invalid{fill:#e5615e99;stroke:#ffd8c6}
+.village-planning{position:absolute!important;left:12px!important;right:70px!important;bottom:12px!important;top:auto!important;width:auto!important;transform:none!important;z-index:3000;max-width:980px;margin:auto;padding:12px!important;background:#213f37f5!important;border:1px solid #bea876!important;border-radius:18px!important;color:#fff0cc;display:block}
+.village-planning[hidden],.village-help-hint[hidden]{display:none!important}
+.village-building-tray{display:flex;overflow-x:auto;gap:8px;min-height:70px;scrollbar-width:thin;align-items:center}
+.village-tray-building{flex:0 0 100px;display:flex;flex-direction:column;align-items:center;touch-action:none;background:#f8e9c911!important;border:1px solid #baa77377!important;border-radius:12px;padding:5px!important;color:#fff0cc;cursor:grab}
+.village-tray-building>svg{width:60px;height:78px;pointer-events:none}.village-tray-building span{font-size:11px;font-weight:bold}.village-tray-building small{font-size:9px;margin:4px 0}.village-plan-actions{display:flex;gap:8px;margin-top:8px}.village-planning p{font-size:12px;margin:8px 0 0}.village-drag-ghost{position:fixed;z-index:5000;pointer-events:none;transform:translate(-50%,-50%);width:100px;height:130px;filter:drop-shadow(0 5px 5px #13282188);opacity:.85}.village-drag-ghost svg{width:100%;height:100%}
+.village-map .village-tool-icon{width:36px;height:36px;padding:7px;border-radius:11px;border:1px solid #c6ad7b;background:#fff1d6;color:#315748;font:bold 21px Georgia;box-shadow:0 3px 8px #102b3825;flex-shrink:0}.village-tool-icon svg{width:100%;height:100%}.village-tool-icon[aria-pressed=true]{background:#bfe0bd}.village-tool-icon[hidden]{display:none!important}
+.village-help-hint{position:absolute;top:110px;left:50%;transform:translateX(-50%);max-width:80%;z-index:3001;background:#fff2d7;color:#315344;border:1px solid #bba06c;border-radius:14px;padding:13px 18px;box-shadow:0 8px 22px #162e3944;font-size:13px;pointer-events:none}
+.village-building-guide{max-width:390px;width:calc(100% - 48px);border:1px solid #ad9466;border-radius:24px;background:linear-gradient(#fff7e5,#e8dec1);color:#2c4e41;padding:26px;box-shadow:0 25px 80px #102e3977}.village-building-guide::backdrop{background:#102e3966;backdrop-filter:blur(3px)}.village-guide-art{height:140px;display:flex;justify-content:center}.village-guide-art svg{width:115px;height:145px}.village-building-guide h2{font:28px Georgia;margin:8px 0 12px}.village-building-guide small{letter-spacing:.18em;color:#88734e;font-size:10px}.village-building-guide p{line-height:1.65;font-size:14px}.village-guide-close{padding:10px 24px;border:0;border-radius:12px;background:#345b48;color:#fff3d6;font:inherit}
+@media(max-width:600px){.village-building-tray{max-height:130px}.village-tray-building{flex-basis:84px}.village-tray-building>svg{width:46px;height:59px}.village-planning{padding:8px!important}.village-planning p{font-size:10px}.village-help-hint{top:155px}.village-toolbar{gap:7px!important}}
+
+.village-tool-icon{position:relative}.village-tool-icon[data-pending]:not([data-pending=""]):after{content:attr(data-pending);position:absolute;top:-6px;right:-5px;background:#b84937;color:#fff4dd;border-radius:20px;padding:2px 5px;font:10px sans-serif}
+
+.village-world .village-square-grid{width:1440px!important;height:1000px!important;max-width:none!important;max-height:none!important}
