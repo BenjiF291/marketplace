@@ -21,8 +21,8 @@ function renderGemWorkshop() {
   craft.disabled=workshopBusy||!next||next.costs.some(c=>(data.gems[c.gemKey]||0)<c.amount);
   document.getElementById('refineryUpgradeCost').textContent=next?next.costs.map(c=>`${c.amount} ${c.gemName}`).join(' + '):'Every gem tier is unlocked.';
   document.getElementById('refineryTier').textContent=`${refinery.current?.gemName||'Ruby'} refinery`;
-  const picture=document.createElement('img');picture.src=`assets/village/refinery/tier-${Math.min(13,refinery.level)}.png`;picture.alt='Crystal refinery laboratory';document.getElementById('refineryPreview').replaceChildren(picture);
-  workshopOptions('compressGem', data.tiers.slice(0,refinery.level).filter(gem=>data.gems[gem.gemKey]>0).map(gem=>[gem.gemKey,`${gem.gemName} (${data.gems[gem.gemKey]})`]));
+  const picture=document.createElement('img');picture.src=`assets/village/refinery/tier-${Math.min(9,refinery.artLevel??refinery.level)}.png`;picture.alt='Crystal refinery laboratory';document.getElementById('refineryPreview').replaceChildren(picture);
+  workshopOptions('compressGem', data.tiers.slice(0,refinery.unlockedIndex??refinery.level).filter(gem=>data.gems[gem.gemKey]>0).map(gem=>[gem.gemKey,`${gem.gemName} (${data.gems[gem.gemKey]})`]));
   const palette = document.getElementById('gemDyePalette'); palette.replaceChildren();
   for (const gem of data.tiers.filter(gem => data.gems[gem.gemKey] > 0 || (data.dyes[gem.gemKey] || 0) > 0)) {
     const tile = amuletNode('div', undefined, 'gem-balance-tile');
@@ -37,7 +37,7 @@ function renderGemWorkshop() {
   updateCompressionQuote();
 }
 function maxCompression() {
-  document.getElementById('compressQuantity').value = Math.floor((workshopState?.gems[document.getElementById('compressGem').value] || 0) / 4);
+  document.getElementById('compressQuantity').value = Math.floor((workshopState?.gems[document.getElementById('compressGem').value] || 0) / 5);
   updateCompressionQuote();
 }
 function updateCompressionQuote() {
@@ -46,9 +46,9 @@ function updateCompressionQuote() {
   const index = workshopState.tiers.findIndex(gem => gem.gemKey === key);
   const next = index >= 0 ? workshopState.tiers[index + 1] : null;
   const count = Number(document.getElementById('compressQuantity').value);
-  const valid = Number.isSafeInteger(count) && count > 0 && Number.isSafeInteger(count * 4);
-  document.getElementById('compressionQuote').textContent = !(workshopState.refinery?.level>0) ? 'Upgrade to Garnet to unlock Ruby refinement.' : next && valid ? `${count * 4} ${workshopState.tiers[index].gemName} → ${count} ${next.gemName}` : 'Choose a source gem and positive whole output quantity.';
-  document.getElementById('compressGems').disabled = workshopBusy || index+1>(workshopState.refinery?.level||0) || !next || !valid || (workshopState.gems[key] || 0) < count * 4;
+  const valid = Number.isSafeInteger(count) && count > 0 && Number.isSafeInteger(count * 5);
+  document.getElementById('compressionQuote').textContent = !(workshopState.refinery?.level>0) ? 'Upgrade to Garnet to unlock Ruby refinement.' : next && valid ? `${count * 5} ${workshopState.tiers[index].gemName} → ${count} ${next.gemName}` : 'Choose a source gem and positive whole output quantity.';
+  document.getElementById('compressGems').disabled = workshopBusy || index+1>(workshopState.refinery?.unlockedIndex||0) || !next || !valid || (workshopState.gems[key] || 0) < count * 5;
 }
 async function workshopAction(action, body) {
   if (workshopBusy || !workshopState) return;

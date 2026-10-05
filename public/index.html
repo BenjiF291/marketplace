@@ -446,7 +446,7 @@
       </details>
       <details id="gemWorkshop" class="gem-converter" ontoggle="if(this.open) loadGemWorkshop()">
         <summary>Gem Workshop - Refinery &amp; Dyes</summary>
-        <h3>Crystal refinery</h3><p>Unlock each output tier with 5 gems of that tier and 10 of every lower tier. Once unlocked, refine 4 source gems into 1 gem of the next tier.</p>
+        <h3>Crystal refinery</h3><p>Unlock each output tier with 5 gems of that tier and 10 of every lower tier. After Diamond, one final upgrade unlocks all special tiers together. Once unlocked, refine 5 source gems into 1 gem of the next tier.</p>
         <div id="refineryPreview" class="refinery-preview"></div><h3 id="refineryTier">Ruby refinery</h3><p id="refineryUpgradeCost"></p><button id="craftCompressor" class="btn btn-primary" onclick="workshopAction('upgrade', {tierId:workshopState.refinery.nextUpgrade?.tierId})" disabled>Upgrade refinery</button>
         <label for="compressGem">Source gem</label><select id="compressGem" onchange="updateCompressionQuote()"></select>
         <label for="compressQuantity">Gems to produce</label><input id="compressQuantity" type="number" min="1" step="1" value="1" oninput="updateCompressionQuote()">

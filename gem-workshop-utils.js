@@ -2,10 +2,11 @@ const { gemIdentity } = require('./gem-utils');
 const DYE_AREAS = { background: 'Page background', header: 'Header', panels: 'Section panels', navigation: 'Navigation tabs', buttons: 'Primary buttons', success: 'Buy and success buttons', borders: 'Panel borders', inputs: 'Input fields', balance: 'Footy balance', converter: 'Gem converter', machine: 'Conversion chamber', amulets: 'Amulet shop background', slots: 'Empty amulet slots', notices: 'Status messages' };
 const { effects } = require('./amulet-utils');
 function refineryProgress(user,tiers){
- const identities=tiers.map(gemIdentity),max=Math.max(0,identities.length-1);
- // Players who paid for the old all-tier machine keep its unlocked recipes.
- const level=Number.isSafeInteger(user.gemRefineryLevel)?Math.max(0,Math.min(max,user.gemRefineryLevel)):(user.gemCompressor===true?max:0);
- const next=identities[level+1];return {level,max,current:identities[level]||null,nextUpgrade:next?{...next,costs:identities.slice(0,level+2).map((g,i)=>({...g,amount:i===level+1?5:10}))}:null};
+ const identities=tiers.map(gemIdentity),diamond=identities.findIndex(g=>g.gemKey==='ultra'),hasSpecial=diamond>=0&&diamond<identities.length-1,max=hasSpecial?diamond+1:Math.max(0,identities.length-1);
+ // Existing all-tier machines and previous special-tier upgrades retain every recipe.
+ const level=Number.isSafeInteger(user.gemRefineryLevel)?Math.max(0,Math.min(max,user.gemRefineryLevel)):(user.gemCompressor===true?max:0),allSpecial=hasSpecial&&level===max,unlockedIndex=allSpecial?identities.length-1:level;
+ const specialUpgrade=hasSpecial&&level===diamond,next=level<max?identities[level+1]:null;
+ return {level,max,unlockedIndex,artLevel:allSpecial?9:level,current:allSpecial?{...identities[level],gemName:'All special crystals'}:identities[level]||null,nextUpgrade:next?{...next,...(specialUpgrade?{gemName:'All special crystals',unlocks:identities.slice(diamond+1)}:{}),costs:identities.slice(0,specialUpgrade?identities.length:level+2).map((g,i)=>({...g,amount:i>level?5:10}))}:null};
 }
 function dyeInventory(user) {
   // Convert each previously purchased permanent color into one batch of five dyes.
@@ -26,13 +27,13 @@ function workshopAction(user, tiers, action, body) {
   if (action === 'compress') {
     const index = identities.findIndex(gem => gem.gemKey === body.gemKey);
     if (index < 0 || index >= identities.length - 1) throw new Error('This gem has no next tier');
-    if(index+1>refineryProgress(user,tiers).level)throw Error('Upgrade your refinery to unlock this output gem.');
-    if (!Number.isSafeInteger(body.quantity) || body.quantity < 1 || !Number.isSafeInteger(body.quantity * 4)) throw new Error('Enter a positive whole output quantity');
-    if (!(gems[body.gemKey] >= body.quantity * 4)) throw new Error('Not enough gems');
+    if(index+1>refineryProgress(user,tiers).unlockedIndex)throw Error('Upgrade your refinery to unlock this output gem.');
+    if (!Number.isSafeInteger(body.quantity) || body.quantity < 1 || !Number.isSafeInteger(body.quantity * 5)) throw new Error('Enter a positive whole output quantity');
+    if (!(gems[body.gemKey] >= body.quantity * 5)) throw new Error('Not enough gems');
     const next = identities[index + 1].gemKey;
     const total = Number(gems[next] || 0) + body.quantity;
     if (!Number.isSafeInteger(total)) throw new Error('Gem balance too large');
-    gems[body.gemKey] -= body.quantity * 4; gems[next] = total;
+    gems[body.gemKey] -= body.quantity * 5; gems[next] = total;
     return { gems };
   }
   const dyes = dyeInventory(user);

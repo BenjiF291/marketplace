@@ -1,6 +1,7 @@
 /* Painted island and a shared transparent atlas; no game engine or render loop. */
 (() => {
  const atlas='assets/village/buildings-painted.png';
+ const refineryAnchors=[[523, 889], [523, 845], [517, 897], [530, 876], [512, 921], [514, 888], [512, 928], [511, 957], [514, 958], [513, 966]];
  const cells={townhall:0,archive:1,market:2,forge:3,arena:4,wheel:5,blacksmith:6,pets:7,cabinet:8,dye:9,compressor:10,vault:11,vip:12};
  // Individual silhouettes isolate neighbours even where atlas rows overlap.
  const frames=[
@@ -30,7 +31,7 @@
  }
 
  function building(kind,level=0,locked=false){
-  if(kind==='compressor'&&!locked){const tier=Math.max(0,Math.min(13,Math.trunc(level)||0)),size=90+tier*4;return anchored(0,0,1024,1024,512,860,size/1024,`<image href="assets/village/refinery/tier-${tier}.png" width="1024" height="1024"/>`);}
+  if(kind==='compressor'&&!locked){const tier=Math.max(0,Math.min(9,Math.trunc(level)||0)),size=tier===9?142:90+tier*4;return anchored(0,0,1024,1024,...refineryAnchors[tier],size/1024,`<image href="assets/village/refinery/tier-${tier}.png" width="1024" height="1024"/>`);}
   if(kind==='timebank'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/time-bank-painted.png" width="1024" height="1024"/>`);
   if(kind==='jobs'&&!locked)return anchored(0,0,1024,1024,512,865,80/1024,`<image href="assets/village/job-station-painted.png" width="1024" height="1024"/>`);
   if(kind==='petstation')return anchored(0,0,1024,1024,512,850,80/1024,`<image href="assets/village/pet-station-painted.png" width="1024" height="1024"/>`);
