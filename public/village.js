@@ -75,7 +75,7 @@
   const tools=el('div','village-preview-tools');levelSelect=el('select');levelSelect.setAttribute('aria-label','Preview village progression');levelSelect.onchange=()=>{simulation=levelSelect.value==='account'?null:Number(levelSelect.value);render();};
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');
-  world=el('div','village-world');world.innerHTML=VillageArt.terrain();viewport.append(world);
+  world=el('div','village-world');world.innerHTML=VillageArt.terrain();viewport.append(world);IslandMinigames.mount(world);
   for(const b of buildings){const tile=el('button','village-building');tile.type='button';tile.dataset.building=b.id;tile.style.left=b.x+'px';tile.style.top=b.y+'px';tile.style.zIndex=Math.round(b.y);tile.onclick=e=>{if(!unlocked(b))return;if(moved&&e.detail!==0){e.preventDefault();return;}select(b);};world.append(tile);tiles.set(b.id,tile);}
   const caption=el('div','village-map-caption');caption.append(el('span','','THE COLLECTOR’S ISLE'),el('small','','Swipe to explore · Tap a building to enter'));
   const controls=el('div','village-camera-controls');for(const [label,text,fn] of [['Zoom out','−',()=>zoom(camera.scale/1.2)],['Recenter map','⌖',reset],['Zoom in','+',()=>zoom(camera.scale*1.2)]]){const b=el('button','',text);b.setAttribute('aria-label',label);b.onclick=fn;controls.append(b);}
