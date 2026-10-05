@@ -23,7 +23,7 @@ function createTimeoutService(db, effects, round) {
       const [winner, loser] = await tx.getAll(winnerRef, loserRef);
       if (winner.exists && loser.exists) {
         const prize = Math.min(Number(match.prize), Math.max(0, Number(loser.data().balance) || 0));
-        const bonus = round(Math.min(50, prize * (effects(winner.data()).battle || 0) / 100));
+        const bonus = round(Math.min(500, prize * (effects(winner.data()).battle || 0) / 100));
         tx.update(winnerRef, { balance: round(Number(winner.data().balance || 0) + prize + bonus) });
         tx.update(loserRef, { balance: round(Number(loser.data().balance || 0) - prize) });
         result.paidPrize = prize;

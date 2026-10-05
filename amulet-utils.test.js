@@ -68,20 +68,20 @@ test('situational bonuses turn on and off with current account and loadout',()=>
  const find=key=>entries.find(e=>e.id.endsWith(':'+key));
  const lifeline=find('lifeline');assert.equal(effects({balance:99,amuletSlots:[lifeline]}).wheel,6);
  assert.equal(effects({balance:100,amuletSlots:[lifeline]}).wheel,undefined);
- const brush=find('minimalist');assert.equal(effects({amuletSlots:[brush]}).pigment,1);
- assert.equal(effects({amuletSlotCount:2,amuletSlots:[brush,entry]}).pigment,1);
- const treasury=find('treasury');assert.equal(effects({gems:{bronze:100},amuletSlots:[treasury]}).pack,25);
+ const brush=find('minimalist');assert.equal(effects({amuletSlots:[brush]}).pigment,3);
+ assert.equal(effects({amuletSlotCount:2,amuletSlots:[brush,entry]}).pigment,3);
+ const treasury=find('treasury');assert.equal(effects({gems:{bronze:100},amuletSlots:[treasury]}).pack,80);
  assert.equal(effects({gems:{bronze:99},amuletSlots:[treasury]}).pack,undefined);
- const diverse=find('palette');assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('reclaimer')]}).pigment,2);
+ const diverse=find('palette');assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('reclaimer')]}).pigment,5);
  assert.equal(effects({amuletSlotCount:3,amuletSlots:[diverse,entry,find('unsealer')]}).pigment,undefined);
- const royal=find('patronage');assert.equal(effects({vipUntil:new Date(Date.now()+60000),amuletSlots:[royal]}).pack,35);
+ const royal=find('patronage');assert.equal(effects({vipUntil:new Date(Date.now()+60000),amuletSlots:[royal]}).pack,189);
  assert.equal(effects({amuletSlots:[royal]}).pack,undefined);
 });
 test('compound effects work together without adding duplicate bonuses',()=>{
  const crown=entries.find(e=>e.id.endsWith(':crown'));
  const unsealer=entries.find(e=>e.id.endsWith(':unsealer'));
  const buffs=effects({amuletSlotCount:2,amuletSlots:[crown,unsealer]});
- assert.equal(buffs.pack,45);assert.equal(buffs.packgem,20);
+ assert.equal(buffs.pack,383);assert.equal(buffs.packgem,100);
 });
 
 test('trophy-exclusive amulets can be equipped but never purchased with gems',()=>{
@@ -110,3 +110,6 @@ test('former solo and pair designs retain IDs and work in full five-slot loadout
  const extended=catalog([...tiers,{id:'special',name:'Special'}]);
  assert.ok(extended.every(item=>!['solo','pair'].includes(item.condition)));
 });
+
+test('all regular and special gem tiers cost 22-42 and Ruby bonuses remain unchanged',()=>{const all=catalog([...tiers,{id:'fighter',name:'Fighter'},{id:'mirror',name:'Mirror'}]);for(const tier of [...tiers,{id:'fighter'},{id:'mirror'}])assert.deepEqual(all.filter(e=>e.tierId===tier.id).map(e=>e.price),[22,27,32,37,42]);assert.deepEqual(all.filter(e=>e.tierRank===0).map(e=>e.bonuses),require('./amulet-designs').SETS[0].map(d=>d[2]));});
+test('existing equipped Diamond amulets gain advertised bonuses without resetting their lock',()=>{const diamond=entries.find(e=>e.id.endsWith(':atelier')),old={...diamond,bonuses:{fullbatch:1,pigment:2,converter:10},equippedAt:10,removableAt:999};const u={amuletSlots:[old]};assert.deepEqual(effects(u),{fullbatch:9,pigment:17,converter:75});const upgraded=require('./amulet-utils').rebalanceAmulet(old);assert.equal(upgraded.removableAt,999);assert.equal(upgraded.price,42);assert.match(upgraded.description,/75 % off/);});
