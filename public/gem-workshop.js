@@ -53,15 +53,15 @@ function updateCompressionQuote() {
 async function workshopAction(action, body) {
   if (workshopBusy || !workshopState) return;
   workshopBusy = true; renderGemWorkshop();
-  let message;
+  let message,result;
   try {
-    await resourceRequest(`/gem-workshop/${action}`, body);
+    result=await resourceRequest(`/gem-workshop/${action}`, body);
     message = { upgrade: 'Crystal refinery upgraded!', compress: 'Gems compressed!', 'craft-dye': 'Dyes crafted for 1 gem, including equipped amulet bonuses.', dye: 'Interface colors saved.' }[action];
   } catch (error) { message = error.message; }
   finally {
     workshopBusy = false;
-    await loadGemWorkshop();
-    if (document.getElementById('gemConverter').open) await loadGemConverter();
+    if(result?.tiers){workshopState=result;if(!document.body.classList.contains('dye-mode'))applyGemTheme(result.theme);renderGemWorkshop();}else await loadGemWorkshop();
+    if (document.getElementById('gemConverter').open&&document.getElementById('gemConverter').getClientRects().length) await loadGemConverter();
     document.getElementById('gemWorkshopStatus').textContent = message;
   }
 }

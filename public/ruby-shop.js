@@ -1,6 +1,6 @@
 ﻿(() => {
  let itemsOnly=false,stallCategory=null;
- window.addEventListener('pet-care-changed',()=>{journeyTables=null;refresh().then(()=>journeyPanel.open?loadJourneyTables():null).catch(()=>{});});
+ window.addEventListener('pet-care-changed',()=>{journeyTables=null;if(dialog.open||journeyDialog.open||habitat.getClientRects().length)refresh().then(()=>journeyPanel.open?loadJourneyTables():null).catch(()=>{});});
  let state=null,busy=false,journeyTables=null,journeyClockOffset=0;
  const extraCompanions=new Map();
  const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
