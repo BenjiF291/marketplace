@@ -132,7 +132,6 @@ function runPracticeComputer() {
     worker.postMessage({board:game.board,hand:game.computer,opponentHand:game.player,difficulty:game.difficulty,seed:game.seed+game.computerTurn});
   } catch (_) {fallback();}
 }
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('practice-sw.js').catch(error=>console.warn('Offline page cache unavailable',error));
 
 let trophySaving=false;
 async function finishPracticeTrophies(){
