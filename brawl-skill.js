@@ -34,8 +34,19 @@ function skillChange(value, result, quality, forfeit=false) {
 function settle(data,result,quality,opponentSkill,forfeit=false) {
   const state=progress(data);
   if(state.placementsCompleted===PLACEMENT_GAMES){
-    const change=skillChange(state.skillLevel,result,quality,forfeit);
-    return {state:{...state,skillLevel:change.after},change};
+    const base=skillChange(state.skillLevel,result,quality,forfeit);
+    const direction=Math.sign(base.delta),prior=state.ratingDirection||0;
+    const streak=direction&&direction===prior?Math.min(8,(state.ratingStreak||0)+1):direction?1:0;
+    const games=Math.max(0,state.ratedGames||0),qualityLevel=quality===null?state.skillLevel:level((quality-.55)/.4*1000);
+    const gap=qualityLevel-state.skillLevel;
+    // One result is weak evidence. Repeated mismatches warrant rapid correction.
+    const gain=games<10?1.8:1.4;
+    const adjustment=base.delta*gain+(direction&&streak>=2?direction*Math.min(55,Math.abs(gap)*.10)*(Math.min(streak,5)-1)/4:0);
+    const cap=direction<0?(streak===1?25:Math.min(65,25+streak*8)):Math.min(95,40+streak*12);
+    const after=level(state.skillLevel+Math.max(-cap,Math.min(cap,Math.round(adjustment))));
+    const change={...base,after,delta:after-state.skillLevel,calibration:games<10,streak,
+      explanation:`${base.explanation} Rating correction: ${after-state.skillLevel>=0?'+':''}${after-state.skillLevel}. ${streak>=2?'Repeated performance is increasing calibration speed.':'A single result has a limited effect.'}`};
+    return {state:{...state,skillLevel:after,ratedGames:games+1,ratingDirection:direction,ratingStreak:streak},change};
   }
   // Invert the post-placement quality expectation. Results contribute 20%,
   // relative to the opponent faced; choices contribute 80%.

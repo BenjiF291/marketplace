@@ -21,6 +21,8 @@ PATH.push(
  {at:4000,footy:2000,gems:{ultra:15},pack:'ultra',packName:'Diamond Victory Pack'},
  {at:5000,footy:2500,gems:{ultra:25},pack:'ultra',packName:'Diamond Victory Pack',packCount:2}
 );
+// Stable claim IDs preserve rewards already collected on the original road.
+for(const reward of PATH){reward.claimId=reward.at;reward.at*=10;}
 PATH.sort((a,b)=>a.at-b.at);
 function replay(session, moves, detailed = false) {
  if(session.live) {

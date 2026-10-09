@@ -12,6 +12,21 @@
  install.onclick=async()=>{if(!installPrompt){instructions();return;}try{await installPrompt.prompt();await installPrompt.userChoice;}finally{installPrompt=null;install.hidden=true;}};
  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;install.hidden=standalone();});window.addEventListener('appinstalled',()=>{install.hidden=true;installPrompt=null;});
  if(/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))install.hidden=standalone();
- function offerUpdate(){if(!registration.waiting||controls.querySelector('[data-update]'))return;const b=document.createElement('button');b.dataset.update='true';b.textContent='Update ready - reload';b.onclick=()=>{navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});registration.waiting?.postMessage({type:'ACTIVATE_UPDATE'});};controls.append(b);}
- navigator.serviceWorker.register('practice-sw.js',{updateViaCache:'none'}).then(reg=>{registration=reg;offerUpdate();reg.addEventListener('updatefound',()=>{const worker=reg.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller)offerUpdate();});});}).catch(()=>{/* Installation failure must not stop the website. */});
+ // Apply waiting workers at startup/login, never reload an active game.
+ const registrationReady=navigator.serviceWorker.register('practice-sw.js',{updateViaCache:'none'}).then(reg=>{registration=reg;if(reg.waiting)reg.waiting.postMessage({type:'ACTIVATE_UPDATE'});return reg;}).catch(()=>null);
+ async function prepareForLogin(){
+  let expired=false,timer;
+  const timeout=new Promise(resolve=>{timer=setTimeout(()=>{expired=true;resolve();},5000);});
+  const update=(async()=>{
+   const reg=await registrationReady;if(!reg||expired)return;
+   try{await reg.update();}catch{return;}if(expired)return;
+   if(reg.installing){const worker=reg.installing;await new Promise(resolve=>{if(['installed','activated','redundant'].includes(worker.state))return resolve();const changed=()=>{if(['installed','activated','redundant'].includes(worker.state)){worker.removeEventListener('statechange',changed);resolve();}};worker.addEventListener('statechange',changed);});}
+   if(expired||!reg.waiting)return;
+   await new Promise(resolve=>{const worker=reg.waiting;const changed=()=>{if(['activated','redundant'].includes(worker.state)){worker.removeEventListener('statechange',changed);resolve();}};worker.addEventListener('statechange',changed);worker.postMessage({type:'ACTIVATE_UPDATE'});changed();});
+  })().catch(()=>{});
+  await Promise.race([update,timeout]);expired=true;clearTimeout(timer);
+ }
+ window.IslandPWA={prepareForLogin};
+ // Login pages can finish an update before any game state is active.
+ if(location.pathname.endsWith('/login.html'))prepareForLogin();
 })();

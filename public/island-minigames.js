@@ -5,6 +5,7 @@
  const button=(parent,text,fn,cls='mini-primary')=>{const b=el('button',cls,text);b.type='button';b.onclick=fn;parent.append(b);return b;};
  let active=null;const completedPractice=new Set(),lastSweetSpots=new Map();
  function open(id){if(active)return;const game=games.find(g=>g.id===id);if(!game)return;
+  window.PlayerProfile?.discover(id);
   const d=el('dialog','island-mini '+id),head=el('header'),content=el('div','mini-content');d.setAttribute('aria-label',game.name);head.append(el('small','', 'ISLAND PASTIMES'),el('h2','',game.name));button(head,'×',()=>d.close(),'mini-close').setAttribute('aria-label','Return to island');d.append(head,content);document.body.append(d);active=d;
   let timers=new Set(),raf=0,cleanup=()=>{};
   const later=(fn,ms)=>{const t=setTimeout(()=>{timers.delete(t);if(d.open)fn();},ms);timers.add(t);};

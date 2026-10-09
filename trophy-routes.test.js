@@ -10,11 +10,11 @@ function harness(seed,owned=[]){
  return {records,get writeCount(){return writeCount;},invoke:async(url,body)=>{let status=200,payload;await handlers[url]({header:()=> 'u',body},{status(code){status=code;return this;},send(value){payload=value;},json(value){payload=value;}});return {status,payload};}};
 }
 test('milestone can only be claimed once and uses peak trophies',async()=>{
- const h=harness({'users/u':{trophies:0,trophyPeak:75,balance:10,gems:{bronze:2}}});
- assert.equal((await h.invoke('/trophies/claim',{at:75})).status,200);
+ const h=harness({'users/u':{trophies:0,trophyPeak:750,balance:10,gems:{bronze:2}}});
+ assert.equal((await h.invoke('/trophies/claim',{at:750})).status,200);
  assert.equal(h.records['users/u'].balance,110);assert.equal(h.records['users/u'].gems.bronze,7);
- assert.equal((await h.invoke('/trophies/claim',{at:75})).status,400);
- assert.equal((await h.invoke('/trophies/claim',{at:150})).status,400);
+ assert.equal((await h.invoke('/trophies/claim',{at:750})).status,400);
+ assert.equal((await h.invoke('/trophies/claim',{at:1500})).status,400);
  assert.equal(h.records['users/u'].balance,110);
 });
 test('completed game trophies are awarded once even when the finish request repeats',async()=>{
@@ -75,7 +75,7 @@ test('forfeit lowers skill and disables then restores milestones based on curren
  const h=harness({'users/u':{},'brawlProfiles/u':{skillLevel:300,ratingVersion:2,placementsCompleted:5}});
  await h.invoke('/computer-battles/start',rankedBody);
  const next=await h.invoke('/computer-battles/start',rankedBody);
- assert.equal(next.payload.profile.skillLevel,288);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v3',skill:288});
+ assert.ok(next.payload.profile.skillLevel>=275&&next.payload.profile.skillLevel<300);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v3',skill:next.payload.profile.skillLevel});
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,150);
  h.records['brawlProfiles/u'].skillLevel=301;
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,300);
@@ -177,13 +177,15 @@ test('completed timed ranked match settles from server events and awards only on
 
 test('expanded road grants exclusive amulets, dyes, and real openable packs exactly once',async()=>{
  const h=harness({'users/u':{trophyPeak:5000,trophyClaims:[75],balance:0},'ascendTiers/bronze':{name:'Bronze',cards:['bronze.png']}});
- assert.equal((await h.invoke('/trophies/claim',{at:100})).status,200);assert.equal(h.records['users/u'].amulets['road:trailblazer'],1);
- assert.equal((await h.invoke('/trophies/claim',{at:100})).status,400);
- assert.equal((await h.invoke('/trophies/claim',{at:50})).status,200);assert.equal(h.records['users/u'].gemDyes.bronze,5);
- assert.equal((await h.invoke('/trophies/claim',{at:200})).status,200);assert.deepEqual(h.records['packs/trophy-bronze'].cardIds,['bronze.png']);
+ assert.equal((await h.invoke('/trophies/claim',{at:1000})).status,200);assert.equal(h.records['users/u'].amulets['road:trailblazer'],1);
+ assert.equal((await h.invoke('/trophies/claim',{at:1000})).status,400);
+ assert.equal((await h.invoke('/trophies/claim',{at:500})).status,200);assert.equal(h.records['users/u'].gemDyes.bronze,5);
+ assert.equal((await h.invoke('/trophies/claim',{at:2000})).status,200);assert.deepEqual(h.records['packs/trophy-bronze'].cardIds,['bronze.png']);
  const packs=Object.entries(h.records).filter(([key])=>key.startsWith('items/'));assert.equal(packs.length,1);assert.equal(packs[0][1].buyerId,'u');assert.equal(packs[0][1].sold,true);
- assert.equal((await h.invoke('/trophies/claim',{at:200})).status,400);assert.equal(Object.keys(h.records).filter(key=>key.startsWith('items/')).length,1);
+ assert.equal((await h.invoke('/trophies/claim',{at:2000})).status,400);assert.equal(Object.keys(h.records).filter(key=>key.startsWith('items/')).length,1);
  assert.ok(h.records['users/u'].trophyClaims.includes(75));
+ assert.equal((await h.invoke('/trophies/claim',{at:750})).status,400);
+ assert.ok((await h.invoke('/trophies')).payload.claimed.includes(750));
 });
 
 

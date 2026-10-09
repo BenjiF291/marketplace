@@ -326,6 +326,7 @@
       localStorage.setItem('userId', data.id);
       localStorage.setItem('sessionToken', data.sessionToken);
       localStorage.setItem('username', data.username);
+      await window.IslandPWA?.prepareForLogin();
       window.location.href = 'index.html';
 
     } catch (error) {
@@ -380,8 +381,9 @@
       localStorage.setItem('sessionToken', data.sessionToken);
       localStorage.setItem('username', data.username);
       
-      setTimeout(() => {
-        window.location.href = 'index.html';
+      setTimeout(async () => {
+        await window.IslandPWA?.prepareForLogin();
+      window.location.href = 'index.html';
       }, 1500);
 
     } catch (error) {

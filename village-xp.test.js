@@ -42,7 +42,7 @@ test('batch rewards ignore old daily limits but respect maximum level XP',()=>{
  const u={...user(),townHallGameplayDay:'2026-10-01',townHallGameplayXP:99};
  apply(u,{action:'start-mine'});apply(u,{action:'collect-mine',mine:0},now+100*minute);
  assert.equal(u.townHallXP,670);assert.equal(u.gems.bronze,220);assert.equal(u.townHallGameplayXP,119);
- assert.equal(hall.gameplay({townHallXP:8499},'ruby mining',now,20).townHallXP,8500);
+ assert.equal(hall.gameplay({townHallXP:hall.MAX_XP-1,townHallProgressVersion:2},'ruby mining',now,20).townHallXP,hall.MAX_XP);
  assert.equal(hall.gameplay(u,'ruby mining',now,20).townHallXP,690);
  assert.equal(hall.gameplay(u,'ruby mining',now+86400000,20).townHallXP,690);
 });
