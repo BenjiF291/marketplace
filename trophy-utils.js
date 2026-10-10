@@ -76,9 +76,9 @@ function replay(session, moves, detailed = false) {
  const result=Math.sign(engine.score(game.board,'player'));
  return detailed?{result,quality:qualities.length?qualities.reduce((a,b)=>a+b,0)/qualities.length:null,moveReviews}:result;
 }
-function trophyUpdate(user,difficulty,result){
+function trophyUpdate(user,difficulty,result,trophyPercent=0){
  const rule=engine.difficulties[difficulty];if(!rule)throw new Error('Invalid difficulty');
- const before=Number(user.trophies)||0,delta=result>0?rule.win:result<0?-rule.loss:0;
+ const before=Number(user.trophies)||0,base=result>0?rule.win:result<0?rule.loss:0,bonus=Math.round(base*Math.max(0,Number(trophyPercent)||0)/100),delta=Math.sign(result)*(base+bonus);
  const trophies=Math.max(0,before+delta);
  return {trophies,trophyPeak:Math.max(user.trophyPeak||0,trophies)};
 }

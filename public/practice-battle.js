@@ -182,7 +182,7 @@ function renderBrawlMoveReviews(reviews) {
   }
 }
 function renderBrawlSkill(data) {
-  const describe=entry=>`${entry.name}: ${[entry.footy?`+${entry.footy} Footy`:null,entry.ruby?`+${entry.ruby} Ruby`:null,entry.trophyPercent?`+${entry.trophyPercent}% trophies`:null].filter(Boolean).join(', ')||'no bonuses'} per ranked win`;
+  const describe=entry=>`${entry.name}: ${[entry.footy?`+${entry.footy} Footy`:null,entry.ruby?`+${entry.ruby} Ruby`:null,null].filter(Boolean).join(', ')||'no currency bonuses'} per ranked win${entry.trophyPercent?`; ${entry.trophyPercent}% more trophies gained or lost (including forfeits)`:''}`;
   document.getElementById('brawlSkillLevel').textContent=data.placed?`Skill Level: ${data.skillLevel} / 1000`:`Placement games: ${data.placementsCompleted} / ${data.placementsRequired}`;
   const progress=document.getElementById('brawlSkillProgress');
   progress.setAttribute('aria-label',data.placed?'Progress to next skill milestone':'Placement games completed');

@@ -46,7 +46,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     if(active){previousRef=db.collection('computerBattles').doc(active);previous=await tx.get(previousRef);}
     const changes={activeComputerBattle:ref.id};
     if(previous?.exists&&previous.data().status==='active'){
-      Object.assign(changes,trophyUpdate(user.data(),previous.data().mode==='skill'?'medium':previous.data().difficulty,-1));
+      Object.assign(changes,trophyUpdate(user.data(),previous.data().mode==='skill'?'medium':previous.data().difficulty,-1,previous.data().mode==='skill'?skill.profile(rating).booster.trophyPercent:0));
       if(previous.data().mode==='skill'){const settled=skill.settle(rating,-1,null,previous.data().skillAtStart,true);forfeitedSkill=settled.change;rating=settled.state;}
       tx.update(previousRef,{status:'forfeit',finishedAt:new Date()});
     }
@@ -86,9 +86,9 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const change=settled?.change||null;
     // Use the CURRENT level; boosters never become permanent inventory items.
     const activeBooster=skill.profile(rating).booster;
-    const update=trophyUpdate(user.data(),isSkill?'medium':current.data().difficulty,result.result);
+    const update=trophyUpdate(user.data(),isSkill?'medium':current.data().difficulty,result.result,isSkill?activeBooster.trophyPercent:0);
     const footy=isSkill&&result.result>0?activeBooster.footy:0;
-    if(isSkill&&result.result>0){update.trophies+=Math.round(25*activeBooster.trophyPercent/100)+(amuletEffects(user.data()).trophybonus||0);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);}
+    if(isSkill&&result.result>0){update.trophies+=(amuletEffects(user.data()).trophybonus||0);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);}
     const ruby=isSkill&&result.result>0?activeBooster.ruby:0;
     if(ruby)update.gems={...require('./gem-wallet').wallet(user.data().gems),bronze:require('./gem-wallet').whole(user.data().gems?.bronze)+ruby};
     if(footy)update.balance=(user.data().balance||0)+footy;

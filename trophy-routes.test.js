@@ -199,3 +199,16 @@ test('timed battle polling only writes when a move happens',async()=>{
  const result=await h.invoke('/computer-battles/turn',{id:'m',action:{type:'place',revision:0,cardIndex:0,cell:0}});
  assert.equal(result.status,200);assert.equal(result.payload.live.events.length,1);assert.equal(h.writeCount,1);
 });
+
+test('current skill boost increases ranked losses and never charges twice',async()=>{
+ const initial={board:Array(16).fill(null),player:[],computer:[],turn:'player'};initial.board[0]={ownerId:'computer'};
+ const h=harness({'users/u':{trophies:100,trophyPeak:150},'brawlProfiles/u':{skillLevel:1000,ratingVersion:2,placementsCompleted:5},'computerBattles/m':{userId:'u',status:'active',mode:'skill',skillAtStart:150,difficulty:'medium',seed:1,initial}});
+ const first=await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.equal(first.status,200);assert.equal(first.payload.delta,-13);assert.equal(h.records['users/u'].trophies,87);assert.equal(h.records['users/u'].trophyPeak,150);
+ await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.equal(h.records['users/u'].trophies,87);
+});
+test('forfeits use the pre-match current skill percentage and losses stop at zero',async()=>{
+ const h=harness({'users/u':{trophies:100,activeComputerBattle:'old'},'brawlProfiles/u':{skillLevel:800,ratingVersion:2,placementsCompleted:5},'computerBattles/old':{userId:'u',status:'active',mode:'skill',skillAtStart:150,difficulty:'medium'}});
+ await h.invoke('/computer-battles/start',rankedBody);assert.equal(h.records['users/u'].trophies,88);
+ assert.equal(require('./trophy-utils').trophyUpdate({trophies:5,trophyPeak:100},'medium',-1,25).trophies,0);
+ assert.equal(require('./trophy-utils').trophyUpdate({trophies:5},'medium',0,25).trophies,5);
+});
