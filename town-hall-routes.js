@@ -30,7 +30,7 @@ module.exports=(app,db,authenticate,clock=Date.now)=>{
  }
 
  function clean(){const now=clock();for(const [token,s] of tokens)if(s.expires<=now)tokens.delete(token);for(const [id,m] of members)if(now-m.lastSeen>12000)members.delete(id);for(const [id,v] of invites)if(v.expires<now)invites.delete(id);}
- function session(req){clean();const s=tokens.get(req.header('X-Hall-Token'));if(!s)throw Error('Your room session ended. Re-enter the Town Hall.');return s;}
+ function session(req){clean();const s=tokens.get(req.header('X-Hall-Token'));if(!s)throw Error('Your room session ended. Re-enter the Town Hall.');s.expires=clock()+5*60000;return s;}
  async function snapshot(id){const r=await room(id);clean();return {self:id,serverNow:clock(),members:[...members.values()].map(({lastSeen,lastAction,lastChat,...m})=>m),invites:[...invites.values()].filter(v=>v.to===id||v.from===id),messages:messages.slice(-30),room:{revision:r.revision,decor:Object.fromEntries(Object.entries(r.decor||{}).filter(([,v])=>v.owner&&DECOR.some(i=>i.id===v.item)))},progress:progress.profile(accounts.get(id)),owned:accounts.get(id)?.rubyItems||{},resources:require('./gem-wallet').wallet(accounts.get(id)?.gems),projects:progress.PROJECTS,rewards:progress.REWARDS,catalog:DECOR,seats:world.SEATS};}
  function seated(m){return m&&m.seat!==null&&Math.hypot(world.position(m,clock()).x-world.SEATS[m.seat].x,world.position(m,clock()).y-world.SEATS[m.seat].y)<15;}
  app.post('/admin/town-hall/join',async(req,res)=>{

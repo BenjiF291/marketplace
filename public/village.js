@@ -30,7 +30,7 @@
  const level=()=>simulation===null?data.level:simulation;
  const unlocked=b=>level()>=b.level;
  const saved=(value)=>{try{localStorage.setItem(pref,value?'on':'off');}catch{}};
- function applyCamera(){frame=0;if(!Number.isFinite(camera.x)||!Number.isFinite(camera.y)||!Number.isFinite(camera.scale)||camera.scale<=0){camera={x:0,y:0,scale:1};initialized=false;}world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;viewport.style.backgroundPosition=`${camera.x}px ${camera.y}px`;viewport.style.backgroundSize=`${600*camera.scale}px ${600*camera.scale}px`;}
+ function applyCamera(){frame=0;if(!Number.isFinite(camera.x)||!Number.isFinite(camera.y)||!Number.isFinite(camera.scale)||camera.scale<=0){camera={x:0,y:0,scale:1};initialized=false;}world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;}
  function paintCamera(){if(!frame)frame=requestAnimationFrame(applyCamera);}
  function clamp(){const r=viewport.getBoundingClientRect(),s=camera.scale;
   // Keep the viewport centre inside a bounded region around the island.

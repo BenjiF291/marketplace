@@ -13,3 +13,13 @@ test('XP reset starts everyone at their existing level without changing unlocks 
   assert.ok(!('balance' in update));assert.ok(!('advancements' in update));
  }
 });
+
+test('tutorial Town Hall ends at 200 XP and subsequent levels use shifted thresholds',()=>{
+ assert.deepEqual(hall.THRESHOLDS,[0,200,1000,4000,8000,14000,22000,34000,50000,70000]);
+ for(let i=1;i<hall.THRESHOLDS.length;i++){
+  const xp=hall.THRESHOLDS[i];
+  assert.equal(hall.profile({townHallXP:xp-1,townHallProgressVersion:3}).level,i);
+  const at=hall.profile({townHallXP:xp,townHallProgressVersion:3});
+  assert.equal(at.level,i+1);assert.equal(at.progress,0);
+ }
+});

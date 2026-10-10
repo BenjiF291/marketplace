@@ -1,7 +1,7 @@
 // Account-owned progression. Shared-room decoration and presence are separate.
 const LEGACY_THRESHOLDS=[0,100,300,650,1150,1850,2850,4200,6000,8500];
 const PREVIOUS_THRESHOLDS=LEGACY_THRESHOLDS.map(x=>x*12);
-const THRESHOLDS=[0,1000,4000,8000,14000,22000,34000,50000,70000,100000];
+const THRESHOLDS=[0,200,1000,4000,8000,14000,22000,34000,50000,70000];
 const MAX_XP=THRESHOLDS.at(-1);
 function retainedLevel(user){const floor=Math.max(1,Math.min(10,user.townHallRetainedLevel||1));if(user.townHallProgressVersion===3)return floor;const thresholds=user.townHallProgressVersion===2?PREVIOUS_THRESHOLDS:LEGACY_THRESHOLDS;let level=1;while(level<10&&(Number(user.townHallXP)||0)>=thresholds[level])level++;return Math.max(level,floor);}
 
