@@ -76,10 +76,16 @@ function replay(session, moves, detailed = false) {
  const result=Math.sign(engine.score(game.board,'player'));
  return detailed?{result,quality:qualities.length?qualities.reduce((a,b)=>a+b,0)/qualities.length:null,moveReviews}:result;
 }
+// One-time road reset: preserve possessions and historical peak, but re-earn higher milestones.
+function roadState(user){
+ if(user.trophyRoadVersion===1)return {trophyClaims:user.trophyClaims||[],trophyRoadPeak:Math.max(user.trophyRoadPeak||0,user.trophies||0),trophyRoadVersion:1};
+ const current=Math.max(0,Number(user.trophies)||0);
+ return {trophyClaims:(user.trophyClaims||[]).filter(id=>{const reward=PATH.find(r=>r.claimId===id);return !reward||reward.at<=current;}),trophyRoadPeak:current,trophyRoadVersion:1};
+}
 function trophyUpdate(user,difficulty,result,trophyPercent=0){
  const rule=engine.difficulties[difficulty];if(!rule)throw new Error('Invalid difficulty');
  const before=Number(user.trophies)||0,base=result>0?rule.win:result<0?rule.loss:0,bonus=Math.round(base*Math.max(0,Number(trophyPercent)||0)/100),delta=Math.sign(result)*(base+bonus);
  const trophies=Math.max(0,before+delta);
- return {trophies,trophyPeak:Math.max(user.trophyPeak||0,trophies)};
+ return {...roadState(user),trophies,trophyPeak:Math.max(user.trophyPeak||0,trophies),trophyRoadPeak:Math.max(roadState(user).trophyRoadPeak,trophies)};
 }
-module.exports={PATH,replay,trophyUpdate};
+module.exports={PATH,replay,trophyUpdate,roadState};

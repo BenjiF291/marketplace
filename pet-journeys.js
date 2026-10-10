@@ -10,7 +10,7 @@ const PET_PERKS={
 function petOdds(table,petId,happiness=0){
  const collector=petId==='pet:snail'||petId==='pet:dragon',dragon=petId==='pet:dragon';
  const quantities=table.quantities.map((q,i,all)=>{const weight=collector?Math.round(q.weight*(i===4?1:.75)+(i?all[i-1].weight*.25:0)):q.weight;return {...q,weight,percent:weight/10000};});
- const gw=dragon?weights(table.gems.map((_,i)=>Math.pow(Math.min(.98,table.decay+.04),i))):table.gems.map(g=>g.weight);
+ const gw=dragon?weights(table.gems.map((_,i)=>Math.pow(Math.min(.98,table.decay+.02),i))):table.gems.map(g=>g.weight);
  const rewards=table.rewards.map(r=>{const weight=dragon?(r.kind==='none'?1000000-(1000000-r.weight)*2:r.weight*2):r.weight;return {...r,weight,percent:weight/10000};});
  const multiplier=require('./pet-care').MULTIPLIERS[Math.max(0,Math.min(10,Math.trunc(happiness)||0))];
  // Multiply the odds of better outcomes relative to the baseline outcome, then normalize.
@@ -18,9 +18,9 @@ function petOdds(table,petId,happiness=0){
  return {perk:PET_PERKS[petId],happiness,multiplier,gems:boost(table.gems.map((g,i)=>({...g,weight:gw[i]}))),quantities:boost(quantities),rewards:boost(rewards)};
 }
 const FOODS=[
- {id:'food',name:'Crystal Crunch',price:2,decay:.62,amounts:[45,30,15,8,2],bonus:1000},
- {id:'food:trail',name:'Explorer Trail Mix',price:8,decay:.8,amounts:[20,30,25,18,7],bonus:4000},
- {id:'food:feast',name:'Starlight Feast',price:20,decay:.94,amounts:[8,17,30,28,17],bonus:10000}
+ {id:'food',name:'Crystal Crunch',price:2,decay:.22,amounts:[45,30,15,8,2],bonus:100},
+ {id:'food:trail',name:'Explorer Trail Mix',price:8,decay:.28,amounts:[20,30,25,18,7],bonus:400},
+ {id:'food:feast',name:'Starlight Feast',price:20,decay:.34,amounts:[8,17,30,28,17],bonus:1000}
 ];
 function weights(values,total=1000000){const sum=values.reduce((a,b)=>a+b,0);if(!sum)return [];const out=values.map(v=>Math.max(1,Math.floor(v/sum*total)));let left=total-out.reduce((a,b)=>a+b,0);for(let i=0;left>0;i++,left--)out[i%out.length]++;return out;}
 function tables(tiers,packs){

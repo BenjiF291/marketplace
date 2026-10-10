@@ -18,6 +18,11 @@ function gameplay(user,activity,now=Date.now(),units=1){
  const amount=Math.max(0,Math.min(REWARDS[activity]*units,MAX_XP-profile(user).xp));if(!amount)return advancement;
  return {...advancement,...grant(user,amount,activity,now),townHallGameplayDay:today,townHallGameplayXP:used+amount};
 }
+function resetToLevelStart(user){
+ if(user.townHallXPResetVersion===1)return {};
+ const level=profile(user).level;
+ return {townHallXP:THRESHOLDS[level-1],townHallRetainedLevel:level,townHallProgressVersion:3,townHallXPResetVersion:1,townHallHistory:[]};
+}
 function project(){throw Error('Resource-for-XP projects have been retired. Earn XP by playing.');}
 
-module.exports={MAX_XP,THRESHOLDS,REWARDS,PROJECTS,UNLOCKS,profile,grant,gameplay,project};
+module.exports={MAX_XP,THRESHOLDS,REWARDS,PROJECTS,UNLOCKS,profile,grant,gameplay,project,resetToLevelStart};

@@ -36,8 +36,8 @@ function designs(rank) {
     return [`special-${i}`,`${a[1]} & ${b[1]}`,{[a[0]]:a[2],[b[0]]:b[2]},['diverse',null,'rubystash','vip','full'][i]];
   });
 }
-// Strong rarity scaling; caps keep probabilities and discounts valid. Ruby stays unchanged.
-const RARITY_POWER=[1,1.4,1.9,2.5,3.2,4.2,5.4,6.8,8.5,10.5,12.5,14.5,16.5,19];
+// Gentle rarity scaling; Ruby stays unchanged and rare tiers retain an advantage.
+const RARITY_POWER=[1,1.15,1.3,1.5,1.7,1.9,2.1,2.3,2.5,2.6,2.7,2.8,2.9,3];
 function designFields(design,rank=0) {
  const [key,name,base,condition]=design;
  const multiplier=RARITY_POWER[Math.max(0,Math.min(RARITY_POWER.length-1,rank))];

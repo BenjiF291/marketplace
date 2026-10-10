@@ -4,3 +4,12 @@ test('gameplay rewards continue across days and unknown activities grant nothing
 test('direct resource-for-XP projects are retired',()=>{assert.deepEqual(hall.PROJECTS,[]);assert.throws(()=>hall.project({gems:{bronze:100}},'stonework'),/retired/);});
 
 test('gameplay has no daily cap including accounts already at the old cap',()=>{const now=Date.UTC(2026,9,1);let u={townHallXP:100,townHallGameplayDay:'2026-10-01',townHallGameplayXP:100};for(let i=0;i<20;i++)u={...u,...hall.gameplay(u,'ranked win',now)};assert.equal(u.townHallXP,300);});
+
+test('XP reset starts everyone at their existing level without changing unlocks and cannot run twice',()=>{
+ for(const u of [{townHallXP:100},{townHallXP:50,townHallProgressVersion:3,townHallRetainedLevel:7},{townHallXP:17500,townHallProgressVersion:3},{townHallXP:999999}]){
+  const before=hall.profile(u),update=hall.resetToLevelStart(u),after=hall.profile({...u,...update});
+  assert.equal(after.level,before.level);assert.equal(after.progress,0);assert.equal(after.xp,hall.THRESHOLDS[before.level-1]);
+  assert.deepEqual(hall.resetToLevelStart({...u,...update}),{});
+  assert.ok(!('balance' in update));assert.ok(!('advancements' in update));
+ }
+});

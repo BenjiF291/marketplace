@@ -10,7 +10,7 @@ function harness(seed,owned=[]){
  return {records,get writeCount(){return writeCount;},invoke:async(url,body)=>{let status=200,payload;await handlers[url]({header:()=> 'u',body},{status(code){status=code;return this;},send(value){payload=value;},json(value){payload=value;}});return {status,payload};}};
 }
 test('milestone can only be claimed once and uses peak trophies',async()=>{
- const h=harness({'users/u':{trophies:0,trophyPeak:750,balance:10,gems:{bronze:2}}});
+ const h=harness({'users/u':{trophies:0,trophyPeak:750,trophyRoadPeak:750,trophyRoadVersion:1,balance:10,gems:{bronze:2}}});
  assert.equal((await h.invoke('/trophies/claim',{at:750})).status,200);
  assert.equal(h.records['users/u'].balance,110);assert.equal(h.records['users/u'].gems.bronze,7);
  assert.equal((await h.invoke('/trophies/claim',{at:750})).status,400);
@@ -176,7 +176,7 @@ test('completed timed ranked match settles from server events and awards only on
 });
 
 test('expanded road grants exclusive amulets, dyes, and real openable packs exactly once',async()=>{
- const h=harness({'users/u':{trophyPeak:5000,trophyClaims:[75],balance:0},'ascendTiers/bronze':{name:'Bronze',cards:['bronze.png']}});
+ const h=harness({'users/u':{trophies:5000,trophyPeak:5000,trophyClaims:[75],balance:0},'ascendTiers/bronze':{name:'Bronze',cards:['bronze.png']}});
  assert.equal((await h.invoke('/trophies/claim',{at:1000})).status,200);assert.equal(h.records['users/u'].amulets['road:trailblazer'],1);
  assert.equal((await h.invoke('/trophies/claim',{at:1000})).status,400);
  assert.equal((await h.invoke('/trophies/claim',{at:500})).status,200);assert.equal(h.records['users/u'].gemDyes.bronze,5);
@@ -211,4 +211,14 @@ test('forfeits use the pre-match current skill percentage and losses stop at zer
  await h.invoke('/computer-battles/start',rankedBody);assert.equal(h.records['users/u'].trophies,88);
  assert.equal(require('./trophy-utils').trophyUpdate({trophies:5,trophyPeak:100},'medium',-1,25).trophies,0);
  assert.equal(require('./trophy-utils').trophyUpdate({trophies:5},'medium',0,25).trophies,5);
+});
+
+test('road reset preserves lower claims and inventory, requires re-earning higher rewards, and runs only once',async()=>{
+ const h=harness({'users/u':{trophies:546,trophyPeak:5000,trophyClaims:[25,50,75,100],balance:999,gems:{bronze:80}}});
+ let r=await h.invoke('/trophies');assert.deepEqual(r.payload.claimed,[250,500]);assert.equal(r.payload.peak,546);
+ assert.equal((await h.invoke('/trophies/claim',{at:750})).status,400);
+ const u=h.records['users/u'];assert.equal(u.balance,999);assert.equal(u.gems.bronze,80);assert.equal(u.trophyPeak,5000);
+ Object.assign(u,require('./trophy-utils').trophyUpdate({...u,trophies:740},'medium',1));
+ assert.equal((await h.invoke('/trophies/claim',{at:750})).status,200);
+ h.records['users/u'].trophies=500;await h.invoke('/trophies');assert.ok(h.records['users/u'].trophyClaims.includes(75));
 });

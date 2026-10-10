@@ -103,3 +103,10 @@ test('exploration claims reset only the returning pet to one, without changing e
  assert.deepEqual(u.petHappiness,{'pet:fox':1,'pet:snail':7});
  u.petHappiness['pet:fox']=4;assert.throws(()=>j.claim(u,'pet:fox','happy-trip',1000+j.HOURS),/already claimed/);assert.equal(u.petHappiness['pet:fox'],4);
 });
+
+test('high-tier gems remain exceptional even with the best food and happiest dragon',()=>{
+ const best=j.petOdds(loot[2],'pet:dragon',10);
+ const chance=rank=>best.gems.slice(rank).reduce((n,g)=>n+g.weight,0)/1000000;
+ assert.ok(chance(4)<.05);assert.ok(chance(8)<.001);
+ assert.ok(1-best.rewards[0].weight/1000000<.011);
+});
