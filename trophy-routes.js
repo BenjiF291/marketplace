@@ -52,14 +52,14 @@ module.exports=(app,db,getOwned,authenticate)=>{
       tx.update(previousRef,{status:'forfeit',finishedAt:new Date()});
     }
     const skillLevel=rating.skillLevel;
-    const difficulty={policy:'adaptive-v3',skill:skillLevel};
+    const difficulty={policy:'adaptive-v4',skill:skillLevel};
     const live=timed?liveTurns.create(initial,difficulty,seed):null;
-    tx.set(ref,{userId:id,initial,seed,difficulty,live,mode:'skill',assessmentVersion:2,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
+    tx.set(ref,{userId:id,initial,seed,difficulty,live,mode:'skill',assessmentVersion:3,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
     tx.set(profileRef,{...progress,...rating,activeComputerBattle:ref.id});
     tx.update(userRef,changes);
     return {difficulty,live,profile:skill.profile(rating),forfeitedSkill};
   });
-  return {id:ref.id,initial,seed,mode:'skill',assessmentVersion:2,...session,target:generated.target,average:generated.average,playerAverage:generated.playerAverage};
+  return {id:ref.id,initial,seed,mode:'skill',assessmentVersion:3,...session,target:generated.target,average:generated.average,playerAverage:generated.playerAverage};
  });
  route('post','/computer-battles/turn',async(id,body)=>{
   if(typeof body.id!=='string'||!body.id||body.id.includes('/'))throw new Error('Invalid battle');
@@ -67,6 +67,11 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const ref=db.collection('computerBattles').doc(body.id),doc=await tx.get(ref);
     if(!doc.exists||doc.data().userId!==id||doc.data().status!=='active'||!doc.data().live)throw new Error('Timed battle unavailable');
     const live=liveTurns.advance(doc.data().live,body.action||{},Date.now());
+    // Search time must not consume the human's timed turn.
+    if(live.difficulty?.policy==='adaptive-v4'&&live.events.length>doc.data().live.events.length&&live.events.at(-1).actor==='computer'&&!live.events.at(-1).interrupt&&!live.finished){
+      const ready=Date.now(),delay=Math.max(0,ready-live.turnStartedAt);
+      live.turnStartedAt=ready;live.computerDueAt+=delay;
+    }
     // Polling without a move must not rewrite the entire battle.
     if(live.events.length!==doc.data().live.events.length)tx.update(ref,{live});
     return {live};
@@ -83,7 +88,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     if(current.data().status!=='active')return current.data().response || {trophies:user.data().trophies||0,delta:current.data().delta||0,status:current.data().status};
     const isSkill=current.data().mode==='skill';
     const rating=skill.progress(profileDoc.data()||{});
-    const settled=isSkill?skill.settle(rating,result.result,result.quality,current.data().skillAtStart):null;
+    const settled=isSkill?skill.settle(rating,result.result,result.quality,current.data().skillAtStart,false,{assessedMoves:result.assessedMoves,totalMoves:result.moveReviews.length}):null;
     const change=settled?.change||null;
     // Use the CURRENT level; boosters never become permanent inventory items.
     const activeBooster=skill.profile(rating).booster;

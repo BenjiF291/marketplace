@@ -30,7 +30,7 @@ function replay(session, moves, detailed = false) {
    const game=structuredClone(session.initial),qualities=[],moveReviews=[];
    for(const event of session.live.events) {
      if(event.actor==='player') {
-       const choices=engine.assessMoves(game.board,game.player,game.computer,'player');
+       const choices=session.assessmentVersion===3?engine.searchMoves(game.board,game.player,game.computer,'player'):engine.assessMoves(game.board,game.player,game.computer,'player');
        const assessment=engine.moveAssessment(choices,event.cardIndex,event.cell,event.options);
        if(assessment.quality!==null)qualities.push(assessment.quality);
        moveReviews.push({turn:moveReviews.length+1,card:game.player[event.cardIndex].name,cell:event.cell,quality:assessment.quality===null?null:Math.round(assessment.quality*100),regret:Math.round(assessment.regret),bestCard:game.player[assessment.best.cardIndex].name,bestCell:assessment.best.cell,reply:null,followup:null});
@@ -39,7 +39,7 @@ function replay(session, moves, detailed = false) {
    }
    if(game.player.length||game.computer.length)throw new Error('Incomplete timed battle');
    const result=Math.sign(engine.score(game.board,'player'));
-   return detailed?{result,quality:qualities.length?qualities.reduce((sum,n)=>sum+n,0)/qualities.length:null,moveReviews}:result;
+   return detailed?{result,assessedMoves:qualities.length,quality:qualities.length?qualities.reduce((sum,n)=>sum+n,0)/qualities.length:null,moveReviews}:result;
  }
 
  if(!Array.isArray(moves)||moves.length>6)throw new Error('Invalid battle replay');
@@ -48,8 +48,8 @@ function replay(session, moves, detailed = false) {
    if(game.turn==='player'){
      const move=moves[index++];if(!move||move.options?.interrupt||!Number.isInteger(move.cardIndex)||!game.player[move.cardIndex])throw new Error('Incomplete or invalid battle replay');
      if(session.mode==='skill') {
-       const strategic=session.assessmentVersion===2;
-       const choices=strategic?engine.assessMoves(game.board,game.player,game.computer,'player'):engine.rankMoves(game.board,game.player,game.computer,'player');
+       const strategic=session.assessmentVersion>=2;
+       const choices=session.assessmentVersion===3?engine.searchMoves(game.board,game.player,game.computer,'player'):strategic?engine.assessMoves(game.board,game.player,game.computer,'player'):engine.rankMoves(game.board,game.player,game.computer,'player');
        const selected=choices.find(choice=>choice.cardIndex===move.cardIndex&&choice.cell===move.cell&&engine.sameOptions(choice.options,move.options));
        if(!selected)throw new Error('Invalid placement');
        const assessment=strategic?engine.moveAssessment(choices,move.cardIndex,move.cell,move.options):{
@@ -74,7 +74,7 @@ function replay(session, moves, detailed = false) {
  }
  if(index!==moves.length)throw new Error('Extra moves');
  const result=Math.sign(engine.score(game.board,'player'));
- return detailed?{result,quality:qualities.length?qualities.reduce((a,b)=>a+b,0)/qualities.length:null,moveReviews}:result;
+ return detailed?{result,assessedMoves:qualities.length,quality:qualities.length?qualities.reduce((a,b)=>a+b,0)/qualities.length:null,moveReviews}:result;
 }
 // One-time road reset: preserve possessions and historical peak, but re-earn higher milestones.
 function roadState(user){

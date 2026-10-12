@@ -38,7 +38,7 @@ function complete(session, worst=false){
  const game=structuredClone(session.initial),moves=[];let turn=0;
  while(game.player.length||game.computer.length){
   if(game.turn==='player'){
-   const choices=session.assessmentVersion===2?engine.assessMoves(game.board,game.player,game.computer,'player'):engine.rankMoves(game.board,game.player,game.computer,'player');
+   const choices=session.assessmentVersion===3?engine.searchMoves(game.board,game.player,game.computer,'player'):session.assessmentVersion===2?engine.assessMoves(game.board,game.player,game.computer,'player'):engine.rankMoves(game.board,game.player,game.computer,'player');
    const move=worst?choices.at(-1):choices[0];moves.push({cardIndex:move.cardIndex,cell:move.cell});
    game.board=engine.play(game.board,game.player[move.cardIndex],move.cell,'player');game.player.splice(move.cardIndex,1);game.turn=game.computer.length?'computer':'player';
   }else{
@@ -53,7 +53,7 @@ test('new accounts begin unranked placements and clients cannot choose ranked st
  assert.equal((await h.invoke('/brawl/skill')).payload.skillLevel,null);
  assert.equal(h.records['brawlProfiles/u'].placementsCompleted,0);
  const start=await h.invoke('/computer-battles/start',{...rankedBody,difficulty:0,skillLevel:1000});
- assert.equal(start.status,200);assert.deepEqual(start.payload.difficulty,{policy:'adaptive-v3',skill:500});
+ assert.equal(start.status,200);assert.deepEqual(start.payload.difficulty,{policy:'adaptive-v4',skill:500});
  assert.ok(Math.abs(start.payload.target-start.payload.playerAverage)<=.4);
  assert.equal(start.payload.profile.placed,false);
  assert.equal((await h.invoke('/computer-battles/start',{...rankedBody,mode:'training'})).status,400);
@@ -75,7 +75,7 @@ test('forfeit lowers skill and disables then restores milestones based on curren
  const h=harness({'users/u':{},'brawlProfiles/u':{skillLevel:300,ratingVersion:2,placementsCompleted:5}});
  await h.invoke('/computer-battles/start',rankedBody);
  const next=await h.invoke('/computer-battles/start',rankedBody);
- assert.ok(next.payload.profile.skillLevel>=275&&next.payload.profile.skillLevel<300);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v3',skill:next.payload.profile.skillLevel});
+ assert.ok(next.payload.profile.skillLevel>=275&&next.payload.profile.skillLevel<300);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v4',skill:next.payload.profile.skillLevel});
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,150);
  h.records['brawlProfiles/u'].skillLevel=301;
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,300);
@@ -221,4 +221,17 @@ test('road reset preserves lower claims and inventory, requires re-earning highe
  Object.assign(u,require('./trophy-utils').trophyUpdate({...u,trophies:740},'medium',1));
  assert.equal((await h.invoke('/trophies/claim',{at:750})).status,200);
  h.records['users/u'].trophies=500;await h.invoke('/trophies');assert.ok(h.records['users/u'].trophyClaims.includes(75));
+});
+
+test('new AI thinking time does not reduce the human timed turn',async t=>{
+ const turns=require('./public/brawl-turns');let now=20000;
+ t.mock.method(Date,'now',()=>now);
+ t.mock.method(engine,'chooseMove',(board,hand)=>{now+=700;return engine.legalMoves(board,hand,'computer')[0];});
+ const initial={board:Array(16).fill(null),player:engine.trainingCards().slice(0,1),computer:engine.trainingCards().slice(1,2),turn:'computer'};
+ const live=turns.create(initial,{policy:'adaptive-v4',skill:1200},1,0);
+ const h=harness({'users/u':{},'computerBattles/m':{userId:'u',status:'active',mode:'skill',initial,live}});
+ const response=await h.invoke('/computer-battles/turn',{id:'m'});
+ assert.equal(response.status,200);assert.equal(response.payload.live.turn,'player');
+ assert.equal(response.payload.live.turnStartedAt,20700);
+ assert.equal(response.payload.live.events.length,1);
 });

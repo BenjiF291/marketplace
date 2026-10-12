@@ -4,7 +4,7 @@ const skill=require('./brawl-skill');
 const engine=require('./public/practice-engine');
 test('skill stays bounded, defaults sensibly and decision quality matters independently of result',()=>{
   assert.equal(skill.level(undefined),500);assert.equal(skill.level(NaN),500);
-  assert.equal(skill.skillChange(1000,1,1).after,1000);
+  assert.equal(skill.skillChange(1200,1,1).after,1200);
   assert.equal(skill.skillChange(0,-1,0).after,0);
   assert.ok(skill.skillChange(400,1,1).delta>skill.skillChange(400,1,0).delta);
   assert.ok(skill.skillChange(400,1,0).delta<0);
@@ -45,4 +45,22 @@ test('placements depend on decisions and result, stay hidden until fifth, and re
  assert.equal(skill.skillChange(350,1,.72).decisionPoints,1);
  assert.equal(skill.skillChange(350,1,.98).decisionPoints,9);
  assert.equal(skill.skillChange(350,1,null).decisionPoints,0);
+});
+
+test('existing ratings survive the 1200 cap and Champion stays at 1000',()=>{
+ const state={ratingVersion:2,placementsCompleted:5,skillLevel:1000,ratedGames:50};
+ assert.equal(skill.progress(state).skillLevel,1000);assert.equal(skill.profile(state).maxSkill,1200);
+ assert.equal(skill.profile(state).placed,true);assert.equal(skill.level(99999),1200);
+ assert.equal(skill.booster(999).at,800);assert.equal(skill.booster(1000).at,1000);assert.equal(skill.booster(1200).at,1000);
+ const buffered=skill.settle({...state,skillLevel:1100},-1,.7,1100);
+ assert.ok(buffered.state.skillLevel>=1000);assert.equal(skill.profile(buffered.state).booster.at,1000);
+});
+test('upper-rating win streaks do not inflate gains and sparse choices carry less evidence',()=>{
+ const state={ratingVersion:2,placementsCompleted:5,skillLevel:1000,ratedGames:60};
+ const normal=skill.settle(state,1,.98,1000),streak=skill.settle({...state,ratingDirection:1,ratingStreak:8},1,.98,1000);
+ assert.equal(normal.change.delta,streak.change.delta);assert.ok(normal.change.delta<=18);
+ assert.ok(skill.skillChange(800,1,1,false,200).outcomePoints<skill.skillChange(800,1,1,false,800).outcomePoints);
+ assert.ok(skill.skillChange(800,1,1,false,800,{assessedMoves:1}).decisionPoints<skill.skillChange(800,1,1,false,800,{assessedMoves:6}).decisionPoints);
+ const few=skill.settle({},1,1,500,false,{assessedMoves:1}),many=skill.settle({},1,1,500,false,{assessedMoves:6});
+ assert.ok(few.state.skillLevel<many.state.skillLevel);
 });

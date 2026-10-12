@@ -36,3 +36,14 @@ test('training starts locally without skill requests and placement summaries nev
   const result=vm.runInContext('formatBrawlSkillResult(change)',context);
   assert.match(result,/Placement 1\/5/);assert.ok(!result.includes('null'));
 });
+
+test('skill UI shows the 1200 cap and keeps Champion active above 1000',()=>{
+ const {context,elements}=harness();
+ context.profile=skill.profile({ratingVersion:2,placementsCompleted:5,skillLevel:1100});
+ vm.runInContext('renderBrawlSkill(profile)',context);
+ assert.match(elements.get('brawlSkillLevel').textContent,/1100 \/ 1200/);
+ assert.match(elements.get('brawlSkillNext').textContent,/100 skill to the 1200 cap/);
+ assert.match(elements.get('brawlSkillBooster').textContent,/Champion/);
+ assert.equal(elements.get('brawlSkillProgress').max,200);
+ assert.equal(elements.get('brawlSkillProgress').value,100);
+});

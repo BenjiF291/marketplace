@@ -201,6 +201,49 @@
       return {cardIndex:move.cardIndex,cell:move.cell,options:move.options,value,line};
     }).sort((a,b) => b.value-a.value);
   }
+  // New ranked games use deterministic, bounded multi-turn search. Legacy
+  // policies remain untouched because the server replays saved games exactly.
+  function searchMoves(board, hand, opponentHand, player = 'computer', config = {}) {
+    const maxDepth=config.depth||4, width=config.width||6, limit=config.nodes||18000;
+    const other=player==='computer'?'player':'computer';
+    const roots=tacticalMoves(board,hand,opponentHand,player);
+    if(!roots.length)return [];
+    let nodes=0, exhausted=false;
+    function visit(position, mine, theirs, turn, depth, alpha, beta) {
+      if(++nodes>limit){exhausted=true;return null;}
+      if(!depth||(!mine.length&&!theirs.length))return {value:positionValue(position,mine,theirs,player),line:[]};
+      const maximizing=turn===player, active=maximizing?mine:theirs, waiting=maximizing?theirs:mine;
+      if(!active.length)return visit(position,mine,theirs,maximizing?other:player,depth,alpha,beta);
+      const moves=tacticalMoves(position,active,waiting,turn);
+      // Finish small endgames exactly; earlier positions use a tactical beam.
+      const candidates=mine.length+theirs.length<=3?moves:moves.slice(0,width);
+      if(!candidates.length)return {value:positionValue(position,mine,theirs,player),line:[]};
+      let best=maximizing?-Infinity:Infinity,line=[];
+      for(const move of candidates){
+        const next=visit(move.board,maximizing?move.remaining:mine,maximizing?theirs:move.remaining,maximizing?other:player,depth-1,alpha,beta);
+        if(exhausted)return null;
+        if(maximizing?next.value>best:next.value<best){best=next.value;line=[{cardIndex:move.cardIndex,cell:move.cell,options:move.options},...next.line];}
+        if(maximizing)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);
+        if(beta<=alpha)break;
+      }
+      return {value:best,line};
+    }
+    let completed=roots.map(move=>({cardIndex:move.cardIndex,cell:move.cell,options:move.options,value:move.value,line:null,depth:1}));
+    const target=Math.min(maxDepth,hand.length+opponentHand.length);
+    for(let depth=2;depth<=target;depth++){
+      const iteration=[];
+      for(const move of roots){
+        const result=visit(move.board,move.remaining,opponentHand,other,depth-1,-Infinity,Infinity);
+        if(exhausted)break;
+        iteration.push({cardIndex:move.cardIndex,cell:move.cell,options:move.options,value:result.value,
+          line:result.line.length?{reply:result.line[0],followup:result.line[1]||null}:null,depth});
+      }
+      // Never compare a deeply searched first move with an unsearched last one.
+      if(exhausted)break;
+      completed=iteration.sort((a,b)=>b.value-a.value);
+    }
+    return completed.sort((a,b)=>b.value-a.value);
+  }
   function sameOptions(a={},b={}) { return a.side===b.side && a.copyCell===b.copyCell; }
   function moveAssessment(choices, cardIndex, cell, options={}) {
     const selected = choices.find(move => move.cardIndex === cardIndex && move.cell === cell && sameOptions(move.options,options));
@@ -213,6 +256,18 @@
       regret, best:{cardIndex:choices[0].cardIndex,cell:choices[0].cell}, line:selected.line};
   }
   function chooseMove(board, hand, opponentHand, difficulty = 'hard', random = Math.random) {
+    if(difficulty?.policy==='adaptive-v4'){
+      const level=Math.max(0,Math.min(1200,Number(difficulty.skill)||0)),strength=level/1200;
+      const depth=level>=1100?5:level>=850?4:level>=400?3:2;
+      const choices=searchMoves(board,hand,opponentHand,'computer',{depth,nodes:level>=1100?30000:18000,width:6});
+      if(!choices.length)return null;
+      if(random()<.12+.88*strength**1.6)return choices[0];
+      const temperature=2+180*(1-strength)**2;
+      const weights=choices.map(move=>Math.exp((move.value-choices[0].value)/temperature));
+      let pick=random()*weights.reduce((sum,n)=>sum+n,0);
+      for(let i=0;i<choices.length;i++){pick-=weights[i];if(pick<=0)return choices[i];}
+      return choices[0];
+    }
     const choices = rankMoves(board, hand, opponentHand);
     if (!choices.length) return null;
     if (typeof difficulty === 'number' || ['adaptive-v2','adaptive-v3'].includes(difficulty?.policy)) {
@@ -313,6 +368,6 @@
     return difference === 0 ? (random()<.5?'player':'computer') : difference>0?'player':'computer';
   }
   function trainingCards() { return [[8,3,5,4],[4,8,3,5],[5,4,8,3],[3,5,4,8],[6,6,4,4],[4,4,6,6]].map((sides,index)=>({id:`training-${index}`,battleCardId:`training-${index}`,name:`Training ${index+1}`,top:sides[0],right:sides[1],bottom:sides[2],left:sides[3],averageScore:5})); }
-  const api = {sameOptions, refreshAuras, placementOptions, effectivePower, canPlace, legalMoves, MIRROR_POWERS, isMirror, starterCard, budgetBonus, isSpecial, validSpecials, cardPower, rankedDeck, ability, play, score, rankMoves, assessMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
+  const api = {sameOptions, refreshAuras, placementOptions, effectivePower, canPlace, legalMoves, MIRROR_POWERS, isMirror, starterCard, budgetBonus, isSpecial, validSpecials, cardPower, rankedDeck, ability, play, score, rankMoves, assessMoves, searchMoves, moveAssessment, startingPlayer, chooseMove, difficulties, seeded, computerDeck, trainingCards};
   if (typeof module !== 'undefined') module.exports = api; else root.PracticeEngine = api;
 })(typeof self !== 'undefined' ? self : globalThis);

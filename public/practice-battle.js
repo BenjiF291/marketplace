@@ -125,7 +125,7 @@ function runPracticeComputer() {
   const reveal=move=>setTimeout(()=>apply(move),Math.max(0,visibleAt-Date.now()));
   const fallback=()=>setTimeout(()=>{if(generation===practiceGeneration)reveal(PracticeEngine.chooseMove(game.board,game.computer,game.player,game.difficulty,PracticeEngine.seeded(game.seed+game.computerTurn)));},150);
   try {
-    const worker=new Worker('practice-worker.js');
+    const worker=new Worker('practice-worker.js?v=20261012-brawl4');
     practiceWorker=worker;
     worker.onmessage=event=>{worker.terminate();if(practiceWorker===worker)practiceWorker=null;reveal(event.data);};
     worker.onerror=()=>{worker.terminate();if(practiceWorker===worker)practiceWorker=null;fallback();};
@@ -182,13 +182,14 @@ function renderBrawlMoveReviews(reviews) {
   }
 }
 function renderBrawlSkill(data) {
+  const max=data.maxSkill||1200;
   const describe=entry=>`${entry.name}: ${[entry.footy?`+${entry.footy} Footy`:null,entry.ruby?`+${entry.ruby} Ruby`:null,null].filter(Boolean).join(', ')||'no currency bonuses'} per ranked win${entry.trophyPercent?`; ${entry.trophyPercent}% more trophies gained or lost (including forfeits)`:''}`;
-  document.getElementById('brawlSkillLevel').textContent=data.placed?`Skill Level: ${data.skillLevel} / 1000`:`Placement games: ${data.placementsCompleted} / ${data.placementsRequired}`;
+  document.getElementById('brawlSkillLevel').textContent=data.placed?`Skill Level: ${data.skillLevel} / ${max}`:`Placement games: ${data.placementsCompleted} / ${data.placementsRequired}`;
   const progress=document.getElementById('brawlSkillProgress');
-  progress.setAttribute('aria-label',data.placed?'Progress to next skill milestone':'Placement games completed');
-  progress.max=data.placed?(data.next?data.next.at-data.booster.at:1000):data.placementsRequired;
-  progress.value=data.placed?(data.next?data.skillLevel-data.booster.at:1000):data.placementsCompleted;
-  document.getElementById('brawlSkillNext').textContent=!data.placed?'Finish five ranked games to establish your starting Skill Level.':data.next?`${data.next.at-data.skillLevel} skill to ${describe(data.next)} (level ${data.next.at}).`:'Maximum Skill Level reached!';
+  progress.setAttribute('aria-label',data.placed?(data.next?'Progress to next skill milestone':'Progress to skill cap'):'Placement games completed');
+  progress.max=data.placed?(data.next?data.next.at-data.booster.at:max-data.booster.at):data.placementsRequired;
+  progress.value=data.placed?data.skillLevel-data.booster.at:data.placementsCompleted;
+  document.getElementById('brawlSkillNext').textContent=!data.placed?'Finish five ranked games to establish your starting Skill Level.':data.next?`${data.next.at-data.skillLevel} skill to ${describe(data.next)} (level ${data.next.at}).`:data.skillLevel>=max?'Maximum Skill Level reached!':`${max-data.skillLevel} skill to the ${max} cap. Champion remains active from 1000; stronger opponents continue above it.`;
   document.getElementById('brawlSkillBooster').textContent=data.placed?`Active booster: ${describe(data.booster)}.`:'Skill boosters become available after placement. Base trophies still apply.';
   const list=document.getElementById('brawlMilestones');list.replaceChildren();
   for(const entry of data.milestones)list.appendChild(amuletNode('p',`${entry.at} - ${describe(entry)}${!data.placed?' - After placement':entry.at===data.booster.at?' - Active':entry.at>data.skillLevel?' - Locked':' - Replaced by your stronger booster'}`));
