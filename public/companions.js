@@ -1,30 +1,25 @@
-﻿/* Layered, animated vector companions. All artwork is local and decorative. */
+/* Textured animal companions: each joint is a separate local cutout. */
 (() => {
- const eyes=(x1,x2,y)=>`<g class="companion-eyes"><ellipse cx="${x1}" cy="${y}" rx="10" ry="15" fill="#17273b"/><ellipse cx="${x2}" cy="${y}" rx="10" ry="15" fill="#17273b"/><circle cx="${x1-3}" cy="${y-5}" r="4" fill="white"/><circle cx="${x2-3}" cy="${y-5}" r="4" fill="white"/></g>`;
- const sparkles='<g class="companion-sparkles" fill="#ffe3a4"><path d="m44 100 4 10 10 4-10 4-4 10-4-10-10-4 10-4Z"/><path d="m259 50 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><circle cx="244" cy="177" r="3"/><circle cx="75" cy="38" r="3"/></g>';
- const art={
- fox:`<g class="companion-tail"><path d="M186 184C287 220 298 115 240 83c19 66-56 23-70 66Z" fill="url(#warm)" stroke="#ac4432" stroke-width="4"/><path d="M240 83c22 17 35 42 29 64-6-18-22-15-26-28-4 8-12 11-20 10 15-10 23-22 17-46" fill="#fff0d1"/></g>
- <g class="companion-body"><ellipse cx="145" cy="177" rx="57" ry="48" fill="url(#warm)" stroke="#ac4432" stroke-width="4"/><path d="M116 154q28-24 52 0l-6 47h-37Z" fill="#fff0d1"/><ellipse cx="111" cy="211" rx="24" ry="12" fill="#743f4f"/><ellipse cx="175" cy="211" rx="24" ry="12" fill="#743f4f"/>
- <g class="companion-head"><g class="companion-ear"><path d="m99 99-8-70q40 13 49 55" fill="#f79a4a" stroke="#ac4432" stroke-width="4"/><path d="m102 49 6 41 20-8Z" fill="#853e59"/></g><g class="companion-ear companion-ear-right"><path d="m164 82 46-48-9 73" fill="#f79a4a" stroke="#ac4432" stroke-width="4"/><path d="m196 56-25 29 22 10Z" fill="#853e59"/></g>
- <path d="M86 104q10-40 58-38 47-1 64 43l-13 32-46 29-51-23-17-25Z" fill="url(#warm)" stroke="#ac4432" stroke-width="4"/><path d="m88 114 48 14 12 29 17-28 39-17-9 29-46 29-51-23Z" fill="#fff0d1"/>
- ${eyes(120,175,113)}<path d="m138 139q12-8 22 0l-11 10Z" fill="#53374a"/><path d="M149 149v7m-10 0q10 10 20 0" fill="none" stroke="#7e4555" stroke-width="3" stroke-linecap="round"/><ellipse cx="103" cy="135" rx="11" ry="5" fill="#ed6476" opacity=".55"/><ellipse cx="188" cy="134" rx="11" ry="5" fill="#ed6476" opacity=".55"/>
- <path d="m150 73 10 12-10 17-10-17Z" fill="#ec385d" stroke="#ffd7ab" stroke-width="2"/><path d="m150 74 0 27-10-17Z" fill="#ff92a3"/></g></g>`,
- snail:`<g class="companion-body"><path d="M73 176q-23 18 1 30 40 23 147 4 45-10 25-31-10-9-27 0-63-22-146-3Z" fill="url(#mint)" stroke="#257d85" stroke-width="4"/><path d="M84 200q63 15 137-3" fill="none" stroke="#bfffc6" stroke-width="6" stroke-linecap="round"/>
- <g class="companion-shell"><path d="M83 180C37 121 81 52 132 52s87 53 66 100q-17 40-60 37Z" fill="url(#violet)" stroke="#61458e" stroke-width="4"/><path d="M94 160c-33-53 12-84 47-63 31 18 13 58-9 46-16-9-5-25 5-17" fill="none" stroke="#f6b7ed" stroke-width="10" stroke-linecap="round"/><path d="m89 76 3-40 24 31 8-44 23 41 21-24 7 50" fill="#a6f7e0" stroke="#65579c" stroke-width="3"/><path d="m92 36 9 38 15-7m8-44 5 49 18-8" fill="#f7fbff"/><path d="m69 125 17 3-7 24-16-10Z" fill="#ce98ec"/></g>
- <g class="companion-head"><path d="M174 181q-17-65 19-80 52-13 52 40 1 45-30 54" fill="url(#mint)" stroke="#257d85" stroke-width="4"/><g class="companion-ear"><path d="m193 111-12-43" stroke="#32989d" stroke-width="9" stroke-linecap="round"/><circle cx="181" cy="63" r="12" fill="#adeccd" stroke="#257d85" stroke-width="3"/></g><g class="companion-ear companion-ear-right"><path d="m228 110 14-47" stroke="#32989d" stroke-width="9" stroke-linecap="round"/><circle cx="244" cy="58" r="12" fill="#adeccd" stroke="#257d85" stroke-width="3"/></g>
- ${eyes(196,225,137)}<path d="M201 163q12 12 22-2" fill="none" stroke="#216875" stroke-width="4" stroke-linecap="round"/><ellipse cx="186" cy="158" rx="8" ry="5" fill="#f5a9be"/><ellipse cx="234" cy="156" rx="8" ry="5" fill="#f5a9be"/></g></g>`,
- dragon:`<g class="companion-tail"><path d="M174 186q88 26 88-40-19 37-57 12" fill="url(#mint)" stroke="#246a81" stroke-width="4"/><path d="m260 147-8-20 20 2Z" fill="#ed9cdb" stroke="#795b9c" stroke-width="3"/></g>
- <g class="companion-wing wing-left"><path d="M118 151 51 59q-26 28-20 80 29-21 44 9 19-19 43 3Z" fill="url(#violet)" stroke="#60488b" stroke-width="4"/><path d="m51 59 25 89m-25-89-20 80 71-10" fill="none" stroke="#e7aeeb" stroke-width="3"/></g>
- <g class="companion-wing wing-right"><path d="m179 149 62-95q35 32 34 79-32-16-40 13-32-17-56 3Z" fill="url(#violet)" stroke="#60488b" stroke-width="4"/><path d="m241 54-6 92m6-92 34 79-69-7" fill="none" stroke="#e7aeeb" stroke-width="3"/></g>
- <g class="companion-body"><ellipse cx="151" cy="169" rx="49" ry="49" fill="url(#mint)" stroke="#246a81" stroke-width="4"/><ellipse cx="151" cy="181" rx="27" ry="34" fill="#ffe3a4"/><path d="M129 176h43m-41 12h39m-34 12h26" stroke="#dfb76b" stroke-width="3"/><ellipse cx="116" cy="211" rx="22" ry="12" fill="#46aaae" stroke="#246a81" stroke-width="3"/><ellipse cx="190" cy="211" rx="22" ry="12" fill="#46aaae" stroke="#246a81" stroke-width="3"/>
- <g class="companion-head"><g class="companion-ear"><path d="m116 84-6-46 26 30" fill="#ffe3a4" stroke="#a57b75" stroke-width="3"/></g><g class="companion-ear companion-ear-right"><path d="m170 70 24-36-3 53" fill="#ffe3a4" stroke="#a57b75" stroke-width="3"/></g><path d="M102 93q3-35 47-34 44-3 52 36l-1 37q-11 33-50 31-43 0-53-28Z" fill="url(#mint)" stroke="#246a81" stroke-width="4"/>
- <path d="m136 65 13-23 15 24-14 14Z" fill="#c88bea" stroke="#785b98" stroke-width="3"/>${eyes(121,178,105)}<ellipse cx="151" cy="139" rx="33" ry="20" fill="#ace5bf"/><circle cx="139" cy="133" r="3" fill="#36787c"/><circle cx="163" cy="133" r="3" fill="#36787c"/><path d="M135 146q17 12 32-2" fill="none" stroke="#36787c" stroke-width="3" stroke-linecap="round"/><path d="m164 149-3 8-4-6" fill="white"/></g></g>`
+ const image=(kind,part,x,y,w,h)=>`<image href="assets/companions/${kind}/${part}.webp" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
+ const joint=(cls,x,y,content)=>`<g class="${cls}" style="transform-box:view-box;transform-origin:${x}px ${y}px">${content}</g>`;
+ const rigs={
+  fox:{body:[87,115,119,100],head:[67,75,132,91],tail:[164,84,112,133],left:[88,37,54,66],right:[147,42,53,63],pawLeft:[95,161,40,63],pawRight:[149,163,41,62],crest:[132,83,13,19],neck:[132,149]},
+  dragon:{body:[96,119,120,97],head:[100,62,123,132],tail:[178,131,99,83],left:[13,65,115,132],right:[183,66,110,132],pawLeft:[101,169,49,62],pawRight:[161,169,50,62],crest:[103,35,75,66],neck:[149,152]},
+  snail:{body:[38,166,229,58],head:[41,146,67,55],tail:[96,76,137,139],left:[47,101,28,68],right:[75,103,28,68],pawLeft:[34,173,26,22],pawRight:[67,175,25,21],crest:[150,76,18,25],neck:[74,187]}
  };
- let serial=0;
+ function draw(kind){
+  const r=rigs[kind],part=(name,box)=>image(kind,name,...box);
+  const tail=joint(kind==='snail'?'companion-shell':'companion-tail',kind==='snail'?125:190,kind==='snail'?183:188,part('tail',r.tail));
+  const wings=kind==='dragon'?joint('companion-wing wing-left',120,159,part('left',r.left))+joint('companion-wing wing-right',184,160,part('right',r.right)):'';
+  const ears=kind==='dragon'?'':joint('companion-ear',r.left[0]+r.left[2]/2,r.left[1]+r.left[3],part('left',r.left))+joint('companion-ear companion-ear-right',r.right[0]+r.right[2]/2,r.right[1]+r.right[3],part('right',r.right));
+  const lids=kind==='fox'?'<g class="companion-eyelids"><path d="M134 100q8-3 13 3l-1 4q-8 1-13-4Z" fill="#ac6834"/><path d="M163 100q4-3 7 1l-1 5-6-1Z" fill="#ac6834"/><path d="m135 103 10 1m19-1 5 1" stroke="#583c28" stroke-width=".7"/></g>':kind==='dragon'?'<g class="companion-eyelids"><path d="M163 99q7-1 12 7l-4 5q-8-3-10-7Z" fill="#467f83"/><path d="m164 104 9 4" stroke="#243d37" stroke-width=".8"/></g>':'';
+  const head=joint('companion-head',...r.neck,ears+part('head',r.head)+lids+part('crest',r.crest));
+  const paws=joint('companion-paw care-paw-left',r.pawLeft[0]+20,r.pawLeft[1]+8,part('paw-left',r.pawLeft))+joint('companion-paw care-paw-right',r.pawRight[0]+20,r.pawRight[1]+8,part('paw-right',r.pawRight));
+  const body=joint('companion-body',150,214,part('body',r.body)+paws+head);
+  return wings+(kind==='snail'?body+tail:tail+body);
+ }
  window.companionArt=id=>{
-  const kind=String(id).split(':')[1];if(!art[kind])return '';
-  const key=`companion-${serial++}-`;
-  let svg=`<svg class="companion-illustration" viewBox="0 0 300 245" aria-hidden="true" focusable="false"><defs><linearGradient id="warm" x2=".3" y2="1"><stop stop-color="#ffcc69"/><stop offset=".55" stop-color="#f9853f"/><stop offset="1" stop-color="#da4d4a"/></linearGradient><linearGradient id="mint" x2=".6" y2="1"><stop stop-color="#8cf2c7"/><stop offset=".6" stop-color="#48c3b3"/><stop offset="1" stop-color="#348fac"/></linearGradient><linearGradient id="violet" x2=".4" y2="1"><stop stop-color="#eea4ea"/><stop offset=".6" stop-color="#a67bde"/><stop offset="1" stop-color="#6954af"/></linearGradient></defs><ellipse cx="151" cy="221" rx="94" ry="12" fill="#302f57" opacity=".12"/>${sparkles}<g class="companion-character">${art[kind]}</g><g class="companion-hearts" fill="#ff698d"><path d="M96 53c-19-17-27 5 0 21 28-19 18-37 0-21Z"/><path d="M218 25c-14-12-20 4 0 17 20-14 13-27 0-17Z"/></g></svg>`;
-  return svg.replace(/id="(warm|mint|violet)"/g,(_,id)=>`id="${key+id}"`).replace(/url\(#(warm|mint|violet)\)/g,(_,id)=>`url(#${key+id})`);
+  const kind=String(id).split(':')[1];if(!rigs[kind])return '';
+  return `<svg class="companion-illustration companion-textured" data-species="${kind}" viewBox="0 0 300 245" aria-hidden="true" focusable="false"><ellipse cx="151" cy="225" rx="88" ry="9" fill="#182722" opacity=".18"/><g class="companion-character">${draw(kind)}</g><g class="companion-hearts" fill="#ff698d"><path d="M96 53c-19-17-27 5 0 21 28-19 18-37 0-21Z"/><path d="M218 25c-14-12-20 4 0 17 20-14 13-27 0-17Z"/></g></svg>`;
  };
 })();
