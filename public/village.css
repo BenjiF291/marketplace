@@ -245,3 +245,10 @@
 .village-world.village-panning *{animation-play-state:paused!important;transition:none!important}
 .village-world.village-panning .village-building>svg,.village-world.village-panning .island-villager svg{filter:none!important}
 @media(pointer:coarse){.village-world .village-building>svg,.village-world .island-villager svg{filter:none!important}.village-world .village-building:hover>svg{translate:none}}
+
+/* Admin-only deployment check, displayed above the island's modal map. */
+.admin-build-greeting{position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;box-sizing:border-box;border:0;padding:24px;background:#142c32f5;color:#fff2c7;text-align:center;overflow:hidden}
+.admin-build-greeting[open]{display:grid;place-content:center}
+.admin-build-greeting p{margin:0;font:900 clamp(64px,18vw,260px)/1.05 system-ui,sans-serif;letter-spacing:-.05em}
+.admin-build-greeting button{position:absolute;right:24px;top:24px;padding:12px 22px;font:600 16px system-ui,sans-serif;border:1px solid #fff2c7;border-radius:12px;background:#fff2c7;color:#142c32;cursor:pointer}
+.admin-build-greeting::backdrop{background:#142c32cc}

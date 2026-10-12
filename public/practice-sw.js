@@ -1,5 +1,5 @@
 /* Same URL/scope as the old practice worker, so existing installations migrate. */
-const CACHE='island-public-v4';
+const CACHE='island-public-v5';
 const root=new URL(self.registration.scope);
 const offline=new URL('offline.html',root).href;
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([offline,new URL('assets/pwa/island-icon-v3-192.png',root).href]))));
