@@ -240,3 +240,8 @@
 .care-object-menu h2{font:700 27px Georgia,serif;margin:0 30px 10px 0;}.care-object-menu>p{font-size:14px;line-height:1.5;}
 .care-menu-close{position:absolute;right:12px;top:10px;border:0;border-radius:50%;background:#b59b7233;font-size:26px;width:34px;height:34px;color:#534330;}
 .care-room-pet-card{padding:12px;margin-top:12px;border:1px solid #b7a071;border-radius:14px;background:#fffaf099;min-height:76px;overflow:hidden;}.care-menu-portrait{width:80px;height:80px;float:left;margin-right:12px;}.care-menu-portrait svg{width:100%;height:100%;}.care-room-pet-card h3{margin:4px 0 6px;}.care-room-pet-card small{display:block;font-size:12px;}.care-room-pet-card .village-primary{display:block;clear:both;width:100%;margin-top:10px;min-height:42px;font-size:13px;touch-action:manipulation;}
+
+/* Keep the moving map cheap to composite, especially on touch devices. */
+.village-world.village-panning *{animation-play-state:paused!important;transition:none!important}
+.village-world.village-panning .village-building>svg,.village-world.village-panning .island-villager svg{filter:none!important}
+@media(pointer:coarse){.village-world .village-building>svg,.village-world .island-villager svg{filter:none!important}.village-world .village-building:hover>svg{translate:none}}
