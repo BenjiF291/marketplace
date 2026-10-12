@@ -99,6 +99,15 @@
   const close=el('button','Lovely!','btn btn-primary');close.onclick=()=>d.close();d.append(close);
   d.addEventListener('close',()=>{d.remove();if(previous?.isConnected)previous.focus();},{once:true});document.body.append(d);d.showModal();close.focus();
  }
+ function foxPrototype(card,id){
+  let box=card.querySelector('.companion-model-controls');
+  if(!box){box=el('div',undefined,'companion-model-controls');const button=el('button','Try 3D fox','companion-3d-link');button.type='button';box.append(button);card.querySelector('.companion-copy').append(box);}
+  box.hidden=id!=='pet:fox';box.querySelector('button').onclick=()=>{
+   const d=el('dialog',undefined,'fox-3d-dialog');d.setAttribute('aria-label','3D fox prototype');
+   const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
+   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
+  };
+ }
  function renderCompanions(ids){
   for(const [id,view] of extraCompanions){if(!ids.slice(1).includes(id)){view.stage.hidden=true;view.explorer.update(null);}}
   for(const id of ids.slice(1)){
@@ -111,7 +120,7 @@
     const ctrl=createCompanionExplorer({stage:card,pet:p,copy:c,message:m,react:reaction,onInteract:interact});view={stage:card,explorer:ctrl};extraCompanions.set(id,view);stage.after(card);
     new IntersectionObserver(entries=>card.classList.toggle('is-visible',entries[0].isIntersecting)).observe(card);
    }
-   view.stage.hidden=false;view.explorer.update(id);
+   view.stage.hidden=false;view.explorer.update(id);foxPrototype(view.stage,id);
   }
  }
 
@@ -124,7 +133,7 @@
   const available=equipped.filter(id=>!(state.journeys||[]).some(j=>j.petId===id&&j.status==='travelling'));
   const id=available[0];stage.hidden=!id;explorer.update(id);renderCompanions(available);
   if(pet.dataset.pet!==(id||'')){pet.dataset.pet=id||'';pet.innerHTML=window.companionArt(id);stage.dataset.mood='';}
-  petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';
+  petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';foxPrototype(stage,id);
   pet.setAttribute('aria-label',`Play with ${petName.textContent}`);pet.title='Click for a head scratch';
   shelf.replaceChildren();
   const heading=el('h3','Your Ruby collection');shelf.append(heading);
