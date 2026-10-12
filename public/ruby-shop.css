@@ -97,36 +97,18 @@ body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double
 .journey-portrait{height:110px;text-align:center}.journey-portrait svg{height:110px;width:135px}.journey-loot{max-height:360px;overflow:auto;overscroll-behavior:contain;padding:0 4px}.journey-loot:focus-visible{outline:2px solid #795b98;outline-offset:2px}
 
 .journey-discoveries{width:min(440px,calc(100vw - 32px));box-sizing:border-box;text-align:center;background:radial-gradient(ellipse at top,#fff0d7,#fffaf5 65%);border:1px solid #e5cfa9;color:#44334f}.journey-discovery-pet{height:120px}.journey-discovery-pet svg{width:150px;height:120px}.journey-discoveries h2{margin:8px 0}.journey-discovery-gems{display:grid;justify-items:center;gap:8px;margin:24px 0;padding:24px;border-radius:18px;background:#fff;border:1px solid #e6dbe9}.journey-discovery-gems .gem-icon{width:80px;height:80px}.journey-discovery-gems strong{font-size:42px;line-height:1.1;color:#47345c}.journey-discovery-gems>span{font-size:20px;font-weight:700}.journey-discovery-bonus{padding:16px;margin-bottom:20px;border:1px solid #d0a958;border-radius:16px;background:#fff2cb;overflow-wrap:anywhere}.journey-discovery-bonus>span{display:block;font-size:11px;letter-spacing:.18em;color:#72500a;margin-bottom:10px}.journey-discovery-bonus>strong{font-size:20px}.journey-discovery-bonus p,.journey-discovery-saved{font-size:13px}.journey-discoveries>.btn{min-width:150px;min-height:44px}
-/* Cutout rigs retain the same animation hooks in every companion surface. */
-.companion-textured .companion-body{animation:animal-breathe 4.8s ease-in-out infinite}
-.companion-textured .companion-head{animation:animal-look 9s ease-in-out infinite}
-.companion-textured .companion-tail{animation:animal-tail 4.6s ease-in-out infinite}
-.companion-textured .companion-paw{animation:animal-paw 8s ease-in-out infinite}.companion-textured .care-paw-right{animation-delay:-4s}
-.companion-textured .companion-wing{animation:animal-wing 4.2s ease-in-out infinite}.companion-textured .wing-right{animation-delay:-.3s;animation-direction:reverse}
-.companion-textured[data-species=snail] .companion-ear{animation:animal-feeler 5.5s ease-in-out infinite}.companion-textured[data-species=snail] .companion-ear-right{animation-delay:-2.7s}
-.companion-textured image{pointer-events:none}
-.pet-play-art[data-mood=nap] .companion-textured .companion-head,.care-animal[data-activity=rest] .companion-textured .companion-head{animation:animal-sleep 4s ease-in-out infinite}
-.pet-play-art[data-mood=nap] .companion-textured .companion-wing{animation:none;transform:rotate(-9deg) scaleX(.9)}
-@keyframes animal-breathe{50%{transform:scale(1.008,1.018)}}
-@keyframes animal-look{0%,35%,100%{transform:rotate(0)}45%,60%{transform:rotate(-3deg)}78%,87%{transform:rotate(2deg)}}
-@keyframes animal-tail{50%{transform:rotate(7deg)}}
-@keyframes animal-paw{0%,70%,100%{transform:translateY(0)}80%,86%{transform:translateY(-3px) rotate(3deg)}}
-@keyframes animal-wing{50%{transform:rotate(7deg) scaleX(.94)}}
-@keyframes animal-feeler{50%{transform:rotate(8deg) scaleY(.96)}}
-@keyframes animal-sleep{0%,100%{transform:translateY(4px) rotate(6deg)}50%{transform:translateY(5px) rotate(7deg)}}
-@media(prefers-reduced-motion:reduce){.companion-textured *{animation:none!important}}
-
-.companion-textured .companion-eyelids{opacity:0;animation:animal-blink 6.7s infinite}
-.pet-play-art[data-mood=nap] .companion-textured .companion-eyelids,.care-animal[data-activity=rest] .companion-textured .companion-eyelids{animation:none;opacity:1}
-@keyframes animal-blink{0%,43%,47%,88%,92%,100%{opacity:0}44%,46%,89%,91%{opacity:1}}
-
-/* Keep small joint overlaps closed while the textured animal moves. */
-.companion-textured .companion-tail{animation-name:animal-attached-tail}
-.companion-textured .companion-ear{animation-name:animal-attached-ear}
-.companion-textured .companion-shell{animation:animal-attached-shell 5s ease-in-out infinite}
-@keyframes animal-attached-tail{50%{transform:rotate(4deg)}}
-@keyframes animal-attached-ear{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-5deg)}90%{transform:rotate(2deg)}}
-@keyframes animal-attached-shell{50%{transform:rotate(-1deg)}}
-
-/* The lodge ledge sits in front of the pet; keep the feet above its lip. */
-.companion-nook .ruby-pet{bottom:14px}
+/* Full-animal film strips keep all joints connected throughout motion. */
+.companion-animated .companion-frame{width:245px!important;height:245px!important;overflow:hidden!important}
+.companion-animated .companion-body{transform-box:view-box;transform-origin:150px 216px;animation:companion-breathe 5s ease-in-out infinite}
+.companion-film{animation:companion-idle-frames 3s step-end infinite;pointer-events:none}
+.companion-animated[data-species=snail] .companion-film{animation-duration:4.2s}
+@keyframes companion-idle-frames{0%,100%{transform:translateX(0)}16.6667%{transform:translateX(-512px)}33.3333%{transform:translateX(-1024px)}50%{transform:translateX(-1536px)}66.6667%{transform:translateX(-2048px)}83.3333%{transform:translateX(-2560px)}}
+.pet-play-art[data-mood=pet] .companion-film,.pet-play-art[data-mood=dance] .companion-film,.companion-stage[data-mood=snack] .companion-film{animation-duration:1.5s}
+.pet-play-art[data-mood=nap] .companion-film,.care-animal[data-activity=rest] .companion-film{animation-play-state:paused}
+.care-animal[data-activity=walk] .companion-film,.care-animal[data-activity=play] .companion-film{animation-duration:1.2s}
+.companion-nook .ruby-pet{bottom:4px}
+/* Large pet cards must override the tiny general-purpose SVG icon rules. */
+.journey-portrait{height:180px}
+.studio-ui .journey-portrait svg.companion-illustration,.journey-portrait svg.companion-illustration{display:block;width:100%;max-width:250px;height:180px;margin:auto}
+.ruby-art.companion-portrait svg.companion-illustration{width:100%!important;height:100%!important;max-width:260px!important;overflow:visible}
+@media(prefers-reduced-motion:reduce){.companion-film{animation:none!important}}

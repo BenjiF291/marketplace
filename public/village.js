@@ -40,13 +40,6 @@
  function zoom(next,cx,cy){const r=viewport.getBoundingClientRect();cx??=r.width/2;cy??=r.height/2;next=Math.max(.4,Math.min(2.4,next));const ratio=next/camera.scale;camera.x=cx-(cx-camera.x)*ratio;camera.y=cy-(cy-camera.y)*ratio;camera.scale=next;clamp();paintCamera();}
  function reset(){const r=viewport.getBoundingClientRect();camera.scale=r.width<650?.73:Math.min(1.1,r.width/1340,r.height/870);camera.x=r.width/2-720*camera.scale;camera.y=r.height/2-470*camera.scale;initialized=true;clamp();paintCamera();}
  function focusBuilding(b){const r=viewport.getBoundingClientRect();camera.x=r.width/2-b.x*camera.scale;camera.y=r.height*.4-b.y*camera.scale;clamp();paintCamera();}
- function greetAdmin(){
-  if(!data?.isAdmin)return;
-  document.getElementById('adminBuildGreeting')?.close();
-  const greeting=el('dialog','admin-build-greeting');greeting.id='adminBuildGreeting';greeting.setAttribute('aria-label','hi admin');
-  const message=el('p','','hi admin'),close=el('button','','Close');close.type='button';close.onclick=()=>greeting.close();
-  greeting.append(message,close);greeting.addEventListener('close',()=>greeting.remove(),{once:true});document.body.append(greeting);greeting.showModal();
- }
  function select(b){if(travelling)return;if(plotEditor?.select(b)){inspector.hidden=true;return;}selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;
   const enter=el('button','village-entrance',b.name);enter.setAttribute('aria-label',`Enter ${b.name}`);enter.onclick=()=>travel(b);inspector.append(enter);
  }
@@ -83,7 +76,7 @@
   notice=el('span','village-preview-notice');notice.setAttribute('role','status');tools.append(levelSelect,notice);
   viewport=el('div','village-viewport');viewport.tabIndex=0;viewport.setAttribute('role','group');viewport.setAttribute('aria-label','Island map. Drag or swipe to explore, pinch to zoom. Arrow keys pan; plus and minus zoom.');
   world=el('div','village-world');world.innerHTML=VillageArt.terrain();viewport.append(world);IslandMinigames.mount(world);
-  for(const b of buildings){const tile=el('button','village-building');tile.type='button';tile.dataset.building=b.id;tile.style.left=b.x+'px';tile.style.top=b.y+'px';tile.style.zIndex=Math.round(b.y);tile.onclick=e=>{if(!unlocked(b))return;if(performance.now()<suppressUntil&&e.detail!==0){e.preventDefault();return;}select(b);if(b.id==='townhall')greetAdmin();};world.append(tile);tiles.set(b.id,tile);}
+  for(const b of buildings){const tile=el('button','village-building');tile.type='button';tile.dataset.building=b.id;tile.style.left=b.x+'px';tile.style.top=b.y+'px';tile.style.zIndex=Math.round(b.y);tile.onclick=e=>{if(!unlocked(b))return;if(performance.now()<suppressUntil&&e.detail!==0){e.preventDefault();return;}select(b);};world.append(tile);tiles.set(b.id,tile);}
   const caption=el('div','village-map-caption');caption.append(el('span','','THE COLLECTOR’S ISLE'),el('small','','Swipe to explore · Tap a building to enter'));
   const controls=el('div','village-camera-controls');for(const [label,text,fn] of [['Zoom out','−',()=>zoom(camera.scale/1.2)],['Recenter map','⌖',reset],['Zoom in','+',()=>zoom(camera.scale*1.2)]]){const b=el('button','',text);b.setAttribute('aria-label',label);b.onclick=fn;controls.append(b);}
   const footer=el('footer','village-footer');status=el('span');jump=el('select');jump.setAttribute('aria-label','Find a building');jump.append(new Option('Find a building…',''));buildings.forEach(b=>jump.append(new Option(b.name,b.id)));jump.onchange=()=>{const b=buildings.find(b=>b.id===jump.value);if(b){focusBuilding(b);select(b);}jump.value='';};footer.append(jump);
