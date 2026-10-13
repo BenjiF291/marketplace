@@ -1,13 +1,13 @@
 import * as THREE from './vendor/three/three.module.js';
 import {OrbitControls} from './vendor/three/OrbitControls.js';
-import {createFox} from './fox-3d-model.js';
+import {createFox} from './fox-3d-model.js?v=2';
 if(new URLSearchParams(location.search).has('embedded'))document.documentElement.dataset.embedded='true';
 const host=document.getElementById('foxCanvas'),loading=document.getElementById('loading'),status=document.getElementById('status');
 try{
- const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;host.append(renderer.domElement);
+ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio*1.5,2.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;host.append(renderer.domElement);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#283e36');scene.fog=new THREE.Fog('#283e36',10,24);
  const camera=new THREE.PerspectiveCamera(36,1,.1,50);camera.position.set(4.7,3.1,5.4);const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.1,-.35);controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=3;controls.maxDistance=12;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.2;controls.autoRotateSpeed=1.4;
- scene.add(new THREE.HemisphereLight('#fff0cf','#314f36',1.8));const key=new THREE.DirectionalLight('#ffdea2',2.4);key.position.set(-3,6,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-7,right:7,top:7,bottom:-7,near:.1,far:20});key.shadow.normalBias=.025;scene.add(key);const rim=new THREE.DirectionalLight('#b6dce2',1.4);rim.position.set(3,4,-4);scene.add(rim);
+ scene.add(new THREE.HemisphereLight('#fff0cf','#314f36',1.8));const key=new THREE.DirectionalLight('#ffdea2',2.4);key.position.set(-3,6,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-7,right:7,top:7,bottom:-7,near:.1,far:20});key.shadow.normalBias=.025;scene.add(key);const rim=new THREE.DirectionalLight('#b6dce2',1.4);rim.position.set(3,4,-4);scene.add(rim);
  const ground=new THREE.Mesh(new THREE.CircleGeometry(14,80),new THREE.MeshStandardMaterial({color:'#697655',roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
  const ring=new THREE.Mesh(new THREE.RingGeometry(2.8,2.83,80),new THREE.MeshStandardMaterial({color:'#a0a276',roughness:1,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.006;scene.add(ring);
  let seed=27;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
