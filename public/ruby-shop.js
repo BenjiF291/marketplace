@@ -102,17 +102,18 @@
  function companionPrototype(card,id){
   let box=card.querySelector('.companion-model-controls');
   if(!box){box=el('div',undefined,'companion-model-controls');const button=el('button','Try 3D fox','companion-3d-link');button.type='button';box.append(button);card.querySelector('.companion-copy').append(box);}
-  const kind=String(id).split(':')[1];box.hidden=!['fox','dragon'].includes(kind);box.querySelector('button').textContent=`Try 3D ${kind||'companion'}`;box.querySelector('button').onclick=()=>openCompanion3DPreview(kind);
+  const kind=String(id).split(':')[1];box.hidden=!['fox','dragon','snail'].includes(kind);box.querySelector('button').textContent=`Try 3D ${kind||'companion'}`;box.querySelector('button').onclick=()=>openCompanion3DPreview(kind);
  }
  function openCompanion3DPreview(kind){
-   if(!['fox','dragon'].includes(kind))return;
+   if(!['fox','dragon','snail'].includes(kind))return;
    const existing=document.getElementById(kind+'3DDialog');if(existing?.open)return;
    const d=el('dialog',undefined,'fox-3d-dialog');d.id=kind+'3DDialog';d.setAttribute('aria-label',`3D ${kind} preview`);
    const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
-   const frame=el('iframe');frame.title=`Interactive 3D ${kind}`;frame.src=`${kind}-3d-preview.html?embedded=1&v=dragon1`;d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
+   const frame=el('iframe');frame.title=`Interactive 3D ${kind}`;frame.src=`${kind}-3d-preview.html?embedded=1&v=snail1`;d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
  }
  window.openFox3DPreview=()=>openCompanion3DPreview('fox');
  window.openDragon3DPreview=()=>openCompanion3DPreview('dragon');
+ window.openSnail3DPreview=()=>openCompanion3DPreview('snail');
  function renderCompanions(ids){
   for(const [id,view] of extraCompanions){if(!ids.slice(1).includes(id)){view.stage.hidden=true;view.explorer.update(null);}}
   for(const id of ids.slice(1)){
