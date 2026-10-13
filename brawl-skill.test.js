@@ -42,8 +42,8 @@ test('placements depend on decisions and result, stay hidden until fifth, and re
  assert.equal(skill.booster(599).footy,0);assert.equal(skill.booster(600).footy,10);
  assert.equal(skill.booster(799).ruby,0);assert.equal(skill.booster(800).ruby,1);
  assert.equal(skill.booster(799).ruby,0);assert.equal(skill.booster(800).ruby,1);
- assert.equal(skill.skillChange(350,1,.72).decisionPoints,1);
- assert.equal(skill.skillChange(350,1,.98).decisionPoints,9);
+ assert.equal(skill.skillChange(350,1,.72).decisionPoints,21);
+ assert.equal(skill.skillChange(350,1,.98).decisionPoints,40);
  assert.equal(skill.skillChange(350,1,null).decisionPoints,0);
 });
 
@@ -63,4 +63,44 @@ test('upper-rating win streaks do not inflate gains and sparse choices carry les
  assert.ok(skill.skillChange(800,1,1,false,800,{assessedMoves:1}).decisionPoints<skill.skillChange(800,1,1,false,800,{assessedMoves:6}).decisionPoints);
  const few=skill.settle({},1,1,500,false,{assessedMoves:1}),many=skill.settle({},1,1,500,false,{assessedMoves:6});
  assert.ok(few.state.skillLevel<many.state.skillLevel);
+});
+
+function calibratedRun(start,quality,results,games=160,evidence={assessedMoves:6}){
+ let state={ratingVersion:2,placementsCompleted:5,skillLevel:start,ratedGames:60};
+ const levels=[];for(let i=0;i<games;i++){state=skill.settle(state,results[i%results.length],quality,state.skillLevel,false,evidence).state;levels.push(state.skillLevel);}return {state,levels};
+}
+test('sound tactical play settles near 900 from either side and tolerates ordinary result variation',()=>{
+ assert.equal(skill.qualityLevel(.90),900);
+ for(const start of [200,500,900,1200]){
+  for(const results of [[1,-1],[1,1,-1,-1,0],[1,1,1,-1,-1]]){
+   const run=calibratedRun(start,.90,results);assert.ok(run.levels.slice(-30).every(n=>n>=875&&n<=930),JSON.stringify({start,results,last:run.state.skillLevel}));
+  }
+ }
+});
+test('repeated wins with ordinary decisions cannot farm Champion or the cap',()=>{
+ const ordinary=calibratedRun(500,.90,[1],500),weak=calibratedRun(1000,.75,[1],500);
+ assert.ok(ordinary.state.skillLevel<1000);
+ const sparse=calibratedRun(500,.90,[1],500,{assessedMoves:1});assert.ok(sparse.state.skillLevel<1000);
+ const forced=calibratedRun(900,null,[1],100,{assessedMoves:0});assert.equal(forced.state.skillLevel,900);assert.ok(ordinary.state.skillLevel>900);
+ assert.ok(weak.state.skillLevel<800);assert.ok(weak.levels.slice(-100).every(n=>n<800));
+ const expert=calibratedRun(500,.985,[1,-1]),elite=calibratedRun(500,1,[1,-1]);
+ assert.ok(expert.state.skillLevel>=1080&&expert.state.skillLevel<=1120);assert.ok(elite.state.skillLevel>=1180);
+});
+test('quality-free matches supply no invented decision correction; forfeits cost exactly 12',()=>{
+ const state={ratingVersion:2,placementsCompleted:5,skillLevel:1100,ratedGames:100,ratingDirection:-1,ratingStreak:8};
+ assert.equal(skill.settle(state,0,null,1100,false,{assessedMoves:0}).change.delta,0);
+ assert.equal(skill.settle(state,-1,null,1100,true).change.delta,-12);
+ assert.equal(skill.skillChange(900,0,.90).delta,0);
+ assert.equal(skill.skillChange(900,1,.90).delta,6);assert.equal(skill.skillChange(900,-1,.90).delta,-6);
+});
+test('placements use the same calibrated scale and completed accounts keep their ratings until they play',()=>{
+ let state={};for(let i=0;i<5;i++)state=skill.settle(state,0,.90,skill.progress(state).skillLevel,false,{assessedMoves:6}).state;
+ assert.ok(state.skillLevel>=850&&state.skillLevel<=925);assert.equal(skill.profile(state).placed,true);
+ assert.equal(skill.progress({ratingVersion:2,placementsCompleted:5,skillLevel:1037}).skillLevel,1037);
+});
+
+test('the same average play with occasional bad games still hovers near 900',()=>{
+ let state={ratingVersion:2,placementsCompleted:5,skillLevel:500,ratedGames:60};const late=[];
+ for(let i=0;i<400;i++){state=skill.settle(state,i%2?1:-1,[1,1,1,.6][i%4],state.skillLevel,false,{assessedMoves:6}).state;if(i>=300)late.push(state.skillLevel);}
+ const average=late.reduce((a,b)=>a+b,0)/late.length;assert.ok(average>=880&&average<=925,`average ${average}`);assert.ok(late.every(n=>n>=860&&n<=950));
 });

@@ -22,43 +22,52 @@ function profile(data={}) {
   return {maxSkill:MAX_SKILL,skillLevel:placed?state.skillLevel:null,placed,placementsCompleted:state.placementsCompleted,placementsRequired:PLACEMENT_GAMES,
     booster:placed?booster(state.skillLevel):NO_BOOSTER,next:placed?MILESTONES.find(m=>m.at>state.skillLevel)||null:null,milestones:MILESTONES};
 }
-function expectedQuality(value) { return .55+.4*Math.min(value,1000)/1000+.04*Math.max(0,value-1000)/200; }
-function qualityLevel(quality) { return level(quality<=.95?(quality-.55)/.4*1000:1000+(quality-.95)/.04*200); }
+// Calibration anchors are bounded-search decision quality, not human win rates.
+// Sound tactical play with occasional mistakes centres on 900; the increasingly
+// narrow bands above it reserve 1000-1200 for much more consistent decisions.
+const QUALITY_SCALE = [[0,0],[.55,400],[.75,650],[.90,900],[.96,1000],[.985,1100],[1,1200]];
+function qualityLevel(quality) {
+  const q=Math.max(0,Math.min(1,quality));
+  for(let i=1;i<QUALITY_SCALE.length;i++){const [lo,a]=QUALITY_SCALE[i-1],[hi,b]=QUALITY_SCALE[i];if(q<=hi)return level(a+(b-a)*(q-lo)/(hi-lo));}
+  return MAX_SKILL;
+}
 function skillChange(value, result, quality, forfeit=false, opponentSkill=value, evidence={}) {
   const before=level(value);
   const expectedResult=1/(1+10**((level(opponentSkill)-before)/300));
-  const outcomePoints=forfeit?-12:Math.round(24*((result+1)/2-expectedResult));
-  const expected=expectedQuality(before);
   const confidence=Number.isFinite(evidence.assessedMoves)?Math.min(1,Math.max(0,evidence.assessedMoves)/4):1;
-  const decisionPoints=forfeit||quality===null?0:Math.round(32*(quality-expected)*confidence);
+  const outcomePoints=forfeit?-12:Math.round(12*((result+1)/2-expectedResult)*confidence);
+  const assessedLevel=quality===null?null:qualityLevel(quality);
+  const decisionPoints=forfeit||assessedLevel===null?0:Math.round(Math.max(-40,Math.min(40,.08*(assessedLevel-before)*confidence)));
   const after=level(before+outcomePoints+decisionPoints);
-  const assessed=quality===null?'No meaningful choice to assess':`estimated move quality ${Math.round(quality*100)}% (expected ${Math.round(expected*100)}%)`;
+  const assessed=quality===null?'No meaningful choice to assess':`estimated move quality ${Math.round(quality*100)}% (performance level ${assessedLevel})`;
   return {before,after,delta:after-before,quality:forfeit||quality===null?null:Math.round(quality*100),outcomePoints,decisionPoints,
     explanation:forfeit?'Unfinished ranked Brawl forfeited (-12).':`${result>0?'Win':result<0?'Loss':'Draw'}: ${outcomePoints>0?'+':''}${outcomePoints}; ${assessed}: ${decisionPoints>=0?'+':''}${decisionPoints}. Move quality is a bounded search estimate, not proof of perfect play.`};
 }
 function settle(data,result,quality,opponentSkill,forfeit=false,evidence={}) {
-  const state=progress(data);
-  if(state.placementsCompleted===PLACEMENT_GAMES){
-    const base=skillChange(state.skillLevel,result,quality,forfeit,opponentSkill,evidence);
-    const direction=Math.sign(base.delta),prior=state.ratingDirection||0;
-    const streak=direction&&direction===prior?Math.min(8,(state.ratingStreak||0)+1):direction?1:0;
-    const games=Math.max(0,state.ratedGames||0),assessedLevel=quality===null?state.skillLevel:qualityLevel(quality);
-    const confidence=Number.isFinite(evidence.assessedMoves)?Math.min(1,Math.max(0,evidence.assessedMoves)/4):1;
-    const gap=(assessedLevel-state.skillLevel)*confidence;
-    const upper=state.skillLevel>=800;
-    // One result is weak evidence. Repeated mismatches warrant rapid correction.
-    const gain=upper&&direction>0 ? .85 : games<10 ? 1.8 : 1.4;
-    const adjustment=base.delta*gain+((!upper||direction<0)&&direction&&streak>=2?direction*Math.min(55,Math.abs(gap)*.10)*(Math.min(streak,5)-1)/4:0);
-    const cap=upper&&direction>0?18:direction<0?(streak===1?25:Math.min(65,25+streak*8)):Math.min(95,40+streak*12);
-    const after=level(state.skillLevel+Math.max(-cap,Math.min(cap,Math.round(adjustment))));
-    const change={...base,after,delta:after-state.skillLevel,calibration:games<10,streak,
-      explanation:`${base.explanation} Rating correction: ${after-state.skillLevel>=0?'+':''}${after-state.skillLevel}. ${(!upper||direction<0)&&streak>=2?'Repeated performance is increasing calibration speed.':'A single result has a limited effect; repeated wins at the top do not amplify the change.'}`};
-    return {state:{...state,skillLevel:after,ratedGames:games+1,ratingDirection:direction,ratingStreak:streak},change};
-  }
-  // Invert the post-placement quality expectation. Results contribute 20%,
-  // relative to the opponent faced; choices contribute 80%.
+  let state=progress(data);
   const confidence=Number.isFinite(evidence.assessedMoves)?Math.min(1,Math.max(0,evidence.assessedMoves)/4):1;
-  const decisionLevel=forfeit?0:quality===null?level(opponentSkill):level(confidence*qualityLevel(quality)+(1-confidence)*level(opponentSkill));
+  if(!forfeit&&Number.isFinite(quality)&&confidence>0){
+    const priorWeight=Number.isFinite(state.qualityWeight)?Math.max(0,state.qualityWeight):0;
+    const weight=Math.min(10,priorWeight+confidence);
+    const previous=Number.isFinite(state.qualityMean)?state.qualityMean:quality;
+    state={...state,qualityMean:previous+(quality-previous)*confidence/weight,qualityWeight:weight};
+  }
+  const recentQuality=quality===null?null:state.qualityMean??quality;
+  if(state.placementsCompleted===PLACEMENT_GAMES){
+    const change=skillChange(state.skillLevel,result,recentQuality,forfeit,opponentSkill,evidence);
+    change.quality=forfeit||quality===null?null:Math.round(quality*100);
+    if(!forfeit&&quality!==null)change.explanation=change.explanation.replace(`estimated move quality ${Math.round(recentQuality*100)}%`,`estimated move quality ${Math.round(quality*100)}% (recent average ${Math.round(recentQuality*100)}%)`);
+    const direction=Math.sign(change.delta),prior=state.ratingDirection||0;
+    const streak=direction&&direction===prior?Math.min(8,(state.ratingStreak||0)+1):direction?1:0;
+    const games=Math.max(0,state.ratedGames||0);
+    // The same evidence has the same effect in either direction. Volume and
+    // streaks never multiply rating gains; quality continually anchors the level.
+    return {state:{...state,skillLevel:change.after,ratedGames:games+1,ratingDirection:direction,ratingStreak:streak},
+      change:{...change,calibration:games<10,streak}};
+  }
+  // Use the same calibrated quality scale. Results contribute 20%,
+  // relative to the opponent faced; choices contribute 80%.
+  const decisionLevel=forfeit?0:quality===null?level(opponentSkill):level(confidence*qualityLevel(recentQuality)+(1-confidence)*level(opponentSkill));
   const resultLevel=level(level(opponentSkill)+result*150);
   const sample=level(.8*decisionLevel+.2*resultLevel);
   const placementsCompleted=state.placementsCompleted+1;
@@ -70,4 +79,4 @@ function settle(data,result,quality,opponentSkill,forfeit=false,evidence={}) {
       quality:forfeit||quality===null?null:Math.round(quality*100),
       explanation:`${forfeit?'Forfeit':result>0?'Win':result<0?'Loss':'Draw'} recorded. Placement ${placementsCompleted}/${PLACEMENT_GAMES}. ${placed?`Starting Skill Level: ${estimate}.`:'Your rating will be assigned after five ranked games.'} Placement combines decision quality (80%) with the result and opponent level (20%).`}};
 }
-module.exports={MAX_SKILL,DEFAULT_SKILL,PLACEMENT_GAMES,RATING_VERSION,MILESTONES,level,progress,booster,profile,skillChange,settle};
+module.exports={QUALITY_SCALE,qualityLevel,MAX_SKILL,DEFAULT_SKILL,PLACEMENT_GAMES,RATING_VERSION,MILESTONES,level,progress,booster,profile,skillChange,settle};

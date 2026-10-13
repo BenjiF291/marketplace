@@ -4,12 +4,22 @@
 
 Players do not receive a starting rating until five ranked games have been settled. The UI shows placement progress instead of a provisional number. New accounts use an internal matchmaking prior of 500; existing accounts use their previous level as a prior. Neither is an assigned starting rating. Bob adapts to the provisional estimate between placement games.
 
-Each placement sample combines 80% decision performance and 20% result relative to the match level:
+Decision quality is calibrated on the same 0-1200 scale used after placement:
 
-- Decision performance: `clamp(round((quality - 0.55) / 0.4 * 1000), 0, 1000)`.
-- Result performance: `clamp(matchLevel + 150 * result, 0, 1000)`; result is +1 / 0 / -1 for win / draw / loss.
-- Sample: `round(0.8 * decisionPerformance + 0.2 * resultPerformance)`.
-- Starting rating: rounded average of the five samples, bounded to 0-1000.
+| Recent estimated decision quality | Performance level |
+| --- | --- |
+| 55% | 400 |
+| 75% | 650 |
+| 90% | 900 |
+| 96% | 1000 |
+| 98.5% | 1100 |
+| 100% | 1200 |
+
+Values interpolate between anchors. These are bounded-search estimates, not human win rates or proof of perfect play. Consistently sound tactical play with occasional mistakes is the 900 benchmark; the top bands require increasingly consistent decisions.
+
+Each informative match contributes to a confidence-weighted recent quality average (`qualityMean`, `qualityWeight`). The first ten full-evidence games build that average; afterward a full-evidence game contributes 10%, with sparse games contributing less. Forfeits and uninformative games do not overwrite the quality history.
+
+Each placement combines 80% calibrated recent decision performance and 20% result relative to the match level. A result sample is `clamp(matchLevel + 150 * result, 0, 1200)`; result is +1 / 0 / -1 for win / draw / loss. Starting rating is the rounded average of five placement samples, bounded to 0-1200.
 
 If there are no informative choices, match level supplies the neutral decision performance. An abandoned ranked game counts as a placement loss with zero decision performance when the next ranked game starts. Training never counts. Retries cannot count a placement twice.
 
@@ -25,9 +35,13 @@ Regret is the score gap between a played placement and the best assessed placeme
 
 ## Rating changes after placement
 
-Result contribution remains +12 for a win, -12 for a loss, and 0 for a draw. Decision adjustment is `round(32 * (quality - expectedQuality))`, with `expectedQuality = 0.55 + 0.4 * skill/1000`. This adjustment can be negative. At skill 350, expected quality is 69%: 72% adds 1 point, while 98% adds 9. No informative choices means no decision adjustment. Final rating is clamped to 0-1000.
+Result contribution is `round(12 * (actualResult - expectedResult) * confidence)`, where actualResult is 1 / 0.5 / 0 and expectedResult depends on the opponent level recorded when the match started. At equal strength with full evidence, this is +6 for a win, -6 for a loss, and zero for a draw.
 
-An abandoned post-placement ranked game costs 12 skill and 10 trophies when the next ranked game starts. Training has no effect on skill or rewards.
+Decision contribution is `round(clamp(0.08 * (recentPerformanceLevel - currentSkill) * confidence, -40, 40))`. Confidence reaches full weight at four assessed moves. No meaningful choices means no decision correction; zero assessed moves also supplies no outcome-based skill change. Win streaks and number of games never multiply rating gains, and the same evidence has the same effect above and below 900. Ratings are bounded to 0-1200.
+
+A player averaging 90% estimated quality and ordinary mixed results converges near 900, whether starting above or below it. Persistent wins with that decision quality settle below 1000 instead of farming the 1200 cap. Stronger estimated decisions support higher levels. These calibration tests are synthetic and do not establish an empirical human skill distribution.
+
+Completed version-2 profiles retain their ratings and placement status; subsequent ranked games recalibrate them. No new placement reset or account migration is required. An abandoned ranked game costs exactly 12 skill after placement. Training has no effect on skill or rewards.
 
 ## Decks and Bob
 
