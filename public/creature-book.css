@@ -16,7 +16,7 @@
 #creatureBook button,#creatureDetail button{font-family:inherit;cursor:pointer}
 #creatureBook .creature-book-close,#creatureDetail .creature-book-close{margin-left:auto;flex-shrink:0;width:43px;height:43px;padding:0;border:3px solid #3d1008;border-radius:8px;background:linear-gradient(#af3e1b,#70210e);color:#ffc271;font:bold 36px/1 system-ui;box-shadow:inset 0 0 0 2px #e77b3555,0 2px 3px #0006;text-shadow:1px 2px #46160b}
 .creature-book-gallery-heading{padding:24px 30px 0;display:flex;justify-content:space-between;align-items:baseline;gap:16px}.creature-book-gallery-heading h2{font-size:20px;margin:0;text-shadow:0 1px #ffecbb}.creature-book-gallery-heading p{font-size:12px;margin:0;color:#6f4926}
-.creature-book-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding:38px 36px 34px}
+.creature-book-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;padding:38px 36px 34px}
 [data-tone=ember]{--ribbon:#9d4223;--ribbon-light:#cc7740}[data-tone=teal]{--ribbon:#126565;--ribbon-light:#3d9690}[data-tone=violet]{--ribbon:#66427d;--ribbon-light:#a079b2}[data-tone=blue]{--ribbon:#24547d;--ribbon-light:#558ebb}
 #creatureBook .creature-book-card{position:relative;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:0 11px 10px;border:2px solid #a47c3b;border-radius:26px 26px 10px 10px;background:radial-gradient(ellipse at 50% 35%,#fff1c4,#edca8b 65%,#d2a565);box-shadow:inset 0 0 0 4px #fff0b855,0 7px 0 #70492344,0 9px 16px #673b1c44;color:#432c18;transition:transform .18s,box-shadow .18s;text-align:center}
 #creatureBook .creature-book-card:hover{transform:translateY(-5px);box-shadow:inset 0 0 0 4px #fff0b855,0 10px 0 #70492333,0 15px 20px #673b1c44}
