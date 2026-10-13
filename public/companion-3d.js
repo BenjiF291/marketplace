@@ -1,7 +1,8 @@
 import * as THREE from './vendor/three/three.module.js';
+import {createDragon} from './dragon-3d-model.js?v=dragon1';
 import {createFox} from './fox-3d-model.js?v=meshy3';
 
-// One shared WebGL context serves every fox portrait. Individual rigs and clocks
+// One shared WebGL context serves every 3D companion portrait. Individual rigs and clocks
 // keep companion interactions independent; hidden portraits do no rendering.
 const entries=new Map();let renderer,scene,camera,frame,last=0,stopped=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -16,15 +17,15 @@ function setup(){
 }
 const observer=new IntersectionObserver(items=>{for(const item of items){const e=entries.get(item.target);if(e)e.visible=item.isIntersecting;}wake();});
 async function mount(host){
- if(entries.has(host))return;const entry={host,visible:false,time:0,fox:null};entries.set(host,entry);observer.observe(host);
- try{if(!renderer)setup();const fox=await createFox();if(!host.isConnected){fox.dispose();entries.delete(host);return;}entry.fox=fox;
+ if(entries.has(host))return;const entry={host,visible:false,time:0,model:null,fox:null,dragon:null,kind:host.dataset.species};entries.set(host,entry);observer.observe(host);
+ try{if(!renderer)setup();const model=await (entry.kind==='dragon'?createDragon():createFox());if(!host.isConnected){model.dispose();entries.delete(host);return;}entry.model=model;entry[entry.kind]=model;
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=420;canvas.setAttribute('aria-hidden','true');host.append(canvas);entry.context=canvas.getContext('2d');wake();
- }catch(error){host.dataset.modelError='true';console.error('Fox 3D portrait:',error);}
+ }catch(error){host.dataset.modelError='true';console.error('Companion 3D portrait:',error);}
 }
 function wake(){if(!frame&&!stopped)frame=requestAnimationFrame(draw);}
 function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=now;let active=false;
- for(const [host,e] of entries){if(!host.isConnected){observer.unobserve(host);e.fox?.dispose();entries.delete(host);continue;}
-  if(!e.fox||!e.visible||document.hidden||!host.getClientRects().length)continue;
+ for(const [host,e] of entries){if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);continue;}
+  if(!e.model||!e.visible||document.hidden||!host.getClientRects().length)continue;
   const paused=!!host.closest('.paused,.is-paused'),still=reduced.matches||paused;
   if(still&&e.painted)continue;active||=!still;
   if(!still)e.time+=dt;
@@ -32,29 +33,30 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
   if(!still&&e.painted&&now-(e.lastDraw||0)<1000/24)continue;e.lastDraw=now;
   const mood=host.closest('[data-mood]')?.dataset.mood;
   const activity=host.closest('[data-activity]')?.dataset.activity;
-  const motion=host.closest('.moving,.is-walking')||mood==='fetch'||activity==='walk'?'walk':mood==='dance'||activity==='play'?'run':'idle';
+  let motion=host.closest('.moving,.is-walking')||mood==='fetch'||activity==='walk'?'walk':mood==='dance'||activity==='play'?'run':'idle';
   const island=host.closest('.island-pet');
-  camera.position.set(3.7,island?5.2:2.7,4.7);camera.lookAt(0,1.2,0);camera.updateMatrixWorld();
-  if(island&&island.dataset.heading!==undefined){const direction=Number(island.dataset.heading),pitch=Math.atan2(camera.position.y-1.2,Math.hypot(camera.position.x,camera.position.z));const desired=Math.atan2(camera.position.x,camera.position.z)+Math.atan2(Math.sin(direction)*Math.sin(pitch)*camera.aspect*island.offsetHeight,Math.cos(direction)*island.offsetWidth);const delta=Math.atan2(Math.sin(desired-e.fox.root.rotation.y),Math.cos(desired-e.fox.root.rotation.y));e.fox.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
-  else e.fox.root.rotation.y=mood==='pet'?.12:0;
+  const dragon=e.kind==='dragon';if(dragon&&island&&motion==='walk')motion='fly';
+  camera.position.set(dragon?4.5:3.7,island?(dragon?6.2:5.2):(dragon?3.0:2.7),dragon?5.8:4.7);camera.lookAt(0,dragon?1.3:1.2,0);camera.updateMatrixWorld();
+  if(island&&island.dataset.heading!==undefined){const direction=Number(island.dataset.heading),pitch=Math.atan2(camera.position.y-(dragon?1.3:1.2),Math.hypot(camera.position.x,camera.position.z));const desired=Math.atan2(camera.position.x,camera.position.z)+Math.atan2(Math.sin(direction)*Math.sin(pitch)*camera.aspect*island.offsetHeight,Math.cos(direction)*island.offsetWidth);const delta=Math.atan2(Math.sin(desired-e.model.root.rotation.y),Math.cos(desired-e.model.root.rotation.y));e.model.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
+  else e.model.root.rotation.y=mood==='pet'?.12:0;
   e.lastPose=now;
   let travelDistance;
   if(island){const distance=Number(island.dataset.walkDistance)||0,delta=e.walkDistance===undefined?0:Math.max(0,distance-e.walkDistance);e.walkDistance=distance;
    // Convert actual map displacement to model units using this view's projected
    // ground scale. Gait advances by distance, so planted paws do not slide.
-   const yaw=e.fox.root.rotation.y,a=new THREE.Vector3(0,0,0).project(camera),b=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).project(camera);
+   const yaw=e.model.root.rotation.y,a=new THREE.Vector3(0,0,0).project(camera),b=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).project(camera);
    const pixelsPerUnit=Math.hypot((b.x-a.x)*island.offsetWidth/2,(b.y-a.y)*island.offsetHeight/2);
    travelDistance=delta/Math.max(.5,pixelsPerUnit);
   }
-  e.fox.update(e.time,{motion:still?'idle':motion,dt,travelDistance});
-  scene.add(e.fox.root);renderer.render(scene,camera);scene.remove(e.fox.root);
+  e.model.update(e.time,{motion:still?'idle':motion,dt,travelDistance});
+  scene.add(e.model.root);renderer.render(scene,camera);scene.remove(e.model.root);
   e.context.clearRect(0,0,512,420);e.context.drawImage(renderer.domElement,0,0);e.painted=true;host.dataset.modelReady='true';
  }
  if(active)wake();
 }
 let queued=false;
-function scan(){queued=false;document.querySelectorAll('[data-fox-3d]').forEach(mount);for(const [host,e] of entries)if(!host.isConnected){observer.unobserve(host);e.fox?.dispose();entries.delete(host);}wake();}
+function scan(){queued=false;document.querySelectorAll('[data-fox-3d],[data-dragon-3d]').forEach(mount);for(const [host,e] of entries)if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);}wake();}
 const mutations=new MutationObserver(()=>{if(!queued){queued=true;queueMicrotask(scan);}});mutations.observe(document.body,{childList:true,subtree:true});scan();
 document.addEventListener('visibilitychange',wake);reduced.addEventListener('change',()=>{entries.forEach(e=>e.painted=false);wake();});
-window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;cancelAnimationFrame(frame);mutations.disconnect();observer.disconnect();entries.forEach(e=>e.fox?.dispose());renderer?.dispose();});
+window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;cancelAnimationFrame(frame);mutations.disconnect();observer.disconnect();entries.forEach(e=>e.model?.dispose());renderer?.dispose();});
 window.companion3D={entries,renderer:()=>renderer};

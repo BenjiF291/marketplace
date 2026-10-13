@@ -99,18 +99,20 @@
   const close=el('button','Lovely!','btn btn-primary');close.onclick=()=>d.close();d.append(close);
   d.addEventListener('close',()=>{d.remove();if(previous?.isConnected)previous.focus();},{once:true});document.body.append(d);d.showModal();close.focus();
  }
- function foxPrototype(card,id){
+ function companionPrototype(card,id){
   let box=card.querySelector('.companion-model-controls');
   if(!box){box=el('div',undefined,'companion-model-controls');const button=el('button','Try 3D fox','companion-3d-link');button.type='button';box.append(button);card.querySelector('.companion-copy').append(box);}
-  box.hidden=id!=='pet:fox';box.querySelector('button').onclick=openFox3DPreview;
+  const kind=String(id).split(':')[1];box.hidden=!['fox','dragon'].includes(kind);box.querySelector('button').textContent=`Try 3D ${kind||'companion'}`;box.querySelector('button').onclick=()=>openCompanion3DPreview(kind);
  }
- function openFox3DPreview(){
-   const existing=document.getElementById('fox3DDialog');if(existing?.open)return;
-   const d=el('dialog',undefined,'fox-3d-dialog');d.id='fox3DDialog';d.setAttribute('aria-label','3D fox prototype');
+ function openCompanion3DPreview(kind){
+   if(!['fox','dragon'].includes(kind))return;
+   const existing=document.getElementById(kind+'3DDialog');if(existing?.open)return;
+   const d=el('dialog',undefined,'fox-3d-dialog');d.id=kind+'3DDialog';d.setAttribute('aria-label',`3D ${kind} preview`);
    const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
-   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1&v=meshy3';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
+   const frame=el('iframe');frame.title=`Interactive 3D ${kind}`;frame.src=`${kind}-3d-preview.html?embedded=1&v=dragon1`;d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
  }
- window.openFox3DPreview=openFox3DPreview;
+ window.openFox3DPreview=()=>openCompanion3DPreview('fox');
+ window.openDragon3DPreview=()=>openCompanion3DPreview('dragon');
  function renderCompanions(ids){
   for(const [id,view] of extraCompanions){if(!ids.slice(1).includes(id)){view.stage.hidden=true;view.explorer.update(null);}}
   for(const id of ids.slice(1)){
@@ -123,7 +125,7 @@
     const ctrl=createCompanionExplorer({stage:card,pet:p,copy:c,message:m,react:reaction,onInteract:interact});view={stage:card,explorer:ctrl};extraCompanions.set(id,view);stage.after(card);
     new IntersectionObserver(entries=>card.classList.toggle('is-visible',entries[0].isIntersecting)).observe(card);
    }
-   view.stage.hidden=false;view.explorer.update(id);foxPrototype(view.stage,id);
+   view.stage.hidden=false;view.explorer.update(id);companionPrototype(view.stage,id);
   }
  }
 
@@ -136,7 +138,7 @@
   const available=equipped.filter(id=>!(state.journeys||[]).some(j=>j.petId===id&&j.status==='travelling'));
   const id=available[0];stage.hidden=!id;explorer.update(id);renderCompanions(available);
   if(pet.dataset.pet!==(id||'')){pet.dataset.pet=id||'';pet.innerHTML=window.companionArt(id);stage.dataset.mood='';}
-  petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';foxPrototype(stage,id);
+  petName.textContent=state.catalog.find(item=>item.id===id)?.name||'Your companion';companionPrototype(stage,id);
   pet.setAttribute('aria-label',`Play with ${petName.textContent}`);pet.title='Click for a head scratch';
   shelf.replaceChildren();
   const heading=el('h3','Your Ruby collection');shelf.append(heading);
