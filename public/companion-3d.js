@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three/three.module.js';
-import {createFox} from './fox-3d-model.js?v=meshy2';
+import {createFox} from './fox-3d-model.js?v=meshy3';
 
 // One shared WebGL context serves every fox portrait. Individual rigs and clocks
 // keep companion interactions independent; hidden portraits do no rendering.
@@ -34,10 +34,19 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
   const activity=host.closest('[data-activity]')?.dataset.activity;
   const motion=host.closest('.moving,.is-walking')||mood==='fetch'||activity==='walk'?'walk':mood==='dance'||activity==='play'?'run':'idle';
   const island=host.closest('.island-pet');
-  e.fox.update(e.time,{motion:still?'idle':motion,dt,pace:Number(island?.dataset.motionPace)||1});
-  if(island&&island.dataset.heading!==undefined){const desired=Math.atan2(camera.position.x,camera.position.z)+Number(island.dataset.heading);const delta=Math.atan2(Math.sin(desired-e.fox.root.rotation.y),Math.cos(desired-e.fox.root.rotation.y));e.fox.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
+  camera.position.set(3.7,island?5.2:2.7,4.7);camera.lookAt(0,1.2,0);camera.updateMatrixWorld();
+  if(island&&island.dataset.heading!==undefined){const direction=Number(island.dataset.heading),pitch=Math.atan2(camera.position.y-1.2,Math.hypot(camera.position.x,camera.position.z));const desired=Math.atan2(camera.position.x,camera.position.z)+Math.atan2(Math.sin(direction)*Math.sin(pitch)*camera.aspect*island.offsetHeight,Math.cos(direction)*island.offsetWidth);const delta=Math.atan2(Math.sin(desired-e.fox.root.rotation.y),Math.cos(desired-e.fox.root.rotation.y));e.fox.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
   else e.fox.root.rotation.y=mood==='pet'?.12:0;
   e.lastPose=now;
+  let travelDistance;
+  if(island){const distance=Number(island.dataset.walkDistance)||0,delta=e.walkDistance===undefined?0:Math.max(0,distance-e.walkDistance);e.walkDistance=distance;
+   // Convert actual map displacement to model units using this view's projected
+   // ground scale. Gait advances by distance, so planted paws do not slide.
+   const yaw=e.fox.root.rotation.y,a=new THREE.Vector3(0,0,0).project(camera),b=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).project(camera);
+   const pixelsPerUnit=Math.hypot((b.x-a.x)*island.offsetWidth/2,(b.y-a.y)*island.offsetHeight/2);
+   travelDistance=delta/Math.max(.5,pixelsPerUnit);
+  }
+  e.fox.update(e.time,{motion:still?'idle':motion,dt,travelDistance});
   scene.add(e.fox.root);renderer.render(scene,camera);scene.remove(e.fox.root);
   e.context.clearRect(0,0,512,420);e.context.drawImage(renderer.domElement,0,0);e.painted=true;host.dataset.modelReady='true';
  }

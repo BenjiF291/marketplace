@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
 import {OrbitControls} from './vendor/three/OrbitControls.js';
-import {createFox} from './fox-3d-model.js?v=meshy2';
+import {createFox} from './fox-3d-model.js?v=meshy3';
 if(new URLSearchParams(location.search).has('embedded'))document.documentElement.dataset.embedded='true';
 const host=document.getElementById('foxCanvas'),loading=document.getElementById('loading'),status=document.getElementById('status');
 try{

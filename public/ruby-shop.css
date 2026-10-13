@@ -118,3 +118,5 @@ body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double
 .fox-3d-dialog{position:fixed;inset:2vh 2vw;margin:auto;width:96vw;height:96dvh;max-width:none;max-height:none;padding:0;border:1px solid #829078;border-radius:20px;background:#122524;overflow:hidden}.fox-3d-dialog iframe{display:block;width:100%;height:100%;border:0}.fox-3d-close{position:absolute;right:20px;top:12px;border:1px solid #a4b499;border-radius:20px;padding:9px 15px;background:#f3e4c0;color:#183328;font:600 12px system-ui;cursor:pointer}.fox-3d-dialog::backdrop{background:#0d242ce6}
 
 .companion-3d-art{display:block;position:relative;line-height:0;isolation:isolate}.companion-3d-art canvas,.companion-3d-art .fox-model-poster{display:block;width:100%;height:100%;object-fit:contain}.companion-3d-art canvas{position:absolute;inset:0}.companion-3d-art[data-model-ready=true] .fox-model-poster{visibility:hidden}
+
+.island-pet:has([data-fox-3d]){width:32px;height:30px}

@@ -19,13 +19,13 @@ export async function createFox(){
  const ears=[bone('Ear_left',[-.30,2.08,.98],head),bone('Ear_right',[.30,2.08,.98],head)];
  const legs=[];
  for(let i=0;i<4;i++){
-  const front=i<2,x=(i%2?1:-1)*(front?.30:.33),z=front?.61:-.55;
-  const hip=bone(`Leg_${i}_hip`,[x,front?1.27:1.28,z],torso);
-  const knee=bone(`Leg_${i}_knee`,[x,.61,front?.67:-.86],hip);
-  const paw=bone(`Leg_${i}_paw`,[x,.105,front?.80:-.72],knee);
+  const front=i<2,side=i%2?1:-1,x=side*(front?.40:.48),z=front?.83:-.54;
+  const hip=bone(`Leg_${i}_hip`,[x,1.30,z],torso);
+  const knee=bone(`Leg_${i}_knee`,[side*(front?.43:.57),.63,front?.94:-.18],hip);
+  const paw=bone(`Leg_${i}_paw`,[side*(front?.48:.68),.13,front?1.22:-.31],knee);
   const a=rest.get(knee).clone().sub(rest.get(hip)),b=rest.get(paw).clone().sub(rest.get(knee));
   const upper=Math.atan2(-a.z,-a.y),lower=Math.atan2(-b.z,-b.y);
-  legs.push({hip,knee,paw,front,x,z,upper,lower,l1:a.length(),l2:b.length(),foot:rest.get(paw).clone().sub(rest.get(hip)),phase:i===0||i===3?0:Math.PI});
+  legs.push({hip,knee,paw,front,x,z,upper,lower,l1:Math.hypot(a.y,a.z),l2:Math.hypot(b.y,b.z),kneeSign:Math.sign(lower-upper),foot:rest.get(paw).clone().sub(rest.get(hip)),walkPhase:[0,.5,.75,.25][i]*Math.PI*2,phase:i===0||i===3?0:Math.PI});
  }
  const tailPoints=[[0,1.3,-.83],[0,1.23,-1.04],[0,1.2,-1.26],[0,1.3,-1.47],[0,1.53,-1.65],[0,1.73,-1.78],[0,1.84,-1.88]];
  const tailBones=tailPoints.map((p,i)=>bone(`Tail_bone_${i}`,p,i?bones.at(-1):torso));
@@ -43,9 +43,16 @@ export async function createFox(){
    add(head,headWeight-earWeight);add(ears[p.x<0?0:1],earWeight);
    if(tailWeight){let t=0;for(let n=0;n<tailPoints.length-1;n++){if(-p.z>=-tailPoints[n][2]){t=n+THREE.MathUtils.clamp((p.z-tailPoints[n][2])/(tailPoints[n+1][2]-tailPoints[n][2]),0,1);}}const n=Math.min(tailBones.length-2,Math.floor(t));add(tailBones[n],tailWeight*(1-(t-n)));add(tailBones[n+1],tailWeight*(t-n));}
    const remaining=1-headWeight-tailWeight;
-   const front=p.z>.12,leg=legs[(front?0:2)+(p.x<0?0:1)];
-   const legWeight=remaining*smooth(1.43-p.y,.12,.48)*smooth(Math.abs(p.x),.16,.25)*(1-smooth(Math.abs(p.z-leg.z),.28,.48));
-   const lowerWeight=smooth(.79-p.y,0,.32),pawWeight=smooth(.22-p.y,0,.13);
+   const front=p.z>.45,leg=legs[(front?0:2)+(p.x<0?0:1)];
+   const hipPoint=rest.get(leg.hip),kneePoint=rest.get(leg.knee);
+   const along=THREE.MathUtils.clamp((hipPoint.y-p.y)/(hipPoint.y-kneePoint.y),0,1);
+   const legX=THREE.MathUtils.lerp(hipPoint.x,kneePoint.x,along),legZ=THREE.MathUtils.lerp(hipPoint.z,kneePoint.z,along);
+   const radial=Math.hypot(p.x-legX,p.z-legZ);
+   // All lower-leg and toe vertices belong to the leg, never to the torso.
+   // Only the upper shoulder/thigh attachment needs a soft body transition.
+   const attachment=1-smooth(radial,.24,.43)*smooth(p.y,.64,.98);
+   const legWeight=remaining*smooth(1.48-p.y,.10,.46)*attachment;
+   const lowerWeight=1-smooth(p.y,.53,.73),pawWeight=1-smooth(p.y,.17,.29);
    add(leg.hip,legWeight*(1-lowerWeight));add(leg.knee,legWeight*lowerWeight*(1-pawWeight));add(leg.paw,legWeight*lowerWeight*pawWeight);add(torso,remaining-legWeight);
    const best=[...influences].sort((a,b)=>b[1]-a[1]).slice(0,4),sum=best.reduce((s,p)=>s+p[1],0)||1;
    for(let j=0;j<4;j++){indices.push(best[j]?.[0]||0);weights.push((best[j]?.[1]||0)/sum);}
@@ -55,33 +62,36 @@ export async function createFox(){
   const skin=new THREE.SkinnedMesh(geo,Array.isArray(o.material)?materials:materials[0]);skin.name='Meshy_fox_skin';skin.castShadow=skin.receiveShadow=true;root.add(skin);skin.bind(new THREE.Skeleton(bones));meshes.push(skin);
  });
  let blend=0,runBlend=0,phase=0,previousTime=null,look=0;
- function update(time,{motion='idle',dt=1/60,immediate=false,lookBack=false,pace=1}={}){
+ function update(time,{motion='idle',dt=1/60,immediate=false,lookBack=false,pace=1,travelDistance}={}){
   const target=motion==='idle'?0:1,runTarget=motion==='run'?1:0;
   const elapsed=immediate?dt:THREE.MathUtils.clamp(previousTime===null?dt:time-previousTime,0,.15);previousTime=time;
   blend=immediate?target:THREE.MathUtils.damp(blend,target,7,elapsed);
-  runBlend=immediate?runTarget:THREE.MathUtils.damp(runBlend,runTarget,5,elapsed);
+  runBlend=immediate?runTarget:THREE.MathUtils.damp(runBlend,runTarget,2.5,elapsed);
   const frequency=THREE.MathUtils.lerp(1/.9,1/.58,runBlend)*THREE.MathUtils.clamp(pace,.5,1.7);
   // Integrate phase so walk/run switches never teleport the paws around a cycle.
-  phase=immediate?time*frequency*Math.PI*2:phase+elapsed*frequency*Math.PI*2;
-  const stride=THREE.MathUtils.lerp(.15,.23,runBlend),crouch=THREE.MathUtils.lerp(.045,.065,runBlend);
+  const stride=THREE.MathUtils.lerp(.4464,.53244,runBlend),stance=THREE.MathUtils.lerp(.62,.54,runBlend),crouch=THREE.MathUtils.lerp(.13,.16,runBlend);
+  const advance=travelDistance===undefined?elapsed*frequency:Math.max(0,travelDistance)*stance/stride;
+  phase=immediate?time*frequency*Math.PI*2:phase+advance*Math.PI*2;
   const bob=Math.sin(phase*2)*THREE.MathUtils.lerp(.006,.014,runBlend)*blend;
   torso.position.y=1.2-crouch*blend+bob;torso.rotation.set(0,0,0);
   look=immediate?(lookBack?.5:0):THREE.MathUtils.damp(look,lookBack?.5:0,5,elapsed);
   head.rotation.set(Math.sin(time*1.5)*.012,look+Math.sin(time*.7)*.035,0);
   ears.forEach((b,i)=>b.rotation.set(Math.sin(time*1.3+i)*.012,0,Math.sin(time*1.7+i)*.012));
-  for(const l of legs){const ph=phase+l.phase+(!l.front?.18*runBlend:0),swing=Math.max(0,Math.sin(ph));
-   const lift=swing*swing*THREE.MathUtils.lerp(.075,.12,runBlend)*blend;
-   const z=l.foot.z+Math.cos(ph)*stride*blend,y=l.foot.y+lift-(torso.position.y-1.2);
-   // Retain a small bend at maximum reach: the acos derivative otherwise makes
-   // nearly straight knees pop between successive poses.
-   const reach=Math.sqrt(l.l1*l.l1+l.l2*l.l2+2*l.l1*l.l2*Math.cos(.32));
+  for(const l of legs){
+   const ph=phase+THREE.MathUtils.lerp(l.walkPhase,l.phase,runBlend)+(!l.front?.18*runBlend:0),cycle=((ph/(Math.PI*2))%1+1)%1;
+   let offset,lift;
+   if(cycle<stance){offset=stride*(.5-cycle/stance);lift=0;}
+   else{const swing=(cycle-stance)/(1-stance);offset=stride*(THREE.MathUtils.smootherstep(swing,0,1)-.5);lift=THREE.MathUtils.lerp(.21,.26,runBlend)*Math.sin(Math.PI*swing)**2;}
+   const z=l.foot.z+offset*blend,y=l.foot.y+lift*blend-(torso.position.y-1.2);
+   const reach=Math.sqrt(l.l1*l.l1+l.l2*l.l2+2*l.l1*l.l2*Math.cos(.4));
    const d=THREE.MathUtils.clamp(Math.hypot(y,z),Math.abs(l.l1-l.l2)+.01,reach);
-   const knee=-Math.acos(THREE.MathUtils.clamp((d*d-l.l1*l.l1-l.l2*l.l2)/(2*l.l1*l.l2),-1,1));
+   const knee=l.kneeSign*Math.acos(THREE.MathUtils.clamp((d*d-l.l1*l.l1-l.l2*l.l2)/(2*l.l1*l.l2),-1,1));
    const hip=Math.atan2(-z,-y)-Math.atan2(l.l2*Math.sin(knee),l.l1+l.l2*Math.cos(knee));
-   const hipTarget=(hip-l.upper)*blend,kneeTarget=(knee-(l.lower-l.upper))*blend;
-   l.hip.rotation.x=immediate?hipTarget:THREE.MathUtils.damp(l.hip.rotation.x,hipTarget,18,elapsed);
-   l.knee.rotation.x=immediate?kneeTarget:THREE.MathUtils.damp(l.knee.rotation.x,kneeTarget,18,elapsed);
-   l.paw.rotation.x=-l.hip.rotation.x-l.knee.rotation.x;
+   // The smooth foot path is the interpolation. Further damping these joints
+   // would drag a planted paw and suppress its short airborne swing.
+   l.hip.rotation.x=(hip-l.upper)*blend;l.knee.rotation.x=(knee-(l.lower-l.upper))*blend;
+   const swingPhase=cycle<stance?0:(cycle-stance)/(1-stance);
+   l.paw.rotation.x=-l.hip.rotation.x-l.knee.rotation.x+Math.sin(swingPhase*Math.PI)*.18*blend;
   }
   tailBones.forEach((b,i)=>b.rotation.set(Math.sin(time*1.3-i*.32)*.007,Math.sin(time*1.7-i*.40)*(i===0?.004:.012+i*.002),0));
   root.updateMatrixWorld(true);

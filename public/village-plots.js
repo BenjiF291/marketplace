@@ -46,11 +46,11 @@
   let walkers=[],walkingMap=null,obstacleSignature='',lastWalk=0;const arrivals=new Set();
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   function positionWalker(w){w.node.style.left='0';w.node.style.top='0';w.node.style.transform=`translate(${w.x.toFixed(1)}px,${w.y.toFixed(1)}px) translate(-50%,-100%)`;w.node.style.zIndex=Math.round(w.y);}
-  function petMotion(w,moving,dx=0,dy=0){if(!w.node.classList.contains('island-pet'))return;const activity=moving?'walk':'idle';if(w.node.dataset.activity!==activity)w.node.dataset.activity=activity;if(moving){w.node.dataset.heading=String(Math.atan2(dx,dy));w.node.dataset.motionPace=String(w.speed/12);}}
+  function petMotion(w,moving,dx=0,dy=0){if(!w.node.classList.contains('island-pet'))return;const activity=moving?'walk':'idle';if(w.node.dataset.activity!==activity)w.node.dataset.activity=activity;if(moving){w.node.dataset.heading=String(Math.atan2(dx,dy));w.node.dataset.motionPace=String(w.speed/12);w.travelled=(w.travelled||0)+Math.min(Math.hypot(dx,dy),w.speed*w.stepTime);w.node.dataset.walkDistance=String(w.travelled);}}
   function walk(now){requestAnimationFrame(walk);if(now-lastWalk<33)return;const dt=Math.min(.08,(now-lastWalk)/1000||0);lastWalk=now;if(document.hidden||!toolbar.parentNode.open||draft||world.classList.contains('village-panning')||reducedMotion.matches||!walkingMap){walkers.forEach(w=>petMotion(w,false));return;}let routesLeft=2;
    for(const w of walkers){if(!w.job&&(w.node.matches(':hover,:focus')||now<w.rest)){petMotion(w,false);continue;}if(!w.path.length){petMotion(w,false);if(w.job){w.node.hidden=true;arrivals.add(w.job);continue;}if(routesLeft--<=0)continue;const target=walkingMap.area[Math.floor(Math.random()*walkingMap.area.length)];w.path=walkingMap.route(w.at,target);w.rest=now+800+Math.random()*3500;continue;}
     const at=w.path[0],p=walkingMap.points[at],dx=p.x-w.x,dy=p.y-w.y,d=Math.hypot(dx,dy),travel=w.speed*dt;
-    if(d<=travel){w.x=p.x;w.y=p.y;w.at=at;w.path.shift();}else{w.x+=dx/d*travel;w.y+=dy/d*travel;}petMotion(w,d>0&&travel>0,dx,dy);positionWalker(w);
+    if(d<=travel){w.x=p.x;w.y=p.y;w.at=at;w.path.shift();}else{w.x+=dx/d*travel;w.y+=dy/d*travel;}w.stepTime=dt;petMotion(w,d>0&&travel>0,dx,dy);positionWalker(w);
    }
   }
   requestAnimationFrame(walk);

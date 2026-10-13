@@ -13,3 +13,10 @@ test('supplied fox has a weighted anatomical rig and three movement clips',()=>{
 test('exported movement clips join their first and last poses without a jump',()=>{
  for(const animation of model.animations)for(const sampler of animation.samplers){const times=read(sampler.input).values,out=read(sampler.output);assert.ok(times[0]===0&&times.at(-1)>0);assert.ok(times.every((t,i)=>!i||t>=times[i-1]));for(let j=0;j<out.components;j++)assert.ok(Math.abs(out.values[j]-out.values[out.values.length-out.components+j])<1e-5,animation.name+' loop seam');}
 });
+
+test('toe vertices follow their own paw joints instead of remaining pinned to the torso',()=>{
+ const counts=[0,0,0,0],skin=model.skins[0],names=skin.joints.map(i=>model.nodes[i].name);
+ for(const mesh of model.meshes)for(const primitive of mesh.primitives){const positions=read(primitive.attributes.POSITION).values,weights=read(primitive.attributes.WEIGHTS_0).values,joints=read(primitive.attributes.JOINTS_0).values;
+  for(let i=0;i<positions.length/3;i++){if(positions[i*3+1]>.10)continue;const leg=(positions[i*3+2]>.45?0:2)+(positions[i*3]>0?1:0);let attached=0;for(let j=0;j<4;j++)if(names[joints[i*4+j]]===`Leg_${leg}_paw`)attached+=weights[i*4+j];assert.ok(attached>.99,`Leg ${leg} toe attached by ${attached}`);counts[leg]++;}
+ }assert.ok(counts.every(n=>n>30));
+});

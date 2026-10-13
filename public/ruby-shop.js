@@ -108,7 +108,7 @@
    const existing=document.getElementById('fox3DDialog');if(existing?.open)return;
    const d=el('dialog',undefined,'fox-3d-dialog');d.id='fox3DDialog';d.setAttribute('aria-label','3D fox prototype');
    const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
-   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1&v=meshy1';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
+   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1&v=meshy3';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
  }
  window.openFox3DPreview=openFox3DPreview;
  function renderCompanions(ids){
