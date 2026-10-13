@@ -102,12 +102,15 @@
  function foxPrototype(card,id){
   let box=card.querySelector('.companion-model-controls');
   if(!box){box=el('div',undefined,'companion-model-controls');const button=el('button','Try 3D fox','companion-3d-link');button.type='button';box.append(button);card.querySelector('.companion-copy').append(box);}
-  box.hidden=id!=='pet:fox';box.querySelector('button').onclick=()=>{
-   const d=el('dialog',undefined,'fox-3d-dialog');d.setAttribute('aria-label','3D fox prototype');
-   const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
-   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1&v=2';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
-  };
+  box.hidden=id!=='pet:fox';box.querySelector('button').onclick=openFox3DPreview;
  }
+ function openFox3DPreview(){
+   const existing=document.getElementById('fox3DDialog');if(existing?.open)return;
+   const d=el('dialog',undefined,'fox-3d-dialog');d.id='fox3DDialog';d.setAttribute('aria-label','3D fox prototype');
+   const close=el('button','Close 3D view','fox-3d-close');close.type='button';close.onclick=()=>d.close();
+   const frame=el('iframe');frame.title='Interactive 3D fox';frame.src='fox-3d-preview.html?embedded=1&v=meshy1';d.append(frame,close);d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();
+ }
+ window.openFox3DPreview=openFox3DPreview;
  function renderCompanions(ids){
   for(const [id,view] of extraCompanions){if(!ids.slice(1).includes(id)){view.stage.hidden=true;view.explorer.update(null);}}
   for(const id of ids.slice(1)){

@@ -1,11 +1,13 @@
-﻿# Fox 3D prototype
+# Supplied Meshy fox
 
-Open `public/fox-3d-preview.html` through the project's HTTP server, or click **Try 3D fox** on its Companion Lodge card.
+The fox now uses the user's `Meshy_AI_Stylized_Fox_Characte_1013143930_image-to-3d-texture_fbx.zip`. Its FBX contains one textured mesh and no bones, skin deformers, or animation stacks. We added a 23-bone anatomical rig: torso, head, two ears, three joints per leg, and seven tail joints.
 
-`fox-3d-model.js` creates an original procedural 3D fox with a sculpted torso/head, articulated head and ears, four skinned legs with foot placement, and a skinned tail. `createFox()` returns the entity, animation controller, animation clips, and disposal method. Its movement uses elapsed time; it needs no animal sprite frames. The preview lets you orbit, see the backside, walk/run around a clearing, pause, and export a GLB.
+`public/assets/companions/fox-meshy-source.glb` preserves the supplied shape, UVs, color, normal, roughness, and metallic maps. The source's roughly 1.6 million triangles were simplified to about 97,000, and textures resized/compressed; the source GLB is about 3.9 MB. `scripts/prepare-meshy-fox.py` reproduces conversion using Blender 4.5 and the original ZIP. Run Blender in background mode with that script and `-- --archive <zip>`.
 
-`public/assets/companions/fox-prototype-v1.glb` is the exported review asset with idle, walk and run clips. This is a prototype for judging 3D movement and styling, not a replacement for the island renderer or a finished battle mode. The other animals retain their existing artwork.
+`public/fox-3d-model.js` loads that source, normalizes its coordinates, binds smooth anatomical skin weights, and animates the actual vertices. Idle has head/ear movement and tail sway. Walk/run use two-link leg IK with paw counter-rotation. No drawing-frame blending is used. The hand-positioned rig is a first pass; extreme poses may need further weight painting. The rigid textured eyes have no eyelid rig.
 
-Three.js 0.186.1 is vendored locally in `public/vendor/three`; its MIT license is included there. The viewer loads only when opened. Close disposes its meshes, skins, textures, and renderer.
+The fox replaces the old 2D sprite everywhere `companionArt('pet:fox')` is used, including the Lodge. `public/companion-3d.js` uses one shared WebGL context, independent portrait rigs, visibility gating, and a 24fps portrait cap. A transparent model portrait remains available while loading or if WebGL fails. The snail and dragon keep their existing artwork. The full viewer is at `/fox-3d-preview.html` or **Try 3D fox** in the Lodge navigation; it offers idle/walk/run, views from all sides, travel around the clearing, and a GLB download.
 
-Visual revision 2 adds a tapered muzzle, curved ear bowls, neck and cheek volume, a fuller tapered tail, finer 1024px fur texture, denser sculpt geometry, supersampled rendering, and 2048px shadows. The existing 25-joint rig and three movement clips remain.
+`public/assets/companions/fox-prototype-v1.glb` now contains the supplied fox, its 23-joint skin, and three seamless exported animation clips. The filename is retained for existing references. The model helper disposes instance geometry/materials/skeletons while source textures remain shared for the page lifetime. Three.js 0.186.1 and its loader utilities are vendored under `public/vendor/three` with their MIT license.
+
+Validation: `node --test --test-isolation=none fox-3d.test.js` checks the exported rig, normalized weights, finite geometry, and looping clips. Browser checks cover the full viewer, inline desktop/mobile rendering, motion, removal cleanup, and Lodge navigation.

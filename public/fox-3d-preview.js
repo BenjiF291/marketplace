@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three/three.module.js';
 import {OrbitControls} from './vendor/three/OrbitControls.js';
-import {createFox} from './fox-3d-model.js?v=2';
+import {createFox} from './fox-3d-model.js?v=meshy1';
 if(new URLSearchParams(location.search).has('embedded'))document.documentElement.dataset.embedded='true';
 const host=document.getElementById('foxCanvas'),loading=document.getElementById('loading'),status=document.getElementById('status');
 try{
@@ -12,8 +12,8 @@ try{
  const ring=new THREE.Mesh(new THREE.RingGeometry(2.8,2.83,80),new THREE.MeshStandardMaterial({color:'#a0a276',roughness:1,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.006;scene.add(ring);
  let seed=27;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
  for(let i=0;i<32;i++){const angle=i/32*Math.PI*2,radius=10+random()*3;const tree=new THREE.Group();tree.position.set(Math.cos(angle)*radius,0,Math.sin(angle)*radius);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.04,.07,1,7),new THREE.MeshStandardMaterial({color:'#514331',roughness:1}));trunk.position.y=.5;tree.add(trunk);for(let n=0;n<3;n++){const crown=new THREE.Mesh(new THREE.ConeGeometry(.7-n*.13,1.2,9),new THREE.MeshStandardMaterial({color:['#314d35','#3c583d','#49634b'][n],roughness:1}));crown.position.y=1+n*.38;crown.castShadow=true;tree.add(crown);}tree.scale.setScalar(.7+random()*.7);scene.add(tree);}
- const fox=createFox();scene.add(fox.root);let motion='idle',paused=false,exporting=false,time=0,distance=0,heading=0,last=performance.now();const reduced=matchMedia('(prefers-reduced-motion: reduce)');
- const setMotion=value=>{motion=value;document.querySelectorAll('[data-motion]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.motion===value)));status.textContent=value==='idle'?'Breathing, blinking, and a gentle tail sway.':value==='walk'?'Walking with articulated hips, knees, and paws.':'A faster gait with the same continuous rig.';};
+ const fox=await createFox();scene.add(fox.root);let motion='idle',paused=false,exporting=false,time=0,distance=0,heading=0,last=performance.now();const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const setMotion=value=>{motion=value;document.querySelectorAll('[data-motion]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.motion===value)));status.textContent=value==='idle'?'A curious gaze, ear twitches, and a gentle tail sway.':value==='walk'?'Walking with articulated hips, knees, and paws.':'A faster gait with the same continuous rig.';};
  document.getElementById('motion').onclick=e=>{const b=e.target.closest('[data-motion]');if(b)setMotion(b.dataset.motion);};
  const views={threequarter:[4.7,3.1,5.4],front:[0,2.4,7],side:[7,2.3,-.3],back:[0,2.5,-7]};
  document.getElementById('views').onclick=e=>{const b=e.target.closest('[data-view]');if(!b)return;camera.position.set(...views[b.dataset.view]);controls.target.set(0,1.1,-.35);controls.update();};
@@ -22,7 +22,7 @@ try{
  const resize=()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();};new ResizeObserver(resize).observe(host);resize();
  function animate(now){requestAnimationFrame(animate);const dt=Math.min(.05,(now-last)/1000);last=now;if(document.hidden)return;
   if(!paused&&!reduced.matches&&!exporting){time+=dt;if(motion!=='idle'&&document.getElementById('travel').checked){distance+=dt*(motion==='run'?1.7:.8);const angle=distance/1.6;fox.root.position.set(1.6*Math.sin(angle),0,1.6*Math.cos(angle)-1.6);const target=Math.PI/2+angle;heading+=Math.atan2(Math.sin(target-heading),Math.cos(target-heading))*Math.min(1,dt*6);fox.root.rotation.y=heading;}}
-  if(!exporting){fox.update(time,{motion:reduced.matches?'idle':motion,dt});if(document.getElementById('look').checked)fox.root.getObjectByName('Head_joint').rotation.y=.75+Math.sin(time)*.04;}
+  if(!exporting){fox.update(time,{motion:reduced.matches?'idle':motion,dt,lookBack:document.getElementById('look').checked});}
   controls.update();renderer.render(scene,camera);
  }
  requestAnimationFrame(animate);loading.hidden=true;
