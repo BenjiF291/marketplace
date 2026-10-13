@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three/three.module.js';
-import {createFox} from './fox-3d-model.js?v=meshy1';
+import {createFox} from './fox-3d-model.js?v=meshy2';
 
 // One shared WebGL context serves every fox portrait. Individual rigs and clocks
 // keep companion interactions independent; hidden portraits do no rendering.
@@ -33,8 +33,11 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
   const mood=host.closest('[data-mood]')?.dataset.mood;
   const activity=host.closest('[data-activity]')?.dataset.activity;
   const motion=host.closest('.moving,.is-walking')||mood==='fetch'||activity==='walk'?'walk':mood==='dance'||activity==='play'?'run':'idle';
-  e.fox.update(e.time,{motion:still?'idle':motion,dt});
-  e.fox.root.rotation.y=mood==='pet'?.15:Math.sin(e.time*.3)*.025;
+  const island=host.closest('.island-pet');
+  e.fox.update(e.time,{motion:still?'idle':motion,dt,pace:Number(island?.dataset.motionPace)||1});
+  if(island&&island.dataset.heading!==undefined){const desired=Math.atan2(camera.position.x,camera.position.z)+Number(island.dataset.heading);const delta=Math.atan2(Math.sin(desired-e.fox.root.rotation.y),Math.cos(desired-e.fox.root.rotation.y));e.fox.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
+  else e.fox.root.rotation.y=mood==='pet'?.12:0;
+  e.lastPose=now;
   scene.add(e.fox.root);renderer.render(scene,camera);scene.remove(e.fox.root);
   e.context.clearRect(0,0,512,420);e.context.drawImage(renderer.domElement,0,0);e.painted=true;host.dataset.modelReady='true';
  }
