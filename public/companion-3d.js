@@ -19,10 +19,12 @@ import {createFox} from './fox-3d-model.js?v=meshy3';
 
 // One shared WebGL context serves every 3D companion portrait. Individual rigs and clocks
 // keep companion interactions independent; hidden portraits do no rendering.
-const entries=new Map();let renderer,scene,camera,frame,last=0,stopped=false;
+const entries=new Map();let renderer,scene,camera,frame,last=0,stopped=false,contextLost=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 function setup(){
  renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});renderer.setSize(512,420);renderer.setClearColor(0,0);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
+ renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;cancelAnimationFrame(frame);frame=null;});
+ renderer.domElement.addEventListener('webglcontextrestored',()=>{contextLost=false;entries.forEach(e=>e.painted=false);wake();});
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
  scene=new THREE.Scene();scene.add(new THREE.HemisphereLight('#fff4df','#586852',2));
  const light=new THREE.DirectionalLight('#ffe1b4',2.4);light.position.set(-3,6,5);light.castShadow=true;light.shadow.mapSize.set(512,512);Object.assign(light.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.1,far:15});light.shadow.normalBias=.035;scene.add(light);
@@ -30,14 +32,17 @@ function setup(){
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.ShadowMaterial({opacity:.16}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
  camera=new THREE.PerspectiveCamera(34,512/420,.1,30);camera.position.set(3.7,2.7,4.7);camera.lookAt(0,1.2,0);
 }
-const observer=new IntersectionObserver(items=>{for(const item of items){const e=entries.get(item.target);if(e)e.visible=item.isIntersecting;}wake();});
+const observer=new IntersectionObserver(items=>{for(const item of items){const e=entries.get(item.target);if(e){e.visible=item.isIntersecting;if(e.visible&&!e.model&&!e.loading)loadModel(e);}}wake();});
 async function mount(host){
  if(entries.has(host))return;const entry={host,visible:false,time:0,model:null,fox:null,dragon:null,snail:null,kind:host.dataset.species};entries.set(host,entry);observer.observe(host);
- try{if(!renderer)setup();const model=await (entry.kind==='defender-rill'?createDefenderRill():entry.kind==='fenra-species'?createFenraSpecies():entry.kind==='krynn-species'?createKrynnSpecies():entry.kind==='brugar-species'?createBrugarSpecies():entry.kind==='rill-species'?createRillSpecies():entry.kind==='defender-talren'?createDefenderTalren():entry.kind==='northern-talren'?createNorthernTalren():entry.kind==='talren'?createTalren():entry.kind==='tharos'?createTharos():entry.kind==='veyrin'?createVeyrin():entry.kind==='fenra'?createFenra():entry.kind==='krynn'?createKrynn():entry.kind==='brugar'?createBrugar():entry.kind==='rill'?createRill():entry.kind==='dragon'?createDragon():entry.kind==='snail'?createSnail():createFox());if(!host.isConnected){model.dispose();entries.delete(host);return;}entry.model=model;entry[entry.kind]=model;
-  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=420;canvas.setAttribute('aria-hidden','true');host.append(canvas);entry.context=canvas.getContext('2d');wake();
- }catch(error){host.dataset.modelError='true';console.error('Companion 3D portrait:',error);}
 }
-function wake(){if(!frame&&!stopped)frame=requestAnimationFrame(draw);}
+async function loadModel(entry){
+ const {host}=entry;entry.loading=true;
+ try{if(!renderer)setup();const model=await (entry.kind==='defender-rill'?createDefenderRill():entry.kind==='fenra-species'?createFenraSpecies():entry.kind==='krynn-species'?createKrynnSpecies():entry.kind==='brugar-species'?createBrugarSpecies():entry.kind==='rill-species'?createRillSpecies():entry.kind==='defender-talren'?createDefenderTalren():entry.kind==='northern-talren'?createNorthernTalren():entry.kind==='talren'?createTalren():entry.kind==='tharos'?createTharos():entry.kind==='veyrin'?createVeyrin():entry.kind==='fenra'?createFenra():entry.kind==='krynn'?createKrynn():entry.kind==='brugar'?createBrugar():entry.kind==='rill'?createRill():entry.kind==='dragon'?createDragon():entry.kind==='snail'?createSnail():createFox());if(stopped||!host.isConnected||entries.get(host)!==entry){model.dispose();return;}entry.model=model;entry[entry.kind]=model;
+  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=420;canvas.setAttribute('aria-hidden','true');host.append(canvas);entry.context=canvas.getContext('2d');wake();
+ }catch(error){host.dataset.modelError='true';console.error('Companion 3D portrait:',error);}finally{entry.loading=false;}
+}
+function wake(){if(!frame&&!stopped&&!contextLost&&!document.hidden)frame=requestAnimationFrame(draw);}
 function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=now;let active=false;
  for(const [host,e] of entries){if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);continue;}
   if(!e.model||!e.visible||document.hidden||!host.getClientRects().length)continue;
@@ -63,15 +68,16 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
    const pixelsPerUnit=Math.hypot((b.x-a.x)*island.offsetWidth/2,(b.y-a.y)*island.offsetHeight/2);
    travelDistance=delta/Math.max(.5,pixelsPerUnit);
   }
-  e.model.update(e.time,{motion:still?'idle':motion,dt,travelDistance});
+  try{e.model.update(e.time,{motion:still?'idle':motion,dt,travelDistance});
   scene.add(e.model.root);renderer.render(scene,camera);scene.remove(e.model.root);
   e.context.clearRect(0,0,512,420);e.context.drawImage(renderer.domElement,0,0);e.painted=true;host.dataset.modelReady='true';
+  }catch(error){scene.remove(e.model.root);e.visible=false;delete host.dataset.modelReady;host.dataset.modelError='true';console.error('Companion portrait rendering:',error);}
  }
  if(active)wake();
 }
 let queued=false;
 function scan(){queued=false;document.querySelectorAll('[data-fox-3d],[data-dragon-3d],[data-snail-3d],[data-rill-3d],[data-brugar-3d],[data-krynn-3d],[data-fenra-3d],[data-veyrin-3d],[data-tharos-3d],[data-talren-3d],[data-northern-talren-3d],[data-defender-talren-3d],[data-rill-species-3d],[data-brugar-species-3d],[data-krynn-species-3d],[data-fenra-species-3d],[data-defender-rill-3d]').forEach(mount);for(const [host,e] of entries)if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);}wake();}
-const mutations=new MutationObserver(()=>{if(!queued){queued=true;queueMicrotask(scan);}});mutations.observe(document.body,{childList:true,subtree:true});scan();
+const mutations=new MutationObserver(()=>{if(!queued){queued=true;requestAnimationFrame(scan);}});mutations.observe(document.body,{childList:true,subtree:true});scan();
 document.addEventListener('visibilitychange',wake);reduced.addEventListener('change',()=>{entries.forEach(e=>e.painted=false);wake();});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;cancelAnimationFrame(frame);mutations.disconnect();observer.disconnect();entries.forEach(e=>e.model?.dispose());renderer?.dispose();});
 window.companion3D={entries,renderer:()=>renderer};

@@ -988,8 +988,10 @@ function startBattleMatchPolling() {
   battleMatchPoll = setInterval(loadBattleMatch, 1500);
 }
 
+let battleMatchLoading = false;
 async function loadBattleMatch() {
-  if (!battleMatchId) return;
+  if (!battleMatchId || battleMatchLoading || document.hidden) return;
+  battleMatchLoading = true;
   const matchId = battleMatchId;
   const revision = battleDeckRevision;
   const savingAtStart = battleDeckSavePending;
@@ -1009,6 +1011,8 @@ async function loadBattleMatch() {
     }
   } catch (error) {
     console.error('Battle match polling error:', error);
+  } finally {
+    battleMatchLoading = false;
   }
 }
 
@@ -1265,8 +1269,14 @@ async function spinWheel() {
       wheel.style.transform = `rotate(${wheelRotation}deg)`;
     }
 
-    wheel.addEventListener('transitionend', function onEnd() {
-      wheel.removeEventListener('transitionend', onEnd);
+    let finished = false;
+    const fallback = setTimeout(onEnd, 4500);
+    function onEnd(event) {
+      if (event && (event.target !== wheel || event.propertyName !== 'transform')) return;
+      if (finished) return;
+      finished = true;
+      clearTimeout(fallback);
+      wheel?.removeEventListener('transitionend', onEnd);
       normalizeWheelRotation();
       resultEl.innerHTML = `✅ You won <strong>${amount} Footy</strong>! Your balance is now ${data.balance} Footy.`;
       document.getElementById('spinButton').disabled = false;
@@ -1274,7 +1284,8 @@ async function spinWheel() {
       loadUsers();
       loadInventory();
       loadSpinInfo();
-    });
+    }
+    wheel?.addEventListener('transitionend', onEnd);
   } catch (error) {
     console.error('Spin error:', error);
     resultEl.textContent = 'Could not spin the wheel. Try again later.';
