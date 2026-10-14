@@ -2,6 +2,7 @@
 (() => {
  let active;
  window.playSpecialPackOpening=(result,theme,flow)=>{
+  if(window.RewardOpening&&!result.preview){window.RewardOpening.play({theme,name:result.packName||'Pack',result:flow?null:result,open:flow?.open,choose:flow?.choose,onClose:flow?.onClose,autoStart:flow?.autoStart});return true;}
   if(!['embers','aurora'].includes(theme)){if(!flow)return false;theme='standard';}
   active?.close();
   const make=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls;if(text)n.textContent=text;return n;};
