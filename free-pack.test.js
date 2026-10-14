@@ -79,3 +79,8 @@ test('creature ribbons receive book rarity in the admin gallery, new claims and 
  const claim=await h.invoke('post','/free-pack/claim',{requestId:'rarity-pack'});assert.equal(claim.payload.rewards[4].rarity,'unique');
  h.records['creatureBookEntries/tharos'].rarity='epic';const status=await h.invoke('get','/free-pack');assert.equal(status.payload.lastClaim.rewards[4].rarity,'epic');assert.equal(h.records['users/u'].stableAnimals.tharos,1);
 });
+
+test('amulet tier metadata survives admin catalogue reads and pack settlement',async()=>{
+ const h=harness(true);h.records['ascendTiers/random-gold-id']={name:'Gold',order:4};const admin=await h.invoke('get','/admin/free-pack');const item=admin.payload.catalog.amulet.find(a=>a.gemKey==='gold');assert.ok(item);
+ const config=rules.defaults();config.cards[4].options=[{kind:'amulet',id:item.id,min:1,max:1,chance:100}];assert.equal((await h.invoke('put','/admin/free-pack',config)).status,200);const claim=await h.invoke('post','/free-pack/claim',{requestId:'gold-amulet'});assert.equal(claim.status,200);assert.equal(claim.payload.rewards[4].gemKey,'gold');assert.equal(h.records['users/u'].amulets[item.id],1);
+});

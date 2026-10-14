@@ -35,6 +35,6 @@
   ${c.accessory==='scarf'?`<path d="M28 45q12 9 25 0v8l-9 4 4 15-8 4-6-21-6-3Z" fill="${c.trim}" stroke="#785943"/>`:''}</svg>`;
  };
  const ids=['relic:rose','relic:moon','relic:crown','relic:books','relic:fern','relic:pennant','relic:skystones','relic:dragon'];
- HallArt.decor=id=>{const cell=ids.indexOf(id);return cell<0?'':`<svg viewBox="${cell%4*256} ${Math.floor(cell/4)*256} 256 256" aria-hidden="true" style="overflow:hidden"><image href="assets/village/collectibles-painted.png" width="1024" height="512" preserveAspectRatio="none"/></svg>`;};
+ HallArt.decor=id=>{const cell=ids.indexOf(id);if(cell<0)return '';const x=cell%4*256,y=Math.floor(cell/4)*256,clip='hall-collectible-'+serial++;return `<svg viewBox="${x} ${y} 256 256" aria-hidden="true" style="overflow:hidden"><defs><clipPath id="${clip}" clipPathUnits="userSpaceOnUse"><rect x="${x}" y="${y}" width="256" height="256"/></clipPath></defs><image clip-path="url(#${clip})" href="assets/village/collectibles-painted.png" width="1024" height="512" preserveAspectRatio="none"/></svg>`;};
  HallArt.room=()=>'<svg class="hall-room-art" viewBox="0 0 900 620" aria-hidden="true"><image href="assets/village/town-hall-painted.png" width="900" height="620" preserveAspectRatio="none"/></svg>';
 })();

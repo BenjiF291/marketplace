@@ -7,7 +7,7 @@ module.exports=(app,db,authenticate)=>{
  function rarityFor(kind,id,entries){const creature=kind==='animal'?id:kind==='rubyItem'&&id.startsWith('pet:')?id.slice(4):null;return creature?(rarities.has(entries[creature]?.rarity)?entries[creature].rarity:'unassigned'):null;}
  async function catalog(){
   const [packs,tiers,creatures]=await Promise.all([db.collection('packs').get(),db.collection('ascendTiers').get(),db.collection('creatureBookEntries').get()]);const entries=entriesFrom(creatures);
-  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name})=>({id,name})),pack:packs.docs.filter(doc=>doc.data().cardIds?.length).map(doc=>({id:doc.id,name:doc.data().name||doc.id})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
+  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name,gemKey})=>({id,name,gemKey})),pack:packs.docs.filter(doc=>doc.data().cardIds?.length).map(doc=>({id:doc.id,name:doc.data().name||doc.id})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
  }
  const route=(method,url,admin,handler)=>app[method](url,async(req,res)=>{
   let id;try{id=await authenticate(req);}catch(error){return res.status(401).send(error.message);}
@@ -34,7 +34,7 @@ module.exports=(app,db,authenticate)=>{
    if(!config.enabled)throw Error('This pack is currently unavailable.');
    const nextAt=(user.freePackLastClaimAt||0)+config.cooldownHours*3600000;
    if(user.isAdmin!==true&&user.freePackLastClaimAt&&now<nextAt)throw Error('Your next free pack is not ready yet.');
-   const rewards=rules.draw(config).map(reward=>({...reward,label:rules.label(reward,names),...(names[reward.kind]?.find(item=>item.id===reward.id)?.rarity?{rarity:names[reward.kind].find(item=>item.id===reward.id).rarity}:{})}));
+   const rewards=rules.draw(config).map(reward=>{const item=names[reward.kind]?.find(item=>item.id===reward.id);return {...reward,label:rules.label(reward,names),...(item?.rarity?{rarity:item.rarity}:{}),...(item?.gemKey?{gemKey:item.gemKey}:{})};});
    // Read all reward pack metadata before making any transactional writes.
    const packDocs=new Map();for(const reward of rewards)if(reward.kind==='pack'&&!packDocs.has(reward.id))packDocs.set(reward.id,await tx.get(db.collection('packs').doc(reward.id)));
    for(const reward of rewards)if(reward.kind==='pack'||reward.kind==='card'){
