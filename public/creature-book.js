@@ -14,7 +14,8 @@
   {kind:'talren',name:'',species:'Talren',number:'10',note:'Talrens are brown, horned magical beasts.'},
   {kind:'northern-talren',name:'',species:'Northern Talren',number:'11',note:'Northern Talrens are grey, horned magical beasts.'},
   {kind:'defender-talren',name:'',species:'Defender Talren',number:'12',note:'Defender Talrens are armored, brown horned magical beasts.'},
-  {kind:'rill-species',name:'',species:'Rill',speciesKey:'rill',number:'13',note:'Rills are magical birds with feathered crests, broad wings, and flowing tails.'}
+  {kind:'rill-species',name:'',species:'Rill',speciesKey:'rill',number:'13',note:'Rills are magical birds with feathered crests, broad wings, and flowing tails.'},
+  {kind:'brugar-species',name:'',species:'Brugar',speciesKey:'brugar',number:'14',note:'Brugars are armored stone beasts with powerful limbs and heavy protective plates.'}
  ];
  const individualName=c=>c.species?c.name:'';
  const title=c=>individualName(c)||c.species||c.name;
@@ -33,7 +34,7 @@
  const q=selector=>book.querySelector(selector),d=selector=>detail.querySelector(selector);
  let selected=0,returnFocus=null,selectedCard=null;
 
- const poster=c=>c.kind==='rill-species'?'assets/creatures/rill-species-poster.png':c.kind==='defender-talren'?'assets/creatures/defender-talren-poster.png':c.kind==='northern-talren'?'assets/creatures/northern-talren-poster.png':c.kind==='talren'?'assets/creatures/talren-poster.png':c.kind==='tharos'?'assets/creatures/tharos-poster.png':c.kind==='veyrin'?'assets/creatures/kael-poster.png':c.kind==='fenra'?'assets/creatures/saelis-poster.png':c.kind==='krynn'?'assets/creatures/virex-poster.png':c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
+ const poster=c=>c.kind==='brugar-species'?'assets/creatures/brugar-species-poster.png':c.kind==='rill-species'?'assets/creatures/rill-species-poster.png':c.kind==='defender-talren'?'assets/creatures/defender-talren-poster.png':c.kind==='northern-talren'?'assets/creatures/northern-talren-poster.png':c.kind==='talren'?'assets/creatures/talren-poster.png':c.kind==='tharos'?'assets/creatures/tharos-poster.png':c.kind==='veyrin'?'assets/creatures/kael-poster.png':c.kind==='fenra'?'assets/creatures/saelis-poster.png':c.kind==='krynn'?'assets/creatures/virex-poster.png':c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
  const species=c=>c.species||c.name;
  const rarity=c=>metadata[c.kind]?.rarity||'unassigned';
  for(const [i,c] of creatures.entries()){
@@ -49,7 +50,7 @@
   d('.creature-edit-button').hidden=!canEdit;
  }
  function showCreature(i,card){selected=i;selectedCard=card;const c=creatures[i];renderInfo();
-  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=rill-species1').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
+  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=brugar-species1').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
   detail.showModal();detail.scrollTop=0;d('.creature-book-close').focus();
  }
  const editor=el('dialog','creature-entry-editor');editor.setAttribute('aria-labelledby','creatureEditorTitle');
