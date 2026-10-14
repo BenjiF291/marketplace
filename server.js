@@ -2678,6 +2678,7 @@ require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 require('./ruby-shop-routes')(app, db, brawlAuth.authenticate);
 require('./creature-book-routes')(app, db, brawlAuth.authenticate);
 require('./free-pack-routes')(app, db, brawlAuth.authenticate);
+require('./stable-routes')(app, db, brawlAuth.authenticate);
 
 /* ------------------ START SERVER ------------------ */
 const PORT = process.env.PORT || 3000;

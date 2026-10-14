@@ -1,6 +1,7 @@
 /* Public island navigation. Admin unlock previews never modify accounts. */
 (() => {
  const buildings=[
+  {id:'stable',name:'Stable',kind:'stable',level:0,route:'stable',description:'A home for your collected animals. The snail, Ember Fox and Pocket Dragon live in the Companion lodge instead. Unlocks at Town Hall level 1.'},
   {id:'timebank',name:'Time Bank',kind:'timebank',level:3,route:'timebank',description:'Create time boosts with up to ten villagers.'},
   {id:'jobs',name:'Central job station',kind:'jobs',level:0,route:'jobs',description:'Assign and recall workers across your island.'},
   {id:'petstation',name:'Pet station',kind:'petstation',level:2,route:'petstation',description:'Care for your pets with a household of villagers.'},
@@ -137,6 +138,7 @@
    if(!footyStudio.enabled)footyStudio.setMode(true);
    if(['petstation','farmhouse','jobs','timebank'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show,data);return;}
    if((b.id==='market'&&b.route==='marketplace'&&!b.marketStall)||b.id==='cabinet'){VillageInteriors.close();await MarketStreet.open({onExit:show,onCards:()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:true})});return;}
+   if(b.route==='stable'){VillageInteriors.close();await Stable.open(show);return;}
    if(b.route==='hall'){VillageInteriors.close();back.hidden=true;await window.openTownHall(show);return;}
    footyStudio.navigate(b.route==='ruby'?'home':b.route);
    VillageInteriors.open(b,{back:b.id==='market'?()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:false}):show,enter:enterBuilding});

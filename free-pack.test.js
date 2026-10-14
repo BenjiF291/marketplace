@@ -48,3 +48,18 @@ test('only admins can edit; disabled packs cannot be claimed; custom fifth cards
  const items=Object.entries(h.records).filter(([key])=>key.startsWith('items/')).map(([,v])=>v);assert.equal(items.length,2);assert.ok(items.every(item=>item.packId==='p'&&item.buyerId==='u'&&item.sold));
  config.enabled=false;await h.invoke('put','/admin/free-pack',config);h.records['users/u'].freePackLastClaimAt=0;assert.equal((await h.invoke('post','/free-pack/claim',{requestId:'disabled-pack'})).status,400);
 });
+
+test('animal reward options are editable and claims store non-companions exactly once',async()=>{
+ const h=harness(true);const editor=await h.invoke('get','/admin/free-pack');
+ assert.equal(editor.payload.catalog.animal.length,17);assert.ok(editor.payload.catalog.animal.some(a=>a.id==='defender-rill'));
+ const config=rules.defaults();config.cards[4].options=[{kind:'animal',id:'tharos',min:2,max:2,chance:100}];
+ assert.equal((await h.invoke('put','/admin/free-pack',config)).status,200);
+ const claim=await h.invoke('post','/free-pack/claim',{requestId:'animal-pack'});assert.equal(claim.status,200);assert.equal(claim.payload.rewards[4].label,'2 Tharos');
+ assert.equal(h.records['users/u'].stableAnimals.tharos,2);assert.equal(h.records['users/u'].rubyItems['pet:tharos'],undefined);
+ await h.invoke('post','/free-pack/claim',{requestId:'animal-pack'});assert.equal(h.records['users/u'].stableAnimals.tharos,2);
+ config.cards[4].options[0].id='made-up';assert.equal((await h.invoke('put','/admin/free-pack',config)).status,400);
+});
+test('fox, snail and pocket dragon animal rewards stay in the companion inventory',()=>{
+ const update=rules.apply({stableAnimals:{tharos:1},rubyItems:{'pet:fox':1}},['fox','snail','dragon','talren'].map(id=>({kind:'animal',id,amount:2})));
+ assert.deepEqual(update.stableAnimals,{tharos:1,talren:2});assert.equal(update.rubyItems['pet:fox'],3);assert.equal(update.rubyItems['pet:snail'],2);assert.equal(update.rubyItems['pet:dragon'],2);
+});

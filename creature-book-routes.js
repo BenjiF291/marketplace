@@ -22,7 +22,7 @@ module.exports=(app,db,authenticate)=>{
   if(entries.krynn)entries['krynn-species']={...(entries['krynn-species']||{}),description:entries.krynn.description,origin:entries.krynn.origin};
   if(entries.fenra)entries['fenra-species']={...(entries['fenra-species']||{}),description:entries.fenra.description,origin:entries.fenra.origin};
   let canEdit=false;const owned=Object.fromEntries([...KINDS].map(kind=>[kind,false]));
-  if(req.header('Authorization')){try{const id=await authenticate(req),user=await db.collection('users').doc(id).get();if(user.exists){const data=user.data();canEdit=data.isAdmin===true;for(const kind of ['fox','snail','dragon'])owned[kind]=Number(data.rubyItems?.['pet:'+kind]||0)>0;}}catch{}}
+  if(req.header('Authorization')){try{const id=await authenticate(req),user=await db.collection('users').doc(id).get();if(user.exists){const data=user.data();canEdit=data.isAdmin===true;for(const animal of require('./public/stable-animals').inventory(data))owned[animal.id]=true;for(const kind of ['fox','snail','dragon'])owned[kind]=Number(data.rubyItems?.['pet:'+kind]||0)>0;}}catch{}}
   res.set('Cache-Control','no-store');res.json({entries,canEdit,owned});
  }catch(e){res.status(500).send('Could not load creature information');}});
  app.put('/admin/creature-book/:kind',async(req,res)=>{

@@ -15,8 +15,8 @@ function validate(value,catalog){
   if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>50)throw Error(`Card ${index+1} needs a title and 1?50 reward options.`);
   let sum=0;const options=card.options.map(option=>{
    const {kind,id,min,max,chance}=option;
-   if(!['gem','footy','boost','rubyItem','amulet','pack','card'].includes(kind))throw Error('Unknown reward type.');
-   if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min||max>10000||(['pack','card'].includes(kind)&&max>20))throw Error('Use whole amounts from 1 to 10000 (up to 20 for cards/packs).');
+   if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal'].includes(kind))throw Error('Unknown reward type.');
+   if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min||max>10000||(['pack','card','animal'].includes(kind)&&max>20))throw Error('Use whole amounts from 1 to 10000 (up to 20 for cards, packs or animals).');
    if(!Number.isFinite(chance)||chance<0||chance>100)throw Error('Chances must be between 0 and 100 percent.');
    if(kind!=='footy'&&!catalog[kind]?.some(entry=>entry.id===id))throw Error(`Choose an available ${kind} reward.`);
    sum+=chance;return {kind,id:kind==='footy'?'':id,min,max,chance};
@@ -33,9 +33,10 @@ function draw(config,random=randomInt){return config.cards.map((card,index)=>{
  return {card:index+1,title:card.title,kind:selected.kind,id:selected.id,amount:selected.min+random(selected.max-selected.min+1)};
 });}
 function apply(user,rewards){
- const update={gems:require('./gem-wallet').wallet(user.gems),balance:Number(user.balance)||0,timeBoosts:{...user.timeBoosts},rubyItems:{...user.rubyItems},amulets:{...user.amulets}};
+ const update={gems:require('./gem-wallet').wallet(user.gems),balance:Number(user.balance)||0,timeBoosts:{...user.timeBoosts},rubyItems:{...user.rubyItems},amulets:{...user.amulets},stableAnimals:{...user.stableAnimals}};
  for(const reward of rewards){const {kind,id,amount}=reward;
-  if(kind==='footy')update.balance=Math.round((update.balance+amount)*100)/100;
+  if(kind==='animal'){const animal=require('./public/stable-animals').animals.find(a=>a.id===id);if(!animal)throw Error('Unknown animal.');const field=animal.companion?'rubyItems':'stableAnimals',key=animal.companion?'pet:'+id:id;update[field][key]=(Number(update[field][key])||0)+amount;}
+  else if(kind==='footy')update.balance=Math.round((update.balance+amount)*100)/100;
   else {const field={gem:'gems',boost:'timeBoosts',rubyItem:'rubyItems',amulet:'amulets'}[kind];if(field)update[field][id]=(Number(update[field][id])||0)+amount;}
  }
  return update;

@@ -6,8 +6,14 @@ Players open Daily pack and select **Claim free pack**. All five rewards and the
 
 Default card chances are 20% each for the first four cards. Cards 1?3 draw 5?15 Rubies, 3?12 Footy, 1 Skip, 1 Leap, or 3?6 Garnet. Card 4 draws 10?25 Rubies, 7?17 Footy, 2 Skips, 1 Leap, or 6?15 Garnet. Card 5 temporarily awards 10 Rubies at 100% until an admin configures it. Ranges are inclusive, whole-number, uniform draws. Each card awards one of its configured possibilities.
 
-Admins open Daily pack ? **Edit pack**. Edit the pack name, enabled setting, claim interval, five card titles, and each card's reward possibilities, amounts, and percentage chances. Add and remove options freely; each card must total 100%. Rewards can be Footy, any standard gem currency, Skip/Leap, shop items, amulets, catalogue cards, or configured collection packs. Card and pack rewards enter the normal inventory. Configured collection packs must have cards. Setting changes affect future claims; already-awarded rewards remain unchanged.
+Admins open Daily pack ? **Edit pack**. Edit the pack name, enabled setting, claim interval, five card titles, and each card's reward possibilities, amounts, and percentage chances. Add and remove options freely; each card must total 100%. Rewards can be animals, Footy, any standard gem currency, Skip/Leap, shop items, amulets, catalogue cards, or configured collection packs. Card and pack rewards enter the normal inventory. Configured collection packs must have cards. Setting changes affect future claims; already-awarded rewards remain unchanged.
 
 The authenticated server endpoints are GET `/free-pack`, POST `/free-pack/claim`, and admin-only GET/PUT `/admin/free-pack`. Settings live at `gameSettings/freePack`; claim time and the latest receipt live on the user. The existing marketplace daily-pack scheduler remains independent.
 
 Deploy the backend and frontend together. No initial database setup is needed: defaults apply until the first admin save. Validation rejects invalid items, malformed percentages, and fractional reward quantities. Tests cover reward ranges, wallet updates, authorization, atomic cooldown, duplicate claims, editor wiring, and toolbar actions.
+
+## Animals and the Stable
+
+Select **Animal** in any reward row, then choose a creature and its amount range/chance. The catalogue covers all 17 current book creatures. Fox, snail and pocket-dragon rewards go to the existing companion inventory. The other 14 creatures are counted in `users.stableAnimals`; duplicate awards increase their counts. The creature book reflects these owned animals.
+
+The Stable unlocks at Town Hall level 1. Place it from **Arrange village**, then enter it to view owned animals, counts, and creature information. Existing island placements are preserved; no Stable is automatically inserted into an occupied island. Storage exists independently of placement, so claiming an animal before placing the building cannot lose it. GET `/stable` authenticates and returns only the caller's animals.

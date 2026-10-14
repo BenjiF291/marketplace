@@ -77,5 +77,5 @@
  book.addEventListener('close',()=>{if(detail.open)detail.close();launcher.setAttribute('aria-expanded','false');place();if(returnFocus?.isConnected)returnFocus.focus();else launcher.focus();});
  window.addEventListener('island-ready',()=>{gameReady=true;place();});
  const loadingPanel=document.getElementById('islandLoading');if(loadingPanel)new MutationObserver(place).observe(loadingPanel,{attributes:true,attributeFilter:['hidden']});
- window.CreatureBook={open:()=>launcher.click(),creatures};
+ window.CreatureBook={open:()=>launcher.click(),openCreature:kind=>{const i=creatures.findIndex(c=>c.kind===kind);if(i<0)return;if(detail.open)detail.close();if(!book.open)launcher.click();if(book.open)showCreature(i,q(`[data-kind="${kind}"]`));},creatures};
 })();
