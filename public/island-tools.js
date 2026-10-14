@@ -7,8 +7,10 @@
   profile:`<defs><linearGradient id="toolFrame" x2="1" y2="1"><stop stop-color="#e7c38a"/><stop offset=".4" stop-color="#a97b45"/><stop offset=".7" stop-color="#f2d79e"/><stop offset="1" stop-color="#866038"/></linearGradient><linearGradient id="toolPortrait" x2="1" y2="1"><stop stop-color="#527d78"/><stop offset="1" stop-color="#213f45"/></linearGradient></defs><path d="m30 78-7 14 14-5 8 5 7-18" fill="#ab6247" stroke="#6e4432"/><path d="m48 77 10 15 2-9 10 1-10-15" fill="#b8874f" stroke="#715030"/><ellipse cx="44" cy="46" rx="30" ry="37" fill="#453125"/><ellipse cx="42" cy="44" rx="30" ry="36" fill="url(#toolFrame)" stroke="#694c31" stroke-width="2"/><ellipse cx="42" cy="44" rx="24" ry="30" fill="url(#toolPortrait)" stroke="#f0d29a"/><path d="M22 66q1-15 14-18h12q13 3 15 18l-7 7H29Z" fill="#b49262"/><path d="m34 48 8 7 8-7-2-5H36Z" fill="#edcf9e"/><ellipse cx="42" cy="34" rx="11" ry="14" fill="#e0bd88"/><path d="M31 34q-4-18 11-19 16 3 11 19l-4-9-8 3-5-2Z" fill="#5e4334"/><path d="m28 59 8-5 6 7 7-7 9 5M42 61v11" fill="none" stroke="#f0d8a4" stroke-width="1.5"/><path d="m42 7 4 4-4 5-4-5Zm0 66 4 4-4 5-4-5Z" fill="#dcc28b" stroke="#72522f"/><circle cx="15" cy="44" r="2" fill="#ffe7af"/><circle cx="69" cy="44" r="2" fill="#ffe7af"/>`,
   help:`<defs><linearGradient id="toolScroll" x2="1" y2="1"><stop stop-color="#ffeccb"/><stop offset="1" stop-color="#c4a773"/></linearGradient></defs><path d="M21 15h44q9 0 8 9l-4 51q0 11-12 11H20q-8-2-8-9l6-49Z" fill="#443528" opacity=".55"/><path d="M22 11h42q8 0 8 8t-8 8H26l-6 41h41q9 0 9 9t-11 10H17q-10-1-10-10l9-55q-5-3-5-7t11-4Z" fill="url(#toolScroll)" stroke="#997647" stroke-width="1.5"/><path d="M22 11q-8 5 1 15h41q7-1 7-8m-51 50q-9 3-8 10t7 8h40q-8-4-4-11" fill="none" stroke="#b4915d"/><path d="M26 31h32m-34 4h35M22 62h34" stroke="#b59767" opacity=".5"/><path d="M34 43q1-10 11-10t9 9q-1 6-8 8l-3 6" fill="none" stroke="#49695a" stroke-width="5" stroke-linecap="round"/><circle cx="42" cy="63" r="2.8" fill="#49695a"/><path d="m20 73 37 1m-34 6 25 1" stroke="#b4915d"/><path d="m60 10 2 8 7 2-7 2-2 7-2-7-7-2 7-2Z" fill="#c09b56"/>`
  };
- const icon=name=>`<svg viewBox="0 0 84 96" aria-hidden="true" focusable="false">${art[name]}</svg>`;
- window.IslandTools={wrap(launcher){
+ let iconId=0,finder;
+ const icon=name=>{const suffix=++iconId;return `<svg viewBox="0 0 84 96" aria-hidden="true" focusable="false">${art[name].replace(/tool[A-Z][a-zA-Z]*/g,id=>id+'-'+suffix)}</svg>`;};
+ function attachBuildingFinder(select){if(!finder||!select)return;if(select.parentNode!==finder)finder.append(select);finder.hidden=false;}
+ window.IslandTools={attachBuildingFinder,wrap(launcher){
   const bar=el('nav','island-tools');bar.id='islandTools';bar.setAttribute('aria-label','Island tools');
   const toggle=el('button','island-tools-toggle','<');toggle.type='button';toggle.setAttribute('aria-label','Retract island tools');toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-controls','islandToolActions');
   const actions=el('div','island-tool-actions');actions.id='islandToolActions';
@@ -20,6 +22,8 @@
   action('village','Arrange village',()=>islandAction('arrangeVillageButton'));
   action('profile','Profile',()=>PlayerProfile.open());
   action('help','Building help',()=>islandAction('villageHelpButton'));
+  finder=el('label','island-tool-action island-building-finder');finder.hidden=true;const finderArt=el('span','island-tool-art');finderArt.innerHTML=icon('village');finder.append(finderArt,el('span','island-tool-label','Find a building'));actions.append(finder);attachBuildingFinder(document.getElementById('villageBuildingFinder'));
+  window.addEventListener('island-ready',()=>attachBuildingFinder(document.getElementById('villageBuildingFinder')));
   bar.append(toggle,actions);return bar;
  }};
 })();

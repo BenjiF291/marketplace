@@ -19,10 +19,11 @@ function harness(){
 }
 test('toolbar has five actions, retracts accessibly, and forwards arrange and profile actions',async()=>{
  const h=harness();const launcher=new h.Node('button');launcher.textContent='Creature book';const bar=h.context.window.IslandTools.wrap(launcher);h.body.append(bar);
- const actions=bar.querySelector('.island-tool-actions');assert.equal(actions.children.length,5);
+ const actions=bar.querySelector('.island-tool-actions');assert.equal(actions.children.length,6);
  const toggle=bar.querySelector('.island-tools-toggle');toggle.click();assert.equal(actions.hidden,true);assert.equal(toggle.attributes['aria-expanded'],'false');toggle.click();assert.equal(actions.hidden,false);
  let arranged=0,profile=0;const source=new h.Node('button');source.id='arrangeVillageButton';source.onclick=()=>arranged++;h.context.PlayerProfile={open:()=>profile++};
  await actions.children[2].click();actions.children[3].click();assert.equal(arranged,1);assert.equal(profile,1);
+ const select=new h.Node('select');select.id='villageBuildingFinder';let changed=0;select.onchange=()=>changed++;h.context.window.IslandTools.attachBuildingFinder(select);const finder=bar.querySelector('.island-building-finder');assert.equal(finder.hidden,false);assert.equal(select.parentNode,finder);select.onchange();assert.equal(changed,1);h.context.window.IslandTools.attachBuildingFinder(select);assert.equal(finder.querySelectorAll('select').length,1);
 });
 test('player can claim and reveal five rewards, and an admin can edit all card option rows',async()=>{
  const h=harness();await h.context.window.FreePack.open();let opening=h.body.querySelector('.reward-opening');assert.equal(opening.open,true);assert.equal(h.claims,0);
