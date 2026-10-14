@@ -14,7 +14,7 @@ function harness(){
  document:{body,hidden:false,createElement:tag=>new Node(tag),getElementById:id=>ids.get(id),querySelector:selector=>selector==='#villageMap[open]'?{}:body.querySelector(selector)},
  Option:function(text,value){const n=new Node('option');n.textContent=text;n.value=value;return n;},
  fetch:async(url,options)=>{let data;if(url==='/free-pack')data={config,serverNow:Date.now(),nextAt:0,canClaim:true,canEdit:true};else if(url==='/free-pack/claim'){claims++;data={requestId:'preview-claim',name:config.name,nextAt:Date.now()+25200000,rewards:rules.draw(config,()=>0).map(r=>({...r,label:rules.label(r,catalog)}))};}else if(options.method==='PUT'){saved=JSON.parse(options.body);data={config:saved};}else data={config,catalog};return {ok:true,json:async()=>data};}};
- context.window.StableAnimals=require('./public/stable-animals');vm.createContext(context);vm.runInContext(fs.readFileSync('public/reward-card-art.js','utf8'),context);context.RewardCardArt=context.window.RewardCardArt;vm.runInContext(fs.readFileSync('public/reward-opening.js','utf8'),context);vm.runInContext(fs.readFileSync('public/free-pack.js','utf8'),context);vm.runInContext(fs.readFileSync('public/island-tools.js','utf8'),context);
+ context.window.StableAnimals=require('./public/stable-animals');vm.createContext(context);vm.runInContext(fs.readFileSync('public/reward-card-art.js','utf8'),context);context.RewardCardArt=context.window.RewardCardArt;vm.runInContext(fs.readFileSync('public/reward-opening.js','utf8'),context);vm.runInContext(fs.readFileSync('public/reward-gallery.js','utf8'),context);vm.runInContext(fs.readFileSync('public/free-pack.js','utf8'),context);vm.runInContext(fs.readFileSync('public/island-tools.js','utf8'),context);
  return {context,body,Node,ids,timers,flush(){const pending=[...timers.values()];timers.clear();pending.forEach(fn=>fn());},get claims(){return claims;},get saved(){return saved;}};
 }
 test('toolbar has five actions, retracts accessibly, and forwards arrange and profile actions',async()=>{
@@ -57,4 +57,14 @@ test('themed collection packs use the shared opening and preserve completion cal
  const h=harness();vm.runInContext(fs.readFileSync('public/pack-cinema.js','utf8'),h.context);let completed;
  assert.equal(h.context.window.playSpecialPackOpening({packName:'Aurora pack'},'aurora',{open:async()=>({cardId:'Bronze_jan.png'}),onClose:done=>completed=done}),true);
  const opening=h.body.querySelector('.reward-opening');assert.equal(opening.dataset.theme,'aurora');await opening.querySelector('.reward-opening-pack').click();h.flush();opening.onclick({target:opening});h.flush();assert.equal(completed,true);
+});
+
+test('admin gallery shows every reward in category order and supports full-size navigation without claiming',async()=>{
+ const h=harness();await h.context.window.FreePack.open();const opening=h.body.querySelector('.reward-opening');await opening.querySelector('.reward-opening-preview').click();
+ const gallery=h.body.querySelector('.reward-gallery');assert.equal(gallery.open,true);assert.equal(h.claims,0);
+ const sections=gallery.querySelectorAll('.reward-gallery-section');assert.deepEqual(sections.map(s=>s.querySelector('h3').textContent),['Gem currencies (2)','Footy (1)','Time boosts (2)','Animals (17)']);assert.equal(gallery.querySelectorAll('.reward-pack-card').length,22);
+ assert.equal(gallery.querySelector('.reward-card-name').textContent,'Garnet');assert.ok(gallery.querySelectorAll('.reward-card-amount').every(n=>n.textContent==='1'));
+ gallery.querySelector('.reward-gallery-tile').querySelector('button').click();const viewer=h.body.querySelector('.reward-card-inspector');assert.equal(viewer.querySelector('h2').textContent,'Garnet');assert.equal(viewer.querySelector('.reward-inspector-prev').disabled,true);
+ viewer.querySelector('.reward-inspector-next').click();assert.equal(viewer.querySelector('h2').textContent,'Ruby');viewer.querySelector('.reward-inspector-prev').click();assert.equal(viewer.querySelector('h2').textContent,'Garnet');
+ const search=gallery.querySelector('.reward-gallery-search');search.value='tharos';search.oninput();assert.equal(gallery.querySelectorAll('.reward-gallery-tile').filter(n=>!n.hidden).length,1);assert.equal(h.claims,0);assert.equal(h.timers.size,0);
 });

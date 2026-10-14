@@ -26,5 +26,12 @@
   return {name,group,image,art:itemArt||svg(body),amount:reward.amount||1};
  }
  function normalize(result){if(result.rewards)return result.rewards;const rewards=[{kind:'card',id:result.cardId||'New card',imageUrl:result.imageUrl,amount:1}];if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});return rewards;}
- const api={describe,normalize};if(typeof module!=='undefined')module.exports=api;else root.RewardCardArt=api;
+ function samples(catalog){
+  const groups=[['gem','Gem currencies'],['footy','Footy'],['boost','Time boosts'],['animal','Animals'],['rubyItem','Shop items'],['amulet','Amulets'],['card','Collection cards'],['pack','Collection packs']];
+  return groups.map(([kind,title])=>{const entries=kind==='footy'?[{id:'',name:'Footy'}]:catalog[kind]||[];
+   const rewards=[...new Map(entries.map(entry=>[entry.id,entry])).values()].map(entry=>{const name=kind==='card'?entry.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):entry.name;return {kind,id:entry.id,amount:1,label:'1 '+name};});
+   rewards.sort((a,b)=>a.label.slice(2).localeCompare(b.label.slice(2),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));return {kind,title,rewards};
+  }).filter(group=>group.rewards.length);
+ }
+ const api={describe,normalize,samples};if(typeof module!=='undefined')module.exports=api;else root.RewardCardArt=api;
 })(typeof window==='undefined'?globalThis:window);

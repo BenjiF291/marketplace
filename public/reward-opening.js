@@ -2,13 +2,18 @@
 (() => {
  let active;
  const el=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls||'';if(text!==undefined)n.textContent=text;return n;};
- window.RewardOpening={play(options){
+ function createCard(reward){const info=RewardCardArt.describe(reward),card=el('article','reward-pack-card');card.dataset.kind=reward.kind;card.style.setProperty('--depth',0);card.dataset.depth='0';
+    const ornament=el('span','reward-card-ornament');ornament.setAttribute('aria-hidden','true');const amount=el('strong','reward-card-amount',String(info.amount)),picture=el('div','reward-card-picture');
+    if(info.image){const image=el('img');image.loading='lazy';image.src=info.image;image.alt=info.name;image.onerror=()=>{picture.innerHTML=info.art;};picture.append(image);}else picture.innerHTML=info.art;
+    card.append(ornament,amount,picture,el('h3','reward-card-name',info.name),el('span','reward-card-footer','THE ISLAND COLLECTION'));return card;}
+ window.RewardOpening={card:createCard,play(options){
   active?.close();const previous=document.activeElement,d=el('dialog','reward-opening');active=d;d.dataset.phase='ready';d.dataset.theme=['embers','aurora'].includes(options.theme)?options.theme:'standard';d.setAttribute('aria-label',options.name||'Open your pack');
   const timers=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let phase='ready',loading=false,busy=false,closed=false,completed=false,index=0,cards=[];
   const schedule=(fn,delay)=>{const timer=setTimeout(()=>{timers.delete(timer);if(!closed)fn();},delay);timers.add(timer);return timer;};
   const header=el('header','reward-opening-header');header.append(el('span','reward-opening-brand','ISLAND TREASURES'),el('h2','',options.name||'Your pack'));
   const controls=el('div','reward-opening-controls');const close=el('button','reward-opening-close','Close');close.type='button';close.onclick=event=>{event.stopPropagation();if(!loading)d.close();};controls.append(close);
   if(options.onDetails){const details=el('button','reward-opening-details','Pack details & odds');details.type='button';details.onclick=event=>{event.stopPropagation();if(!loading&&!busy)return options.onDetails();};controls.append(details);}
+  if(options.onPreview){const preview=el('button','reward-opening-preview','All reward cards');preview.type='button';preview.onclick=event=>{event.stopPropagation();if(!loading&&!busy)return options.onPreview();};controls.append(preview);}
   const stage=el('div','reward-opening-stage'),halo=el('div','reward-opening-halo'),pack=el('button','reward-opening-pack');pack.type='button';pack.setAttribute('aria-label','Open '+(options.name||'pack'));
   pack.innerHTML='<span class="reward-wrapper-seam seam-top"></span><span class="reward-wrapper-face"><span class="reward-wrapper-brand">THE ISLAND COLLECTION</span><span class="reward-wrapper-emblem" aria-hidden="true"><svg viewBox="0 0 160 160"><path d="m80 9 56 33v70l-56 35-56-35V42Z" fill="#d9b46e"/><path d="m80 18 47 29v60l-47 30-47-30V47Z" fill="#244f47"/><path d="m43 100 37-54 38 54Z" fill="#9bb084"/><path d="m80 46 13 19-13-5-11 8Z" fill="#f5ddb0"/><path d="m44 111 72-1m-58 9h45" stroke="#d9b46e" stroke-width="3"/><path d="m80 28 3 7 8 2-8 3-3 7-3-7-8-3 8-2Z" fill="#f4dca0"/></svg></span><strong class="reward-wrapper-name"></strong><span class="reward-wrapper-caption">A LITTLE WONDER INSIDE</span></span><span class="reward-wrapper-seam seam-bottom"></span>';
   // Keep names as text, including admin-authored names.
@@ -19,10 +24,7 @@
   d.append(header,controls,stage,status,progress,advance);document.body.append(d);
   function present(result){
    const rewards=RewardCardArt.normalize(result);if(!rewards.length)throw Error('This pack has no reward cards.');
-   cards=rewards.map((reward,i)=>{const info=RewardCardArt.describe(reward),card=el('article','reward-pack-card');card.dataset.kind=reward.kind;card.style.setProperty('--depth',i);card.dataset.depth=String(i);card.setAttribute('aria-hidden',String(i!==0));
-    const ornament=el('span','reward-card-ornament');ornament.setAttribute('aria-hidden','true');const amount=el('strong','reward-card-amount',String(info.amount)),picture=el('div','reward-card-picture');
-    if(info.image){const image=el('img');image.src=info.image;image.alt=info.name;image.onerror=()=>{picture.innerHTML=info.art;};picture.append(image);}else picture.innerHTML=info.art;
-    card.append(ornament,amount,picture,el('h3','reward-card-name',info.name),el('span','reward-card-footer','THE ISLAND COLLECTION'));stack.append(card);return card;});
+   cards=rewards.map((reward,i)=>{const card=createCard(reward);card.style.setProperty('--depth',i);card.dataset.depth=String(i);card.setAttribute('aria-hidden',String(i!==0));stack.append(card);return card;});
    phase='opening';d.dataset.phase=phase;status.textContent='Unsealing your treasures...';
    schedule(()=>{pack.hidden=true;stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();},reduced?0:650);
   }
