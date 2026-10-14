@@ -325,7 +325,7 @@
     const sides=['top','right','bottom','left'].map(side=>Number(card[side])||0).sort((a,b)=>b-a);
     return sides[0]*.35+sides[1]*.3+sides[2]*.2+sides[3]*.15+(isSpecial(card)?.65:0);
   }
-  function rankedDeck(pool, inventory, player, random=Math.random) {
+  function rankedDeck(pool, inventory, player, random=Math.random, boost=0) {
     const key=card=>card.battleCardId||card.id;
     const unique=cards=>[...new Map(cards.map(card=>[key(card),card])).values()];
     const owned=unique([...inventory,...player]);
@@ -333,6 +333,26 @@
     const total=cards=>cards.reduce((sum,card)=>sum+cardPower(card),0);
     const average=cards=>cards.reduce((sum,card)=>sum+Number(card.averageScore||0),0)/cards.length;
     const playerPower=total(player);
+    if(boost>0){
+      const target=average(player)+boost;
+      const candidates=unique([...pool,...owned]);let best=[...player],bestGap=Infinity;
+      // Escalation may use the whole real catalogue. No card's stats are changed.
+      for(let attempt=0;attempt<800;attempt++){
+        const remaining=[...candidates],chosen=[];let sum=0;
+        for(let i=0;i<6;i++){
+          const desired=(target*6-sum)/(6-i);
+          const legal=remaining.filter(card=>!isSpecial(card)||!chosen.some(isSpecial));
+          if(!legal.length)break;
+          legal.sort((a,b)=>Math.abs(Number(a.averageScore||0)-desired)-Math.abs(Number(b.averageScore||0)-desired));
+          const card=legal[Math.floor(random()*Math.min(8,legal.length))];
+          chosen.push(card);sum+=Number(card.averageScore||0);remaining.splice(remaining.indexOf(card),1);
+        }
+        if(chosen.length!==6)continue;
+        const gap=Math.abs(average(chosen)-target);
+        if(gap<bestGap){best=chosen;bestGap=gap;}
+      }
+      return {deck:best.map(card=>({...card})),target,average:average(best),playerAverage:average(player)};
+    }
     const inventoryPower=total(owned)/owned.length*6;
     const targetPower=Math.min(playerPower,playerPower*.85+inventoryPower*.15)*(.98+random()*.04);
     const outside=unique(pool).filter(card=>!ownedIds.has(key(card)) && cardPower(card)<=Math.max(...player.map(cardPower))*1.05);

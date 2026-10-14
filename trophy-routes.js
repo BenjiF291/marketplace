@@ -6,6 +6,7 @@ const engine = require('./public/practice-engine');
 const liveTurns = require('./public/brawl-turns');
 const {PATH,replay,trophyUpdate,roadState} = require('./trophy-utils');
 const skill = require('./brawl-skill');
+const deckPressure = require('./brawl-deck-pressure');
 module.exports=(app,db,getOwned,authenticate)=>{
  const route=(method,url,handler)=>app[method](url,async(req,res)=>{
   let id;
@@ -33,10 +34,6 @@ module.exports=(app,db,getOwned,authenticate)=>{
   if(!engine.validSpecials(player))throw new Error('Only one special card is allowed per deck');
   const snapshot=await db.collection('battleCards').get();
   const pool=snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
-  const generated=engine.rankedDeck(pool,available,player);
-  const board=Array(16).fill(null);board[5]=engine.starterCard(pool,[...player,...generated.deck]);
-  const initial={board,player,computer:generated.deck,turn:engine.startingPlayer(player,generated.deck)};
-  const timed=[...player,...generated.deck].some(card=>engine.ability(card)==='mirror-interrupt');
   const ref=db.collection('computerBattles').doc();const seed=crypto.randomInt(2147483647);
   const session=await db.runTransaction(async tx=>{
     const userRef=db.collection('users').doc(id),user=await tx.get(userRef);if(!user.exists)throw new Error('User not found');
@@ -49,17 +46,23 @@ module.exports=(app,db,getOwned,authenticate)=>{
     if(previous?.exists&&previous.data().status==='active'){
       Object.assign(changes,trophyUpdate(user.data(),previous.data().mode==='skill'?'medium':previous.data().difficulty,-1,previous.data().mode==='skill'?skill.profile(rating).booster.trophyPercent:0));
       if(previous.data().mode==='skill'){const settled=skill.settle(rating,-1,null,previous.data().skillAtStart,true);forfeitedSkill=settled.change;rating=settled.state;}
+      rating={...rating,deckPressure:deckPressure.settle(rating,-1)};
       tx.update(previousRef,{status:'forfeit',finishedAt:new Date()});
     }
-    const skillLevel=rating.skillLevel;
+    const matchmaking=deckPressure.matchmaking(rating);
+    const generated=engine.rankedDeck(pool,available,player,engine.seeded(seed),matchmaking.deckBoost);
+    const board=Array(16).fill(null);board[5]=engine.starterCard(pool,[...player,...generated.deck]);
+    const initial={board,player,computer:generated.deck,turn:engine.startingPlayer(player,generated.deck)};
+    const timed=[...player,...generated.deck].some(card=>engine.ability(card)==='mirror-interrupt');
+    const skillLevel=deckPressure.AI_SKILL;
     const difficulty={policy:'adaptive-v4',skill:skillLevel};
     const live=timed?liveTurns.create(initial,difficulty,seed):null;
-    tx.set(ref,{userId:id,initial,seed,difficulty,live,mode:'skill',assessmentVersion:3,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
+    tx.set(ref,{userId:id,initial,seed,difficulty,live,matchmaking,mode:'skill',assessmentVersion:3,skillAtStart:skillLevel,status:'active',createdAt:new Date()});
     tx.set(profileRef,{...progress,...rating,activeComputerBattle:ref.id});
     tx.update(userRef,changes);
-    return {difficulty,live,profile:skill.profile(rating),forfeitedSkill};
+    return {difficulty,live,initial,matchmaking,target:generated.target,average:generated.average,playerAverage:generated.playerAverage,profile:skill.profile(rating),forfeitedSkill};
   });
-  return {id:ref.id,initial,seed,mode:'skill',assessmentVersion:3,...session,target:generated.target,average:generated.average,playerAverage:generated.playerAverage};
+  return {id:ref.id,seed,mode:'skill',assessmentVersion:3,...session};
  });
  route('post','/computer-battles/turn',async(id,body)=>{
   if(typeof body.id!=='string'||!body.id||body.id.includes('/'))throw new Error('Invalid battle');
@@ -98,8 +101,8 @@ module.exports=(app,db,getOwned,authenticate)=>{
     const ruby=isSkill&&result.result>0?activeBooster.ruby:0;
     if(ruby)update.gems={...require('./gem-wallet').wallet(user.data().gems),bronze:require('./gem-wallet').whole(user.data().gems?.bronze)+ruby};
     if(footy)update.balance=(user.data().balance||0)+footy;
-    if(isSkill)tx.set(profileRef,{...profileDoc.data(),...settled.state,activeComputerBattle:null});
     const delta=update.trophies-(user.data().trophies||0);
+    if(isSkill)tx.set(profileRef,{...profileDoc.data(),...settled.state,deckPressure:deckPressure.settle(rating,result.result),activeComputerBattle:null});
     tx.update(userRef,{...update,...(isSkill?require('./town-hall-progress').gameplay(user.data(),result.result>0?'ranked win':result.result<0?'ranked loss':'ranked draw'):require('./town-hall-progress').gameplay(user.data(),'training battle')),activeComputerBattle:null});
     const response={trophies:update.trophies,delta,status:'finished',footy,ruby,skill:change,moveReviews:result.moveReviews||[],profile:isSkill?skill.profile(settled.state):null};
     tx.update(ref,{status:'finished',result:result.result,delta,response,finishedAt:new Date()});

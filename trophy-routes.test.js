@@ -34,6 +34,27 @@ test('starting again forfeits unfinished trophy match and rejects invalid decks'
 
 const engine=require('./public/practice-engine');
 const rankedBody={mode:'skill',first:'player',cardIds:engine.trainingCards().map(c=>c.id)};
+test('ranked deck escalation is authoritative and fixed AI strength ignores rating and client overrides',async()=>{
+ const now=Date.now(),seed={'users/u':{},'brawlProfiles/u':{skillLevel:1200,ratingVersion:2,placementsCompleted:5,deckPressure:{version:2,wins:8,losses:0,boost:10}}};
+ const h=harness(seed);
+ const start=await h.invoke('/computer-battles/start',{...rankedBody,deckMultiplier:50,winStreak:1000,skillLevel:0});
+ assert.equal(start.status,200);assert.equal(start.payload.difficulty.skill,700);
+ assert.ok(Math.abs(start.payload.matchmaking.deckBoost-10)<1e-9);
+ assert.ok(Math.abs(start.payload.target-(start.payload.playerAverage+10))<1e-9);
+ assert.equal(h.records[`computerBattles/${start.payload.id}`].skillAtStart,700);
+ const afterForfeit=await h.invoke('/computer-battles/start',rankedBody);
+ assert.equal(afterForfeit.payload.matchmaking.deckBoost,7);
+ assert.deepEqual(h.records['brawlProfiles/u'].deckPressure,{version:2,wins:0,losses:1,boost:7});
+});
+test('ranked win boost settles once alongside trophy rewards',async()=>{
+ const initial={board:Array(16).fill(null),player:[],computer:[],turn:'player'};initial.board[0]={ownerId:'player'};
+ const h=harness({'users/u':{trophies:0},'brawlProfiles/u':{skillLevel:800,ratingVersion:2,placementsCompleted:5,deckPressure:{version:2,wins:2,losses:0,boost:0}},'computerBattles/m':{userId:'u',status:'active',mode:'skill',skillAtStart:700,difficulty:{policy:'adaptive-v4',skill:700},seed:1,initial}});
+ const first=await h.invoke('/computer-battles/finish',{id:'m',moves:[]});
+ assert.equal(first.status,200);assert.equal(h.records['brawlProfiles/u'].deckPressure.wins,3);
+ assert.equal(h.records['brawlProfiles/u'].deckPressure.boost,5);
+ const saved=structuredClone(h.records['brawlProfiles/u'].deckPressure);
+ await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.deepEqual(h.records['brawlProfiles/u'].deckPressure,saved);
+});
 function complete(session, worst=false){
  const game=structuredClone(session.initial),moves=[];let turn=0;
  while(game.player.length||game.computer.length){
@@ -53,7 +74,7 @@ test('new accounts begin unranked placements and clients cannot choose ranked st
  assert.equal((await h.invoke('/brawl/skill')).payload.skillLevel,null);
  assert.equal(h.records['brawlProfiles/u'].placementsCompleted,0);
  const start=await h.invoke('/computer-battles/start',{...rankedBody,difficulty:0,skillLevel:1000});
- assert.equal(start.status,200);assert.deepEqual(start.payload.difficulty,{policy:'adaptive-v4',skill:500});
+ assert.equal(start.status,200);assert.deepEqual(start.payload.difficulty,{policy:'adaptive-v4',skill:700});
  assert.ok(Math.abs(start.payload.target-start.payload.playerAverage)<=.4);
  assert.equal(start.payload.profile.placed,false);
  assert.equal((await h.invoke('/computer-battles/start',{...rankedBody,mode:'training'})).status,400);
@@ -75,7 +96,7 @@ test('forfeit lowers skill and disables then restores milestones based on curren
  const h=harness({'users/u':{},'brawlProfiles/u':{skillLevel:300,ratingVersion:2,placementsCompleted:5}});
  await h.invoke('/computer-battles/start',rankedBody);
  const next=await h.invoke('/computer-battles/start',rankedBody);
- assert.ok(next.payload.profile.skillLevel>=275&&next.payload.profile.skillLevel<300);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v4',skill:next.payload.profile.skillLevel});
+ assert.ok(next.payload.profile.skillLevel>=275&&next.payload.profile.skillLevel<300);assert.deepEqual(next.payload.difficulty,{policy:'adaptive-v4',skill:700});
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,150);
  h.records['brawlProfiles/u'].skillLevel=301;
  assert.equal((await h.invoke('/brawl/skill')).payload.booster.at,300);

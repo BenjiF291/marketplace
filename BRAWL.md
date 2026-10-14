@@ -47,22 +47,11 @@ Completed version-2 profiles retain their ratings and placement status; subseque
 
 **The deck with the higher printed total score always starts**; equal totals use a coin toss. The server determines this for ranked matches, ignoring any client-supplied starting-player choice. Saved matches retain their original starting order. New deck matching uses the side-strength rules below instead of matching only printed averages.
 
-New matches use `adaptive-v3` with the same 3-5 second delay. At skill fraction
-`r`, Bob's decision handicap is `310 + 200*r^3` (previously `190 + 220*r^3`).
-The best-move probability and weighted sampling formula are unchanged. Old saved
-matches keep their stored numeric or `adaptive-v2` policy for deterministic replay.
+New ranked matches use `adaptive-v4` with a fixed AI skill of **700**, independent of the player's rating. Existing sessions retain their saved policy for deterministic replay. Ratings and reward boosters continue to track player progression.
 
-Bob's deck now prefers 4-5 cards from the player's complete available battle
-inventory and 1-2 unowned catalogue cards. If there are no safe, legal outsiders,
-it falls back to more owned cards. It never invents cards or changes their stats.
-Matching uses actual sides: descending sides weighted 35/30/20/15%, plus 0.65 for
-a special. Bob's target total power is `min(playerPower, .85*playerPower +
-.15*inventoryPower) * random(.98, 1.02)`. Inventory power means the average card
-power times six. This gives good deck selection an advantage without giving weak
-decks an unrestricted catalogue opponent. Total power is capped at
-`playerPower*1.03 + .1`; outsiders are individually capped at 1.05 times the
-strongest selected card's estimated power. This is a heuristic, not a complete
-measure of directional synergy or abilities.
+Matchmaking history is stored server-side in `brawlProfiles.deckPressure` (version 2) and settled atomically. After three consecutive wins, Bob's target printed average is the player's average +5 points. Each subsequent win adds +1 while a boost remains active. Every loss or forfeit subtracts 3 points, floored at zero; three consecutive losses reset the boost regardless of its size. A win breaks the loss streak. Draws break both streaks and preserve the boost. If the boost reaches zero, three consecutive wins are required to activate +5 again. Trophy gain rates no longer affect matchmaking. Older percentage-based history starts fresh; existing battles retain their saved decks and AI policy.
+
+Baseline decks retain the familiar owned-card matching. Boosted decks target the player's printed average plus the saved points boost using real catalogue and owned cards. There is no percentage cap or stat inflation. The nearest legal combination is used, so the available catalogue limits the actual average that can be reached. Repeated finish requests cannot apply the boost twice.
 
 All decks allow at most one special card, including Mirror. Ranked start, online
 setup, Ready, and saved-deck creation enforce the rule on the server; Training and

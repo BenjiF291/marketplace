@@ -274,7 +274,7 @@
       <h2>⚔️ Battle</h2>
       <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
         <summary>Play against Bob</summary>
-        <p>Blue is you; red is Bob. Bob adapts to your Skill Level with a randomized deck of similar strength. Ranked Brawls need a connection to start and sync results; an ongoing Brawl can be played offline unless a 15-second interrupt power is in play. Timed ranked battles stay connected.</p>
+        <p>Blue is you; red is Bob. Bob plays at a fixed AI strength of 700. After three consecutive ranked wins, his target deck average rises 5 points above yours, then another point per win. Each loss removes 3 points of boost; three losses in a row reset it. Ranked Brawls need a connection to start and sync results; an ongoing Brawl can be played offline unless a 15-second interrupt power is in play. Timed ranked battles stay connected.</p>
         <section class="brawl-skill-panel" aria-label="Brawl Skill Level">
           <h3 id="brawlSkillLevel">Skill Level: connect to load</h3>
           <progress id="brawlSkillProgress" max="1000" value="0" aria-label="Progress to next skill milestone"></progress>
@@ -287,7 +287,7 @@
           <p id="practiceNote"></p><p id="practiceCount"></p>
           <div id="practicePicker" class="battle-hand"></div>
           <label for="practiceMode">Brawl mode</label>
-          <select id="practiceMode" onchange="updateBrawlMode()"><option value="skill">Ranked &mdash; adaptive Skill Level</option><option value="training">Training &mdash; no skill changes or rewards</option></select>
+          <select id="practiceMode" onchange="updateBrawlMode()"><option value="skill">Ranked &mdash; win-streak deck challenge</option><option value="training">Training &mdash; no skill changes or rewards</option></select>
           <div id="practiceTraining" hidden><label for="practiceDifficulty">Training difficulty</label><select id="practiceDifficulty"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
           <p>Leaving an unfinished ranked Brawl counts as a loss when you start another. Training never changes your Skill Level.</p>
           <p>The stronger deck starts (total card score). Equal totals use a coin toss. Bob's deck can be slightly stronger or weaker than yours.</p>
