@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three/three.module.js';
+import {createTalren} from './talren-3d-model.js?v=talren1';
 import {createTharos} from './tharos-3d-model.js?v=tharos1';
 import {createVeyrin} from './veyrin-3d-model.js?v=kael1';
 import {createFenra} from './fenra-3d-model.js?v=saelis1';
@@ -25,7 +26,7 @@ function setup(){
 const observer=new IntersectionObserver(items=>{for(const item of items){const e=entries.get(item.target);if(e)e.visible=item.isIntersecting;}wake();});
 async function mount(host){
  if(entries.has(host))return;const entry={host,visible:false,time:0,model:null,fox:null,dragon:null,snail:null,kind:host.dataset.species};entries.set(host,entry);observer.observe(host);
- try{if(!renderer)setup();const model=await (entry.kind==='tharos'?createTharos():entry.kind==='veyrin'?createVeyrin():entry.kind==='fenra'?createFenra():entry.kind==='krynn'?createKrynn():entry.kind==='brugar'?createBrugar():entry.kind==='rill'?createRill():entry.kind==='dragon'?createDragon():entry.kind==='snail'?createSnail():createFox());if(!host.isConnected){model.dispose();entries.delete(host);return;}entry.model=model;entry[entry.kind]=model;
+ try{if(!renderer)setup();const model=await (entry.kind==='talren'?createTalren():entry.kind==='tharos'?createTharos():entry.kind==='veyrin'?createVeyrin():entry.kind==='fenra'?createFenra():entry.kind==='krynn'?createKrynn():entry.kind==='brugar'?createBrugar():entry.kind==='rill'?createRill():entry.kind==='dragon'?createDragon():entry.kind==='snail'?createSnail():createFox());if(!host.isConnected){model.dispose();entries.delete(host);return;}entry.model=model;entry[entry.kind]=model;
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=420;canvas.setAttribute('aria-hidden','true');host.append(canvas);entry.context=canvas.getContext('2d');wake();
  }catch(error){host.dataset.modelError='true';console.error('Companion 3D portrait:',error);}
 }
@@ -62,7 +63,7 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
  if(active)wake();
 }
 let queued=false;
-function scan(){queued=false;document.querySelectorAll('[data-fox-3d],[data-dragon-3d],[data-snail-3d],[data-rill-3d],[data-brugar-3d],[data-krynn-3d],[data-fenra-3d],[data-veyrin-3d],[data-tharos-3d]').forEach(mount);for(const [host,e] of entries)if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);}wake();}
+function scan(){queued=false;document.querySelectorAll('[data-fox-3d],[data-dragon-3d],[data-snail-3d],[data-rill-3d],[data-brugar-3d],[data-krynn-3d],[data-fenra-3d],[data-veyrin-3d],[data-tharos-3d],[data-talren-3d]').forEach(mount);for(const [host,e] of entries)if(!host.isConnected){observer.unobserve(host);e.model?.dispose();entries.delete(host);}wake();}
 const mutations=new MutationObserver(()=>{if(!queued){queued=true;queueMicrotask(scan);}});mutations.observe(document.body,{childList:true,subtree:true});scan();
 document.addEventListener('visibilitychange',wake);reduced.addEventListener('change',()=>{entries.forEach(e=>e.painted=false);wake();});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;cancelAnimationFrame(frame);mutations.disconnect();observer.disconnect();entries.forEach(e=>e.model?.dispose());renderer?.dispose();});
