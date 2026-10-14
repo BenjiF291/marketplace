@@ -1,4 +1,4 @@
-﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar']);
+﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn']);
 const RARITIES=new Set(['','common','rare','epic','legendary','unique']);
 function validateEntry(body,kind){
  if(!KINDS.has(kind))throw Error('Unknown creature');
@@ -9,7 +9,7 @@ function validateEntry(body,kind){
  }
  if(!RARITIES.has(body.rarity))throw Error('Choose a valid rarity');
  result.rarity=body.rarity;
- if(!['rill','brugar'].includes(kind))result.individualDescription='';
+ if(!['rill','brugar','krynn'].includes(kind))result.individualDescription='';
  return result;
 }
 module.exports=(app,db,authenticate)=>{

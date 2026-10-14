@@ -6,7 +6,8 @@
 
   {kind:'snail',name:'Crystal Snail',number:'03',category:'GENTLE CRYSTAL CRAWLER',feature:'Crystal-crowned spiral shell',movement:'Crawls & explores',note:'An amethyst-colored shell crowned with teal crystals shelters this gentle explorer. Tiny waves travel through its soft foot while four curious feelers test the air ahead.',detail:'Look closely: the shell stays firm while the foot and feelers move beneath it.',quote:'Every small journey holds a little wonder.'},
   {kind:'rill',name:'Aeri',species:'Rill',number:'04',category:'RILL / BRAWL CREATURE',feature:'Blue plumage & sweeping wings',movement:'Perched idle',note:'Meet Aeri, a Rill with luminous blue feathers, a proud crest, and long, flowing tail plumes. A calm perched stance reveals the layered wings and graceful silhouette of this magical bird.',detail:'Look closely: Aeri breathes softly, turns its head, and gently settles its wings and tail.',quote:'Still wings. A sky full of possibility.',care:'Aeri is a brawl creature, not a pet. Its battle role and attacks will arrive in a future update.'},
-  {kind:'brugar',name:'Brakk',species:'Brugar',number:'05',note:'Brugars are armored stone beasts with powerful limbs and heavy protective plates.'}
+  {kind:'brugar',name:'Brakk',species:'Brugar',number:'05',note:'Brugars are armored stone beasts with powerful limbs and heavy protective plates.'},
+  {kind:'krynn',name:'Virex',species:'Krynn',number:'06',note:'Krynns are dark, wolf-like beasts with pointed ears, a spiked mane, pale markings, and two long, curved tails.'}
  ];
  const individualName=c=>c.species?c.name:'';
  const title=c=>individualName(c)||c.species||c.name;
@@ -25,7 +26,7 @@
  const q=selector=>book.querySelector(selector),d=selector=>detail.querySelector(selector);
  let selected=0,returnFocus=null,selectedCard=null;
 
- const poster=c=>c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
+ const poster=c=>c.kind==='krynn'?'assets/creatures/virex-poster.png':c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
  const species=c=>c.species||c.name;
  const rarity=c=>metadata[c.kind]?.rarity||'unassigned';
  for(const [i,c] of creatures.entries()){
@@ -41,7 +42,7 @@
   d('.creature-edit-button').hidden=!canEdit;
  }
  function showCreature(i,card){selected=i;selectedCard=card;const c=creatures[i];renderInfo();
-  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=brakk1').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
+  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=virex1').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
   detail.showModal();detail.scrollTop=0;d('.creature-book-close').focus();
  }
  const editor=el('dialog','creature-entry-editor');editor.setAttribute('aria-labelledby','creatureEditorTitle');
