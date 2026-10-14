@@ -68,3 +68,13 @@ test('admin gallery shows every reward in category order and supports full-size 
  viewer.querySelector('.reward-inspector-next').click();assert.equal(viewer.querySelector('h2').textContent,'Ruby');viewer.querySelector('.reward-inspector-prev').click();assert.equal(viewer.querySelector('h2').textContent,'Garnet');
  const search=gallery.querySelector('.reward-gallery-search');search.value='tharos';search.oninput();assert.equal(gallery.querySelectorAll('.reward-gallery-tile').filter(n=>!n.hidden).length,1);assert.equal(h.claims,0);assert.equal(h.timers.size,0);
 });
+
+test('creature reward cards have a rarity ribbon in the shared renderer, other rewards do not',()=>{
+ const h=harness();for(const rarity of ['common','rare','epic','legendary','unique']){
+  const card=h.context.window.RewardOpening.card({kind:'animal',id:'tharos',amount:1,rarity});assert.equal(card.dataset.rarity,rarity);assert.equal(card.querySelector('.reward-card-rarity-ribbon').attributes['aria-label'],rarity+' rarity');
+ }
+ const pet=h.context.window.RewardOpening.card({kind:'rubyItem',id:'pet:fox',amount:1,rarity:'rare'});assert.equal(pet.dataset.rarity,'rare');
+ const neutral=h.context.window.RewardOpening.card({kind:'animal',id:'talren',amount:1});assert.equal(neutral.dataset.rarity,'unassigned');
+ assert.equal(h.context.window.RewardOpening.card({kind:'gem',id:'bronze',amount:5}).querySelector('.reward-card-rarity-ribbon'),null);
+ const groups=h.context.RewardCardArt.samples({animal:[{id:'tharos',name:'Tharos',rarity:'unique'}]});assert.equal(groups.find(g=>g.kind==='animal').rewards[0].rarity,'unique');
+});

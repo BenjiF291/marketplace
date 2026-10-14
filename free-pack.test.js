@@ -71,3 +71,11 @@ test('admins can repeatedly claim with no cooldown while every request stays ide
  const saved=structuredClone(h.records);const retry=await h.invoke('post','/free-pack/claim',{requestId:'admin-first'});assert.deepEqual(retry.payload,first.payload);assert.deepEqual(h.records,saved);
  h.records['users/u'].isAdmin=false;assert.equal((await h.invoke('post','/free-pack/claim',{requestId:'not-admin-now'})).status,400);
 });
+
+test('creature ribbons receive book rarity in the admin gallery, new claims and saved reward previews',async()=>{
+ const h=harness(true);h.records['creatureBookEntries/tharos']={rarity:'unique'};h.records['creatureBookEntries/fox']={rarity:'rare'};
+ const gallery=await h.invoke('get','/admin/free-pack');assert.equal(gallery.payload.catalog.animal.find(a=>a.id==='tharos').rarity,'unique');assert.equal(gallery.payload.catalog.rubyItem.find(a=>a.id==='pet:fox').rarity,'rare');
+ const config=rules.defaults();config.cards[4].options=[{kind:'animal',id:'tharos',min:1,max:1,chance:100,rarity:'common'}];await h.invoke('put','/admin/free-pack',config);
+ const claim=await h.invoke('post','/free-pack/claim',{requestId:'rarity-pack'});assert.equal(claim.payload.rewards[4].rarity,'unique');
+ h.records['creatureBookEntries/tharos'].rarity='epic';const status=await h.invoke('get','/free-pack');assert.equal(status.payload.lastClaim.rewards[4].rarity,'epic');assert.equal(h.records['users/u'].stableAnimals.tharos,1);
+});
