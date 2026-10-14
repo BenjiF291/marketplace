@@ -17,9 +17,9 @@ module.exports=(app,db,authenticate)=>{
   const snapshot=await db.collection('creatureBookEntries').get();
   const entries={};for(const doc of snapshot.docs)if(KINDS.has(doc.id)){const data=doc.data();entries[doc.id]={description:data.description||'',origin:data.origin||'',individualDescription:data.individualDescription||'',rarity:RARITIES.has(data.rarity)?data.rarity:''};}
   if(entries.veyrin)entries.tharos={...(entries.tharos||{}),description:entries.veyrin.description,origin:entries.veyrin.origin};
-  let canEdit=false;
-  if(req.header('Authorization')){try{const id=await authenticate(req),user=await db.collection('users').doc(id).get();canEdit=user.exists&&user.data().isAdmin===true;}catch{}}
-  res.set('Cache-Control','no-store');res.json({entries,canEdit});
+  let canEdit=false;const owned=Object.fromEntries([...KINDS].map(kind=>[kind,false]));
+  if(req.header('Authorization')){try{const id=await authenticate(req),user=await db.collection('users').doc(id).get();if(user.exists){const data=user.data();canEdit=data.isAdmin===true;for(const kind of ['fox','snail','dragon'])owned[kind]=Number(data.rubyItems?.['pet:'+kind]||0)>0;}}catch{}}
+  res.set('Cache-Control','no-store');res.json({entries,canEdit,owned});
  }catch(e){res.status(500).send('Could not load creature information');}});
  app.put('/admin/creature-book/:kind',async(req,res)=>{
   let id;try{id=await authenticate(req);}catch{return res.status(401).send('Please log in again to edit the creature book');}
