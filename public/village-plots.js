@@ -7,8 +7,8 @@
   const layer=el('div','village-land-plots');world.prepend(layer);const residents=el('div','village-residents');world.append(residents);
   const panel=el('section','village-planning');panel.hidden=true;panel.setAttribute('aria-label','Arrange your village');toolbar.parentNode.append(panel);
   const hint=el('p');hint.setAttribute('role','status');const tray=el('div','village-building-tray');tray.setAttribute('aria-label','Unplaced buildings');
-  const edit=el('button','village-tool-icon');edit.setAttribute('aria-label','Arrange village');edit.title='Arrange village';edit.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
-  const help=el('button','village-tool-icon','?');help.title='About island buildings';help.setAttribute('aria-label','Learn about a building');help.setAttribute('aria-pressed','false');toolbar.append(edit,help);
+  const edit=el('button','village-tool-icon');edit.setAttribute('aria-label','Arrange village');edit.id='arrangeVillageButton';edit.title='Arrange village';edit.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+  const help=el('button','village-tool-icon','?');help.id='villageHelpButton';help.title='About island buildings';help.setAttribute('aria-label','Learn about a building');help.setAttribute('aria-pressed','false');toolbar.append(edit,help);
   const save=el('button','village-primary','Save layout'),cancel=el('button','village-secondary','Cancel');const actions=el('div','village-plan-actions');actions.append(save,cancel);panel.append(tray,actions,hint);
   const instruction=el('div','village-help-hint','Click a building to learn what it does. Click ? again to leave help mode.');instruction.hidden=true;toolbar.parentNode.append(instruction);
   const layout=()=>getData().layout||VillageLayout.profile({}),positions=()=>draft||layout().positions;
