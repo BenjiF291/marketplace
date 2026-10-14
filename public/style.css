@@ -1808,3 +1808,6 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 .amulet-tier-heading {grid-column:1 / -1;border-bottom:1px solid #c9c6b8;padding:16px 0 10px;margin-top:8px}
 .amulet-tier-heading h4 {margin:0 0 6px;font-size:18px}
 .amulet-tier-heading p {margin:0;font-size:13px}
+
+/* Match each mask to object-fit:contain without changing source card pixels. */
+img.card-image-cutout{object-fit:contain!important;object-position:center!important;background:transparent!important;border:0!important;border-radius:0!important;mask-mode:alpha;mask-size:contain;mask-position:center;mask-repeat:no-repeat;-webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat}
