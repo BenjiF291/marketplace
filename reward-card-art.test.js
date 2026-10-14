@@ -18,3 +18,8 @@ test('admin samples cover each distinct catalogue reward once, sorted by categor
  const groups=art.samples(catalog);assert.deepEqual(Array.from(groups,g=>g.kind),['gem','footy','boost','animal','rubyItem','amulet','card','pack']);assert.deepEqual(Array.from(groups[0].rewards,r=>r.id),['garnet','ruby']);assert.deepEqual(Array.from(groups[3].rewards,r=>r.id),['aeri','tharos']);
  const rewards=groups.flatMap(g=>g.rewards);assert.equal(rewards.length,10);assert.ok(rewards.every(r=>r.amount===1));assert.equal(new Set(rewards.map(r=>r.kind+'/'+r.id)).size,10);assert.equal(groups[6].rewards[0].label,'1 Bronze jan');
 });
+
+test('every creature has a padded frame inside its poster dimensions',()=>{
+ for(const animal of root.StableAnimals.animals){const info=art.describe({kind:'animal',id:animal.id,amount:1}),f=info.imageFrame;assert.ok(f,animal.id);assert.ok(f.x>=0&&f.y>=0&&f.width>0&&f.height>0);assert.ok(f.x+f.width<=f.imageWidth&&f.y+f.height<=f.imageHeight);assert.ok(f.width<f.imageWidth,animal.id);}
+ assert.ok(art.describe({kind:'rubyItem',id:'pet:fox',amount:1}).imageFrame);assert.equal(art.describe({kind:'gem',id:'bronze',amount:5}).imageFrame,null);
+});

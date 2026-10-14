@@ -1,6 +1,9 @@
 /* Shared presentation for every reward accepted by the pack editor. */
 (function(root){
  const gems={bronze:['Ruby','#cf504d'],'rare-bronze':['Garnet','#a44465'],silver:['Moonstone','#8cbcb9'],'rare-silver':['Opal','#b9aed0'],gold:['Citrine','#e5b34f'],'rare-gold':['Emerald','#53ad83'],platinum:['Sapphire','#658ac1'],lightning:['Amethyst','#a178c0'],ultra:['Diamond','#a9d9e5']};
+ // Visible alpha bounds, padded below so fine fur and wing tips stay inside the frame.
+ const creatureBounds={rill:[190,90,486,580],brugar:[184,163,638,630],'brugar-species':[223,172,586,526],'defender-rill':[179,58,506,550],'defender-talren':[139,139,520,574],'fenra-species':[187,58,538,519],veyrin:[177,160,664,538],'krynn-species':[179,173,668,543],'northern-talren':[123,139,517,573],'rill-species':[183,58,511,546],fenra:[198,89,559,533],talren:[174,140,528,579],tharos:[184,158,643,538],krynn:[170,162,679,533],dragon:[120,87,512,395],fox:[93,52,472,417],snail:[40,49,493,420]};
+ function creatureFrame(animal){const bounds=creatureBounds[animal?.id];if(!bounds)return null;const imageWidth=animal.companion?512:768,imageHeight=animal.companion?420:630,x=Math.max(0,bounds[0]-10),y=Math.max(0,bounds[1]-10);return {x,y,width:Math.min(imageWidth,bounds[2]+10)-x,height:Math.min(imageHeight,bounds[3]+10)-y,imageWidth,imageHeight};}
  const svg=body=>`<svg viewBox="0 0 240 240" aria-hidden="true">${body}</svg>`;
  const gem=(color,x=120,y=113,size=1)=>`<g transform="translate(${x} ${y}) scale(${size})"><path d="m-46-33 26-25h40l26 25L0 48Z" fill="${color}" stroke="#fff2c5" stroke-width="3"/><path d="m-46-33 46 81-20-106m66 25-46 81 20-106M-46-33h92L0-14Z" fill="#ffffff27" stroke="#fff5e380" stroke-width="2"/><path d="m-20-58 20 44 20-44" fill="#ffffff44"/></g>`;
  const coin=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><ellipse cy="7" rx="32" ry="14" fill="#88602e"/><ellipse rx="32" ry="14" fill="#e5be63" stroke="#fff0b3" stroke-width="2"/><ellipse rx="24" ry="9" fill="#c29442"/><path d="M-4 6V-6H8M-4 0h9" fill="none" stroke="#ffdf8d" stroke-width="3"/></g>`;
@@ -24,7 +27,7 @@
   const garment=reward.kind==='rubyItem'?root.Wardrobe?.catalog.find(item=>item.id===reward.id):null;
   if(garment&&root.HallArt?.avatar)itemArt=root.HallArt.avatar({[garment.slot]:garment.value});
   const creature=reward.kind==='animal'||reward.kind==='rubyItem'&&reward.id?.startsWith('pet:');const rarity=['common','rare','epic','legendary','unique'].includes(reward.rarity)?reward.rarity:'unassigned';
-  return {name,group,image,art:itemArt||svg(body),amount:reward.amount||1,creature,rarity};
+  return {name,group,image,art:itemArt||svg(body),amount:reward.amount||1,creature,rarity,imageFrame:creature?creatureFrame(animal):null};
  }
  function normalize(result){if(result.rewards)return result.rewards;const rewards=[{kind:'card',id:result.cardId||'New card',imageUrl:result.imageUrl,amount:1}];if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});return rewards;}
  function samples(catalog){

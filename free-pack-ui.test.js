@@ -11,7 +11,7 @@ function harness(){
  const timers=new Map();let timerId=0;
  const context={console,setTimeout:(fn)=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),matchMedia:()=>({matches:false}),Date,Math,Number,Object,Array,JSON,crypto:{randomUUID:()=> 'preview-claim'},currentUserId:'u',API_URL:'',resourceHeaders:()=>({}),loadUsers(){},loadInventory(){},setInterval:()=>1,clearInterval(){},
  localStorage:{getItem:key=>storage.get(key),setItem:(key,v)=>storage.set(key,v),removeItem:key=>storage.delete(key)},Event:class{},window:{addEventListener(){},dispatchEvent(){}},
- document:{body,hidden:false,createElement:tag=>new Node(tag),getElementById:id=>ids.get(id),querySelector:selector=>selector==='#villageMap[open]'?{}:body.querySelector(selector)},
+ document:{body,hidden:false,createElement:tag=>new Node(tag),createElementNS:(ns,tag)=>new Node(tag),getElementById:id=>ids.get(id),querySelector:selector=>selector==='#villageMap[open]'?{}:body.querySelector(selector)},
  Option:function(text,value){const n=new Node('option');n.textContent=text;n.value=value;return n;},
  fetch:async(url,options)=>{let data;if(url==='/free-pack')data={config,serverNow:Date.now(),nextAt:0,canClaim:true,canEdit:true};else if(url==='/free-pack/claim'){claims++;data={requestId:'preview-claim',name:config.name,nextAt:Date.now()+25200000,rewards:rules.draw(config,()=>0).map(r=>({...r,label:rules.label(r,catalog)}))};}else if(options.method==='PUT'){saved=JSON.parse(options.body);data={config:saved};}else data={config,catalog};return {ok:true,json:async()=>data};}};
  context.window.StableAnimals=require('./public/stable-animals');vm.createContext(context);vm.runInContext(fs.readFileSync('public/reward-card-art.js','utf8'),context);context.RewardCardArt=context.window.RewardCardArt;vm.runInContext(fs.readFileSync('public/reward-opening.js','utf8'),context);vm.runInContext(fs.readFileSync('public/reward-gallery.js','utf8'),context);vm.runInContext(fs.readFileSync('public/free-pack.js','utf8'),context);vm.runInContext(fs.readFileSync('public/island-tools.js','utf8'),context);
@@ -77,4 +77,9 @@ test('creature reward cards have a rarity ribbon in the shared renderer, other r
  const neutral=h.context.window.RewardOpening.card({kind:'animal',id:'talren',amount:1});assert.equal(neutral.dataset.rarity,'unassigned');
  assert.equal(h.context.window.RewardOpening.card({kind:'gem',id:'bronze',amount:5}).querySelector('.reward-card-rarity-ribbon'),null);
  const groups=h.context.RewardCardArt.samples({animal:[{id:'tharos',name:'Tharos',rarity:'unique'}]});assert.equal(groups.find(g=>g.kind==='animal').rewards[0].rarity,'unique');
+});
+
+test('creature cards use tightly fitted SVG frames while collection cards keep their original images',()=>{
+ const h=harness();const card=h.context.window.RewardOpening.card({kind:'animal',id:'tharos',amount:1,rarity:'unique'});const picture=card.querySelector('.reward-card-picture'),svg=picture.querySelector('svg');assert.equal(svg.attributes.viewBox,'174 148 479 400');assert.equal(svg.attributes.preserveAspectRatio,'xMidYMid meet');assert.equal(svg.querySelector('image').attributes.width,768);assert.equal(card.querySelector('.reward-card-amount').textContent,'1');assert.equal(card.querySelector('.reward-card-name').textContent,'Tharos');
+ const collection=h.context.window.RewardOpening.card({kind:'card',id:'Bronze_jan.png',amount:1});assert.ok(collection.querySelector('.reward-card-picture').querySelector('img'));
 });
