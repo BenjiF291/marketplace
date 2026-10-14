@@ -1,4 +1,4 @@
-﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn','fenra','veyrin','tharos','talren','northern-talren','defender-talren']);
+﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn','fenra','veyrin','tharos','talren','northern-talren','defender-talren','rill-species']);
 const RARITIES=new Set(['','common','rare','epic','legendary','unique']);
 function validateEntry(body,kind){
  if(!KINDS.has(kind))throw Error('Unknown creature');
@@ -17,6 +17,7 @@ module.exports=(app,db,authenticate)=>{
   const snapshot=await db.collection('creatureBookEntries').get();
   const entries={};for(const doc of snapshot.docs)if(KINDS.has(doc.id)){const data=doc.data();entries[doc.id]={description:data.description||'',origin:data.origin||'',individualDescription:data.individualDescription||'',rarity:RARITIES.has(data.rarity)?data.rarity:''};}
   if(entries.veyrin)entries.tharos={...(entries.tharos||{}),description:entries.veyrin.description,origin:entries.veyrin.origin};
+  if(entries.rill)entries['rill-species']={...(entries['rill-species']||{}),description:entries.rill.description,origin:entries.rill.origin};
   let canEdit=false;const owned=Object.fromEntries([...KINDS].map(kind=>[kind,false]));
   if(req.header('Authorization')){try{const id=await authenticate(req),user=await db.collection('users').doc(id).get();if(user.exists){const data=user.data();canEdit=data.isAdmin===true;for(const kind of ['fox','snail','dragon'])owned[kind]=Number(data.rubyItems?.['pet:'+kind]||0)>0;}}catch{}}
   res.set('Cache-Control','no-store');res.json({entries,canEdit,owned});
@@ -28,6 +29,7 @@ module.exports=(app,db,authenticate)=>{
    let entry;try{entry=validateEntry(req.body||{},req.params.kind);}catch(e){return res.status(400).send(e.message);}
    const audit={updatedBy:id,updatedAt:new Date().toISOString()};
    if(req.params.kind==='tharos'){const batch=db.batch();batch.set(db.collection('creatureBookEntries').doc('veyrin'),{description:entry.description,origin:entry.origin,...audit},{merge:true});batch.set(db.collection('creatureBookEntries').doc('tharos'),{individualDescription:entry.individualDescription,rarity:entry.rarity,...audit});await batch.commit();}
+   else if(req.params.kind==='rill-species'){const batch=db.batch();batch.set(db.collection('creatureBookEntries').doc('rill'),{description:entry.description,origin:entry.origin,...audit},{merge:true});batch.set(db.collection('creatureBookEntries').doc('rill-species'),{individualDescription:'',rarity:entry.rarity,...audit});await batch.commit();}
    else await db.collection('creatureBookEntries').doc(req.params.kind).set({...entry,...audit});
    res.json(entry);
   }catch(e){res.status(500).send('Could not save creature information');}
