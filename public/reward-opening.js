@@ -20,9 +20,9 @@
   function present(result){
    const rewards=RewardCardArt.normalize(result);if(!rewards.length)throw Error('This pack has no reward cards.');
    cards=rewards.map((reward,i)=>{const info=RewardCardArt.describe(reward),card=el('article','reward-pack-card');card.dataset.kind=reward.kind;card.style.setProperty('--depth',i);card.dataset.depth=String(i);card.setAttribute('aria-hidden',String(i!==0));
-    const ornament=el('span','reward-card-ornament');ornament.setAttribute('aria-hidden','true');const amount=el('strong','reward-card-amount','?'+info.amount),group=el('span','reward-card-group',info.group),picture=el('div','reward-card-picture');
+    const ornament=el('span','reward-card-ornament');ornament.setAttribute('aria-hidden','true');const amount=el('strong','reward-card-amount',String(info.amount)),picture=el('div','reward-card-picture');
     if(info.image){const image=el('img');image.src=info.image;image.alt=info.name;image.onerror=()=>{picture.innerHTML=info.art;};picture.append(image);}else picture.innerHTML=info.art;
-    card.append(ornament,group,amount,picture,el('h3','reward-card-name',info.name),el('span','reward-card-footer','THE ISLAND COLLECTION'));stack.append(card);return card;});
+    card.append(ornament,amount,picture,el('h3','reward-card-name',info.name),el('span','reward-card-footer','THE ISLAND COLLECTION'));stack.append(card);return card;});
    phase='opening';d.dataset.phase=phase;status.textContent='Unsealing your treasures...';
    schedule(()=>{pack.hidden=true;stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();},reduced?0:650);
   }
@@ -34,8 +34,10 @@
   }
   function step(){if(closed||loading||busy)return;if(phase==='ready')return open();if(phase!=='cards')return;
    busy=true;const card=cards[index];card.classList.add('reward-card-departing');let finished=false;
-   const finish=()=>{if(finished||closed)return;finished=true;card.remove();index++;if(index===cards.length){completed=true;d.close();return;}cards.slice(index).forEach((next,i)=>{next.dataset.depth=String(i);next.style.setProperty('--depth',i);next.setAttribute('aria-hidden',String(i!==0));});busy=false;showStatus();};
-   card.addEventListener('animationend',event=>{if(event.target===card&&event.animationName==='reward-card-eject')finish();},{once:true});schedule(finish,reduced?0:550);
+   // Promote the next opaque card immediately, beneath the departing one.
+   index++;cards.slice(index).forEach((next,i)=>{next.dataset.depth=String(i);next.style.setProperty('--depth',i);next.setAttribute('aria-hidden',String(i!==0));});if(index<cards.length)showStatus();
+   const finish=()=>{if(finished||closed)return;finished=true;card.remove();if(index===cards.length){completed=true;d.close();return;}busy=false;};
+   card.addEventListener('animationend',event=>{if(event.target===card&&event.animationName==='reward-card-eject')finish();},{once:true});schedule(finish,reduced?0:320);
   }
   pack.onclick=event=>{event.stopPropagation();return step();};d.onclick=event=>{if(event.target.closest?.('.island-tools'))return;step();};
   d.addEventListener('keydown',event=>{if(event.target!==d||!['Enter',' '].includes(event.key))return;event.preventDefault();step();});

@@ -63,3 +63,11 @@ test('fox, snail and pocket dragon animal rewards stay in the companion inventor
  const update=rules.apply({stableAnimals:{tharos:1},rubyItems:{'pet:fox':1}},['fox','snail','dragon','talren'].map(id=>({kind:'animal',id,amount:2})));
  assert.deepEqual(update.stableAnimals,{tharos:1,talren:2});assert.equal(update.rubyItems['pet:fox'],3);assert.equal(update.rubyItems['pet:snail'],2);assert.equal(update.rubyItems['pet:dragon'],2);
 });
+
+test('admins can repeatedly claim with no cooldown while every request stays idempotent',async()=>{
+ const h=harness(true);const first=await h.invoke('post','/free-pack/claim',{requestId:'admin-first'});assert.equal(first.status,200);assert.equal(first.payload.nextAt,first.payload.claimedAt);
+ assert.equal((await h.invoke('get','/free-pack')).payload.canClaim,true);assert.equal((await h.invoke('get','/free-pack')).payload.nextAt,0);
+ const second=await h.invoke('post','/free-pack/claim',{requestId:'admin-second'});assert.equal(second.status,200);
+ const saved=structuredClone(h.records);const retry=await h.invoke('post','/free-pack/claim',{requestId:'admin-first'});assert.deepEqual(retry.payload,first.payload);assert.deepEqual(h.records,saved);
+ h.records['users/u'].isAdmin=false;assert.equal((await h.invoke('post','/free-pack/claim',{requestId:'not-admin-now'})).status,400);
+});
