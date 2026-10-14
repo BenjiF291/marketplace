@@ -18,7 +18,8 @@
   }
   if(!managed.has(image))managed.set(image,['mask-image','-webkit-mask-image'].map(property=>[property,image.style.getPropertyValue(property)]));
   const mask=new URL('assets/card-masks/'+encodeURIComponent(name)+'.svg?v='+hash.maskHash.slice(0,12),document.baseURI);
-  const value='url("'+mask.href+'")';
+  // Inline generated silhouettes are ready before paint and need no separate request.
+  const value='url("'+(hash.maskData||mask.href)+'")';
   image.style.setProperty('mask-image',value);image.style.setProperty('-webkit-mask-image',value);
   image.classList.add('card-image-cutout');
  }

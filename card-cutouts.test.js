@@ -7,6 +7,7 @@ test('all generated masks preserve card interiors and match unchanged source ima
  assert.ok(Object.keys(files).length>=70);let whiteRemoved=0;
  for(const [name,hash] of Object.entries(files)){const source=fs.readFileSync('public/images/'+name);assert.equal(crypto.createHash('sha256').update(source).digest('hex'),hash.sourceHash,name);const {w,h,pixels}=decode(source),mask=fs.readFileSync('public/assets/card-masks/'+name+'.svg','utf8'),kept=new Uint8Array(w*h);assert.ok(mask.includes(`viewBox="0 0 ${w} ${h}"`));
   assert.equal(crypto.createHash('sha256').update(mask).digest('hex'),hash.maskHash,name);
+  assert.equal(Buffer.from(hash.maskData.split(',')[1],'base64').toString('utf8'),mask,name+': inline mask matches generated silhouette');
   const crossings=Array.from({length:h},()=>[]);const path=mask.match(/ d="([^"]+)"/)[1];
   for(const contour of path.split('Z').filter(Boolean)){const points=[...contour.matchAll(/[ML](\d+) (\d+)/g)].map(m=>[Number(m[1]),Number(m[2])]);for(let i=0;i<points.length;i++){const [x,y]=points[i],[nx,ny]=points[(i+1)%points.length];assert.ok(x===nx||y===ny);if(x===nx)for(let row=Math.min(y,ny);row<Math.max(y,ny);row++)crossings[row].push(x);}}
   for(let y=0;y<h;y++){const edges=crossings[y].sort((a,b)=>a-b);assert.equal(edges.length%2,0);for(let i=0;i<edges.length;i+=2)kept.fill(1,y*w+edges[i],y*w+edges[i+1]);}
@@ -27,7 +28,7 @@ test('all generated masks preserve card interiors and match unchanged source ima
 test('display masks follow dynamic card images, preserve src, and leave unrelated images alone',()=>{
  let notify;const style=new Map(),classes=new Set(),image={src:'/images/Bronze_jan.png',getAttribute(){return this.src;},style:{getPropertyValue:k=>style.get(k)||'',setProperty:(k,v)=>style.set(k,v)},classList:{add:c=>classes.add(c),remove:c=>classes.delete(c)},nodeType:1,matches:s=>s==='img',querySelectorAll:()=>[]};
  const window={CardMaskFiles:files,addEventListener(){}};const env={window,URL,WeakMap,Set,Object,API_URL:'https://api.example.com',location:{origin:'https://game.example.com'},document:{baseURI:'https://game.example.com/index.html',body:{},querySelectorAll:()=>[image]},MutationObserver:class{constructor(fn){notify=fn;}observe(){}disconnect(){}}};
- vm.runInNewContext(fs.readFileSync('public/card-cutouts.js','utf8'),env);assert.equal(image.src,'/images/Bronze_jan.png');assert.ok(classes.has('card-image-cutout'));assert.ok(style.get('mask-image').includes('Bronze_jan.png.svg'));
+ vm.runInNewContext(fs.readFileSync('public/card-cutouts.js','utf8'),env);assert.equal(image.src,'/images/Bronze_jan.png');assert.ok(classes.has('card-image-cutout'));assert.equal(style.get('mask-image'),'url("'+files['Bronze_jan.png'].maskData+'")');
  image.src='/assets/creatures/tharos-poster.png';notify([{type:'attributes',target:image}]);assert.equal(classes.has('card-image-cutout'),false);assert.equal(style.get('mask-image'),'');
  image.src='https://unrelated.example/images/Bronze_jan.png';window.CardCutouts.attach(image);assert.equal(classes.has('card-image-cutout'),false);
  image.src='https://api.example.com/images/Bronze_jan.png';notify([{type:'childList',addedNodes:[image]}]);assert.ok(classes.has('card-image-cutout'));

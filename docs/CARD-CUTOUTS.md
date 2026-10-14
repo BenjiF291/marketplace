@@ -10,4 +10,6 @@ Generate or refresh the masks after adding or replacing local card images:
 
 The generator reads PNGs and writes `public/assets/card-masks/*.svg` plus `public/card-mask-files.js`. Outside-connected transparent and neutral off-white pixels are separated from the artwork. A small silhouette cleanup removes isolated matte debris and one-pixel connections to border noise; the main card is then traced as a continuous outline, avoiding scanline seams. Interior colors and white lettering stay in the original image. Existing transparent cards without white surrounds need no generated mask. The manifest stores both source and generated-mask hashes. Mask URLs use the mask hash, so a regenerated outline refreshes browser caches even when its source PNG has not changed.
 
+The final pass trims one pale matte pixel at the silhouette boundary. The manifest also embeds each SVG as a data URL, eliminating extra mask requests and stale independently cached masks. Reward cards attach the mask before insertion; the observer handles other collection images.
+
 Deploy the manifest, masks, display script, and stylesheet together. Run `node --test --test-isolation=none card-cutouts.test.js` to verify source hashes, preservation of the central artwork and protected interior pixels, and handling of dynamically displayed card images.
