@@ -1,4 +1,4 @@
-﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn','fenra','veyrin','tharos','talren']);
+﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn','fenra','veyrin','tharos','talren','northern-talren']);
 const RARITIES=new Set(['','common','rare','epic','legendary','unique']);
 function validateEntry(body,kind){
  if(!KINDS.has(kind))throw Error('Unknown creature');
