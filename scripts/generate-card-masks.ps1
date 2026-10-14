@@ -46,14 +46,18 @@ public static class CardMaskGenerator {
    }
    if(largest.Count<count*.2)return false;
    var clean=new bool[count];foreach(int at in largest){int x=at%w,y=at/w;for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++){int nx=x+dx,ny=y+dy;if(nx>=0&&nx<w&&ny>=0&&ny<h&&!outside[ny*w+nx])clean[ny*w+nx]=true;}}
-   // Trim the last pale antialiased matte pixel along the outside silhouette.
-   // Work from a snapshot so this cannot eat into white lettering or light card faces.
-   var trimmed=(bool[])clean.Clone();
-   for(int y=1;y<h-1;y++)for(int x=1;x<w-1;x++){
-    int at=y*w+x;if(!clean[at])continue;
-    int p=y*stride+x*4,low=Math.Min(pixels[p],Math.Min(pixels[p+1],pixels[p+2])),high=Math.Max(pixels[p],Math.Max(pixels[p+1],pixels[p+2]));
-    if(low<205||high-low>20)continue;
-    for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++)if(!clean[at+dy*w+dx])trimmed[at]=false;
+   // Deliberately crop into the card itself, including its outer printed frame.
+   // Color-based fringe removal left pale lines behind. A uniform inset removes
+   // those lines even when the matte is tinted or blended with the original border.
+   int inset=Math.Max(3,(int)Math.Ceiling(Math.Min(w,h)*.018));
+   var trimmed=new bool[count];
+   for(int y=inset;y<h-inset;y++)for(int x=inset;x<w-inset;x++){
+    int at=y*w+x;if(!clean[at])continue;bool keep=true;
+    for(int dy=-inset;dy<=inset&&keep;dy++)for(int dx=-inset;dx<=inset;dx++){
+     if(dx*dx+dy*dy>inset*inset)continue;
+     if(!clean[at+dy*w+dx]){keep=false;break;}
+    }
+    trimmed[at]=keep;
    }
    for(int i=0;i<count;i++)outside[i]=!trimmed[i];
    // Trace continuous boundaries instead of hundreds of one-pixel rectangles.

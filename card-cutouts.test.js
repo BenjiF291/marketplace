@@ -14,11 +14,13 @@ test('all generated masks preserve card interiors and match unchanged source ima
 
   const rowBounds=Array.from({length:h},(_,y)=>{let left=0,right=w-1;while(left<w&&!kept[y*w+left])left++;while(right>=0&&!kept[y*w+right])right--;return [left,right];});
   const background=(x,y)=>{const at=(y*w+x)*4;if(!pixels[at+3])return true;const low=Math.min(pixels[at],pixels[at+1],pixels[at+2]),high=Math.max(pixels[at],pixels[at+1],pixels[at+2]);return low>=242&&high-low<=10;};
+  // The outer printed frame is intentionally cropped along with the matte.
+  const edgeAllowance=Math.max(3,Math.ceil(Math.min(w,h)*.018))+2;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!pixels[i*4+3])continue;if(background(x,y)&&!kept[i])whiteRemoved++;
    // All central artwork (including white lettering) must remain fully visible.
    if(x>=w*.3&&x<w*.7&&y>=h*.25&&y<h*.75&&kept[i]!==1)assert.fail(name+': central artwork removed at '+i);
-   if(kept[i]||background(x,y)||Math.min(pixels[i*4],pixels[i*4+1],pixels[i*4+2])>=220||x<rowBounds[y][0]+2||x>rowBounds[y][1]-2||y<2||y>=h-2)continue;
-   let interior=true;for(let dy=-2;dy<=2&&interior;dy++)for(let dx=-2;dx<=2;dx++)if(background(x+dx,y+dy)){interior=false;break;}
+   if(kept[i]||background(x,y)||Math.min(pixels[i*4],pixels[i*4+1],pixels[i*4+2])>=220||x<rowBounds[y][0]+edgeAllowance||x>rowBounds[y][1]-edgeAllowance||y<edgeAllowance||y>=h-edgeAllowance)continue;
+   let interior=true;for(let dy=-edgeAllowance;dy<=edgeAllowance&&interior;dy++)for(let dx=-edgeAllowance;dx<=edgeAllowance;dx++)if(background(x+dx,y+dy)){interior=false;break;}
    if(interior)assert.fail(name+': interior artwork removed at '+i);
   }
 
