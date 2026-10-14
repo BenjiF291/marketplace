@@ -58,3 +58,5 @@
 .creature-book-card[data-obtained=false] .creature-card-art img{opacity:.48;filter:grayscale(.58) saturate(.65) drop-shadow(0 5px 3px #58301822)}
 
 .creature-book-gallery-heading{flex-wrap:wrap}.creature-sort-toggle{padding:8px 13px;border:1px solid #967044;border-radius:8px;background:linear-gradient(#f8e4b6,#d7b77c);color:#53391e;box-shadow:inset 0 1px #fff3cd,0 2px 4px #673b1b22;font:13px Georgia,serif;cursor:pointer;white-space:nowrap}.creature-sort-toggle:hover{background:#f6dfaa}.creature-sort-toggle:focus-visible{outline:3px solid #98733f;outline-offset:3px}
+
+.creature-sort-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.creature-sort-toggle[aria-pressed=true]{background:linear-gradient(#4d6c51,#2d4c3a);border-color:#a18a52;color:#fff0bc;box-shadow:inset 0 1px #cbd4a533,0 2px 4px #673b1b22}.creature-sort-toggle[aria-pressed=true]:hover{background:#4d6c51}
