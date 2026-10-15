@@ -2,13 +2,10 @@ const rules=require('./free-pack');
 const fs=require('node:fs'),path=require('node:path');
 module.exports=(app,db,authenticate)=>{
  const configRef=db.collection('gameSettings').doc('freePack');
- const rarities=new Set(['common','rare','epic','legendary','unique']);
+ const catalog=()=>module.exports.catalog(db);
  const entriesFrom=snapshot=>Object.fromEntries(snapshot.docs.map(doc=>[doc.id,doc.data()]));
+ const rarities=new Set(['common','rare','epic','legendary','unique']);
  function rarityFor(kind,id,entries){const creature=kind==='animal'?id:kind==='rubyItem'&&id.startsWith('pet:')?id.slice(4):null;return creature?(rarities.has(entries[creature]?.rarity)?entries[creature].rarity:'unassigned'):null;}
- async function catalog(){
-  const [packs,tiers,creatures]=await Promise.all([db.collection('packs').get(),db.collection('ascendTiers').get(),db.collection('creatureBookEntries').get()]);const entries=entriesFrom(creatures);
-  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name,gemKey})=>({id,name,gemKey})),pack:packs.docs.filter(doc=>doc.data().cardIds?.length).map(doc=>({id:doc.id,name:doc.data().name||doc.id})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
- }
  const route=(method,url,admin,handler)=>app[method](url,async(req,res)=>{
   let id;try{id=await authenticate(req);}catch(error){return res.status(401).send(error.message);}
   try{if(admin){const user=await db.collection('users').doc(id).get();if(user.data()?.isAdmin!==true)return res.status(403).send('Admin access required.');}res.json(await handler(id,req.body||{}));}catch(error){res.status(400).send(error.message);}
@@ -41,10 +38,21 @@ module.exports=(app,db,authenticate)=>{
     const pack=packDocs.get(reward.id)?.data();if(reward.kind==='pack'&&!pack?.cardIds?.length)throw Error('A configured reward pack is no longer available.');
     for(let i=0;i<reward.amount;i++)tx.set(db.collection('items').doc(),{name:reward.kind==='pack'?pack.name:`Card ${reward.id}`,itemType:reward.kind,packId:reward.kind==='pack'?reward.id:null,packColor:pack?.color||null,imageUrl:reward.kind==='card'?`/images/${reward.id}`:null,price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,sourceItemId:null,source:'free-pack',purchasedAt:new Date(now),createdAt:new Date(now)});
    }
-   const receipt={requestId:body.requestId,name:config.name,rewards,claimedAt:now,nextAt:user.isAdmin===true?now:now+config.cooldownHours*3600000};
+   const receipt={requestId:body.requestId,name:config.name,appearance:config.appearance,rewards,claimedAt:now,nextAt:user.isAdmin===true?now:now+config.cooldownHours*3600000};
    tx.set(claimRef,receipt);
    tx.update(userRef,{...rules.apply(user,rewards),...require('./town-hall-progress').gameplay(user,'pack'),freePackLastClaimAt:now,freePackReceipt:receipt});
    return receipt;
   });
  });
+};
+
+module.exports.catalog=async function(db){
+ const rarities=new Set(['common','rare','epic','legendary','unique']);
+ const entriesFrom=snapshot=>Object.fromEntries(snapshot.docs.map(doc=>[doc.id,doc.data()]));
+ function rarityFor(kind,id,entries){const creature=kind==='animal'?id:kind==='rubyItem'&&id.startsWith('pet:')?id.slice(4):null;return creature?(rarities.has(entries[creature]?.rarity)?entries[creature].rarity:'unassigned'):null;}
+ async function catalog(){
+  const [packs,tiers,creatures]=await Promise.all([db.collection('packs').get(),db.collection('ascendTiers').get(),db.collection('creatureBookEntries').get()]);const entries=entriesFrom(creatures);
+  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name,gemKey})=>({id,name,gemKey})),pack:packs.docs.filter(doc=>doc.data().cardIds?.length).map(doc=>({id:doc.id,name:doc.data().name||doc.id})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
+ }
+ return catalog();
 };

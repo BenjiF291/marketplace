@@ -9,7 +9,9 @@ if (!userId) {
 let currentUserId = userId;
 
 // Determine API URL based on environment
-const API_URL = 'https://marketplace-aw8b.onrender.com';  // Production Render URL
+const API_URL = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+  ? 'http://localhost:3000'
+  : 'https://marketplace-aw8b.onrender.com';
 
 let isServerOnline = true;
 let currentView = 'marketplace';
@@ -1778,7 +1780,7 @@ async function loadPacks() {
       option.textContent = `${pack.name} (${pack.cardIds.length} cards)`;
       select.appendChild(option);
 
-      if (pack.createdBy === currentUserId) {
+      if (currentUserIsAdmin) {
         const editorOption = document.createElement('option');
         editorOption.value = pack.id;
         editorOption.textContent = `${pack.name} (${pack.cardIds.length} cards)`;
@@ -1789,6 +1791,7 @@ async function loadPacks() {
       item.textContent = `${pack.name}: ${pack.cardIds.length} possible card${pack.cardIds.length === 1 ? '' : 's'}`;
       list.appendChild(item);
     });
+    updatePackBuilderPreview();
     populateDirectListingProducts();
   } catch (error) {
     console.error('Error loading packs:', error);
@@ -1861,6 +1864,10 @@ async function createDirectMarketplaceListing() {
   }
 }
 
+let builderRewardCards=[];
+function updatePackBuilderPreview(){const box=document.getElementById('packBuilderPreview');if(box&&window.RewardOpening)box.replaceChildren(window.RewardOpening.cover(document.getElementById('packName').value,{base:document.getElementById('packColor').value,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value}));const status=document.getElementById('packRewardSummary');if(status)status.textContent=builderRewardCards.length+' extra reward cards per opening';}
+async function editBuilderRewards(){try{await window.FreePack.editRewards(builderRewardCards,cards=>{builderRewardCards=cards;updatePackBuilderPreview();});}catch(error){alert(error.message);}}
+function clearBuilderRewards(){builderRewardCards=[];updatePackBuilderPreview();}
 function loadPackForEditing() {
   const packId = document.getElementById('packEditorSelect').value;
   const nameInput = document.getElementById('packName');
@@ -1873,6 +1880,13 @@ function loadPackForEditing() {
   });
   nameInput.value = pack ? pack.name : '';
   colorInput.value = pack ? (pack.color || '#667eea') : '#667eea';
+  document.getElementById('packAccent').value=pack?.appearance?.accent||colorInput.value;
+  document.getElementById('packTrim').value=pack?.appearance?.trim||'#ffe1a0';
+  colorInput.value=pack?.appearance?.base||colorInput.value;
+  document.getElementById('packShopEnabled').checked=pack?.shop?.enabled===true;
+  document.getElementById('packShopPrice').value=pack?.shop?.price||10;
+  document.getElementById('packShopCurrency').value=pack?.shop?.currency||'footy';
+  builderRewardCards=structuredClone(pack?.rewardCards||[]);updatePackBuilderPreview();
   saveButton.textContent = pack ? 'Save Pack Changes' : 'Save New Pack';
 }
 
@@ -1889,7 +1903,7 @@ async function savePack() {
     const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {
       method: packId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ name, cardIds, color })
+      body: JSON.stringify({ name, cardIds, color, appearance:{base:color,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value},rewardCards:builderRewardCards,shop:{enabled:document.getElementById('packShopEnabled').checked,price:Number(document.getElementById('packShopPrice').value),currency:document.getElementById('packShopCurrency').value} })
     });
     if (!res.ok) return alert(await res.text());
     await loadPacks();
@@ -2185,7 +2199,8 @@ async function openPackQueue(ids,compass=null,pack=null){
   for(const itemId of ids){
    const item=pack||inventoryPacks.find(p=>p.id===itemId)||{};
    const request=async body=>{const res=await fetch(`${API_URL}/open-pack`,{method:'POST',headers:resourceHeaders(),body:JSON.stringify({itemId,...body})});if(!res.ok)throw Error(await res.text());return res.json();};
-   const completed=await new Promise(resolve=>window.playSpecialPackOpening({packName:item.name||'Pack',packColor:item.packColor},document.body.dataset.rubyOpening,{
+   let design={};if(item.packId){try{const response=await fetch(API_URL+'/pack-design/'+encodeURIComponent(item.packId));if(response.ok)design=await response.json();}catch{}}
+   const completed=await new Promise(resolve=>window.playSpecialPackOpening({packName:design.name||item.name||'Pack',appearance:design.appearance,packColor:design.color||item.packColor},document.body.dataset.rubyOpening,{
     bulk:ids.length>1,autoStart:ids.length>1&&itemId!==ids[0],
     open:()=>request(compass?{compass}:{}),
     choose:async choices=>{const choice=await window.chooseRubyPackCard(choices);return choice===undefined?null:request({choice});},

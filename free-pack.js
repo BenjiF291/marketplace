@@ -10,7 +10,7 @@ function defaults(){return {name:'Daily Discovery Pack',enabled:true,cooldownHou
 function validate(value,catalog){
  if(!value||typeof value.name!=='string'||!value.name.trim()||value.name.length>80||typeof value.enabled!=='boolean')throw Error('Enter a pack name and enabled setting.');
  if(!Number.isFinite(value.cooldownHours)||value.cooldownHours<1||value.cooldownHours>168)throw Error('Cooldown must be between 1 and 168 hours.');
- if(!Array.isArray(value.cards)||value.cards.length!==5)throw Error('The pack needs exactly five cards.');
+ if(!Array.isArray(value.cards)||value.cards.length<1||value.cards.length>30)throw Error('Use between 1 and 30 reward cards.');
  const cards=value.cards.map((card,index)=>{
   if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>50)throw Error(`Card ${index+1} needs a title and 1?50 reward options.`);
   let sum=0;const options=card.options.map(option=>{
@@ -24,7 +24,11 @@ function validate(value,catalog){
   if(Math.abs(sum-100)>.000001)throw Error(`Card ${index+1} chances must total 100% (currently ${sum}%).`);
   return {title:card.title.trim(),options};
  });
- return {name:value.name.trim(),enabled:value.enabled,cooldownHours:value.cooldownHours,cards};
+ const inventoryWrites=cards.reduce((sum,card)=>sum+Math.max(...card.options.map(o=>['pack','card'].includes(o.kind)?o.max:0)),0);
+ if(inventoryWrites>400)throw Error('Reduce collection card or pack quantities: at most 400 inventory items per claim.');
+ const appearance={base:'#75432b',accent:'#cf9859',trim:'#ffe1a0'};
+ for(const key of Object.keys(appearance))if(value.appearance?.[key]!==undefined){if(typeof value.appearance[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(value.appearance[key]))throw Error('Choose valid pack colors.');appearance[key]=value.appearance[key];}
+ return {name:value.name.trim(),enabled:value.enabled,cooldownHours:value.cooldownHours,cards,appearance};
 }
 function draw(config,random=randomInt){return config.cards.map((card,index)=>{
  const roll=random(1000000)/10000;let sum=0,selected;

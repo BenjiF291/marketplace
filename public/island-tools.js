@@ -17,7 +17,7 @@
   toggle.onclick=()=>{actions.hidden=!actions.hidden;toggle.textContent=actions.hidden?'>':'<';toggle.setAttribute('aria-expanded',String(!actions.hidden));toggle.setAttribute('aria-label',actions.hidden?'Expand island tools':'Retract island tools');};
   const action=(picture,name,fn)=>{const b=el('button','island-tool-action');b.type='button';b.setAttribute('aria-label',name);const visual=el('span','island-tool-art');visual.innerHTML=icon(picture);b.append(visual,el('span','island-tool-label',name));b.onclick=fn;actions.append(b);return b;};
   actions.append(launcher);
-  const pack=action('pack','Daily pack',()=>FreePack.open());pack.id='freePackLauncher';
+  const pack=action('pack','Pack shop',()=>window.PackShop.open());pack.id='freePackLauncher';
   async function islandAction(id){try{if(!document.querySelector('#villageMap[open]'))await Island.show();const source=document.getElementById(id);if(source&&!source.hidden&&!source.disabled)source.click();}catch(error){console.error(error);}}
   action('village','Arrange village',()=>islandAction('arrangeVillageButton'));
   action('profile','Profile',()=>PlayerProfile.open());

@@ -8,7 +8,21 @@
     else if(info.image){const image=el('img');image.loading='lazy';image.src=info.image;image.alt=info.name;image.onerror=()=>{picture.innerHTML=info.art;};if(window.CardCutouts)window.CardCutouts.attach(image);picture.append(image);}else picture.innerHTML=info.art;
     if(info.creature){card.dataset.rarity=info.rarity;const ribbon=el('span','reward-card-rarity-ribbon');ribbon.setAttribute('role','img');ribbon.setAttribute('aria-label',info.rarity==='unassigned'?'Rarity unassigned':info.rarity+' rarity');card.append(ribbon);}
     card.append(ornament,amount,picture,el('h3','reward-card-name',info.name));return card;}
- window.RewardOpening={card:createCard,play(options){
+ const defaultColors={base:'#75432b',accent:'#cf9859',trim:'#ffe1a0'};
+ function applyPackColors(node,appearance={}){for(const [key,fallback] of Object.entries(defaultColors)){const value=appearance?.[key];node.style.setProperty('--wrapper-'+key,/^#[0-9a-f]{6}$/i.test(value||'')?value:fallback);}}
+ function cover(name,appearance){const shell=el('div','pack-design-preview');applyPackColors(shell,appearance);shell.append(el('span','pack-design-kicker','ISLAND TREASURES'),el('span','pack-design-jewel','\u2726'),el('strong','pack-design-title',name||'Your pack'),el('span','pack-design-caption','COLLECT / DISCOVER / ENJOY'));return shell;}
+ function decorateDaily(pack){
+   pack.classList.add('reward-opening-pack-daily');
+   const collage=el('span','reward-wrapper-collage');collage.setAttribute('aria-hidden','true');
+   const animal=window.StableAnimals?.animals?.find(a=>!['snail','fox','dragon'].includes(a.id));
+   const examples=[{kind:'card',id:'Genious_ben.png',amount:1},{kind:'boost',id:'skip',amount:1},{kind:'rubyItem',id:'compass:rare',label:'Compass',amount:1},{kind:'pack',id:'Discovery pack',amount:1},{kind:'amulet',id:'bronze',label:'Ruby amulet',gemKey:'bronze',amount:1},{kind:'animal',id:animal?.id||'fox',label:animal?.name||'Fox',rarity:animal?.rarity||'rare',amount:1},{kind:'footy',amount:12},{kind:'gem',id:'rare-bronze',amount:5},{kind:'gem',id:'bronze',amount:15}];
+   examples.forEach((reward,i)=>{const slot=el('span','reward-wrapper-sample');slot.dataset.sample=String(i);slot.append(createCard(reward));collage.append(slot);});
+   pack.querySelector('.reward-wrapper-face').append(collage);
+   pack.querySelector('.reward-wrapper-brand').textContent='YOUR DAILY DISCOVERY';
+
+ }
+ function dailyCover(name){const pack=el('div','reward-opening-pack'),face=el('span','reward-wrapper-face');face.append(el('span','reward-wrapper-brand'),el('span','reward-wrapper-name',name),el('span','reward-wrapper-caption','A LITTLE WONDER INSIDE'));pack.append(face);decorateDaily(pack);return pack;}
+ window.RewardOpening={card:createCard,cover,dailyCover,play(options){
   active?.close();const previous=document.activeElement,d=el('dialog','reward-opening');active=d;d.dataset.phase='ready';d.dataset.theme=['embers','aurora'].includes(options.theme)?options.theme:'standard';d.setAttribute('aria-label',options.name||'Open your pack');
   const timers=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let phase='ready',loading=false,busy=false,closed=false,completed=false,index=0,cards=[];
   const schedule=(fn,delay)=>{const timer=setTimeout(()=>{timers.delete(timer);if(!closed)fn();},delay);timers.add(timer);return timer;};
@@ -20,26 +34,10 @@
   pack.innerHTML='<span class="reward-wrapper-seam seam-top"></span><span class="reward-wrapper-face"><span class="reward-wrapper-brand">THE ISLAND COLLECTION</span><span class="reward-wrapper-emblem" aria-hidden="true"><svg viewBox="0 0 160 160"><path d="m80 9 56 33v70l-56 35-56-35V42Z" fill="#d9b46e"/><path d="m80 18 47 29v60l-47 30-47-30V47Z" fill="#244f47"/><path d="m43 100 37-54 38 54Z" fill="#9bb084"/><path d="m80 46 13 19-13-5-11 8Z" fill="#f5ddb0"/><path d="m44 111 72-1m-58 9h45" stroke="#d9b46e" stroke-width="3"/><path d="m80 28 3 7 8 2-8 3-3 7-3-7-8-3 8-2Z" fill="#f4dca0"/></svg></span><strong class="reward-wrapper-name"></strong><span class="reward-wrapper-caption">A LITTLE WONDER INSIDE</span></span><span class="reward-wrapper-seam seam-bottom"></span>';
   // Keep names as text, including admin-authored names.
   pack.querySelector('.reward-wrapper-name').textContent=options.name||'Discovery Pack';
-  if(options.daily){
-   pack.classList.add('reward-opening-pack-daily');
-   const collage=el('span','reward-wrapper-collage');collage.setAttribute('aria-hidden','true');
-   const animal=window.StableAnimals?.animals?.find(a=>a.id!=='snail'&&a.id!=='fox'&&a.id!=='dragon');
-   // Illustrative cover art, independent of the five rewards drawn on opening.
-   const examples=[
-    {kind:'card',id:'Genious_ben.png',amount:1},
-    {kind:'boost',id:'skip',amount:1},
-    {kind:'rubyItem',id:'compass:rare',label:'Compass',amount:1},
-    {kind:'pack',id:'Discovery pack',amount:1},
-    {kind:'amulet',id:'bronze',label:'Ruby amulet',gemKey:'bronze',amount:1},
-    {kind:'animal',id:animal?.id||'fox',label:animal?.name||'Fox',rarity:animal?.rarity||'rare',amount:1},
-    {kind:'footy',amount:12},
-    {kind:'gem',id:'rare-bronze',amount:5},
-    {kind:'gem',id:'bronze',amount:15}
-   ];
-   examples.forEach((reward,i)=>{const slot=el('span','reward-wrapper-sample');slot.dataset.sample=String(i);slot.append(createCard(reward));collage.append(slot);});
-   pack.querySelector('.reward-wrapper-face').append(collage);
-   pack.querySelector('.reward-wrapper-brand').textContent='YOUR DAILY DISCOVERY';
-   pack.querySelector('.reward-wrapper-caption').textContent='FIVE LITTLE SURPRISES';
+  if(options.daily){decorateDaily(pack);
+  }else{
+   pack.classList.add('reward-opening-pack-designed');applyPackColors(pack,options.appearance);
+   pack.querySelector('.reward-wrapper-face').append(cover(options.name,options.appearance));
   }
   const stack=el('div','reward-opening-stack');stack.hidden=true;stage.append(halo,pack,stack);
   const status=el('p','reward-opening-status','Tap the pack to open');status.setAttribute('role','status');status.setAttribute('aria-live','polite');const progress=el('p','reward-opening-progress');

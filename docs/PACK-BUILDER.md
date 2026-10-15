@@ -1,0 +1,15 @@
+# Regular pack builder
+
+Admin control → Pack Builder edits any regular saved pack, including packs created by another admin. Daily packs use their separate editor and retain their overlapping reward-card cover.
+
+Choose a pack, edit its name, pack color, accent, and foil/lettering colors. The preview matches the wrapper used when opening that pack. The original card picker remains the pool for the guaranteed collection card.
+
+Enable **Show in the pack shop** and set a positive price and currency to publish a regular pack in the toolbar shop. Disable it to withdraw future sales. The daily pack always appears there as Free with its existing cooldown. These offers do not require marketplace stock listings.
+
+Each pack has a small information button showing numbered reward-card tabs, reward images, amount ranges, and probabilities from the saved configuration. The first card of a regular pack uses equal odds across its collection-card pool. Extra cards and daily-pack cards use their configured weights. Shop purchases debit the selected wallet and create an inventory pack atomically; retrying the same purchase request does not charge again. The price is checked again before charging. A successful purchase starts the normal opening flow.
+
+Edit extra rewards opens the weighted reward editor. Add up to 30 additional reward cards, with up to 50 options each, covering currencies, boosts, animals, shop items, amulets, collection cards and packs. Each additional card draws one option; its chances must total 100%. Apply rewards to builder stages the changes. Save Pack Changes publishes the design, pool, and extra rewards together. Clear extra rewards restores single-card openings after saving.
+
+The extra-reward editor also has **Saved extra rewards**. Enter a preset name and save the current set, or use **Save card as preset** on an individual card. Choose a saved preset and either append its cards or replace the current draft. Apply the rewards and save the pack as usual. Presets are shared among admins and stored in Firestore, and preserve quantities and chances. Loading creates a copy; later edits do not change the preset or other packs. Presets are available only in the regular pack builder, leaving the daily pack editor unchanged.
+
+Opening awards the original collection card, additional configured rewards, and existing amulet bonuses in one transaction and consumes the pack. Existing packs without extra rewards retain their original behavior. The current saved design is used for unopened packs, including packs granted before their design was edited. Daily pack settings are not changed when regular packs are saved.

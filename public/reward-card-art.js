@@ -41,7 +41,7 @@
   const creature=reward.kind==='animal'||reward.kind==='rubyItem'&&reward.id?.startsWith('pet:');const rarity=['common','rare','epic','legendary','unique'].includes(reward.rarity)?reward.rarity:'unassigned';
   return {name,group,image,art:itemArt||svg(body),amount:reward.amount||1,creature,rarity,imageFrame:creature?creatureFrame(animal):null};
  }
- function normalize(result){if(result.rewards)return result.rewards;const rewards=[{kind:'card',id:result.cardId||'New card',imageUrl:result.imageUrl,amount:1}];if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});return rewards;}
+ function normalize(result){if(result.rewards)return result.rewards;const rewards=[{kind:'card',id:result.cardId||'New card',imageUrl:result.imageUrl,amount:1}];rewards.push(...(result.extraRewards||[]));if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});return rewards;}
  function samples(catalog){
   const groups=[['gem','Gem currencies'],['footy','Footy'],['boost','Time boosts'],['animal','Animals'],['rubyItem','Shop items'],['amulet','Amulets'],['card','Collection cards'],['pack','Collection packs']];
   return groups.map(([kind,title])=>{const entries=kind==='footy'?[{id:'',name:'Footy'}]:catalog[kind]||[];

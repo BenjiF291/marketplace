@@ -14,7 +14,7 @@ test('weighted draws honor boundaries, zero chances, and inclusive ranges',()=>{
  config.cards[0].options[0].chance=0;config.cards[0].options[1].chance=40;assert.equal(rules.draw(config,()=>0)[0].kind,'footy');
 });
 test('admin config rejects invalid chances, quantities and unknown items',()=>{
- for(const change of [c=>c.cards.pop(),c=>c.cards[0].options[0].chance=21,c=>c.cards[0].options[0].min=2.5,c=>c.cards[0].options[0].id='missing',c=>c.cooldownHours=0]){const c=rules.defaults();change(c);assert.throws(()=>rules.validate(c,catalog));}
+ for(const change of [c=>c.cards=[],c=>c.cards=Array(31).fill(c.cards[0]),c=>c.cards[0].options[0].chance=21,c=>c.cards[0].options[0].min=2.5,c=>c.cards[0].options[0].id='missing',c=>c.cooldownHours=0]){const c=rules.defaults();change(c);assert.throws(()=>rules.validate(c,catalog));}
 });
 test('awards aggregate into real wallets and boost inventories without changing the original user',()=>{
  const user={balance:5,gems:{bronze:2,'rare-bronze':1},timeBoosts:{skip:1}};
@@ -83,4 +83,14 @@ test('creature ribbons receive book rarity in the admin gallery, new claims and 
 test('amulet tier metadata survives admin catalogue reads and pack settlement',async()=>{
  const h=harness(true);h.records['ascendTiers/random-gold-id']={name:'Gold',order:4};const admin=await h.invoke('get','/admin/free-pack');const item=admin.payload.catalog.amulet.find(a=>a.gemKey==='gold');assert.ok(item);
  const config=rules.defaults();config.cards[4].options=[{kind:'amulet',id:item.id,min:1,max:1,chance:100}];assert.equal((await h.invoke('put','/admin/free-pack',config)).status,200);const claim=await h.invoke('post','/free-pack/claim',{requestId:'gold-amulet'});assert.equal(claim.status,200);assert.equal(claim.payload.rewards[4].gemKey,'gold');assert.equal(h.records['users/u'].amulets[item.id],1);
+});
+
+
+test('admin pack colors are validated, persisted and included in claims',async()=>{
+ const h=harness(true),config=rules.defaults();config.name='Bronze';config.appearance={base:'#693d22',accent:'#c48b52',trim:'#ffe5b0'};
+ assert.equal((await h.invoke('put','/admin/free-pack',config)).status,200);
+ assert.deepEqual((await h.invoke('get','/admin/free-pack')).payload.config.appearance,config.appearance);
+ const claim=await h.invoke('post','/free-pack/claim',{requestId:'bronze-colors'});assert.equal(claim.payload.name,'Bronze');assert.deepEqual(claim.payload.appearance,config.appearance);
+ config.appearance.base='url(unsafe)';assert.equal((await h.invoke('put','/admin/free-pack',config)).status,400);
+ const normal=harness();assert.equal((await normal.invoke('put','/admin/free-pack',rules.defaults())).status,403);
 });

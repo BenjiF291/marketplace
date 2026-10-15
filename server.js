@@ -31,7 +31,8 @@ app.use((req, res, next) => {
   ];
 
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin) || !origin) {
+  const localOrigin = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(origin || '');
+  if (allowedOrigins.includes(origin) || localOrigin || !origin) {
     res.header('Access-Control-Allow-Origin', origin || '*');
   }
 
@@ -1524,6 +1525,7 @@ app.post('/ascend-tier-assignment', async (req, res) => {
 });
 
 /* ------------------ PACKS ------------------ */
+app.get('/pack-design/:packId',async(req,res)=>{try{const doc=await db.collection('packs').doc(req.params.packId).get();if(!doc.exists)return res.status(404).send('Pack not found');const pack=doc.data();res.json({name:pack.name,color:pack.color||'#667eea',appearance:pack.appearance||null});}catch{res.status(400).send('Could not load pack design');}});
 app.get('/packs', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || !(await userIsAdmin(requesterId))) {
@@ -1565,10 +1567,12 @@ app.post('/packs', async (req, res) => {
   }
 
   try {
+    const extras=require('./pack-builder').validate(req.body,await require('./free-pack-routes').catalog(db));
     const pack = await db.collection('packs').add({
       name: name.trim(),
       cardIds: cards,
       color: color || '#667eea',
+      ...extras,
       createdBy: requesterId,
       createdAt: new Date()
     });
@@ -1608,9 +1612,10 @@ app.put('/packs/:packId', async (req, res) => {
     const packRef = db.collection('packs').doc(packId);
     const packDoc = await packRef.get();
     if (!packDoc.exists) return res.status(404).send('Pack not found');
-    if (packDoc.data().createdBy !== requesterId) return res.status(403).send('You can only edit packs you created');
 
-    await packRef.update({ name: name.trim(), cardIds: cards, color: color || '#667eea', updatedAt: new Date() });
+
+    const extras=require('./pack-builder').validate(req.body,await require('./free-pack-routes').catalog(db));
+    await packRef.update({ name: name.trim(), cardIds: cards, color: color || '#667eea', ...extras, updatedAt: new Date() });
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating pack:', error);
@@ -1683,6 +1688,7 @@ app.post('/open-pack', async (req, res) => {
   const packGemRoll=crypto.randomInt(100);
   try {
     if(req.body.compass || req.body.choice)await brawlAuth.authenticate(req);
+    const rewardCatalog=await require('./free-pack-routes').catalog(db);
     const result = await db.runTransaction(async transaction => {
       const packItemRef = db.collection('items').doc(itemId);
       const packItemDoc = await transaction.get(packItemRef);
@@ -1715,10 +1721,15 @@ app.post('/open-pack', async (req, res) => {
         transaction.update(packItemRef,{pendingPackChoices:picks});
         return {choices:picks,packColor:packItem.packColor||pack.color};
       }
+      const extraRewards=require('./pack-builder').draw(pack,rewardCatalog),extraPacks=new Map();
+      for(const reward of extraRewards)if(reward.kind==='pack'&&!extraPacks.has(reward.id)){const doc=await transaction.get(db.collection('packs').doc(reward.id));if(!doc.exists||!doc.data().cardIds?.length)throw Error('A reward pack is unavailable');extraPacks.set(reward.id,doc.data());}
+      const rewardUpdate=require('./free-pack').apply(opener.data(),extraRewards);
+      for(const reward of extraRewards)if(['card','pack'].includes(reward.kind))for(let i=0;i<reward.amount;i++){const meta=extraPacks.get(reward.id);transaction.set(db.collection('items').doc(),{name:meta?.name||('Card '+reward.id),itemType:reward.kind,packId:meta?reward.id:null,packColor:meta?.color||null,imageUrl:reward.kind==='card'?'/images/'+reward.id:null,price:0,sellerId:requesterId,buyerId:requesterId,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-reward'});}
+      if(extraRewards.length)transaction.update(openerRef,rewardUpdate);
       const hallXP=require('./town-hall-progress').gameplay(opener.data(),'pack');if(Object.keys(hallXP).length)transaction.update(openerRef,hallXP);
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
       const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
-      if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(opener.data().balance||0)+packBonus),gems:{...require('./gem-wallet').wallet(opener.data().gems),bronze:require('./gem-wallet').whole(opener.data().gems?.bronze)+rubyBonus}});
+      if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(rewardUpdate.balance||0)+packBonus),gems:{...rewardUpdate.gems,bronze:require('./gem-wallet').whole(rewardUpdate.gems?.bronze)+rubyBonus}});
       transaction.set(cardRef, {
         name: `Card ${cardId}`,
         itemType: 'card',
@@ -1734,10 +1745,10 @@ app.post('/open-pack', async (req, res) => {
       });
       transaction.delete(packItemRef);
       const packName = packItem.name || (pack.name ? (/\bpack$/i.test(pack.name) ? pack.name : `${pack.name} Pack`) : 'Pack');
-      return { cardId, packBonus, rubyBonus, packName, packColor: packItem.packColor || pack.color || '#667eea' };
+      return { cardId, packBonus, rubyBonus, packName, extraRewards, appearance:pack.appearance, packColor: packItem.packColor || pack.color || '#667eea' };
     });
     if(result.choices)return res.json(result);
-    res.json({ success: true, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
+    res.json({ success: true, extraRewards:result.extraRewards, appearance:result.appearance||null, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
   } catch (error) {
     const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This compass cannot open that pack tier', 'You do not own this item'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
@@ -2678,6 +2689,8 @@ require('./gem-workshop-routes')(app, db, getAscendTierConfig);
 require('./ruby-shop-routes')(app, db, brawlAuth.authenticate);
 require('./creature-book-routes')(app, db, brawlAuth.authenticate);
 require('./free-pack-routes')(app, db, brawlAuth.authenticate);
+require('./pack-shop-routes')(app, db, brawlAuth.authenticate);
+require('./pack-reward-presets')(app, db, brawlAuth.authenticate);
 require('./stable-routes')(app, db, brawlAuth.authenticate);
 
 /* ------------------ START SERVER ------------------ */

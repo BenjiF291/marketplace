@@ -22,3 +22,5 @@
 @media(prefers-reduced-motion:reduce){.island-tool-art{transition:none}.island-tool-action:hover .island-tool-art,.island-tool-action:focus-visible .island-tool-art{transform:none}}
 
 .island-building-finder{position:relative;cursor:pointer}.island-building-finder[hidden]{display:none!important}.island-building-finder select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}.island-building-finder:focus-within{outline:3px solid #e8c27a;outline-offset:4px;border-radius:12px}.island-building-finder:hover .island-tool-art{transform:translateY(-4px) rotate(-4deg)}.village-footer:empty{display:none}
+@media(min-width:651px){.free-pack-option{grid-template-columns:1.1fr 1.2fr 1.7fr .6fr .6fr .7fr auto}}
+.pack-reward-presets{padding:16px;margin:18px 0;border:1px solid #a98b54;border-radius:12px;background:linear-gradient(135deg,#fff0c9,#d5bb89)}.pack-reward-presets h3{margin-top:0}.pack-reward-presets button{margin:5px 8px 5px 0}.pack-reward-presets p{max-width:65ch}
