@@ -26,3 +26,11 @@ test('regular packs retain legacy behavior without extra rewards and validate ne
  assert.throws(()=>builder.validate({name:'Bad',rewardCards:[slot('gem','missing',1)]},catalog));
  const h=harness();const result=await h.invoke('post','/open-pack',{itemId:'owned'},'u');assert.equal(result.status,200);assert.equal(result.payload.extraRewards.length,0);assert.equal(result.payload.cardId,'Bronze_jan.png');
 });
+
+test('reward-only packs can be saved and opened without a phantom collection card',async()=>{
+ const h=harness(),body={name:'Supplies',cardIds:[],color:'#996633',rewardCards:[slot('gem','bronze',5)]};
+ assert.equal((await h.invoke('put','/packs/:packId',body)).status,200);
+ const result=await h.invoke('post','/open-pack',{itemId:'owned'},'u');assert.equal(result.status,200);assert.equal(result.payload.cardId,null);assert.equal(result.payload.imageUrl,null);assert.equal(result.payload.extraRewards.length,1);assert.equal(Object.entries(h.records).filter(([key,value])=>key.startsWith('items/')&&value.itemType==='card').length,0);
+ const rewards=require('./public/reward-card-art').normalize(result.payload);assert.equal(rewards.some(r=>r.kind==='card'),false);assert.equal(rewards[0].id,'bronze');
+ assert.throws(()=>builder.validate({...body,rewardCards:[]},catalog),/at least one/);
+});

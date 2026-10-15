@@ -58,7 +58,7 @@ function draw(now){frame=null;const dt=Math.min(.05,(now-last)/1000||1/30);last=
   const dragon=e.kind==='dragon';if(dragon&&island&&motion==='walk')motion='fly';
   const veyrin=e.kind==='veyrin'||e.kind==='tharos',krynn=e.kind==='krynn'||e.kind==='krynn-species',brugar=e.kind==='brugar'||e.kind==='brugar-species';camera.position.set(veyrin?0:krynn?.5:brugar?4.8:dragon?4.5:3.7,island?(dragon?6.2:5.2):(brugar?3.0:dragon?3.0:2.7),veyrin||krynn?7.0:brugar?6.0:dragon?5.8:4.7);camera.lookAt(0,veyrin||krynn||brugar?1.0:dragon?1.3:1.2,0);camera.updateMatrixWorld();
   if(island&&island.dataset.heading!==undefined){const direction=Number(island.dataset.heading),pitch=Math.atan2(camera.position.y-(dragon?1.3:1.2),Math.hypot(camera.position.x,camera.position.z));const desired=Math.atan2(camera.position.x,camera.position.z)+Math.atan2(Math.sin(direction)*Math.sin(pitch)*camera.aspect*island.offsetHeight,Math.cos(direction)*island.offsetWidth);const delta=Math.atan2(Math.sin(desired-e.model.root.rotation.y),Math.cos(desired-e.model.root.rotation.y));e.model.root.rotation.y+=delta*(1-Math.exp(-8*(now-(e.lastPose||now-40))/1000));}
-  else e.model.root.rotation.y=mood==='pet'?.12:0;
+  else e.model.root.rotation.y=host.dataset.viewYaw!==undefined?Number(host.dataset.viewYaw)||0:mood==='pet'?.12:0;
   e.lastPose=now;
   let travelDistance;
   if(island){const distance=Number(island.dataset.walkDistance)||0,delta=e.walkDistance===undefined?0:Math.max(0,distance-e.walkDistance);e.walkDistance=distance;
@@ -80,4 +80,4 @@ function scan(){queued=false;document.querySelectorAll('[data-fox-3d],[data-drag
 const mutations=new MutationObserver(()=>{if(!queued){queued=true;requestAnimationFrame(scan);}});mutations.observe(document.body,{childList:true,subtree:true});scan();
 document.addEventListener('visibilitychange',wake);reduced.addEventListener('change',()=>{entries.forEach(e=>e.painted=false);wake();});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;cancelAnimationFrame(frame);mutations.disconnect();observer.disconnect();entries.forEach(e=>e.model?.dispose());renderer?.dispose();});
-window.companion3D={entries,renderer:()=>renderer};
+window.companion3D={entries,renderer:()=>renderer,setYaw(host,yaw){host.dataset.viewYaw=String(yaw);const entry=entries.get(host);if(entry)entry.painted=false;wake();}};

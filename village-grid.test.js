@@ -8,3 +8,10 @@ test('new buildings require their unlock and use circular spots',()=>{const u=se
 test('brand-new islands start with the Town Hall and keep starter buildings in the tray',()=>{const u=layout.initial();assert.deepEqual(Object.keys(layout.profile(u).positions),['townhall']);assert.throws(()=>require('./vault-job').action(u,{action:'vault-start'}),/Place/);});
 
 test('old grid saves migrate to nearby unique circles without losing buildings or house tiers',()=>{const u={villageGridVersion:2,villageLayout:{townhall:8,'house:0':50,farmhouse:70},villageHouseTiers:{'house:0':3},villageLayoutRevision:7};const next={...u,...layout.migration(u,9)};assert.equal(next.villageLayout.townhall,8);assert.equal(Object.keys(next.villageLayout).length,3);assert.equal(new Set(Object.values(next.villageLayout)).size,3);assert.ok(Object.values(next.villageLayout).every(n=>n<layout.legacyCount));assert.equal(layout.profile(next).houseTiers['house:0'],3);assert.equal(next.villageLayoutRevision,8);assert.deepEqual(layout.migration(next,9),{});});
+
+test('Town Hall 1 can place the stable even with unchanged legacy higher-level buildings',()=>{
+ const user={...layout.initial(),villageLayout:{townhall:8,vip:22},villageLayoutRevision:4},before=layout.profile(user).positions,spot=free(user,'stable').id;
+ assert.equal(layout.LEVELS.stable,0);const saved=layout.validate(user,{...before,stable:spot},4,0);assert.equal(saved.villageLayout.stable,spot);assert.equal(saved.villageLayout.vip,22);
+ const next={...user,...saved},move=free(next,'stable').id;assert.equal(layout.validate(next,{...saved.villageLayout,stable:move},5,0).villageLayout.stable,move);
+ assert.throws(()=>layout.validate(user,{...before,vip:spot},4,0),/not unlocked/);assert.throws(()=>layout.validate(user,{...before,petstation:spot},4,0),/not unlocked/);
+});

@@ -41,11 +41,11 @@
   const creature=reward.kind==='animal'||reward.kind==='rubyItem'&&reward.id?.startsWith('pet:');const rarity=['common','rare','epic','legendary','unique'].includes(reward.rarity)?reward.rarity:'unassigned';
   return {name,group,image,art:itemArt||svg(body),amount:reward.amount||1,creature,rarity,imageFrame:creature?creatureFrame(animal):null};
  }
- function normalize(result){if(result.rewards)return result.rewards;const rewards=[{kind:'card',id:result.cardId||'New card',imageUrl:result.imageUrl,amount:1}];rewards.push(...(result.extraRewards||[]));if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});return rewards;}
+ function normalize(result){if(result.rewards)return result.rewards;const rewards=[...(result.extraRewards||[])];if(result.packBonus)rewards.push({kind:'footy',amount:result.packBonus,label:result.packBonus+' Footy'});if(result.rubyBonus)rewards.push({kind:'gem',id:'bronze',amount:result.rubyBonus,label:result.rubyBonus+' Ruby'});if(result.cardId)rewards.push({kind:'card',id:result.cardId,imageUrl:result.imageUrl,amount:1});return rewards;}
  function samples(catalog){
   const groups=[['gem','Gem currencies'],['footy','Footy'],['boost','Time boosts'],['animal','Animals'],['rubyItem','Shop items'],['amulet','Amulets'],['card','Collection cards'],['pack','Collection packs']];
   return groups.map(([kind,title])=>{const entries=kind==='footy'?[{id:'',name:'Footy'}]:catalog[kind]||[];
-   const rewards=[...new Map(entries.map(entry=>[entry.id,entry])).values()].map(entry=>{const name=kind==='card'?entry.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):entry.name;return {kind,id:entry.id,amount:1,label:'1 '+name,...(entry.rarity?{rarity:entry.rarity}:{}),...(entry.gemKey?{gemKey:entry.gemKey}:{})};});
+   const rewards=[...new Map(entries.map(entry=>[entry.id,entry])).values()].map(entry=>{const name=kind==='card'?entry.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):entry.name;return {kind,id:entry.id,amount:1,label:'1 '+name,...(entry.rarity?{rarity:entry.rarity}:{}),...(entry.gemKey?{gemKey:entry.gemKey}:{}),...(kind==='pack'?{appearance:entry.appearance||null,packColor:entry.color||null}:{})};});
    rewards.sort((a,b)=>a.label.slice(2).localeCompare(b.label.slice(2),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));return {kind,title,rewards};
   }).filter(group=>group.rewards.length);
  }

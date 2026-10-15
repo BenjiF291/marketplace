@@ -13,7 +13,7 @@
   function select(index){tabs.querySelectorAll('button').forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});const card=pack.cards[index];strip.setAttribute('aria-label',`Card ${index+1}: ${card.title}`);strip.replaceChildren();
    strip.scrollLeft=0;
    for(const option of [...card.options].sort((a,b)=>a.chance-b.chance)){const item=data.catalog[option.kind]?.find(i=>i.id===option.id),label=option.kind==='footy'?'Footy':item?.name||option.id;
-    const tile=el('div','pack-odds-tile'),frame=el('div','pack-odds-card');frame.append(window.RewardOpening.card({...option,amount:option.min===option.max?option.min:`${option.min}–${option.max}`,label:option.kind==='card'?label.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):label,rarity:item?.rarity,gemKey:item?.gemKey}));
+    const tile=el('div','pack-odds-tile'),frame=el('div','pack-odds-card');frame.append(window.RewardOpening.card({...option,amount:option.min===option.max?option.min:`${option.min}–${option.max}`,label:option.kind==='card'?label.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):label,rarity:item?.rarity,gemKey:item?.gemKey,packName:option.kind==='pack'?item?.name:undefined,appearance:item?.appearance,packColor:item?.color}));
     tile.append(frame,el('strong','pack-odds-percent',`${Number(option.chance.toFixed(4))}%`));strip.append(tile);
    }
   }

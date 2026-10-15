@@ -1551,8 +1551,8 @@ app.post('/packs', async (req, res) => {
   if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
     return res.status(400).send('Enter a pack name up to 80 characters');
   }
-  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
-    return res.status(400).send('Choose between 1 and 100 cards');
+  if (!Array.isArray(cardIds) || cardIds.length > 100) {
+    return res.status(400).send('Choose up to 100 cards');
   }
   if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
@@ -1594,8 +1594,8 @@ app.put('/packs/:packId', async (req, res) => {
   if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
     return res.status(400).send('Enter a pack name up to 80 characters');
   }
-  if (!Array.isArray(cardIds) || cardIds.length === 0 || cardIds.length > 100) {
-    return res.status(400).send('Choose between 1 and 100 cards');
+  if (!Array.isArray(cardIds) || cardIds.length > 100) {
+    return res.status(400).send('Choose up to 100 cards');
   }
   if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
@@ -1699,11 +1699,11 @@ app.post('/open-pack', async (req, res) => {
       }
 
       const packDoc = await transaction.get(db.collection('packs').doc(packItem.packId));
-      if (!packDoc.exists || !Array.isArray(packDoc.data().cardIds) || packDoc.data().cardIds.length === 0) {
+      if (!packDoc.exists || !require('./pack-builder').hasRewards(packDoc.data())) {
         throw new Error('Pack has no available cards');
       }
       const pack = packDoc.data();
-      let cardId = pack.cardIds[crypto.randomInt(pack.cardIds.length)];
+      let cardId = pack.cardIds?.length?pack.cardIds[crypto.randomInt(pack.cardIds.length)]:null;
       const cardRef = db.collection('items').doc();
       const openerRef = db.collection('users').doc(requesterId);
       const opener = await transaction.get(openerRef);
@@ -1713,6 +1713,7 @@ app.post('/open-pack', async (req, res) => {
         if(!picks.includes(req.body.choice))return {choices:picks,packColor:packItem.packColor||pack.color};
         cardId=req.body.choice;
       } else if(req.body.compass){
+        if(!pack.cardIds?.length)throw Error('This pack has no collection cards for a compass');
         const tierDocs=await transaction.get(db.collection('ascendTiers').orderBy('order','asc'));
         if(!rubyShop.compassAllowed(req.body.compass,packItem.packId,tierDocs.docs.map(doc=>({...doc.data(),id:doc.id}))))throw new Error('This compass cannot open that pack tier');
         const owned=rubyShop.spend(opener.data(),req.body.compass);
@@ -1722,7 +1723,7 @@ app.post('/open-pack', async (req, res) => {
         return {choices:picks,packColor:packItem.packColor||pack.color};
       }
       const extraRewards=require('./pack-builder').draw(pack,rewardCatalog),extraPacks=new Map();
-      for(const reward of extraRewards)if(reward.kind==='pack'&&!extraPacks.has(reward.id)){const doc=await transaction.get(db.collection('packs').doc(reward.id));if(!doc.exists||!doc.data().cardIds?.length)throw Error('A reward pack is unavailable');extraPacks.set(reward.id,doc.data());}
+      for(const reward of extraRewards)if(reward.kind==='pack'&&!extraPacks.has(reward.id)){const doc=await transaction.get(db.collection('packs').doc(reward.id));if(!doc.exists||!require('./pack-builder').hasRewards(doc.data()))throw Error('A reward pack is unavailable');extraPacks.set(reward.id,doc.data());}
       const rewardUpdate=require('./free-pack').apply(opener.data(),extraRewards);
       for(const reward of extraRewards)if(['card','pack'].includes(reward.kind))for(let i=0;i<reward.amount;i++){const meta=extraPacks.get(reward.id);transaction.set(db.collection('items').doc(),{name:meta?.name||('Card '+reward.id),itemType:reward.kind,packId:meta?reward.id:null,packColor:meta?.color||null,imageUrl:reward.kind==='card'?'/images/'+reward.id:null,price:0,sellerId:requesterId,buyerId:requesterId,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-reward'});}
       if(extraRewards.length)transaction.update(openerRef,rewardUpdate);
@@ -1730,7 +1731,7 @@ app.post('/open-pack', async (req, res) => {
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
       const rubyBonus=packGemRoll<(amuletEffects(opener.data()||{}).packgem||0)?1:0;
       if(packBonus||rubyBonus)transaction.update(openerRef,{balance:roundFooty(Number(rewardUpdate.balance||0)+packBonus),gems:{...rewardUpdate.gems,bronze:require('./gem-wallet').whole(rewardUpdate.gems?.bronze)+rubyBonus}});
-      transaction.set(cardRef, {
+      if(cardId)transaction.set(cardRef, {
         name: `Card ${cardId}`,
         itemType: 'card',
         price: 0,
@@ -1748,9 +1749,9 @@ app.post('/open-pack', async (req, res) => {
       return { cardId, packBonus, rubyBonus, packName, extraRewards, appearance:pack.appearance, packColor: packItem.packColor || pack.color || '#667eea' };
     });
     if(result.choices)return res.json(result);
-    res.json({ success: true, extraRewards:result.extraRewards, appearance:result.appearance||null, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: `/images/${result.cardId}`, packColor: result.packColor });
+    res.json({ success: true, extraRewards:result.extraRewards, appearance:result.appearance||null, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: result.cardId?`/images/${result.cardId}`:null, packColor: result.packColor });
   } catch (error) {
-    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This compass cannot open that pack tier', 'You do not own this item'];
+    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This pack has no collection cards for a compass', 'This compass cannot open that pack tier', 'You do not own this item'];
     if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
     console.error('Error opening pack:', error);
     res.status(500).send('Could not open pack');

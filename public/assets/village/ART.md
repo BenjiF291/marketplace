@@ -3,6 +3,8 @@
 Generated with the built-in imagegen tool on 2026-09-25. Original generated PNG files were copied into this directory; no external image URLs are required. Runtime SVG atlas windows keep buildings separate and interactive. These are illustrated 2.5D assets, not 3D meshes.
 
 - `island-painted.png`: island, forest, stone roads, cliff faces, waterfalls and ocean.
+- `stable-painted.png`: isolated transparent stable generated with the built-in imagegen tool on 2026-10-15, using `buildings-painted.png` as the camera/material/style reference. Carved oak, green shingles, stone foundations, hay bays and a fenced yard. Runtime placement uses the shared ground-anchor system in `village-art.js`.
+- `stable-interior-painted.png`: painted stable interior generated with the built-in imagegen tool on 2026-10-15. Empty flagstone floor, carved wooden stalls, lanterns and hay surround the carousel's live 3D animals and display platforms. Used as a decorative background by `stable.css`.
 - `buildings-painted.png`: transparent 4x4 building atlas. Row-major order: Town Hall, archive, market, forge; arena, wheel, blacksmith, pets; emporium, dye, compressor, vault; VIP, construction, advanced forge, diamond forge. Frame bounds are adjusted in village-art.js to exclude neighboring finials.
 
 ## Island prompt

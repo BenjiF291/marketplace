@@ -4,7 +4,8 @@
  const el=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls||'';if(text!==undefined)n.textContent=text;return n;};
  function createCard(reward){const info=RewardCardArt.describe(reward),card=el('article','reward-pack-card');card.dataset.kind=reward.kind;card.style.setProperty('--depth',0);card.dataset.depth='0';
     const ornament=el('span','reward-card-ornament');ornament.setAttribute('aria-hidden','true');const amount=el('strong','reward-card-amount',String(info.amount)),picture=el('div','reward-card-picture');
-    if(info.image&&info.imageFrame){const ns='http://www.w3.org/2000/svg',frame=info.imageFrame,svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');svg.setAttribute('viewBox',`${frame.x} ${frame.y} ${frame.width} ${frame.height}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('role','img');svg.setAttribute('aria-label',info.name);image.setAttribute('href',info.image);image.setAttribute('width',frame.imageWidth);image.setAttribute('height',frame.imageHeight);image.onerror=()=>{picture.innerHTML=info.art;};svg.append(image);picture.append(svg);}
+    if(reward.kind==='pack'){picture.append(cover(reward.packName||info.name,reward.appearance||{base:reward.packColor,accent:reward.packColor}));}
+    else if(info.image&&info.imageFrame){const ns='http://www.w3.org/2000/svg',frame=info.imageFrame,svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');svg.setAttribute('viewBox',`${frame.x} ${frame.y} ${frame.width} ${frame.height}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.setAttribute('role','img');svg.setAttribute('aria-label',info.name);image.setAttribute('href',info.image);image.setAttribute('width',frame.imageWidth);image.setAttribute('height',frame.imageHeight);image.onerror=()=>{picture.innerHTML=info.art;};svg.append(image);picture.append(svg);}
     else if(info.image){const image=el('img');image.loading='lazy';image.src=info.image;image.alt=info.name;image.onerror=()=>{picture.innerHTML=info.art;};if(window.CardCutouts)window.CardCutouts.attach(image);picture.append(image);}else picture.innerHTML=info.art;
     if(info.creature){card.dataset.rarity=info.rarity;const ribbon=el('span','reward-card-rarity-ribbon');ribbon.setAttribute('role','img');ribbon.setAttribute('aria-label',info.rarity==='unassigned'?'Rarity unassigned':info.rarity+' rarity');card.append(ribbon);}
     card.append(ornament,amount,picture,el('h3','reward-card-name',info.name));return card;}
@@ -18,10 +19,11 @@
    const examples=[{kind:'card',id:'Genious_ben.png',amount:1},{kind:'boost',id:'skip',amount:1},{kind:'rubyItem',id:'compass:rare',label:'Compass',amount:1},{kind:'pack',id:'Discovery pack',amount:1},{kind:'amulet',id:'bronze',label:'Ruby amulet',gemKey:'bronze',amount:1},{kind:'animal',id:animal?.id||'fox',label:animal?.name||'Fox',rarity:animal?.rarity||'rare',amount:1},{kind:'footy',amount:12},{kind:'gem',id:'rare-bronze',amount:5},{kind:'gem',id:'bronze',amount:15}];
    examples.forEach((reward,i)=>{const slot=el('span','reward-wrapper-sample');slot.dataset.sample=String(i);slot.append(createCard(reward));collage.append(slot);});
    pack.querySelector('.reward-wrapper-face').append(collage);
-   pack.querySelector('.reward-wrapper-brand').textContent='YOUR DAILY DISCOVERY';
+   pack.querySelector('.reward-wrapper-brand')?.remove();
+   pack.querySelector('.reward-wrapper-caption')?.remove();
 
  }
- function dailyCover(name){const pack=el('div','reward-opening-pack'),face=el('span','reward-wrapper-face');face.append(el('span','reward-wrapper-brand'),el('span','reward-wrapper-name',name),el('span','reward-wrapper-caption','A LITTLE WONDER INSIDE'));pack.append(face);decorateDaily(pack);return pack;}
+ function dailyCover(name){const pack=el('div','reward-opening-pack'),face=el('span','reward-wrapper-face');face.append(el('span','reward-wrapper-name',name));pack.append(face);decorateDaily(pack);return pack;}
  window.RewardOpening={card:createCard,cover,dailyCover,play(options){
   active?.close();const previous=document.activeElement,d=el('dialog','reward-opening');active=d;d.dataset.phase='ready';d.dataset.theme=['embers','aurora'].includes(options.theme)?options.theme:'standard';d.setAttribute('aria-label',options.name||'Open your pack');
   const timers=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let phase='ready',loading=false,busy=false,closed=false,completed=false,index=0,cards=[];
@@ -41,7 +43,7 @@
   }
   const stack=el('div','reward-opening-stack');stack.hidden=true;stage.append(halo,pack,stack);
   const status=el('p','reward-opening-status','Tap the pack to open');status.setAttribute('role','status');status.setAttribute('aria-live','polite');const progress=el('p','reward-opening-progress');
-  const advance=el('button','reward-opening-next','Open pack');advance.type='button';advance.onclick=event=>{event.stopPropagation();return step();};
+  const advance=el('button','reward-opening-next','Open pack');advance.type='button';advance.hidden=true;advance.onclick=event=>{event.stopPropagation();return step();};
   d.append(header,controls,stage,status,progress,advance);document.body.append(d);
   function present(result){
    const rewards=RewardCardArt.normalize(result);if(!rewards.length)throw Error('This pack has no reward cards.');
@@ -49,7 +51,7 @@
    phase='opening';d.dataset.phase=phase;status.textContent='Unsealing your treasures...';
    schedule(()=>{pack.hidden=true;pack.querySelector('.reward-wrapper-collage')?.remove();stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();},reduced?0:650);
   }
-  function showStatus(){status.textContent='Tap anywhere to reveal the next card';progress.textContent=`${index+1} / ${cards.length}`;advance.textContent=index===cards.length-1?'Collect & finish':'Next card';const card=cards[index];d.setAttribute('aria-label',`${options.name||'Your pack'}: ${card.querySelector('.reward-card-name').textContent}, card ${index+1} of ${cards.length}`);}
+  function showStatus(){advance.hidden=false;status.textContent='Tap anywhere to reveal the next card';progress.textContent=`${index+1} / ${cards.length}`;advance.textContent=index===cards.length-1?'Collect & finish':'Next card';const card=cards[index];d.setAttribute('aria-label',`${options.name||'Your pack'}: ${card.querySelector('.reward-card-name').textContent}, card ${index+1} of ${cards.length}`);}
   async function open(){if(loading||phase!=='ready')return;loading=true;close.disabled=true;pack.disabled=true;advance.disabled=true;status.textContent='Opening your pack...';
    try{let result=options.result||await options.open();if(result.choices){if(!options.choose)throw Error('Choose a reward before continuing.');result=await options.choose(result.choices);if(!result){d.close();return;}}if(!closed)present(result);}
    catch(error){if(!closed){status.textContent=error.message+' Tap the pack to try again.';phase='ready';d.dataset.phase='ready';}}

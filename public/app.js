@@ -1866,7 +1866,7 @@ async function createDirectMarketplaceListing() {
 
 let builderRewardCards=[];
 function updatePackBuilderPreview(){const box=document.getElementById('packBuilderPreview');if(box&&window.RewardOpening)box.replaceChildren(window.RewardOpening.cover(document.getElementById('packName').value,{base:document.getElementById('packColor').value,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value}));const status=document.getElementById('packRewardSummary');if(status)status.textContent=builderRewardCards.length+' extra reward cards per opening';}
-async function editBuilderRewards(){try{await window.FreePack.editRewards(builderRewardCards,cards=>{builderRewardCards=cards;updatePackBuilderPreview();});}catch(error){alert(error.message);}}
+async function editBuilderRewards(){try{await window.FreePack.editRewards(builderRewardCards,cards=>{builderRewardCards=cards;updatePackBuilderPreview();},[...document.querySelectorAll('#packCardPicker input:checked')].map(input=>input.value));}catch(error){alert(error.message);}}
 function clearBuilderRewards(){builderRewardCards=[];updatePackBuilderPreview();}
 function loadPackForEditing() {
   const packId = document.getElementById('packEditorSelect').value;
@@ -1897,7 +1897,7 @@ async function savePack() {
   const packId = document.getElementById('packEditorSelect').value;
   const name = nameInput && nameInput.value.trim();
   if (!name) return alert('Enter a pack name');
-  if (cardIds.length === 0) return alert('Choose at least one card for the pack');
+  if (!cardIds.length&&!builderRewardCards.length) return alert('Add at least one collection card or extra reward.');
 
   try {
     const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {

@@ -38,7 +38,7 @@ test('player can claim and reveal five rewards, and an admin can edit all card o
 });
 
 test('Stable renders owned animals and opens their book information, then returns to the island',async()=>{
- const h=harness();let shown,returned=0;h.context.CreatureBook={openCreature:id=>shown=id};
+ const h=harness();h.context.window.companion3D={setYaw(){}};let shown,returned=0;h.context.CreatureBook={openCreature:id=>shown=id};
  h.context.fetch=async()=>({ok:true,json:async()=>({total:2,animals:[{id:'tharos',name:'Tharos',species:'Veyrin',poster:'assets/creatures/tharos-poster.png',count:2}]})});
  vm.runInContext(fs.readFileSync('public/stable.js','utf8'),h.context);await h.context.window.Stable.open(()=>returned++);
  const box=h.body.querySelector('.stable-dialog');assert.equal(box.open,true);assert.equal(box.querySelector('.stable-total').textContent,'2 animals in your Stable');assert.equal(box.querySelectorAll('.stable-animal').length,1);
@@ -94,7 +94,7 @@ test('admin editor adds, duplicates and removes reward cards',async()=>{
 });
 
 test('daily collage stays separate from regular pack design and reward editing',async()=>{
- const h=harness();await h.context.window.FreePack.open();const daily=h.body.querySelector('.reward-opening');assert.equal(daily.querySelectorAll('.reward-wrapper-sample').length,9);assert.equal(daily.querySelector('.pack-design-preview'),null);
+ const h=harness();await h.context.window.FreePack.open();const daily=h.body.querySelector('.reward-opening');assert.equal(daily.querySelectorAll('.reward-wrapper-sample').length,9);assert.equal(daily.querySelector('.reward-opening-pack').className.includes('reward-opening-pack-designed'),false);assert.equal(daily.querySelector('.reward-wrapper-brand'),null);assert.equal(daily.querySelector('.reward-wrapper-caption'),null);
  await daily.querySelector('.reward-opening-details').click();await h.body.querySelector('.free-pack-edit').click();assert.equal(h.body.querySelector('.free-pack-editor').querySelectorAll('input').some(n=>n.type==='color'),false);
  let selected;await h.context.window.FreePack.editRewards([],cards=>{selected=cards;});const editors=h.body.querySelectorAll('.free-pack-editor'),editor=editors[editors.length-1];await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(selected.length,1);assert.equal(h.saved,undefined);
  const preview=h.context.window.RewardOpening.cover('Bronze',{base:'#a56030'});assert.equal(preview.querySelector('.pack-design-title').textContent,'Bronze');assert.equal(preview.style['--wrapper-base'],'#a56030');
@@ -128,4 +128,23 @@ test('admin can save extra rewards and copy a preset into another pack draft',as
  library.querySelector('input').value='Small ruby bonus';await find('Save current rewards as preset').click();assert.equal(presets.length,1);assert.equal(presets[0].name,'Small ruby bonus');
  find('Add reward card').click();assert.equal(editor.querySelectorAll('fieldset').length,2);find('Replace rewards with preset').click();assert.equal(editor.querySelectorAll('fieldset').length,1);
  find('Add preset cards').click();assert.equal(editor.querySelectorAll('fieldset').length,2);await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(applied.length,2);assert.equal(applied[0].options[0].max,5);assert.equal(presets[0].cards.length,1);assert.equal(h.saved,undefined);
+});
+
+test('regular openings reveal extras before the main card and render the awarded pack design',async()=>{
+ const h=harness(),art=h.context.RewardCardArt,extra={kind:'pack',id:'bronze',packName:'Bronze',appearance:{base:'#854322',accent:'#b77b44',trim:'#ffd599'},amount:1};
+ const result={cardId:'Gold_lotte.png',extraRewards:[{kind:'footy',amount:10},extra],packBonus:2,rubyBonus:1};const rewards=art.normalize(result);assert.equal(rewards.length,5);assert.equal(rewards[4].kind,'card');assert.equal(rewards[4].id,'Gold_lotte.png');assert.equal(rewards[0].kind,'footy');assert.equal(art.normalize({rewards}).at(-1).id,'Gold_lotte.png');
+ const card=h.context.window.RewardOpening.card(extra);assert.equal(card.querySelector('.pack-design-title').textContent,'Bronze');assert.equal(card.querySelector('.pack-design-preview').style['--wrapper-base'],'#854322');
+ const opening=h.context.window.RewardOpening.play({name:'Bronze',open:async()=>result});assert.equal(opening.querySelector('.reward-opening-next').hidden,true);await opening.querySelector('.reward-opening-pack').click();h.flush();assert.equal(opening.querySelector('.reward-opening-next').hidden,false);assert.equal(opening.querySelector('.reward-card-name').textContent,'Footy');
+});
+
+test('stable carousel switches models and rotates the active animal',async()=>{
+ const h=harness();let yaw;h.context.window.companion3D={setYaw:(host,value)=>yaw=value};
+ h.context.fetch=async()=>({ok:true,json:async()=>({total:2,animals:[{id:'tharos',name:'Tharos',species:'Veyrin',poster:'a.png',count:1},{id:'brugar',name:'Brakk',species:'Brugar',poster:'b.png',count:1}]})});
+ vm.runInContext(fs.readFileSync('public/stable.js','utf8'),h.context);await h.context.window.Stable.open(()=>{});const stable=h.body.querySelector('.stable-dialog');assert.equal(stable.querySelectorAll('.stable-model').length,1);assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');
+ const slider=stable.querySelector('.stable-rotation');slider.value='90';slider.oninput();assert.equal(yaw,Math.PI/2);stable.querySelector('.stable-next').click();assert.equal(stable.querySelector('.stable-model').dataset.species,'brugar');assert.equal(stable.querySelector('.stable-position').textContent,'2 / 2');stable.querySelector('.stable-next').click();assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');stable.querySelector('.stable-header').querySelector('button').click();assert.equal(stable.querySelector('.stable-model'),null);
+});
+
+test('regular reward editor shows the final collection pool and copies it as an editable extra',async()=>{
+ const h=harness();let applied;await h.context.window.FreePack.editRewards([],cards=>applied=cards,['Bronze_jan.png','Gold_lotte.png']);const editor=h.body.querySelector('.free-pack-editor');assert.equal(editor.querySelector('.pack-main-card').querySelectorAll('.reward-pack-card').length,2);
+ editor.querySelectorAll('button').find(b=>b.textContent==='Copy final card to extra rewards').click();const slots=editor.querySelectorAll('fieldset');assert.equal(slots.length,2);const rows=slots[1].querySelectorAll('.free-pack-option');assert.equal(rows.length,2);rows[0].querySelectorAll('input').at(-1).value='25';rows[1].querySelectorAll('input').at(-1).value='75';await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(applied[1].options[0].chance,25);assert.equal(applied[1].options[1].chance,75);assert.equal(applied[1].options[1].id,'Gold_lotte.png');
 });

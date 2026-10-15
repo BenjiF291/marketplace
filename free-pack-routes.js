@@ -31,11 +31,11 @@ module.exports=(app,db,authenticate)=>{
    if(!config.enabled)throw Error('This pack is currently unavailable.');
    const nextAt=(user.freePackLastClaimAt||0)+config.cooldownHours*3600000;
    if(user.isAdmin!==true&&user.freePackLastClaimAt&&now<nextAt)throw Error('Your next free pack is not ready yet.');
-   const rewards=rules.draw(config).map(reward=>{const item=names[reward.kind]?.find(item=>item.id===reward.id);return {...reward,label:rules.label(reward,names),...(item?.rarity?{rarity:item.rarity}:{}),...(item?.gemKey?{gemKey:item.gemKey}:{})};});
+   const rewards=rules.draw(config).map(reward=>{const item=names[reward.kind]?.find(item=>item.id===reward.id);return {...reward,label:rules.label(reward,names),...(item?.rarity?{rarity:item.rarity}:{}),...(item?.gemKey?{gemKey:item.gemKey}:{}),...(reward.kind==='pack'?{packName:item.name,packColor:item.color,appearance:item.appearance||null}:{})};});
    // Read all reward pack metadata before making any transactional writes.
    const packDocs=new Map();for(const reward of rewards)if(reward.kind==='pack'&&!packDocs.has(reward.id))packDocs.set(reward.id,await tx.get(db.collection('packs').doc(reward.id)));
    for(const reward of rewards)if(reward.kind==='pack'||reward.kind==='card'){
-    const pack=packDocs.get(reward.id)?.data();if(reward.kind==='pack'&&!pack?.cardIds?.length)throw Error('A configured reward pack is no longer available.');
+    const pack=packDocs.get(reward.id)?.data();if(reward.kind==='pack'&&!require('./pack-builder').hasRewards(pack))throw Error('A configured reward pack is no longer available.');
     for(let i=0;i<reward.amount;i++)tx.set(db.collection('items').doc(),{name:reward.kind==='pack'?pack.name:`Card ${reward.id}`,itemType:reward.kind,packId:reward.kind==='pack'?reward.id:null,packColor:pack?.color||null,imageUrl:reward.kind==='card'?`/images/${reward.id}`:null,price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,sourceItemId:null,source:'free-pack',purchasedAt:new Date(now),createdAt:new Date(now)});
    }
    const receipt={requestId:body.requestId,name:config.name,appearance:config.appearance,rewards,claimedAt:now,nextAt:user.isAdmin===true?now:now+config.cooldownHours*3600000};
@@ -52,7 +52,7 @@ module.exports.catalog=async function(db){
  function rarityFor(kind,id,entries){const creature=kind==='animal'?id:kind==='rubyItem'&&id.startsWith('pet:')?id.slice(4):null;return creature?(rarities.has(entries[creature]?.rarity)?entries[creature].rarity:'unassigned'):null;}
  async function catalog(){
   const [packs,tiers,creatures]=await Promise.all([db.collection('packs').get(),db.collection('ascendTiers').get(),db.collection('creatureBookEntries').get()]);const entries=entriesFrom(creatures);
-  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name,gemKey})=>({id,name,gemKey})),pack:packs.docs.filter(doc=>doc.data().cardIds?.length).map(doc=>({id:doc.id,name:doc.data().name||doc.id})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
+  return {animal:require('./public/stable-animals').animals.map(({id,name})=>({id,name,rarity:rarityFor('animal',id,entries)})),gem:Object.entries(rules.GEM_NAMES).map(([id,name])=>({id,name})),boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}],rubyItem:require('./ruby-shop').CATALOG.map(({id,name})=>({id,name,...(id.startsWith('pet:')?{rarity:rarityFor('rubyItem',id,entries)}:{})})),amulet:require('./amulet-utils').catalog(tiers.docs.map(doc=>({...doc.data(),id:doc.id}))).map(({id,name,gemKey})=>({id,name,gemKey})),pack:packs.docs.filter(doc=>require('./pack-builder').hasRewards(doc.data())).map(doc=>({id:doc.id,name:doc.data().name||doc.id,color:doc.data().color||'#667eea',appearance:doc.data().appearance||null})),card:fs.readdirSync(path.join(__dirname,'public','images')).filter(name=>/\.(png|jpe?g|webp)$/i.test(name)).map(id=>({id,name:id}))};
  }
  return catalog();
 };

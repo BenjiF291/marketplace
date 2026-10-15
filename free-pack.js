@@ -12,7 +12,7 @@ function validate(value,catalog){
  if(!Number.isFinite(value.cooldownHours)||value.cooldownHours<1||value.cooldownHours>168)throw Error('Cooldown must be between 1 and 168 hours.');
  if(!Array.isArray(value.cards)||value.cards.length<1||value.cards.length>30)throw Error('Use between 1 and 30 reward cards.');
  const cards=value.cards.map((card,index)=>{
-  if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>50)throw Error(`Card ${index+1} needs a title and 1?50 reward options.`);
+  if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>100)throw Error(`Card ${index+1} needs a title and 1-100 reward options.`);
   let sum=0;const options=card.options.map(option=>{
    const {kind,id,min,max,chance}=option;
    if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal'].includes(kind))throw Error('Unknown reward type.');

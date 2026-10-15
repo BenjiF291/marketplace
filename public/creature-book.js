@@ -68,7 +68,7 @@
   d('.creature-edit-button').hidden=!canEdit;
  }
  function showCreature(i,card){selected=i;selectedCard=card;const c=creatures[i];renderInfo();
-  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=defender-rill1').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
+  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=stable-rotate2').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
   detail.showModal();detail.scrollTop=0;d('.creature-book-close').focus();
  }
  const editor=el('dialog','creature-entry-editor');editor.setAttribute('aria-labelledby','creatureEditorTitle');

@@ -8,7 +8,7 @@ function harness(){
  return {records,invoke:async(method,url,body={},denied=false)=>{let status=200,payload;await handlers[method+' '+url]({body,denied},{status(n){status=n;return this;},send(v){payload=v;},json(v){payload=v;}});return {status,payload};}};
 }
 test('shop shows the daily pack and only published offers with per-card odds',async()=>{
- const h=harness(),response=await h.invoke('get','/pack-shop');assert.equal(response.status,200);assert.equal(response.payload.daily.daily,true);assert.equal(response.payload.daily.cards.length,5);assert.equal(response.payload.packs.length,1);assert.equal(response.payload.packs[0].cards[0].options.length,2);assert.equal(response.payload.packs[0].cards[0].options[0].chance,50);assert.equal(response.payload.packs[0].cards[1].options[0].chance,100);
+ const h=harness(),response=await h.invoke('get','/pack-shop');assert.equal(response.status,200);assert.equal(response.payload.daily.daily,true);assert.equal(response.payload.daily.cards.length,5);assert.equal(response.payload.packs.length,1);assert.equal(response.payload.packs[0].cards[1].options.length,2);assert.equal(response.payload.packs[0].cards[1].options[0].chance,50);assert.equal(response.payload.packs[0].cards[0].options[0].chance,100);
  assert.equal((await h.invoke('get','/pack-shop',{},true)).status,401);
 });
 test('paid pack purchases charge once under retries and concurrent requests',async()=>{
