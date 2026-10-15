@@ -20,6 +20,27 @@
   pack.innerHTML='<span class="reward-wrapper-seam seam-top"></span><span class="reward-wrapper-face"><span class="reward-wrapper-brand">THE ISLAND COLLECTION</span><span class="reward-wrapper-emblem" aria-hidden="true"><svg viewBox="0 0 160 160"><path d="m80 9 56 33v70l-56 35-56-35V42Z" fill="#d9b46e"/><path d="m80 18 47 29v60l-47 30-47-30V47Z" fill="#244f47"/><path d="m43 100 37-54 38 54Z" fill="#9bb084"/><path d="m80 46 13 19-13-5-11 8Z" fill="#f5ddb0"/><path d="m44 111 72-1m-58 9h45" stroke="#d9b46e" stroke-width="3"/><path d="m80 28 3 7 8 2-8 3-3 7-3-7-8-3 8-2Z" fill="#f4dca0"/></svg></span><strong class="reward-wrapper-name"></strong><span class="reward-wrapper-caption">A LITTLE WONDER INSIDE</span></span><span class="reward-wrapper-seam seam-bottom"></span>';
   // Keep names as text, including admin-authored names.
   pack.querySelector('.reward-wrapper-name').textContent=options.name||'Discovery Pack';
+  if(options.daily){
+   pack.classList.add('reward-opening-pack-daily');
+   const collage=el('span','reward-wrapper-collage');collage.setAttribute('aria-hidden','true');
+   const animal=window.StableAnimals?.animals?.find(a=>a.id!=='snail'&&a.id!=='fox'&&a.id!=='dragon');
+   // Illustrative cover art, independent of the five rewards drawn on opening.
+   const examples=[
+    {kind:'card',id:'Genious_ben.png',amount:1},
+    {kind:'boost',id:'skip',amount:1},
+    {kind:'rubyItem',id:'compass:rare',label:'Compass',amount:1},
+    {kind:'pack',id:'Discovery pack',amount:1},
+    {kind:'amulet',id:'bronze',label:'Ruby amulet',gemKey:'bronze',amount:1},
+    {kind:'animal',id:animal?.id||'fox',label:animal?.name||'Fox',rarity:animal?.rarity||'rare',amount:1},
+    {kind:'footy',amount:12},
+    {kind:'gem',id:'rare-bronze',amount:5},
+    {kind:'gem',id:'bronze',amount:15}
+   ];
+   examples.forEach((reward,i)=>{const slot=el('span','reward-wrapper-sample');slot.dataset.sample=String(i);slot.append(createCard(reward));collage.append(slot);});
+   pack.querySelector('.reward-wrapper-face').append(collage);
+   pack.querySelector('.reward-wrapper-brand').textContent='YOUR DAILY DISCOVERY';
+   pack.querySelector('.reward-wrapper-caption').textContent='FIVE LITTLE SURPRISES';
+  }
   const stack=el('div','reward-opening-stack');stack.hidden=true;stage.append(halo,pack,stack);
   const status=el('p','reward-opening-status','Tap the pack to open');status.setAttribute('role','status');status.setAttribute('aria-live','polite');const progress=el('p','reward-opening-progress');
   const advance=el('button','reward-opening-next','Open pack');advance.type='button';advance.onclick=event=>{event.stopPropagation();return step();};
@@ -28,7 +49,7 @@
    const rewards=RewardCardArt.normalize(result);if(!rewards.length)throw Error('This pack has no reward cards.');
    cards=rewards.map((reward,i)=>{const card=createCard(reward);card.style.setProperty('--depth',i);card.dataset.depth=String(i);card.setAttribute('aria-hidden',String(i!==0));stack.append(card);return card;});
    phase='opening';d.dataset.phase=phase;status.textContent='Unsealing your treasures...';
-   schedule(()=>{pack.hidden=true;stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();},reduced?0:650);
+   schedule(()=>{pack.hidden=true;pack.querySelector('.reward-wrapper-collage')?.remove();stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();},reduced?0:650);
   }
   function showStatus(){status.textContent='Tap anywhere to reveal the next card';progress.textContent=`${index+1} / ${cards.length}`;advance.textContent=index===cards.length-1?'Collect & finish':'Next card';const card=cards[index];d.setAttribute('aria-label',`${options.name||'Your pack'}: ${card.querySelector('.reward-card-name').textContent}, card ${index+1} of ${cards.length}`);}
   async function open(){if(loading||phase!=='ready')return;loading=true;close.disabled=true;pack.disabled=true;advance.disabled=true;status.textContent='Opening your pack...';
