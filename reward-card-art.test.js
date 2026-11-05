@@ -9,7 +9,7 @@ test('every configured reward type has a named amount card and illustration',()=
  assert.equal(art.describe({kind:'card',id:'Bronze_jan.png',amount:1}).name,'Bronze jan');
 });
 test('regular collection openings include separate Footy and Ruby bonus cards',()=>{
- const rewards=art.normalize({cardId:'Bronze_jan.png',packBonus:5,rubyBonus:2});assert.equal(rewards.length,3);assert.equal(rewards[0].kind,'card');assert.equal(rewards[1].kind,'footy');assert.equal(rewards[1].amount,5);assert.equal(rewards[2].id,'bronze');assert.equal(rewards[2].amount,2);
+ const rewards=art.normalize({cardId:'Bronze_jan.png',packBonus:5,rubyBonus:2});assert.equal(rewards.length,3);assert.equal(rewards[0].kind,'footy');assert.equal(rewards[0].amount,5);assert.equal(rewards[1].id,'bronze');assert.equal(rewards[1].amount,2);assert.equal(rewards[2].kind,'card');
  const original=[{kind:'animal',id:'tharos',amount:2}];assert.equal(art.normalize({rewards:original}),original);
 });
 
@@ -37,4 +37,13 @@ test('amulet gem colors come from their tier key, including gallery examples',()
 test('collectible atlas sprites are clipped to exactly their own cell',()=>{
  const context={HallArt:{},HallWorld:{}};vm.runInNewContext(fs.readFileSync('public/hall-character-art.js','utf8'),context);const ids=['relic:rose','relic:moon','relic:crown','relic:books','relic:fern','relic:pennant','relic:skystones','relic:dragon'],clips=new Set();
  ids.forEach((id,index)=>{const svg=context.HallArt.decor(id),x=index%4*256,y=Math.floor(index/4)*256;assert.ok(svg.includes('<rect x="'+x+'" y="'+y+'" width="256" height="256"/>'));const clip=svg.match(/<clipPath id="([^"]+)"/)[1];assert.ok(svg.includes('clip-path="url(#'+clip+')"'));clips.add(clip);});assert.equal(clips.size,8);
+});
+
+test('daily pack amulet extras precede the last configured reward without changing the receipt',()=>{
+ const first={kind:'gem',id:'bronze',amount:2},last={kind:'animal',id:'tharos',amount:1};
+ const bonus={kind:'footy',amount:5,source:'amulet'},ruby={kind:'gem',id:'bronze',amount:1,source:'amulet'};
+ const receipt=[first,last,bonus,ruby],normalized=art.normalize({rewards:receipt});
+ assert.deepEqual(Array.from(normalized),[first,bonus,ruby,last]);assert.deepEqual(receipt,[first,last,bonus,ruby]);
+ assert.deepEqual(Array.from(art.normalize({rewards:[last,bonus]})),[bonus,last]);
+ assert.deepEqual(Array.from(art.normalize({rewards:[bonus,ruby]})),[bonus,ruby]);
 });
