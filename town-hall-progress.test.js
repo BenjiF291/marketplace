@@ -14,12 +14,27 @@ test('XP reset starts everyone at their existing level without changing unlocks 
  }
 });
 
-test('tutorial Town Hall ends at 200 XP and subsequent levels use shifted thresholds',()=>{
- assert.deepEqual(hall.THRESHOLDS,[0,200,1000,4000,8000,14000,22000,34000,50000,70000]);
+test('daily-visit Town Hall curve uses exact cumulative threshold boundaries',()=>{
+ assert.deepEqual(hall.THRESHOLDS,[0,100,450,1100,2400,4800,8000,12000,16600,22000]);
  for(let i=1;i<hall.THRESHOLDS.length;i++){
   const xp=hall.THRESHOLDS[i];
   assert.equal(hall.profile({townHallXP:xp-1,townHallProgressVersion:3}).level,i);
   const at=hall.profile({townHallXP:xp,townHallProgressVersion:3});
   assert.equal(at.level,i+1);assert.equal(at.progress,0);
  }
+});
+
+test('lower thresholds preserve earned XP and never reduce an existing level or balance',()=>{
+ const previous=[0,200,1000,4000,8000,14000,22000,34000,50000,70000];
+ for(const xp of [0,50,100,199,200,999,4000,14000,22000,34000,50000,70000,99999]){
+  const u={townHallXP:xp,townHallProgressVersion:3,balance:123,gems:{bronze:456}},before=structuredClone(u),p=hall.profile(u);let oldLevel=1;while(oldLevel<10&&xp>=previous[oldLevel])oldLevel++;
+  assert.equal(p.xp,xp);assert.ok(p.level>=oldLevel);assert.deepEqual(u,before);
+  const next=hall.grant(u,5,'pack');assert.ok(next.townHallXP>=xp);assert.equal(next.townHallXP,xp>=hall.MAX_XP?xp:Math.min(hall.MAX_XP,xp+5));
+ }
+ assert.equal(hall.profile({townHallXP:4800,townHallProgressVersion:3}).level,6);
+ assert.equal(hall.profile({townHallXP:50,townHallProgressVersion:3,townHallRetainedLevel:7}).level,7);
+});
+test('daily-login target reaches TH6 in about 45 days and later levels slow gradually',()=>{
+ const income=[53,79,85,111,134,146,166,166,166],days=hall.THRESHOLDS.slice(1).map((xp,i)=>Math.ceil((xp-hall.THRESHOLDS[i])/income[i]));
+ assert.equal(days.slice(0,5).reduce((a,b)=>a+b,0),45);assert.deepEqual(days.slice(5),[22,25,28,33]);
 });

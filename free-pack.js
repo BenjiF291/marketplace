@@ -15,7 +15,7 @@ function validate(value,catalog){
   if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>100)throw Error(`Card ${index+1} needs a title and 1-100 reward options.`);
   let sum=0;const options=card.options.map(option=>{
    const {kind,id,min,max,chance}=option;
-   if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal'].includes(kind))throw Error('Unknown reward type.');
+   if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal','brawlToken'].includes(kind))throw Error('Unknown reward type.');
    if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min||max>10000||(['pack','card','animal'].includes(kind)&&max>20))throw Error('Use whole amounts from 1 to 10000 (up to 20 for cards, packs or animals).');
    if(!Number.isFinite(chance)||chance<0||chance>100)throw Error('Chances must be between 0 and 100 percent.');
    if(kind!=='footy'&&!catalog[kind]?.some(entry=>entry.id===id))throw Error(`Choose an available ${kind} reward.`);
@@ -30,20 +30,35 @@ function validate(value,catalog){
  for(const key of Object.keys(appearance))if(value.appearance?.[key]!==undefined){if(typeof value.appearance[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(value.appearance[key]))throw Error('Choose valid pack colors.');appearance[key]=value.appearance[key];}
  return {name:value.name.trim(),enabled:value.enabled,cooldownHours:value.cooldownHours,cards,appearance};
 }
-function draw(config,random=randomInt){return config.cards.map((card,index)=>{
+function draw(config,random=randomInt,catalog={},user={}){const result=[],awarded=new Set(),unique=require('./unique-creature-rewards');for(const [index,source] of config.cards.entries()){const card=unique.cards([source],catalog,user,awarded)[0];if(!card)continue;
  const roll=random(1000000)/10000;let sum=0,selected;
  for(const option of card.options){sum+=option.chance;if(roll<sum){selected=option;break;}}
  if(!selected)selected=card.options.filter(o=>o.chance>0).at(-1);
- return {card:index+1,title:card.title,kind:selected.kind,id:selected.id,amount:selected.min+random(selected.max-selected.min+1)};
-});}
+ let id=selected.id;
+ if(selected.kind==='brawlToken'&&id.startsWith('rarity:')||selected.kind==='rubyItem'&&id.startsWith('rarity:clothing:')){
+  const pool=catalog[selected.kind]?.find(entry=>entry.id===id)?.members;
+  if(!pool?.length)throw Error(selected.kind==='brawlToken'?'No creatures are currently assigned to '+id.slice(7)+' rarity.':'No clothing is currently assigned to '+id+' .');
+  id=selected.kind==='brawlToken'?require('./brawl-token-selection').choose(pool,user,random):pool[random(pool.length)];
+ }
+ const reward={card:index+1,title:card.title,kind:selected.kind,id,amount:selected.min+random(selected.max-selected.min+1)};const uniqueId=unique.creature(reward,catalog);if(uniqueId){awarded.add(uniqueId);reward.amount=1;reward.rarity='unique';}result.push(reward);
+}if(config.cards.length&&!result.length&&!config.allowEmpty)throw Error('You already own all Unique creatures available in this pack.');return result;}
 function apply(user,rewards){
- const update={gems:require('./gem-wallet').wallet(user.gems),balance:Number(user.balance)||0,timeBoosts:{...user.timeBoosts},rubyItems:{...user.rubyItems},amulets:{...user.amulets},stableAnimals:{...user.stableAnimals}};
- for(const reward of rewards){const {kind,id,amount}=reward;
-  if(kind==='animal'){const animal=require('./public/stable-animals').animals.find(a=>a.id===id);if(!animal)throw Error('Unknown animal.');const field=animal.companion?'rubyItems':'stableAnimals',key=animal.companion?'pet:'+id:id;update[field][key]=(Number(update[field][key])||0)+amount;}
-  else if(kind==='footy')update.balance=Math.round((update.balance+amount)*100)/100;
-  else {const field={gem:'gems',boost:'timeBoosts',rubyItem:'rubyItems',amulet:'amulets'}[kind];if(field)update[field][id]=(Number(update[field][id])||0)+amount;}
+ const update={gems:require('./gem-wallet').wallet(user.gems),balance:require('./public/currency-format').footy(Number(user.balance)||0),timeBoosts:{...user.timeBoosts},rubyItems:{...user.rubyItems},amulets:{...user.amulets},stableAnimals:{...user.stableAnimals}};
+ for(const reward of rewards){const {kind,id}=reward,amount=kind==='gem'?Math.round(reward.amount):kind==='footy'?require('./public/currency-format').footy(reward.amount):reward.amount;
+  if(kind==='brawlToken'){const creature=require('./public/creature-brawl-catalog').creatures.find(c=>c.id===id);if(!creature)throw Error('Unknown Brawl token.');if(!Number.isSafeInteger(amount)||amount<1||amount>10005)throw Error('Invalid Brawl token amount.');if(!update.creatureBrawl)update.creatureBrawl={...user.creatureBrawl,tokens:require('./creature-token-wallet').wallet(user.creatureBrawl)};const tokens=update.creatureBrawl.tokens;tokens[creature.tokenKey]=(Number(tokens[creature.tokenKey])||0)+amount;}
+  else if(kind==='animal'){const animal=require('./public/stable-animals').animals.find(a=>a.id===id);if(!animal)throw Error('Unknown animal.');const field=animal.companion?'rubyItems':'stableAnimals',key=animal.companion?'pet:'+id:id;update[field][key]=reward.rarity==='unique'?1:(Number(update[field][key])||0)+amount;}
+  else if(kind==='footy')update.balance=require('./public/currency-format').footy(update.balance+amount);
+  else {const field={gem:'gems',boost:'timeBoosts',rubyItem:'rubyItems',amulet:'amulets'}[kind];if(field)update[field][id]=kind==='rubyItem'&&id.startsWith('pet:')&&reward.rarity==='unique'?1:(Number(update[field][id])||0)+amount;}
  }
  return update;
 }
 function label(reward,catalog){const name=reward.kind==='footy'?'Footy':catalog[reward.kind]?.find(item=>item.id===reward.id)?.name||reward.id;return `${reward.amount} ${name}`;}
-module.exports={defaults,validate,draw,apply,label,GEM_NAMES};
+function rewardAmulets(user,rewards){const bonus=require('./amulet-utils').effects(user).packtokens||0;return rewards.map(reward=>{if(reward.kind!=='brawlToken'||!bonus)return reward;const amount=reward.amount+bonus;return {...reward,amount,...(reward.label?{label:reward.label.replace(/^\d+\s+/,amount+' ')}:{})};});}
+function tokenProgress(user,rewards){
+ const catalog=require('./public/creature-brawl-catalog'),wallet=require('./creature-token-wallet').wallet(user.creatureBrawl);
+ const owned=require('./creature-brawl-service').reconcile({...user,...apply(user,rewards)}).owned;
+ return rewards.map(reward=>{if(reward.kind!=='brawlToken')return reward;const creature=catalog.creatures.find(c=>c.id===reward.id),before=Number(wallet[creature.tokenKey])||0,after=before+reward.amount,grade=owned.find(i=>i.kind===reward.id)?.grade||1;wallet[creature.tokenKey]=after;return {...reward,tokenProgress:{owned:owned.some(i=>i.kind===reward.id),before,after,target:grade<10?grade*5:null,grade,species:creature.tokenKey}};});
+}
+function openingAmuletRewards(user,random=randomInt){const buffs=require('./amulet-utils').effects(user),rewards=[];if(buffs.pack)rewards.push({kind:'footy',id:'',amount:buffs.pack,label:buffs.pack+' Footy',source:'amulet'});if(buffs.packgem&&random(100)<buffs.packgem)rewards.push({kind:'gem',id:'bronze',amount:1,label:'1 Ruby',source:'amulet'});return rewards;}
+function amuletOdds(user,cards){const bonus=require('./amulet-utils').effects(user).packtokens||0;return cards.map(card=>({...card,options:card.options.map(option=>option.kind==='brawlToken'?{...option,min:option.min+bonus,max:option.max+bonus}:option)}));}
+module.exports={defaults,validate,draw,apply,label,GEM_NAMES,rewardAmulets,openingAmuletRewards,amuletOdds,tokenProgress};

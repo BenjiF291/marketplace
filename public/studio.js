@@ -112,7 +112,7 @@
     const empty=document.createElement('p');empty.className='studio-filter-empty studio-only';empty.hidden=true;list.after(empty);
     const apply=()=>{if(!enabled){Array.from(list.children).forEach(row=>row.classList.remove('studio-filtered'));return;}
       const query=toolbar.querySelector('input').value.toLowerCase().trim();let count=0;
-      Array.from(list.children).forEach(row=>{const match=!query||row.textContent.toLowerCase().includes(query)||Array.from(row.querySelectorAll('img')).some(img=>img.alt.toLowerCase().includes(query));row.classList.toggle('studio-filtered',!match);if(match)count++;});
+      Array.from(list.children).forEach(row=>{const match=!row.hidden&&(!query||row.textContent.toLowerCase().includes(query)||Array.from(row.querySelectorAll('img')).some(img=>img.alt.toLowerCase().includes(query)));row.classList.toggle('studio-filtered',!match);if(match)count++;});
       $(`studioCount-${listId}`).textContent=query?`${count} matches`:'';
       empty.hidden=!(query&&count===0);empty.textContent='Nothing matches that search. Try a different name.';
     };

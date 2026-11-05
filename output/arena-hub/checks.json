@@ -1,0 +1,12 @@
+{
+  "errors": [],
+  "checks": [
+    "two illustrated half-screen mode panels",
+    "small accessible close cross",
+    "ranked disabled without three saved creatures",
+    "team builder/save and lobby portraits",
+    "grade upgrade manager",
+    "AI difficulty and opponent preview",
+    "desktop, phone and short landscape layouts"
+  ]
+}

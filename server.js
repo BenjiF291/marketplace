@@ -30,6 +30,7 @@ app.use((req, res, next) => {
     'http://127.0.0.1:3000'
   ];
 
+  res.vary('Origin');
   const origin = req.headers.origin;
   const localOrigin = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(origin || '');
   if (allowedOrigins.includes(origin) || localOrigin || !origin) {
@@ -47,8 +48,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.static('public'));
+require('./http-optimization')(app, path.join(__dirname, 'public'));
 
 const { createDailyPackService, dailyPrice } = require('./daily-packs');
 const ensureDailyPack = createDailyPackService({
@@ -850,8 +850,8 @@ app.post('/battle-matches/:matchId/place', async (req, res) => {
           const winnerDoc = winnerId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
           const loserDoc = loserId === match.participantIds[0] ? firstUserDoc : secondUserDoc;
           const battleBonus = roundFooty(Math.min(500, prize * (amuletEffects(winnerDoc.data()).battle || 0) / 100));
-          transaction.update(winnerRef, { balance: Number(winnerDoc.data().balance || 0) + prize + battleBonus });
-          transaction.update(loserRef, { balance: Number(loserDoc.data().balance || 0) - prize });
+          transaction.update(winnerRef, { balance: roundFooty(Number(winnerDoc.data().balance || 0) + prize + battleBonus) });
+          transaction.update(loserRef, { balance: roundFooty(Number(loserDoc.data().balance || 0) - prize) });
         }
         if(!timeOut){for(const [ref,doc] of [[firstUserRef,firstUserDoc],[secondUserRef,secondUserDoc]]){const xp=require('./town-hall-progress').gameplay(doc.data(),'player battle');if(Object.keys(xp).length)transaction.update(ref,xp);}}
         prizePaid = true;
@@ -1072,6 +1072,7 @@ app.post('/spin-wheel', async (req, res) => {
 
     let rewardAmount;
     let baseReward;
+    let spinReward, bonusFooty, vipMultiplier;
     let newBalance;
 
     await db.runTransaction(async (transaction) => {
@@ -1102,10 +1103,14 @@ app.post('/spin-wheel', async (req, res) => {
         rewardAmount = rewardAmount * 2;
       }
 
+      vipMultiplier = vipUntil && vipUntil.getTime() > now.getTime() ? 2 : 1;
+      spinReward = rewardAmount;
       rewardAmount += amuletEffects(user).wheel || 0;
       const wheelSpinCount=(Number(user.wheelSpinCount)||0)+1;
       if(wheelSpinCount%3===0)rewardAmount+=amuletEffects(user).wheelstreak||0;
-      newBalance = (user.balance || 0) + rewardAmount;
+      rewardAmount = roundFooty(rewardAmount);
+      bonusFooty = roundFooty(rewardAmount - spinReward);
+      newBalance = roundFooty(Number(user.balance || 0) + rewardAmount);
       nextSpinAt = new Date(now.getTime() + cooldownMs);
 
       transaction.update(userRef, {
@@ -1118,7 +1123,7 @@ app.post('/spin-wheel', async (req, res) => {
       });
     });
 
-    res.json({ amount: rewardAmount, baseReward, balance: newBalance, nextSpinAt: nextSpinAt.toISOString() });
+    res.json({ amount: rewardAmount, baseReward, spinReward, bonusFooty, vipMultiplier, balance: newBalance, nextSpinAt: nextSpinAt.toISOString() });
   } catch (error) {
     console.error('Spin wheel error:', error);
 
@@ -1136,7 +1141,8 @@ app.post('/spin-wheel', async (req, res) => {
 
 /* ------------------ TRANSFER ------------------ */
 app.post('/transfer', async (req, res) => {
-  const { fromId, toUsername, amount } = req.body;
+  const { fromId, toUsername, amount: rawAmount } = req.body;
+  const amount = typeof rawAmount === 'number' ? roundFooty(rawAmount) : NaN;
 
   if (!fromId || typeof fromId !== 'string') {
     return res.status(400).send('Invalid sender');
@@ -1184,11 +1190,11 @@ app.post('/transfer', async (req, res) => {
       const toUser = toDoc.data();
 
       transaction.update(fromRef, {
-        balance: fromUser.balance - amount
+        balance: roundFooty(Number(fromUser.balance) - amount)
       });
 
       transaction.update(toDoc.ref, {
-        balance: toUser.balance + amount
+        balance: roundFooty(Number(toUser.balance) + amount)
       });
 
       transaction.set(transferHistoryRef, {
@@ -1261,7 +1267,7 @@ app.get('/items', async (req, res) => {
         const item = {
           id: doc.id,
           name: data.name || 'Unknown Item',
-          price: data.currency&&data.currency!=='footy'&&Number(data.price)>0?require('./gem-wallet').price(data.price,data.currency):data.price||0,
+          price: data.currency&&data.currency!=='footy'&&Number(data.price)>0?require('./gem-wallet').price(data.price,data.currency):roundFooty(data.price||0),
           currency: data.currency || 'footy', currencyName: data.currencyName || 'Footy',
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
@@ -1722,7 +1728,7 @@ app.post('/open-pack', async (req, res) => {
         transaction.update(packItemRef,{pendingPackChoices:picks});
         return {choices:picks,packColor:packItem.packColor||pack.color};
       }
-      const extraRewards=require('./pack-builder').draw(pack,rewardCatalog),extraPacks=new Map();
+      const extraRewards=require('./free-pack').tokenProgress(opener.data(),require('./free-pack').rewardAmulets(opener.data(),require('./pack-builder').draw(pack,rewardCatalog,opener.data()))),extraPacks=new Map();
       for(const reward of extraRewards)if(reward.kind==='pack'&&!extraPacks.has(reward.id)){const doc=await transaction.get(db.collection('packs').doc(reward.id));if(!doc.exists||!require('./pack-builder').hasRewards(doc.data()))throw Error('A reward pack is unavailable');extraPacks.set(reward.id,doc.data());}
       const rewardUpdate=require('./free-pack').apply(opener.data(),extraRewards);
       for(const reward of extraRewards)if(['card','pack'].includes(reward.kind))for(let i=0;i<reward.amount;i++){const meta=extraPacks.get(reward.id);transaction.set(db.collection('items').doc(),{name:meta?.name||('Card '+reward.id),itemType:reward.kind,packId:meta?reward.id:null,packColor:meta?.color||null,imageUrl:reward.kind==='card'?'/images/'+reward.id:null,price:0,sellerId:requesterId,buyerId:requesterId,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-reward'});}
@@ -2198,7 +2204,7 @@ app.post('/buy', async (req, res) => {
       const hasActiveVip = vipUntil && vipUntil.getTime() > Date.now();
       const currency = item.currency || 'footy';
       const hasHostDiscount = hasActiveVip && seller.isAdmin === true && vipPercent(item.vipDiscountPercent)>0;
-      const basePrice=currency==='footy'?item.price:require('./gem-wallet').price(item.price,currency);
+      const basePrice=currency==='footy'?roundFooty(item.price):require('./gem-wallet').price(item.price,currency);
       const sellerPayment = hasHostDiscount ? vipPrice(basePrice,item.vipDiscountPercent,item.currency) : basePrice;
       const purchasePrice = currency === 'footy' && seller.isAdmin === true ? discounted(sellerPayment, amuletEffects(buyer).market) : sellerPayment;
       if(req.body.expectedPrice!==undefined && req.body.expectedPrice!==purchasePrice)throw new Error('Price changed. Refresh the marketplace before buying.');
@@ -2693,6 +2699,7 @@ require('./free-pack-routes')(app, db, brawlAuth.authenticate);
 require('./pack-shop-routes')(app, db, brawlAuth.authenticate);
 require('./pack-reward-presets')(app, db, brawlAuth.authenticate);
 require('./stable-routes')(app, db, brawlAuth.authenticate);
+require('./creature-brawl-routes')(app, db, brawlAuth.authenticate);
 
 /* ------------------ START SERVER ------------------ */
 const PORT = process.env.PORT || 3000;

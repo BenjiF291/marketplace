@@ -27,6 +27,18 @@ test('regular packs retain legacy behavior without extra rewards and validate ne
  const h=harness();const result=await h.invoke('post','/open-pack',{itemId:'owned'},'u');assert.equal(result.status,200);assert.equal(result.payload.extraRewards.length,0);assert.equal(result.payload.cardId,'Bronze_jan.png');
 });
 
+test('only admins can save a per-pack purchase cooldown',async()=>{
+ const h=harness(),body={name:'Bronze',cardIds:['Bronze_jan.png'],color:'#996633',shop:{enabled:true,price:10,currency:'footy',cooldownMinutes:195}};
+ assert.equal((await h.invoke('put','/packs/:packId',body,'u')).status,403);assert.equal(h.records['packs/main'].shop,undefined);
+ assert.equal((await h.invoke('put','/packs/:packId',body)).status,200);assert.equal(h.records['packs/main'].shop.cooldownMinutes,195);
+});
+
+test('regular pack token rewards include equipped Token Cache in the receipt and wallet',async()=>{
+ const h=harness();h.records['users/u'].amuletSlots=[{bonuses:{packtokens:2}}];h.records['users/u'].creatureBrawl={tokens:{rill:6}};
+ h.records['packs/main'].rewardCards=[slot('brawlToken','rill-species',3)];
+ const result=await h.invoke('post','/open-pack',{itemId:'owned'},'u');assert.equal(result.status,200);assert.equal(result.payload.extraRewards[0].amount,5);assert.equal(h.records['users/u'].creatureBrawl.tokens.rill,11);
+});
+
 test('reward-only packs can be saved and opened without a phantom collection card',async()=>{
  const h=harness(),body={name:'Supplies',cardIds:[],color:'#996633',rewardCards:[slot('gem','bronze',5)]};
  assert.equal((await h.invoke('put','/packs/:packId',body)).status,200);

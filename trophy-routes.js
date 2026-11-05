@@ -96,7 +96,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
     // Use the CURRENT level; boosters never become permanent inventory items.
     const activeBooster=skill.profile(rating).booster;
     const update=trophyUpdate(user.data(),isSkill?'medium':current.data().difficulty,result.result,isSkill?activeBooster.trophyPercent:0);
-    const footy=isSkill&&result.result>0?activeBooster.footy:0;
+    const baseFooty=isSkill&&result.result>0?activeBooster.footy:0,footy=require('./amulet-utils').round(baseFooty+Math.min(500,baseFooty*(amuletEffects(user.data()).battle||0)/100));
     if(isSkill&&result.result>0){update.trophies+=(amuletEffects(user.data()).trophybonus||0);update.trophyPeak=Math.max(update.trophyPeak,update.trophies);update.trophyRoadPeak=Math.max(update.trophyRoadPeak,update.trophies);}
     const ruby=isSkill&&result.result>0?activeBooster.ruby:0;
     if(ruby)update.gems={...require('./gem-wallet').wallet(user.data().gems),bronze:require('./gem-wallet').whole(user.data().gems?.bronze)+ruby};
@@ -126,7 +126,7 @@ module.exports=(app,db,getOwned,authenticate)=>{
       tx.set(db.collection('packs').doc(packId),{name:reward.packName,cardIds:rewardTier.cards,color:rewardTier.backgroundColor||'#b79d4a',trophyReward:true});
       for(let i=0;i<(reward.packCount||1);i++)tx.set(db.collection('items').doc(),{name:reward.packName,itemType:'pack',packId,packColor:rewardTier.backgroundColor||'#b79d4a',price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,sourceItemId:null,imageUrl:null,purchasedAt:new Date(),createdAt:new Date()});
     }
-    tx.update(ref,{...road,...require('./town-hall-progress').gameplay(user,'trophy reward'),gems,amulets,gemDyes:dyes,balance:(user.balance||0)+reward.footy,trophyClaims:[...claims,reward.claimId]});return {success:true};
+    tx.update(ref,{...road,...require('./town-hall-progress').gameplay(user,'trophy reward'),gems,amulets,gemDyes:dyes,balance:require('./public/currency-format').footy(Number(user.balance||0)+reward.footy),trophyClaims:[...claims,reward.claimId]});return {success:true};
   });
  });
 };

@@ -1,18 +1,18 @@
 const {stations,has}=require('./pet-stations');
-const {SHIFT:MINE_SHIFT}=require('./ruby-mine-rules');
+const {shiftDuration}=require('./ruby-mine-rules');
 const layout=require('./public/village-layout'),workforce=require('./village-workforce');
-const RESOURCES={water:{minutes:20,tier:1},carrot:{minutes:40,tier:1},corn:{minutes:80,tier:2},milk:{minutes:120,tier:3},meat:{minutes:240,tier:3}};
+const RESOURCES={water:{workers:2,minutes:20,tier:1},carrot:{workers:3,minutes:40,tier:1},corn:{workers:4,minutes:80,tier:2},milk:{workers:5,minutes:120,tier:3},meat:{workers:6,minutes:240,tier:3}};
 const PETS=['pet:fox','pet:snail','pet:dragon'];
 const MULTIPLIERS=[1,1.08,1.2,1.38,1.65,2,2.45,3,3.6,4.25,5];
 const MEALS={food:{name:'Regular meal',gain:1,ingredients:{water:1,carrot:1},tier:1},'food:trail':{name:'Better meal',gain:2,ingredients:{water:1,corn:1},tier:2},'food:feast':{name:'Extraordinary meal',gain:4,ingredients:{milk:1,meat:1},tier:3}};
 const happiness=(u,id)=>Math.max(0,Math.min(10,Math.trunc(Number(u.petHappiness?.[id])||0)));
 function busyHouses(u,now=Date.now()){
- return new Set([...Object.values(u.rubyMineShifts||{}).filter(s=>now<s.started+MINE_SHIFT).map(s=>s.house||s.worker?.split('/')[0]),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends).map(j=>j.house),...stations(u).map(s=>s.house).filter(Boolean)]);
+ return new Set([...Object.values(u.rubyMineShifts||{}).filter(s=>now<s.started+shiftDuration(s)).map(s=>s.house||s.worker?.split('/')[0]),...Object.values(u.farmJobs||{}).filter(j=>now<j.ends).map(j=>j.house),...stations(u).map(s=>s.house).filter(Boolean)]);
 }
 function profile(u,now=Date.now()){
  const busy=busyHouses(u,now),homes=layout.profile(u),level=require('./town-hall-progress').profile(u).level;
  const farmJobs=Object.entries(u.farmJobs||{}).filter(([id])=>Object.hasOwn(RESOURCES,id)).map(([resource,j])=>({...j,resource,active:now<j.ends,claimable:Math.max(0,Math.min(3,Math.floor((now-j.started)/((j.ends-j.started)/3||RESOURCES[resource].minutes*60000)))-(j.claimed||0))}));
- return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3&&(u.villageGridVersion!==2||u.villageLayout?.petstation!==undefined),farmUnlocked:level>=2&&(u.villageGridVersion!==2||u.villageLayout?.farmhouse!==undefined),farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,owned:Number(u.rubyItems?.[id])||0})),stations:stations(u).map(s=>({...s,workers:workforce.assigned(s,workforce.residents(u))})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,playReadyAt:Number(u.petCareCooldowns?.[id]?.play)||0,feedReadyAt:Number(u.petCareCooldowns?.[id]?.feed)||0,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:has(u,id)})),serverNow:now};
+ return {workforce:workforce.profile(u,now),resources:RESOURCES,farmJobs,stationUnlocked:level>=3&&(u.villageGridVersion!==2||u.villageLayout?.petstation!==undefined),farmUnlocked:level>=2&&(u.villageGridVersion!==2||u.villageLayout?.farmhouse!==undefined),farmLevel:Math.max(1,Math.min(3,Number(u.farmLevel)||1)),ingredients:u.farmIngredients||{},meals:Object.entries(MEALS).map(([id,m])=>({id,...m,nutrition:require('./creature-growth').FOODS.find(f=>f.id===id)?.nutrition||0,owned:Number(u.rubyItems?.[id])||0})),stations:stations(u).map(s=>({...s,workers:workforce.assigned(s,workforce.residents(u))})),station:u.petStation?{...u.petStation,workers:workforce.assigned(u.petStation,workforce.residents(u))}:null,availableHouses:Object.keys(homes.houseTiers).filter(h=>!busy.has(h)),pets:PETS.filter(id=>u.rubyItems?.[id]>0).map(id=>({id,growth:require('./creature-growth').profile(u,id.slice(4),0),playReadyAt:Number(u.petCareCooldowns?.[id]?.play)||0,feedReadyAt:Number(u.petCareCooldowns?.[id]?.feed)||0,happiness:happiness(u,id),multiplier:MULTIPLIERS[happiness(u,id)],travelling:u.petJourneys?.[id]?.status==='travelling',inStation:has(u,id)})),serverNow:now};
 }
 function action(u,b,now=Date.now()){u=require('./gem-wallet').user(u);
  const state=profile(u,now);
@@ -31,12 +31,12 @@ function action(u,b,now=Date.now()){u=require('./gem-wallet').user(u);
   const petCareCooldowns={...(u.petCareCooldowns||{}),[b.pet]:{...(u.petCareCooldowns?.[b.pet]||{}),[key]:now+(key==='play'?3600000:7200000)}};
   if(b.action==='pet-play')return {petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
   const meal=Object.hasOwn(MEALS,b.food)?MEALS[b.food]:null;if(!meal||!(u.rubyItems?.[b.food]>0))throw Error('Choose a meal you own.');
-  return {petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)},rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};
+  const growth=require('./creature-growth'),progress=growth.profile(u,b.pet.slice(4),0),fed=progress.level<growth.MAX_LEVEL?growth.feed(u,{instanceId:b.pet.slice(4)+':0',foodId:b.food}).update:{rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};return {...fed,petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)}};
  }
  if(b.action==='farm-start'){
   const resource=Object.hasOwn(RESOURCES,b.resource)?RESOURCES[b.resource]:null;if(!state.farmUnlocked||!resource||resource.tier>state.farmLevel)throw Error('This ingredient is not unlocked.');
   if(state.farmJobs.some(j=>j.resource===b.resource))throw Error('Collect this ingredient assignment first.');
-  return {farmJobs:{...(u.farmJobs||{}),[b.resource]:{workers:workforce.allocate(u,2,now),started:now,ends:now+3*resource.minutes*60000,claimed:0}}};
+  return {farmJobs:{...(u.farmJobs||{}),[b.resource]:{workers:workforce.allocate(u,resource.workers,now),started:now,ends:now+3*resource.minutes*60000,claimed:0}}};
  }
  if(b.action==='farm-collect'||b.action==='farm-recall'){
   const job=state.farmJobs.find(j=>j.resource===b.resource);if(!job)throw Error('Assignment not found.');

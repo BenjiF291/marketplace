@@ -1,0 +1,16 @@
+{
+  "errors": [],
+  "selected": [
+    "fixture-5",
+    "fixture-0",
+    "fixture-10"
+  ],
+  "checks": [
+    "owned and unowned artwork",
+    "actual rarity metadata and grade/token progress",
+    "selection/removal/replacement and persistence",
+    "rarity/name sort, search, class and owned filters",
+    "ability inspection",
+    "desktop/landscape/mobile fits and reachable save"
+  ]
+}

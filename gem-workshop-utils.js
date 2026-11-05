@@ -3,8 +3,8 @@ const DYE_AREAS = { background: 'Page background', header: 'Header', panels: 'Se
 const { effects } = require('./amulet-utils');
 function refineryProgress(user,tiers){
  const identities=tiers.map(gemIdentity),diamond=identities.findIndex(g=>g.gemKey==='ultra'),hasSpecial=diamond>=0&&diamond<identities.length-1,max=hasSpecial?diamond+1:Math.max(0,identities.length-1);
- // Existing all-tier machines and previous special-tier upgrades retain every recipe.
- const level=Number.isSafeInteger(user.gemRefineryLevel)?Math.max(0,Math.min(max,user.gemRefineryLevel)):(user.gemCompressor===true?max:0),allSpecial=hasSpecial&&level===max,unlockedIndex=allSpecial?identities.length-1:level;
+ // Only explicit refinery upgrades unlock recipes; the legacy compressor flag is not a refinery upgrade.
+ const level=Number.isSafeInteger(user.gemRefineryLevel)?Math.max(0,Math.min(max,user.gemRefineryLevel)):0,allSpecial=hasSpecial&&level===max,unlockedIndex=allSpecial?identities.length-1:level;
  const specialUpgrade=hasSpecial&&level===diamond,next=level<max?identities[level+1]:null;
  return {level,max,unlockedIndex,artLevel:allSpecial?9:level,current:allSpecial?{...identities[level],gemName:'All special crystals'}:identities[level]||null,nextUpgrade:next?{...next,...(specialUpgrade?{gemName:'All special crystals',unlocks:identities.slice(diamond+1)}:{}),costs:identities.slice(0,specialUpgrade?identities.length:level+2).map((g,i)=>({...g,amount:i>level?5:10}))}:null};
 }

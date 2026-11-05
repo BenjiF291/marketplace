@@ -1,5 +1,15 @@
 const test=require('node:test'),assert=require('node:assert/strict');const shop=require('./ruby-shop');
 const tiers=['Bronze','Rare Bronze','Silver','Rare Silver','Gold','Rare Gold','Platinum','Lightning','Ultra','Special','Mythic'].map((name,order)=>({name,order,packs:[`p${order}`]}));
+
+test('all five pack effects can be bought and equipped, and require ownership',()=>{
+ const effects=shop.CATALOG.filter(item=>item.kind==='opening');assert.equal(effects.length,5);
+ for(const item of effects){
+  const user={gems:{bronze:500}};assert.throws(()=>shop.use(user,{itemId:item.id}),/own/);
+  Object.assign(user,shop.purchase(user,item.id));assert.equal(user.gems.bronze,500-item.price);
+  assert.equal(shop.use(user,{itemId:item.id}).rubyEquipped.opening,item.id);
+  assert.throws(()=>shop.purchase(user,item.id),/Already/);
+ }
+});
 test('shop spends only Ruby, forbids duplicate pets and invalid goods',()=>{
  const user={gems:{bronze:150,gold:20}};const update=shop.purchase(user,'pet:fox');assert.equal(update.gems.bronze,50);assert.equal(update.gems.gold,20);assert.equal(user.gems.bronze,150);
  assert.throws(()=>shop.purchase({...user,...update},'pet:fox'),/Already/);assert.throws(()=>shop.purchase({gems:{bronze:1}},'fuel'),/enough/);assert.throws(()=>shop.purchase(user,'forged'));
@@ -36,7 +46,11 @@ test('Ruby transactions authenticate and deduplicate retries of purchases',async
  assert.equal(status,200);assert.equal(records['users/u'].gems.bronze,85);assert.equal(records['users/u'].rubyItems.fuel,1);assert.equal(authenticated,2);
 });
 
-test('food purchases require the matching farmhouse tier',()=>{const shop=require('./ruby-shop'),u={gems:{bronze:100},townHallXP:0};assert.throws(()=>shop.purchase(u,'food'),/farmhouse/);u.townHallXP=100;assert.equal(shop.purchase(u,'food').rubyItems.food,1);assert.throws(()=>shop.purchase(u,'food:trail'),/farmhouse/);u.farmLevel=2;assert.equal(shop.purchase(u,'food:trail').rubyItems['food:trail'],1);assert.throws(()=>shop.purchase(u,'food:feast'),/farmhouse/);u.farmLevel=3;assert.equal(shop.purchase(u,'food:feast').rubyItems['food:feast'],1);});
+test('food purchases require the matching farmhouse tier',()=>{const shop=require('./ruby-shop'),u={gems:{bronze:100},balance:100,townHallXP:0};assert.throws(()=>shop.purchase(u,'food'),/farmhouse/);u.townHallXP=100;assert.equal(shop.purchase(u,'food').rubyItems.food,1);assert.throws(()=>shop.purchase(u,'food:trail'),/farmhouse/);u.farmLevel=2;assert.equal(shop.purchase(u,'food:trail').rubyItems['food:trail'],1);assert.throws(()=>shop.purchase(u,'food:feast'),/farmhouse/);u.farmLevel=3;assert.equal(shop.purchase(u,'food:feast').rubyItems['food:feast'],1);});
 test('extra outfits have distinct prices, require ownership and persist when equipped',()=>{const shop=require('./ruby-shop');for(const [outfit,cost] of [['botanist',15],['mariner',25],['starlight',40]]){const id='outfit:'+outfit,u={balance:100,gems:{bronze:100}};assert.throws(()=>shop.use(u,{itemId:id}),/own/);Object.assign(u,shop.purchase(u,id));assert.equal(u.balance,100-cost);assert.equal(u.gems.bronze,100);assert.throws(()=>shop.purchase(u,id),/Already owned/);const update=shop.use(u,{itemId:id});assert.equal(update.townHallCharacter.outfit,outfit);}});
 
 test('collectibles can be purchased repeatedly for full price, including from player stalls',()=>{let u={gems:{bronze:500},rubyItems:{'relic:rose':1}};Object.assign(u,shop.purchase(u,'relic:rose'));assert.equal(u.rubyItems['relic:rose'],2);assert.equal(u.gems.bronze,350);const rules=require('./player-stall'),item=rules.catalog().find(i=>i.id==='relic:rose'),stall={entries:[{...item,unique:true,price:135,quantity:1}],history:[]};rules.buy(u,{gems:{}},stall,item.key,0);assert.equal(u.rubyItems['relic:rose'],3);assert.equal(u.gems.bronze,215);});
+
+test('all three pet foods charge Footy, preserve Rubies and reject insufficient Footy',()=>{
+ for(const id of ['food','food:trail','food:feast']){const item=shop.CATALOG.find(i=>i.id===id),user={townHallXP:8000,townHallProgressVersion:3,farmLevel:3,balance:100,gems:{bronze:0}};assert.equal(item.currency,'Footy');const update=shop.purchase(user,id);assert.equal(update.balance,100-item.price);assert.equal(update.rubyItems[id],1);assert.equal(update.gems,undefined);assert.equal(user.gems.bronze,0);assert.throws(()=>shop.purchase({...user,balance:item.price-.01,gems:{bronze:10000}},id),/Footy/);}
+});

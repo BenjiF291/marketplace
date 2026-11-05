@@ -1,0 +1,258 @@
+{
+  "source": "embedded-glb",
+  "joints": 29,
+  "skinnedMeshes": 1,
+  "proceduralSkinConditioned": false,
+  "clips": [
+    {
+      "name": "idle",
+      "duration": 4.800000190734863,
+      "tracks": 30,
+      "valid": true,
+      "maxVertexDisplacement": 0.06204813149595136,
+      "finite": true,
+      "p99EdgeStretch": 1.013904842142057,
+      "maxEdgeStretch": 1.1610828639734099
+    },
+    {
+      "name": "walk",
+      "duration": 1,
+      "tracks": 30,
+      "valid": true,
+      "maxVertexDisplacement": 0.9017858736311896,
+      "finite": true,
+      "p99EdgeStretch": 1.995641111839269,
+      "maxEdgeStretch": 7.636162119668289
+    },
+    {
+      "name": "run",
+      "duration": 0.6800000071525574,
+      "tracks": 30,
+      "valid": true,
+      "maxVertexDisplacement": 1.229003310091452,
+      "finite": true,
+      "p99EdgeStretch": 2.3383503647843162,
+      "maxEdgeStretch": 11.293790733095323
+    },
+    {
+      "name": "fly",
+      "duration": 0.800000011920929,
+      "tracks": 30,
+      "valid": true,
+      "maxVertexDisplacement": 1.0398559602340582,
+      "finite": true,
+      "p99EdgeStretch": 2.4501118816531293,
+      "maxEdgeStretch": 6.288546093175354
+    }
+  ],
+  "rootMotion": [
+    {
+      "clip": "idle",
+      "bone": "Torso",
+      "first": [
+        0,
+        0.8999999761581421,
+        0.3499999940395355
+      ],
+      "last": [
+        0,
+        0.8999999761581421,
+        0.3499999940395355
+      ],
+      "range": [
+        [
+          0,
+          0
+        ],
+        [
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        [
+          0.3499999940395355,
+          0.3499999940395355
+        ]
+      ],
+      "horizontalDrift": [
+        0,
+        0
+      ],
+      "removedVerticalOffset": 0
+    },
+    {
+      "clip": "walk",
+      "bone": "Torso",
+      "first": [
+        0,
+        0.7900000214576721,
+        0.3499999940395355
+      ],
+      "last": [
+        0,
+        0.7900000214576721,
+        0.3499999940395355
+      ],
+      "range": [
+        [
+          0,
+          0
+        ],
+        [
+          0.7860000133514404,
+          0.7940000295639038
+        ],
+        [
+          0.3499999940395355,
+          0.3499999940395355
+        ]
+      ],
+      "horizontalDrift": [
+        0,
+        0
+      ],
+      "removedVerticalOffset": 0
+    },
+    {
+      "clip": "run",
+      "bone": "Torso",
+      "first": [
+        0,
+        0.7599999904632568,
+        0.3499999940395355
+      ],
+      "last": [
+        0,
+        0.7599999904632568,
+        0.3499999940395355
+      ],
+      "range": [
+        [
+          0,
+          0
+        ],
+        [
+          0.7559999823570251,
+          0.7639999985694885
+        ],
+        [
+          0.3499999940395355,
+          0.3499999940395355
+        ]
+      ],
+      "horizontalDrift": [
+        0,
+        0
+      ],
+      "removedVerticalOffset": 0
+    },
+    {
+      "clip": "fly",
+      "bone": "Torso",
+      "first": [
+        0,
+        1.3200000524520874,
+        0.3499999940395355
+      ],
+      "last": [
+        0,
+        1.3200000524520874,
+        0.3499999940395355
+      ],
+      "range": [
+        [
+          0,
+          0
+        ],
+        [
+          1.3020000457763672,
+          1.3380000591278076
+        ],
+        [
+          0.3499999940395355,
+          0.3499999940395355
+        ]
+      ],
+      "horizontalDrift": [
+        0,
+        0
+      ],
+      "removedVerticalOffset": 0.4200000524520874
+    }
+  ],
+  "missing": [
+    "melee attack",
+    "ranged cast",
+    "hit reaction",
+    "defeat",
+    "victory"
+  ],
+  "scale": [
+    0.8307109776255427,
+    0.8307109776255427,
+    0.8307109776255427
+  ],
+  "bounds": [
+    2.6070323574008354,
+    2.600182323548946,
+    3.565691703557968
+  ],
+  "orientation": {
+    "forward": "+Z",
+    "yawOffset": 0
+  },
+  "combat": {
+    "moves": [
+      {
+        "id": "basic",
+        "progress": 0.54,
+        "travel": 14.59461964655792,
+        "scale": [
+          0.8307109776255427,
+          0.8307109776255427,
+          0.8307109776255427
+        ],
+        "home": 0,
+        "yawDrift": 0,
+        "effects": 0
+      },
+      {
+        "id": "embers",
+        "progress": 0.54,
+        "travel": 14.644359629386567,
+        "scale": [
+          0.8307109776255427,
+          0.8307109776255427,
+          0.8307109776255427
+        ],
+        "home": 0,
+        "yawDrift": 0,
+        "effects": 0
+      },
+      {
+        "id": "sweep",
+        "progress": 0.54,
+        "travel": 0,
+        "scale": [
+          0.8307109776255427,
+          0.8307109776255427,
+          0.8307109776255427
+        ],
+        "home": 0,
+        "yawDrift": 0,
+        "effects": 0
+      }
+    ],
+    "projectileCalls": 1
+  },
+  "checks": [
+    "actual BrawlArena scene",
+    "four embedded clips played/seeking",
+    "no procedural bone writes or skin conditioning",
+    "root translation inspection and Y offset rebase",
+    "melee contact, advance/return, facing, elevation and ranged projectile path",
+    "independent same-kind skeletons",
+    "desktop/mobile rendering",
+    "default production path unchanged",
+    "failed rigged GLB falls back to production factory"
+  ]
+}

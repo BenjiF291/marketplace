@@ -1,0 +1,209 @@
+{
+  "initial": {
+    "actors": 6,
+    "canvas": 1,
+    "independent": true,
+    "inward": true,
+    "cameraPerspective": true,
+    "cameraElevation": 23.805943518457717,
+    "positions": [
+      {
+        "id": "actor-0-0",
+        "position": {
+          "x": 320.00000000000114,
+          "y": 475.20000000000016
+        },
+        "height": 1.5525,
+        "bounds": {
+          "left": 265.448870775488,
+          "right": 364.3231120916439,
+          "top": 366.980342322036,
+          "bottom": 507.48741936916343
+        }
+      },
+      {
+        "id": "actor-0-1",
+        "position": {
+          "x": 640,
+          "y": 561.6000000000009
+        },
+        "height": 1.1475,
+        "bounds": {
+          "left": 615.1456037283982,
+          "right": 664.8543962716018,
+          "top": 473.7110751737724,
+          "bottom": 589.0502063183416
+        }
+      },
+      {
+        "id": "actor-0-2",
+        "position": {
+          "x": 972.7999999999986,
+          "y": 489.5999999999929
+        },
+        "height": 2.200360754182171,
+        "bounds": {
+          "left": 824.4128605921778,
+          "right": 1148.6088768767556,
+          "top": 329.91530010296526,
+          "bottom": 543.7874346646746
+        }
+      },
+      {
+        "id": "actor-1-0",
+        "position": {
+          "x": 345.6000000000007,
+          "y": 251.99999999999886
+        },
+        "height": 1.5525,
+        "bounds": {
+          "left": 315.16400436070467,
+          "right": 369.8891074911657,
+          "top": 171.80257590950993,
+          "bottom": 270.52438574809776
+        }
+      },
+      {
+        "id": "actor-1-1",
+        "position": {
+          "x": 640,
+          "y": 208.80000000000447
+        },
+        "height": 2.16,
+        "bounds": {
+          "left": 593.7624464548051,
+          "right": 686.237553545195,
+          "top": 106.93779416914205,
+          "bottom": 229.19267652744227
+        }
+      },
+      {
+        "id": "actor-1-2",
+        "position": {
+          "x": 934.3999999999993,
+          "y": 251.99999999999886
+        },
+        "height": 2.4975000000000005,
+        "bounds": {
+          "left": 890.204706522756,
+          "right": 989.6304325038835,
+          "top": 131.19523441725985,
+          "bottom": 272.58014083337656
+        }
+      }
+    ],
+    "rootTranslations": []
+  },
+  "results": [
+    {
+      "label": "melee",
+      "before": 300,
+      "beforeImpact": 300,
+      "travel": [
+        -0.10991460930084936,
+        0,
+        -1.0442311902362627
+      ],
+      "impacts": 1,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "ranged burn",
+      "before": 1180,
+      "beforeImpact": 1180,
+      "travel": [
+        0,
+        0,
+        0
+      ],
+      "impacts": 1,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "shield support",
+      "before": 760,
+      "beforeImpact": 760,
+      "travel": [
+        0,
+        0,
+        0
+      ],
+      "impacts": 1,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "heal support",
+      "before": 300,
+      "beforeImpact": 300,
+      "travel": [
+        0,
+        0,
+        0
+      ],
+      "impacts": 1,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "multi-hit",
+      "before": 1180,
+      "beforeImpact": 1180,
+      "travel": [
+        -0.09289851316438315,
+        0,
+        1.045882338626983
+      ],
+      "impacts": 2,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "AoE",
+      "before": 760,
+      "beforeImpact": 760,
+      "travel": [
+        -0.38585786380499204,
+        0,
+        0.9765314684841694
+      ],
+      "impacts": 3,
+      "defeats": 0,
+      "restored": true,
+      "noEffects": true
+    },
+    {
+      "label": "knockout",
+      "before": 1,
+      "beforeImpact": 1,
+      "travel": [
+        -0.10991460930084936,
+        0,
+        -1.0442311902362627
+      ],
+      "impacts": 1,
+      "defeats": 1,
+      "restored": true,
+      "noEffects": true
+    }
+  ],
+  "reduced": {
+    "movement": 0,
+    "quality": "low"
+  },
+  "lifecycle": {
+    "paused": true,
+    "resumed": true,
+    "lost": true,
+    "restored": true,
+    "reported": true
+  },
+  "errors": []
+}

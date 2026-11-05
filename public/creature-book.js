@@ -18,7 +18,10 @@
   {kind:'brugar-species',name:'',species:'Brugar',speciesKey:'brugar',number:'14',note:'Brugars are armored stone beasts with powerful limbs and heavy protective plates.'},
   {kind:'krynn-species',name:'',species:'Krynn',speciesKey:'krynn',number:'15',note:'Krynns are shadow beasts with pointed ears, spiked manes, and curved tails.'},
   {kind:'fenra-species',name:'',species:'Fenra',speciesKey:'fenra',number:'16',note:'Fenras are silver-winged magical creatures with long necks, feathered crests, four hooves, and flowing tails.'},
-  {kind:'defender-rill',name:'',species:'Defender Rill',number:'17',note:'Defender Rills are armored teal magical birds with feathered crests and flowing tails.'}
+  {kind:'defender-rill',name:'',species:'Defender Rill',number:'17',note:'Defender Rills are armored teal magical birds with feathered crests and flowing tails.'},
+  {kind:'kanji',name:'',species:'Kanji',number:'18',note:'Kanjis are feather-winged feline creatures with saber fangs and a long tail.'},
+  {kind:'trusk',name:'',species:'Trusk',number:'19',note:'Trusks are stocky bear-like creatures with layered scales and heavy paws.'},
+  {kind:'velkris',name:'',species:'Velkris',number:'20',note:'Velkris have eight jointed legs, ivory fangs, a green-and-black carapace and a curled stinger tail.'}
  ];
  const individualName=c=>c.species?c.name:'';
  const title=c=>individualName(c)||c.species||c.name;
@@ -51,7 +54,7 @@
  directionButton.onclick=()=>{reverseOrder=!reverseOrder;sortCards();};
  ownedButton.onclick=()=>{ownedFirst=!ownedFirst;sortCards();};
 
- const poster=c=>c.kind==='defender-rill'?'assets/creatures/defender-rill-poster.png':c.kind==='fenra-species'?'assets/creatures/fenra-species-poster.png':c.kind==='krynn-species'?'assets/creatures/krynn-species-poster.png':c.kind==='brugar-species'?'assets/creatures/brugar-species-poster.png':c.kind==='rill-species'?'assets/creatures/rill-species-poster.png':c.kind==='defender-talren'?'assets/creatures/defender-talren-poster.png':c.kind==='northern-talren'?'assets/creatures/northern-talren-poster.png':c.kind==='talren'?'assets/creatures/talren-poster.png':c.kind==='tharos'?'assets/creatures/tharos-poster.png':c.kind==='veyrin'?'assets/creatures/kael-poster.png':c.kind==='fenra'?'assets/creatures/saelis-poster.png':c.kind==='krynn'?'assets/creatures/virex-poster.png':c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
+ const poster=c=>c.kind==='velkris'?'assets/creatures/velkris-poster.png':c.kind==='trusk'?'assets/creatures/trusk-poster.png':c.kind==='kanji'?'assets/creatures/kanji-poster.png':c.kind==='defender-rill'?'assets/creatures/defender-rill-poster.png':c.kind==='fenra-species'?'assets/creatures/fenra-species-poster.png':c.kind==='krynn-species'?'assets/creatures/krynn-species-poster.png':c.kind==='brugar-species'?'assets/creatures/brugar-species-poster.png':c.kind==='rill-species'?'assets/creatures/rill-species-poster.png':c.kind==='defender-talren'?'assets/creatures/defender-talren-poster.png':c.kind==='northern-talren'?'assets/creatures/northern-talren-poster.png':c.kind==='talren'?'assets/creatures/talren-poster.png':c.kind==='tharos'?'assets/creatures/tharos-poster.png':c.kind==='veyrin'?'assets/creatures/kael-poster.png':c.kind==='fenra'?'assets/creatures/saelis-poster.png':c.kind==='krynn'?'assets/creatures/virex-poster.png':c.kind==='brugar'?'assets/creatures/brakk-poster.png':c.kind==='rill'?'assets/creatures/aeri-poster.png':`assets/companions/${c.kind}-meshy-poster.png`;
  const species=c=>c.species||c.name;
  const rarity=c=>metadata[c.kind]?.rarity||'unassigned';
  for(const [i,c] of creatures.entries()){
@@ -68,7 +71,7 @@
   d('.creature-edit-button').hidden=!canEdit;
  }
  function showCreature(i,card){selected=i;selectedCard=card;const c=creatures[i];renderInfo();
-  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=stable-rotate2').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
+  const portrait=d('.creature-book-portrait');if(c.species){import('./companion-3d.js?v=stable-stage3').catch(error=>console.error('Creature portrait:',error));portrait.innerHTML=`<span class="companion-illustration companion-3d-art" data-species="${c.kind}" data-${c.kind}-3d aria-hidden="true"><img class="fox-model-poster" src="${poster(c)}" alt=""></span>`;}else portrait.innerHTML=window.companionArt('pet:'+c.kind);
   detail.showModal();detail.scrollTop=0;d('.creature-book-close').focus();
  }
  const editor=el('dialog','creature-entry-editor');editor.setAttribute('aria-labelledby','creatureEditorTitle');
@@ -85,7 +88,7 @@
  // Dialogs occupy the browser top layer. Move the launcher into the active game
  // dialog so it stays clickable on the island, in the Lodge, and in care rooms.
  const opened=[];
- function place(){const loading=!!document.querySelector('.island-loading-screen[open]')||document.getElementById('islandLoading')?.hidden===false;toolBar.hidden=!gameReady||loading;launcher.hidden=toolBar===launcher?(!gameReady||loading):false;if(book.open)return;const dialogs=[...document.querySelectorAll('dialog[open]')].filter(d=>d!==book);for(let i=opened.length-1;i>=0;i--)if(!dialogs.includes(opened[i]))opened.splice(i,1);for(const d of dialogs)if(!opened.includes(d))opened.push(d);const target=opened.at(-1)||document.body;if(toolBar.parentNode!==target)target.append(toolBar);}
+ function place(){toolBar.querySelectorAll('button:disabled,select:disabled').forEach(control=>control.disabled=false);const loading=!!document.querySelector('.island-loading-screen[open]')||document.getElementById('islandLoading')?.hidden===false;toolBar.hidden=!gameReady||loading;launcher.hidden=toolBar===launcher?(!gameReady||loading):false;if(book.open)return;const dialogs=[...document.querySelectorAll('dialog[open]')].filter(d=>d!==book);for(let i=opened.length-1;i>=0;i--)if(!dialogs.includes(opened[i]))opened.splice(i,1);for(const d of dialogs)if(!opened.includes(d))opened.push(d);const target=opened.at(-1)||document.body;if(toolBar.parentNode!==target)target.append(toolBar);}
  const observer=new MutationObserver(records=>{for(const record of records)if(record.type==='attributes'&&record.target.tagName==='DIALOG'&&record.target!==book&&record.target.open){const at=opened.indexOf(record.target);if(at>=0)opened.splice(at,1);opened.push(record.target);}place();});observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});place();
  launcher.onclick=()=>{if(launcher.hidden||toolBar.hidden)return;loadMetadata();returnFocus=document.activeElement;book.showModal();launcher.setAttribute('aria-expanded','true');q('.creature-book-close').focus();};
  book.addEventListener('close',()=>{if(detail.open)detail.close();launcher.setAttribute('aria-expanded','false');place();if(returnFocus?.isConnected)returnFocus.focus();else launcher.focus();});

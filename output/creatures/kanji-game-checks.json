@@ -1,0 +1,87 @@
+{
+  "errors": [],
+  "ranked": {
+    "instances": {
+      "a59a1655-781e-45ab-80f7-f1feb30a2e99": {
+        "id": "a59a1655-781e-45ab-80f7-f1feb30a2e99",
+        "kind": "rill-species",
+        "ordinal": 0,
+        "grade": 1
+      },
+      "2c201985-6fc3-4fbf-985a-fd9c8b86cd11": {
+        "id": "2c201985-6fc3-4fbf-985a-fd9c8b86cd11",
+        "kind": "rill-species",
+        "ordinal": 1,
+        "grade": 1
+      },
+      "7e591e0d-3d20-4065-a383-11a7faa67ea9": {
+        "id": "7e591e0d-3d20-4065-a383-11a7faa67ea9",
+        "kind": "brugar-species",
+        "ordinal": 0,
+        "grade": 1
+      },
+      "56e04015-77cc-4365-a101-7ea198e5054f": {
+        "id": "56e04015-77cc-4365-a101-7ea198e5054f",
+        "kind": "krynn-species",
+        "ordinal": 0,
+        "grade": 1
+      },
+      "eccc563f-a047-468f-98af-9aeeac40c2fc": {
+        "id": "eccc563f-a047-468f-98af-9aeeac40c2fc",
+        "kind": "kanji",
+        "ordinal": 0,
+        "grade": 1
+      }
+    },
+    "tokens": {
+      "rill": 1,
+      "brugar": 1
+    },
+    "rating": 20,
+    "sequence": 1,
+    "selected": [
+      "a59a1655-781e-45ab-80f7-f1feb30a2e99",
+      "2c201985-6fc3-4fbf-985a-fd9c8b86cd11",
+      "7e591e0d-3d20-4065-a383-11a7faa67ea9"
+    ],
+    "paidWins": 1,
+    "activeMatch": null,
+    "rewardDay": "2026-10-19",
+    "clearedStages": [
+      0
+    ],
+    "ladder": 1,
+    "lastMatch": "f35af33e-6c61-420a-864d-ce60fac81140"
+  },
+  "practice": {
+    "instances": {},
+    "tokens": {},
+    "rating": 0,
+    "sequence": 1,
+    "selected": [],
+    "paidWins": 0,
+    "activeMatch": null,
+    "lastMatch": "679dab91-207a-4fee-97a1-e52b09829792"
+  },
+  "checks": [
+    "six independent rigged actors, one shared canvas",
+    "duplicate target clicks locked",
+    "real index arena navigation",
+    "team selection/replacement",
+    "opponent inspection",
+    "default basic attack, hover previews, immediate target attacks",
+    "refresh resume",
+    "full ranked battle/results",
+    "viewport canvas and bottom-left cluster at 1920x1080, 1366x768, 844x390 and 390x844",
+    "real fullscreen entry/exit keeps saved match",
+    "HUD clicks do not submit actions",
+    "abandon confirmation preserved",
+    "large Tharos/Fenra/Brugar practice models",
+    "active battle exit/reentry disposes scene",
+    "three power icons",
+    "390px layout",
+    "existing Skystones return",
+    "marketplace return",
+    "unowned practice full battle/no rewards"
+  ]
+}

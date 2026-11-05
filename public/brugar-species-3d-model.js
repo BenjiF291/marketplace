@@ -36,11 +36,11 @@ export async function createBrugarSpecies(){
  asset.scene.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.clone();geo.applyMatrix4(normalize.clone().multiply(o.matrixWorld));const positions=geo.attributes.position,indices=[],weights=[],p=new THREE.Vector3();
   for(let i=0;i<positions.count;i++){
    p.fromBufferAttribute(positions,i);const influences=new Map(),add=(b,w)=>{if(w>0)influences.set(joints.indexOf(b),(influences.get(joints.indexOf(b))||0)+w);};
-   // Tail clubs keep a single rigid influence; shafts use smooth segment weights.
+   // Blend shaft-to-club influences continuously so large battle swings do not tear at a fixed X boundary.
    const tailWeight=(1-smooth(p.x,-.30,.35))*(1-smooth(p.z,-.30,.15)*smooth(p.x,-.45,-.15))*smooth(p.y,.42,.68);
    let available=1-tailWeight;
    if(tailWeight>0){let nearest=tails[0],best=Infinity;for(const chain of tails)for(const point of chain.points){const dist=p.distanceToSquared(point);if(dist<best){best=dist;nearest=chain;}}
-    if(p.x<-1.47) add(nearest.bones.at(-1),tailWeight);else chainWeights(nearest,p,tailWeight,add);
+    const clubWeight=1-smooth(p.x,-1.72,-1.28);add(nearest.bones.at(-1),tailWeight*clubWeight);chainWeights(nearest,p,tailWeight*(1-clubWeight),add);
    }
    const headWeight=available*smooth(p.z,.32,.76)*smooth(p.y,.45,.68)*(1-smooth(Math.abs(p.x-.90),.60,.85));
    const jawWeight=headWeight*(1-smooth(p.y,.57,.70))*smooth(p.z,.91,1.12);add(jaw,jawWeight);add(head,headWeight-jawWeight);available-=headWeight;

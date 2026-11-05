@@ -9,7 +9,7 @@ function harness(){
  querySelector(selector){return this.querySelectorAll(selector)[0]||null;}querySelectorAll(selector){return this.children.flatMap(c=>[...(c.matches(selector)?[c]:[]),...c.querySelectorAll(selector)]);}}
  const body=new Node('body'),storage=new Map(),config=rules.defaults(),catalog={animal:require('./public/stable-animals').animals,gem:[{id:'bronze',name:'Ruby'},{id:'rare-bronze',name:'Garnet'}],boost:[{id:'skip',name:'Skip'},{id:'leap',name:'Leap'}]};let saved,claims=0;
  const timers=new Map();let timerId=0;
- const context={console,structuredClone,setTimeout:(fn)=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),matchMedia:()=>({matches:false}),Date,Math,Number,Object,Array,JSON,crypto:{randomUUID:()=> 'preview-claim'},currentUserId:'u',API_URL:'',resourceHeaders:()=>({}),loadUsers(){},loadInventory(){},setInterval:()=>1,clearInterval(){},
+ const context={CurrencyFormat:require('./public/currency-format'),console,structuredClone,setTimeout:(fn)=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),matchMedia:()=>({matches:false}),Date,Math,Number,Object,Array,JSON,crypto:{randomUUID:()=> 'preview-claim'},currentUserId:'u',API_URL:'',resourceHeaders:()=>({}),loadUsers(){},loadInventory(){},setInterval:()=>1,clearInterval(){},
  localStorage:{getItem:key=>storage.get(key),setItem:(key,v)=>storage.set(key,v),removeItem:key=>storage.delete(key)},Event:class{},window:{addEventListener(){},dispatchEvent(){}},
  document:{body,hidden:false,createElement:tag=>new Node(tag),createElementNS:(ns,tag)=>new Node(tag),getElementById:id=>ids.get(id),querySelector:selector=>selector==='#villageMap[open]'?{}:body.querySelector(selector)},
  Option:function(text,value){const n=new Node('option');n.textContent=text;n.value=value;return n;},
@@ -20,7 +20,8 @@ function harness(){
 test('toolbar has five actions, retracts accessibly, and forwards arrange and profile actions',async()=>{
  const h=harness();const launcher=new h.Node('button');launcher.textContent='Creature book';const bar=h.context.window.IslandTools.wrap(launcher);h.body.append(bar);
  const actions=bar.querySelector('.island-tool-actions');assert.equal(actions.children.length,6);
- const toggle=bar.querySelector('.island-tools-toggle');toggle.click();assert.equal(actions.hidden,true);assert.equal(toggle.attributes['aria-expanded'],'false');toggle.click();assert.equal(actions.hidden,false);
+ const toggle=bar.querySelector('.island-tools-toggle');assert.equal(actions.hidden,true);assert.equal(toggle.attributes['aria-expanded'],'false');toggle.click();assert.equal(actions.hidden,false);toggle.click();assert.equal(actions.hidden,true);toggle.click();assert.equal(actions.hidden,false);
+ h.context.window.IslandTools.setPackReady(true);const packBadge=actions.querySelector('.island-pack-seal'),closedBadge=toggle.querySelector('.island-pack-seal');assert.equal(packBadge.hidden,false);assert.equal(closedBadge.hidden,true);toggle.click();assert.equal(closedBadge.hidden,false);assert.equal(closedBadge.textContent,'1');h.context.window.IslandTools.setAchievementCount(4);assert.equal(closedBadge.textContent,'5');h.context.window.IslandTools.setAchievementCount(0);h.context.window.IslandTools.setPackReady(false);assert.equal(packBadge.hidden,true);assert.equal(closedBadge.hidden,true);toggle.click();
  let arranged=0,profile=0;const source=new h.Node('button');source.id='arrangeVillageButton';source.onclick=()=>arranged++;h.context.PlayerProfile={open:()=>profile++};
  await actions.children[2].click();actions.children[3].click();assert.equal(arranged,1);assert.equal(profile,1);
  const select=new h.Node('select');select.id='villageBuildingFinder';let changed=0;select.onchange=()=>changed++;h.context.window.IslandTools.attachBuildingFinder(select);const finder=bar.querySelector('.island-building-finder');assert.equal(finder.hidden,false);assert.equal(select.parentNode,finder);select.onchange();assert.equal(changed,1);h.context.window.IslandTools.attachBuildingFinder(select);assert.equal(finder.querySelectorAll('select').length,1);
@@ -29,20 +30,20 @@ test('player can claim and reveal five rewards, and an admin can edit all card o
  const h=harness();await h.context.window.FreePack.open();let opening=h.body.querySelector('.reward-opening');assert.equal(opening.open,true);assert.equal(h.claims,0);
  await opening.querySelector('.reward-opening-details').click();const box=h.body.querySelector('.free-pack-dialog');assert.equal(box.open,true);assert.equal(box.querySelector('.free-pack-claim').disabled,false);
  await box.querySelector('.free-pack-edit').click();const editor=h.body.querySelector('.free-pack-editor');assert.equal(editor.querySelectorAll('fieldset').length,5);assert.equal(editor.querySelectorAll('.free-pack-option').length,21);
- const animalRow=editor.querySelectorAll('.free-pack-option').at(-1),selectors=animalRow.querySelectorAll('select');selectors[0].value='animal';selectors[0].onchange();assert.equal(selectors[1].children.length,17);selectors[1].value='tharos';
+ const animalRow=editor.querySelectorAll('.free-pack-option').at(-1),selectors=animalRow.querySelectorAll('select');selectors[0].value='animal';selectors[0].onchange();assert.equal(selectors[1].children.length,require('./public/stable-animals').animals.length);selectors[1].value='tharos';
  const name=editor.querySelector('input');name.value='Edited daily pack';await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(h.saved.name,'Edited daily pack');assert.equal(h.saved.cards.length,5);assert.equal(h.saved.cards[4].options[0].kind,'animal');assert.equal(h.saved.cards[4].options[0].id,'tharos');
- await box.querySelector('.free-pack-claim').click();opening=h.body.querySelector('.reward-opening');await opening.querySelector('.reward-opening-pack').click();assert.equal(h.claims,1);h.flush();assert.equal(opening.querySelectorAll('.reward-pack-card').length,5);assert.ok(opening.querySelectorAll('.reward-card-amount').every(n=>/^\d+$/.test(n.textContent)));assert.equal(opening.querySelector('.reward-card-group'),null);
+ await box.querySelector('.free-pack-claim').click();opening=h.body.querySelector('.reward-opening');await opening.querySelector('.reward-opening-pack').click();assert.equal(h.claims,1);h.flush();assert.equal(opening.querySelectorAll('.reward-pack-card').length,5);assert.ok(opening.querySelectorAll('.reward-card-amount').every(n=>/^\d+(?:\.\d{2})?$/.test(n.textContent)));assert.equal(opening.querySelector('.reward-card-group'),null);
  for(let i=0;i<5;i++){opening.onclick({target:opening});if(i<4){const next=opening.querySelectorAll('.reward-pack-card')[1];assert.equal(next.dataset.depth,'0');assert.equal(next.attributes['aria-hidden'],'false');}opening.onclick({target:opening});assert.equal(h.timers.size,1);h.flush();assert.equal(opening.querySelectorAll('.reward-pack-card').length,4-i);}
  assert.equal(opening.open,false);assert.equal(h.claims,1);
 
 });
 
 test('Stable renders owned animals and opens their book information, then returns to the island',async()=>{
- const h=harness();h.context.window.companion3D={setYaw(){}};let shown,returned=0;h.context.CreatureBook={openCreature:id=>shown=id};
+ const h=harness();h.context.window.companion3D={setYaw(){}};let shown,returned=0;h.context.window.CreatureBook={openCreature:id=>shown=id};
  h.context.fetch=async()=>({ok:true,json:async()=>({total:2,animals:[{id:'tharos',name:'Tharos',species:'Veyrin',poster:'assets/creatures/tharos-poster.png',count:2}]})});
  vm.runInContext(fs.readFileSync('public/stable.js','utf8'),h.context);await h.context.window.Stable.open(()=>returned++);
- const box=h.body.querySelector('.stable-dialog');assert.equal(box.open,true);assert.equal(box.querySelector('.stable-total').textContent,'2 animals in your Stable');assert.equal(box.querySelectorAll('.stable-animal').length,1);
- box.querySelector('.stable-animal').querySelector('button').click();assert.equal(shown,'tharos');box.querySelector('.stable-header').querySelector('button').click();assert.equal(returned,1);assert.equal(box.open,false);
+ const box=h.body.querySelector('.stable-dialog');assert.equal(box.open,true);assert.equal(box.querySelector('.stable-total').textContent,'2 residents \u00b7 1 species');assert.equal(box.querySelectorAll('.stable-animal').length,1);
+ assert.equal(box.querySelectorAll('.stable-resident').length,2);box.querySelector('.stable-info').click();assert.equal(shown,'tharos');box.querySelector('.stable-header').querySelector('button').click();assert.equal(returned,1);assert.equal(box.open,false);
 });
 
 test('opening retries failed requests, supports reduced motion, and keeps collection bonuses as separate cards',async()=>{
@@ -62,8 +63,8 @@ test('themed collection packs use the shared opening and preserve completion cal
 test('admin gallery shows every reward in category order and supports full-size navigation without claiming',async()=>{
  const h=harness();await h.context.window.FreePack.open();const opening=h.body.querySelector('.reward-opening');await opening.querySelector('.reward-opening-preview').click();
  const gallery=h.body.querySelector('.reward-gallery');assert.equal(gallery.open,true);assert.equal(h.claims,0);
- const sections=gallery.querySelectorAll('.reward-gallery-section');assert.deepEqual(sections.map(s=>s.querySelector('h3').textContent),['Gem currencies (2)','Footy (1)','Time boosts (2)','Animals (17)']);assert.equal(gallery.querySelectorAll('.reward-pack-card').length,22);
- assert.equal(gallery.querySelector('.reward-card-name').textContent,'Garnet');assert.ok(gallery.querySelectorAll('.reward-card-amount').every(n=>n.textContent==='1'));
+ const sections=gallery.querySelectorAll('.reward-gallery-section');assert.deepEqual(sections.map(s=>s.querySelector('h3').textContent),['Gem currencies (2)','Footy (1)','Time boosts (2)',`Animals (${require('./public/stable-animals').animals.length})`]);assert.equal(gallery.querySelectorAll('.reward-pack-card').length,5+require('./public/stable-animals').animals.length);
+ assert.equal(gallery.querySelector('.reward-card-name').textContent,'Garnet');assert.ok(gallery.querySelectorAll('.reward-card-amount').every(n=>['1','1.00'].includes(n.textContent)));
  gallery.querySelector('.reward-gallery-tile').querySelector('button').click();const viewer=h.body.querySelector('.reward-card-inspector');assert.equal(viewer.querySelector('h2').textContent,'Garnet');assert.equal(viewer.querySelector('.reward-inspector-prev').disabled,true);
  viewer.querySelector('.reward-inspector-next').click();assert.equal(viewer.querySelector('h2').textContent,'Ruby');viewer.querySelector('.reward-inspector-prev').click();assert.equal(viewer.querySelector('h2').textContent,'Garnet');
  const search=gallery.querySelector('.reward-gallery-search');search.value='tharos';search.oninput();assert.equal(gallery.querySelectorAll('.reward-gallery-tile').filter(n=>!n.hidden).length,1);assert.equal(h.claims,0);assert.equal(h.timers.size,0);
@@ -93,6 +94,22 @@ test('admin editor adds, duplicates and removes reward cards',async()=>{
  await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(h.saved.cards.length,6);
 });
 
+test('daily and regular pack editors save the displayed card order without dropping edits',async()=>{
+ for(const daily of [true,false]){
+  const h=harness();let applied;
+  if(daily){await h.context.window.FreePack.open();await h.body.querySelector('.reward-opening-details').click();await h.body.querySelector('.free-pack-edit').click();}
+  else await h.context.window.FreePack.editRewards(['First','Second','Third'].map(title=>({title,options:[{kind:'footy',id:'',min:1,max:1,chance:100}]})),cards=>{applied=cards;});
+  const editor=h.body.querySelector('.free-pack-editor'),list=editor.querySelector('.free-pack-card-list'),cards=list.querySelectorAll('fieldset'),move=(card,label)=>card.querySelectorAll('button').find(b=>b.textContent===label);
+  cards.forEach((card,i)=>{card.querySelector('input').value='Card '+i;});
+  assert.equal(move(cards[0],'Move up').disabled,true);assert.equal(move(cards.at(-1),'Move down').disabled,true);
+  move(cards[1],'Move up').click();assert.equal(list.querySelectorAll('fieldset')[0],cards[1]);
+  move(cards[0],'Move down').click();assert.equal(list.querySelectorAll('fieldset')[2],cards[0]);
+  assert.equal(list.querySelectorAll('legend')[0].textContent,'Reward card 1');
+  await editor.querySelector('form').onsubmit({preventDefault(){}});
+  const saved=daily?h.saved.cards:applied;assert.deepEqual(Array.from(saved.slice(0,3),card=>card.title),['Card 1','Card 2','Card 0']);assert.equal(saved.length,cards.length);assert.ok(saved.every(card=>card.options.length>0));
+ }
+});
+
 test('daily collage stays separate from regular pack design and reward editing',async()=>{
  const h=harness();await h.context.window.FreePack.open();const daily=h.body.querySelector('.reward-opening');assert.equal(daily.querySelectorAll('.reward-wrapper-sample').length,9);assert.equal(daily.querySelector('.reward-opening-pack').className.includes('reward-opening-pack-designed'),false);assert.equal(daily.querySelector('.reward-wrapper-brand'),null);assert.equal(daily.querySelector('.reward-wrapper-caption'),null);
  await daily.querySelector('.reward-opening-details').click();await h.body.querySelector('.free-pack-edit').click();assert.equal(h.body.querySelector('.free-pack-editor').querySelectorAll('input').some(n=>n.type==='color'),false);
@@ -103,14 +120,29 @@ test('daily collage stays separate from regular pack design and reward editing',
 test('pack shop displays free and paid packs and tabbed odds without buying',async()=>{
  const h=harness(),config=rules.defaults(),paid={id:'bronze',name:'Bronze',price:15,currency:'footy',cards:[{title:'Collection card',options:[{kind:'card',id:'Bronze_jan.png',min:1,max:1,chance:100}]},{title:'Rubies',options:[{kind:'gem',id:'bronze',min:5,max:15,chance:100}]}]};let buys=0;
  h.context.fetch=async(url,options)=>{if(url==='/pack-shop')return {ok:true,json:async()=>({serverNow:Date.now(),canEdit:false,catalog:{gem:[{id:'bronze',name:'Ruby'}],card:[{id:'Bronze_jan.png',name:'Jan'}]},daily:{id:'daily',daily:true,name:config.name,cards:config.cards,enabled:true,nextAt:0},packs:[paid]})};buys++;throw Error('Unexpected purchase');};
- vm.runInContext(fs.readFileSync('public/pack-shop.js','utf8'),h.context);await h.context.window.PackShop.open();const shop=h.body.querySelector('.pack-shop-dialog');assert.equal(shop.querySelectorAll('.pack-shop-tile').length,2);assert.equal(shop.querySelectorAll('.pack-shop-buy')[0].textContent,'Free');assert.equal(shop.querySelectorAll('.pack-shop-buy')[1].textContent,'15 Footy');assert.equal(shop.querySelectorAll('.reward-wrapper-sample').length,9);
- shop.querySelectorAll('.pack-shop-info')[1].click();const odds=h.body.querySelector('.pack-odds-dialog');assert.equal(odds.querySelectorAll('.pack-odds-tabs')[0].children.length,2);assert.equal(odds.querySelector('.pack-odds-percent').textContent,'100%');odds.querySelector('.pack-odds-tabs').children[1].click();assert.equal(odds.querySelector('.reward-card-amount').textContent,'5\u201315');assert.equal(odds.querySelector('.reward-card-name').textContent,'Ruby');assert.equal(buys,0);assert.equal(h.claims,0);
+ vm.runInContext(fs.readFileSync('public/pack-shop.js','utf8'),h.context);await h.context.window.PackShop.open();const shop=h.body.querySelector('.pack-shop-dialog');assert.equal(shop.querySelectorAll('.pack-shop-tile').length,2);assert.equal(shop.querySelectorAll('.pack-shop-buy')[0].textContent,'Free');assert.equal(shop.querySelectorAll('.pack-shop-buy')[1].textContent,'15.00 Footy');assert.equal(shop.querySelectorAll('.reward-wrapper-sample').length,9);
+ shop.querySelectorAll('.pack-shop-info')[1].click();const odds=h.body.querySelector('.pack-odds-dialog');assert.equal(odds.querySelectorAll('.pack-odds-tabs')[0].children.length,2);assert.equal(odds.querySelector('.pack-odds-percent').textContent,'100.00%');odds.querySelector('.pack-odds-tabs').children[1].click();assert.equal(odds.querySelector('.reward-card-amount').textContent,'5\u201315');assert.equal(odds.querySelector('.reward-card-name').textContent,'Ruby');assert.equal(buys,0);assert.equal(h.claims,0);
  odds.close();config.cards[4].options=[{kind:'gem',id:'bronze',min:1,max:1,chance:90},{kind:'gem',id:'bronze',min:2,max:2,chance:1},{kind:'gem',id:'bronze',min:3,max:3,chance:9}];
- shop.querySelectorAll('.pack-shop-info')[0].click();const dailyOdds=h.body.querySelector('.pack-odds-dialog');assert.equal(dailyOdds.querySelector('.pack-odds-tabs').children[4].attributes['aria-selected'],'true');assert.deepEqual(dailyOdds.querySelectorAll('.pack-odds-percent').map(n=>n.textContent),['1%','9%','90%']);assert.deepEqual(config.cards[4].options.map(o=>o.chance),[90,1,9]);
+ shop.querySelectorAll('.pack-shop-info')[0].click();const dailyOdds=h.body.querySelector('.pack-odds-dialog');assert.equal(dailyOdds.querySelector('.pack-odds-tabs').children[4].attributes['aria-selected'],'true');assert.deepEqual(dailyOdds.querySelectorAll('.pack-odds-percent').map(n=>n.textContent),['1.00%','9.00%','90.00%']);assert.deepEqual(config.cards[4].options.map(o=>o.chance),[90,1,9]);
 });
 
 test('pack shop explains a missing backend route without displaying raw HTML',async()=>{
  const h=harness();h.context.fetch=async()=>({ok:false,status:404,text:async()=>'<html><pre>Cannot GET /pack-shop</pre></html>'});vm.runInContext(fs.readFileSync('public/pack-shop.js','utf8'),h.context);await h.context.window.PackShop.open();const shop=h.body.querySelector('.pack-shop-dialog'),message=shop.querySelector('.pack-shop-status').textContent;assert.ok(message.includes('Restart the local game server'));assert.equal(message.includes('<html>'),false);assert.ok(shop.querySelectorAll('button').some(b=>b.textContent==='Retry'));
+});
+
+test('daily and paid odds previews start on the true final card for any card count',async()=>{
+ const h=harness(),cards=n=>Array.from({length:n},(_,i)=>({title:'Reward '+(i+1),options:[{kind:'footy',id:'',min:i+1,max:i+1,chance:100}]}));
+ h.context.fetch=async()=>({ok:true,json:async()=>({serverNow:Date.now(),canEdit:false,catalog:{gem:[]},daily:{daily:true,id:'daily',name:'Daily',enabled:true,nextAt:0,cards:cards(7)},packs:[{id:'paid',name:'Paid',price:10,currency:'footy',cards:cards(3)}]})});
+ vm.runInContext(fs.readFileSync('public/pack-shop.js','utf8'),h.context);await h.context.window.PackShop.open();const buttons=h.body.querySelectorAll('.pack-shop-info');
+ for(const [index,last] of [[0,7],[1,3]]){buttons[index].click();const dialog=h.body.querySelector('.pack-odds-dialog'),tabs=dialog.querySelector('.pack-odds-tabs').children;assert.equal(tabs[last-1].attributes['aria-selected'],'true');assert.equal(dialog.querySelector('.pack-odds-strip').querySelector('.reward-card-amount').textContent,String(last));dialog.close();}
+});
+
+test('paid shop cooldown shows hours/minutes and unlocks after expiry',async()=>{
+ const h=harness();let now=1700000000000;h.context.Date={now:()=>now};const nextAt=now+150*60000;
+ h.context.fetch=async()=>({ok:true,json:async()=>({serverNow:now,canEdit:false,catalog:{gem:[]},daily:{daily:true,id:'daily',name:'Daily',enabled:true,nextAt:0,cards:[]},packs:[{id:'paid',name:'Silver',price:10,currency:'footy',nextAt,cooldownMinutes:150,cards:[]},{id:'other',name:'Bronze',price:5,currency:'footy',cards:[]}]})});
+ vm.runInContext(fs.readFileSync('public/pack-shop.js','utf8'),h.context);await h.context.window.PackShop.open();
+ let buttons=h.body.querySelectorAll('.pack-shop-buy');assert.equal(buttons[1].disabled,true);assert.equal(buttons[1].textContent,'Unlocks in 2h 30m');assert.equal(buttons[2].disabled,false);
+ now=nextAt;await h.context.window.PackShop.open();buttons=h.body.querySelectorAll('.pack-shop-buy');assert.equal(buttons[1].disabled,false);assert.equal(buttons[1].textContent,'10.00 Footy');
 });
 
 test('daily pack refreshes wallets and island resources only after the last reveal or an early close',async()=>{
@@ -137,14 +169,24 @@ test('regular openings reveal extras before the main card and render the awarded
  const opening=h.context.window.RewardOpening.play({name:'Bronze',open:async()=>result});assert.equal(opening.querySelector('.reward-opening-next').hidden,true);await opening.querySelector('.reward-opening-pack').click();h.flush();assert.equal(opening.querySelector('.reward-opening-next').hidden,false);assert.equal(opening.querySelector('.reward-card-name').textContent,'Footy');
 });
 
-test('stable carousel switches models and rotates the active animal',async()=>{
+test('stable roster switches individual models and rotates the active animal',async()=>{
  const h=harness();let yaw;h.context.window.companion3D={setYaw:(host,value)=>yaw=value};
  h.context.fetch=async()=>({ok:true,json:async()=>({total:2,animals:[{id:'tharos',name:'Tharos',species:'Veyrin',poster:'a.png',count:1},{id:'brugar',name:'Brakk',species:'Brugar',poster:'b.png',count:1}]})});
- vm.runInContext(fs.readFileSync('public/stable.js','utf8'),h.context);await h.context.window.Stable.open(()=>{});const stable=h.body.querySelector('.stable-dialog');assert.equal(stable.querySelectorAll('.stable-model').length,1);assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');
- const slider=stable.querySelector('.stable-rotation');slider.value='90';slider.oninput();assert.equal(yaw,Math.PI/2);stable.querySelector('.stable-next').click();assert.equal(stable.querySelector('.stable-model').dataset.species,'brugar');assert.equal(stable.querySelector('.stable-position').textContent,'2 / 2');stable.querySelector('.stable-next').click();assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');stable.querySelector('.stable-header').querySelector('button').click();assert.equal(stable.querySelector('.stable-model'),null);
+ vm.runInContext(fs.readFileSync('public/stable.js','utf8'),h.context);await h.context.window.Stable.open(()=>{});const stable=h.body.querySelector('.stable-dialog');assert.equal(stable.querySelectorAll('.stable-model').length,1);assert.equal(stable.querySelector('.stable-model').dataset.species,'brugar');
+ const slider=stable.querySelector('.stable-rotation');slider.value='90';slider.oninput();assert.equal(yaw,Math.PI/2);stable.querySelectorAll('.stable-resident')[1].click();assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');assert.equal(stable.querySelector('.stable-position').textContent,'2 / 2');stable.querySelectorAll('.stable-resident')[1].click();assert.equal(stable.querySelector('.stable-model').dataset.species,'tharos');stable.querySelector('.stable-header').querySelector('button').click();assert.equal(stable.querySelector('.stable-model'),null);
 });
 
 test('regular reward editor shows the final collection pool and copies it as an editable extra',async()=>{
  const h=harness();let applied;await h.context.window.FreePack.editRewards([],cards=>applied=cards,['Bronze_jan.png','Gold_lotte.png']);const editor=h.body.querySelector('.free-pack-editor');assert.equal(editor.querySelector('.pack-main-card').querySelectorAll('.reward-pack-card').length,2);
  editor.querySelectorAll('button').find(b=>b.textContent==='Copy final card to extra rewards').click();const slots=editor.querySelectorAll('fieldset');assert.equal(slots.length,2);const rows=slots[1].querySelectorAll('.free-pack-option');assert.equal(rows.length,2);rows[0].querySelectorAll('input').at(-1).value='25';rows[1].querySelectorAll('input').at(-1).value='75';await editor.querySelector('form').onsubmit({preventDefault(){}});assert.equal(applied[1].options[0].chance,25);assert.equal(applied[1].options[1].chance,75);assert.equal(applied[1].options[1].id,'Gold_lotte.png');
+});
+
+test('packed creature token card shows portrait and authoritative updated balance',()=>{
+ const h=harness();const card=h.context.window.RewardOpening.card({kind:'brawlToken',id:'rill-species',amount:3,tokenProgress:{before:4,after:7,target:10}});
+ assert.equal(card.querySelector('.reward-token-balance').textContent,'7 tokens');
+ assert.equal(card.querySelector('.reward-token-type').textContent,'+3 BRAWL TOKENS');
+ assert.equal(card.querySelector('.reward-token-fill').style.width,'70%');
+ assert.equal(card.querySelector('.reward-token-bar').attributes['aria-valuenow'],'7');
+ assert.ok(card.querySelector('.reward-card-picture').children.length);
+ const preview=h.context.window.RewardOpening.card({kind:'brawlToken',id:'rill-species',amount:3});assert.equal(preview.querySelector('.reward-token-bar').textContent,'+3 tokens');
 });

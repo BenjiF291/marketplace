@@ -27,11 +27,15 @@
  let jump,entering=false,plotEditor;
 
  let camera={x:0,y:0,scale:1},initialized=false,frame=0,gesture=null,moved=false,suppressUntil=0,travelEpoch=0,travelRestore=null;
- const pointers=new Map();const pref=`footy-village:${currentUserId}`;
+ let wheelIdleTimer;const pointers=new Map();const pref=`footy-village:${currentUserId}`;
  const level=()=>simulation===null?data.level:simulation;
  const unlocked=b=>level()>=b.level;
  const saved=(value)=>{try{localStorage.setItem(pref,value?'on':'off');}catch{}};
- function applyCamera(){frame=0;if(!Number.isFinite(camera.x)||!Number.isFinite(camera.y)||!Number.isFinite(camera.scale)||camera.scale<=0){camera={x:0,y:0,scale:1};initialized=false;}world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;}
+ function applyCamera(){frame=0;if(!Number.isFinite(camera.x)||!Number.isFinite(camera.y)||!Number.isFinite(camera.scale)||camera.scale<=0){camera={x:0,y:0,scale:1};initialized=false;}world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.scale})`;
+  // The repeating sea shares the island camera, including its texture scale.
+  // It fills the viewport without enlarging the draggable world's bounds.
+  viewport.style.backgroundPosition=`${camera.x}px ${camera.y}px`;
+  viewport.style.backgroundSize=`${600*camera.scale}px ${600*camera.scale}px`;}
  function paintCamera(){if(!frame)frame=requestAnimationFrame(applyCamera);}
  function clamp(){const r=viewport.getBoundingClientRect(),s=camera.scale;
   // Keep the viewport centre inside a bounded region around the island.
@@ -43,10 +47,11 @@
  function focusBuilding(b){const r=viewport.getBoundingClientRect();camera.x=r.width/2-b.x*camera.scale;camera.y=r.height*.4-b.y*camera.scale;clamp();paintCamera();}
  function select(b){if(travelling)return;if(plotEditor?.select(b)){inspector.hidden=true;return;}selected=b;for(const [id,tile] of tiles)tile.classList.toggle('selected',id===b.id);inspector.replaceChildren();inspector.hidden=false;
   const enter=el('button','village-entrance',b.name);enter.setAttribute('aria-label',`Enter ${b.name}`);enter.onclick=()=>travel(b);inspector.append(enter);
+  if(window.TimeSkips?.supports(b.id)){const skip=el('button','village-time-skip','Time skip');skip.type='button';skip.setAttribute('aria-label',`Time skip for ${b.name}`);skip.onclick=()=>TimeSkips.open({building:b.id,name:b.name});inspector.append(skip);}
  }
  let travelling=false,guideShown=false,lastBuilding=null;
  const doorScale=()=>matchMedia('(pointer:coarse)').matches?Math.min(2.4,Math.max(camera.scale,camera.scale*1.65)):Math.max(camera.scale,3.2);
- function clearGesture(){world?.classList.remove('village-panning');const ids=[...pointers.keys()];pointers.clear();for(const id of ids){try{if(viewport?.hasPointerCapture(id))viewport.releasePointerCapture(id);}catch{}}suppressUntil=0;gesture=null;moved=false;if(frame){cancelAnimationFrame(frame);frame=0;}}
+ function clearGesture(){clearTimeout(wheelIdleTimer);world?.classList.remove('village-panning');const ids=[...pointers.keys()];pointers.clear();for(const id of ids){try{if(viewport?.hasPointerCapture(id))viewport.releasePointerCapture(id);}catch{}}suppressUntil=0;gesture=null;moved=false;if(frame){cancelAnimationFrame(frame);frame=0;}}
  const guideKey=`footy-island-guide-v1:${currentUserId}`;
  function guide(force=false){if(!force){if(guideShown)return;try{if(localStorage.getItem(guideKey)==='done')return;}catch{}}guideShown=true;
   const box=el('dialog','island-guide');box.setAttribute('aria-label','Welcome to your island');
@@ -91,7 +96,7 @@
   viewport.addEventListener('lostpointercapture',e=>{if(e.target!==viewport||viewport.hasPointerCapture(e.pointerId))return;release(e);});
   const recover=()=>{clearGesture();if(travelRestore){camera=travelRestore;travelRestore=null;clamp();applyCamera();}travelEpoch++;travelling=false;d.classList.remove('village-travelling','village-returning');jump.disabled=false;};
   window.addEventListener('blur',recover);window.addEventListener('pageshow',recover);window.addEventListener('pagehide',recover);document.addEventListener('visibilitychange',recover);
-  viewport.addEventListener('wheel',e=>{e.preventDefault();if(travelling)return;const r=viewport.getBoundingClientRect();zoom(camera.scale*Math.exp(-e.deltaY*.001),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+  viewport.addEventListener('wheel',e=>{e.preventDefault();if(travelling)return;world.classList.add('village-panning');clearTimeout(wheelIdleTimer);wheelIdleTimer=setTimeout(()=>{if(!pointers.size)world.classList.remove('village-panning');},150);const r=viewport.getBoundingClientRect();zoom(camera.scale*Math.exp(-e.deltaY*.001),e.clientX-r.left,e.clientY-r.top);},{passive:false});
   viewport.addEventListener('keydown',e=>{if(e.target!==viewport)return;const move={ArrowLeft:[70,0],ArrowRight:[-70,0],ArrowUp:[0,70],ArrowDown:[0,-70]}[e.key];if(move){e.preventDefault();camera.x+=move[0];camera.y+=move[1];clamp();paintCamera();}if(['+','=','-'].includes(e.key)){e.preventDefault();zoom(camera.scale*(e.key==='-'?1/1.2:1.2));}});
   plotEditor=VillagePlots({world,toolbar,buildings,tiles,getData:()=>data,changed:render,pan:(dx,dy)=>{camera.x+=dx;camera.y+=dy;clamp();applyCamera();}});
   new ResizeObserver(()=>{if(d.open&&!travelling){if(!initialized)reset();else{clamp();paintCamera();}}}).observe(viewport);
@@ -136,6 +141,7 @@
  async function enterBuilding(b){if(entering||!verified||!enabled||!unlocked(b))return;entering=true;
   try{lastBuilding=b;d.close();inspector.hidden=true;selected=null;tiles.forEach(t=>t.classList.remove('selected'));back.hidden=true;
    if(!footyStudio.enabled)footyStudio.setMode(true);
+   if(b.id==='arena'&&!b.skystones){VillageInteriors.close();window.CreatureBrawl.arena(show,()=>enterBuilding({...b,skystones:true}));return;}
    if(['petstation','farmhouse','jobs','timebank'].includes(b.route)){VillageInteriors.close();await window.VillageCare.open(b.route,show,data);return;}
    if((b.id==='market'&&b.route==='marketplace'&&!b.marketStall)||b.id==='cabinet'){VillageInteriors.close();await MarketStreet.open({onExit:show,onCards:()=>enterBuilding({...buildings.find(n=>n.id==='market'),marketStall:true})});return;}
    if(b.route==='stable'){VillageInteriors.close();await Stable.open(show);return;}
@@ -152,7 +158,7 @@
   const bar=document.getElementById('villageResourceBar');if(!bar)return;const staff=state.economy?.workforce;
   const icons={villagers:'<circle cx="12" cy="8" r="4" fill="#d9b18b"/><path d="M4 23v-5a8 8 0 0 1 16 0v5" fill="#47796a"/><path d="M8 6q4-6 8 0" fill="#705038"/>',footy:'<circle cx="12" cy="12" r="10" fill="#e7bb58" stroke="#997332" stroke-width="2"/><path d="M9 18V6h8v3h-5v3h4v3h-4v3z" fill="#765027"/>',rubies:'<path d="M6 3h12l5 7-11 13L1 10z" fill="#bd354b" stroke="#842c43"/><path d="M6 3l6 7 6-7M1 10h22M12 10v13" fill="none" stroke="#ffb0a8" stroke-width="1.5"/>'};
   const counters=el('div','village-resource-counters');
-  for(const [key,value,label] of [['villagers',`${staff?.available.length||0}/${staff?.total??state.layout?.villagers??0}`,'Villagers available'],['footy',Number(state.balance||0).toLocaleString(),'Footy'],['rubies',Number(state.layout?.rubies||0).toLocaleString(),'Rubies']]){const counter=el('div','village-resource-counter');counter.title=label;counter.setAttribute('aria-label',`${label}: ${value}`);const icon=el('span','village-resource-icon');icon.innerHTML=`<svg viewBox="0 0 24 26" aria-hidden="true">${icons[key]}</svg>`;counter.append(icon,el('strong','',value));counters.append(counter);}
+  for(const [key,value,label] of [['villagers',`${staff?.available.length||0}/${staff?.total??state.layout?.villagers??0}`,'Villagers available'],['footy',Number(state.balance||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}),'Footy'],['rubies',Number(state.layout?.rubies||0).toLocaleString(undefined,{maximumFractionDigits:0}),'Rubies']]){const counter=el('div','village-resource-counter');counter.title=label;counter.setAttribute('aria-label',`${label}: ${value}`);const icon=el('span','village-resource-icon');icon.innerHTML=`<svg viewBox="0 0 24 26" aria-hidden="true">${icons[key]}</svg>`;counter.append(icon,el('strong','',value));counters.append(counter);}
   bar.replaceChildren(counters);
   const p=state.progress;if(p){const xp=el('div','village-island-xp'),label=el('div','village-xp-label');label.append(el('span','',`Town Hall ${p.level}`),el('span','',p.next===null?'MAX LEVEL':`${p.progress} / ${p.required} XP`));const meter=el('progress');meter.max=p.required||1;meter.value=p.next===null?1:p.progress;meter.setAttribute('aria-label','Town Hall experience');xp.title=p.unlock;xp.append(label,meter);bar.append(xp);}
  }

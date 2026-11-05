@@ -11,13 +11,13 @@ test('refinery starts at Ruby and upgrades with five new gems and ten of every l
 });
 test('a refinery upgrade only unlocks the new output, not later gems',()=>{const u={gemRefineryLevel:1,gems:{bronze:10,'rare-bronze':8}};assert.equal(workshopAction(u,tiers,'compress',{gemKey:'bronze',quantity:2}).gems['rare-bronze'],10);assert.throws(()=>workshopAction(u,tiers,'compress',{gemKey:'rare-bronze',quantity:1}),/Upgrade/);});
 
-test('legacy all-tier machines retain recipes, refinement spends 5 per output and follows next configured tier', () => {
-  const user = { gemCompressor: true, gems: { bronze: 11, 'rare-bronze': 1, ultra: 5 } };
+test('explicit refinery levels retain recipes, refinement spends 5 per output and follows next configured tier', () => {
+  const user = { gemRefineryLevel:9, gemCompressor: true, gems: { bronze: 11, 'rare-bronze': 1, ultra: 5 } };
   const result = workshopAction(user, tiers, 'compress', { gemKey: 'bronze', quantity: 2 });
   assert.equal(result.gems.bronze, 1); assert.equal(result.gems['rare-bronze'], 3);
   assert.equal(workshopAction(user, tiers, 'compress', { gemKey: 'ultra', quantity: 1 }).gems['tier-9'], 1);
   for (const quantity of [0, -1, 1.5, 3, Number.MAX_SAFE_INTEGER]) assert.throws(() => workshopAction(user, tiers, 'compress', { gemKey: 'bronze', quantity }));
-  assert.throws(() => workshopAction({ ...user, gemCompressor: false }, tiers, 'compress', { gemKey: 'bronze', quantity: 1 }));
+  assert.throws(() => workshopAction({ ...user, gemRefineryLevel:0, gemCompressor: false }, tiers, 'compress', { gemKey: 'bronze', quantity: 1 }));
   assert.throws(() => workshopAction(user, tiers, 'compress', { gemKey: 'tier-9', quantity: 1 }));
 });
 test('one gem crafts five consumable dyes; each application spends one and reset is free', () => {
@@ -74,3 +74,12 @@ test('batch rejects insufficient dyes, invalid areas and conflicting saved chang
 });
 
 test('one final upgrade unlocks every tier after Ultra and charges five of each special',()=>{const all=[...tiers,{name:'Mini',id:'mini'},{name:'Mirror',id:'mirror'}],{refineryProgress}=require('./gem-workshop-utils'),{gemIdentity}=require('./gem-utils');let u={gemRefineryLevel:8,gems:Object.fromEntries(all.map(t=>[gemIdentity(t).gemKey,20]))};const p=refineryProgress(u,all);assert.equal(p.max,9);assert.equal(p.nextUpgrade.gemName,'All special crystals');assert.deepEqual(p.nextUpgrade.costs.map(c=>c.amount),[10,10,10,10,10,10,10,10,10,5,5,5]);u={...u,...workshopAction(u,all,'upgrade',{tierId:'9'})};assert.equal(refineryProgress(u,all).nextUpgrade,null);assert.equal(refineryProgress(u,all).unlockedIndex,11);assert.equal(refineryProgress({...u,gemRefineryLevel:11},all).level,9);assert.equal(workshopAction(u,all,'compress',{gemKey:'tier-mini',quantity:1}).gems['tier-mirror'],16);assert.throws(()=>workshopAction({gemRefineryLevel:1,gems:{bronze:4}},all,'compress',{gemKey:'bronze',quantity:1}),/Not enough/);});
+
+test('legacy compressor and admin status never auto-upgrade a newly unlocked refinery',()=>{
+ const {refineryProgress}=require('./gem-workshop-utils');
+ for(const isAdmin of [false,true]){
+  const p=refineryProgress({gemCompressor:true,isAdmin,townHallXP:2400},tiers);
+  assert.equal(p.level,0);assert.equal(p.current.gemName,'Ruby');assert.ok(p.nextUpgrade);
+ }
+ assert.equal(refineryProgress({gemRefineryLevel:4,gemCompressor:true},tiers).level,4);
+});

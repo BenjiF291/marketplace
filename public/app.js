@@ -1,3 +1,4 @@
+const formatCurrency = (value,currency='footy') => CurrencyFormat.format(value,currency);
 // Check if user is logged in
 const userId = localStorage.getItem('userId');
 const username = localStorage.getItem('username');
@@ -987,9 +988,18 @@ async function placeBattleCard(position) {
 
 function startBattleMatchPolling() {
   if (battleMatchPoll) clearInterval(battleMatchPoll);
-  battleMatchPoll = setInterval(loadBattleMatch, 1500);
+  let nextPollAt = 0;
+  battleMatchPoll = setInterval(() => {
+    if (document.hidden || !battleMatchId || battleMatch?.status === 'finished' || Date.now() < nextPollAt) return;
+    const delay = battleMatch?.status === 'board' ? 2000 : 5000;
+    nextPollAt = Date.now() + delay;
+    loadBattleMatch();
+  }, 500);
 }
 
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && battleMatchPoll && battleMatchId && battleMatch?.status !== 'finished') loadBattleMatch();
+});
 let battleMatchLoading = false;
 async function loadBattleMatch() {
   if (!battleMatchId || battleMatchLoading || document.hidden) return;
@@ -1108,7 +1118,7 @@ async function loadHistory() {
       renderHistoryMessage(transferList, 'No Footy transactions yet.');
     } else {
       history.transfers.forEach(transaction => {
-        const description = `From ${transaction.from} to ${transaction.to}: ${transaction.amount} Footy`;
+        const description = `From ${transaction.from} to ${transaction.to}: ${formatCurrency(transaction.amount)} Footy`;
         addHistoryEntry(transferList, description, transaction.occurredAt);
       });
     }
@@ -1119,8 +1129,8 @@ async function loadHistory() {
     } else {
       history.itemTrades.forEach(trade => {
         const description = trade.direction === 'bought'
-          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${trade.amount} ${trade.currencyName || 'Footy'}`
-          : `Sold ${trade.itemName} to ${trade.counterparty} for ${trade.amount} ${trade.currencyName || 'Footy'}`;
+          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`
+          : `Sold ${trade.itemName} to ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`;
         addHistoryEntry(itemList, description, trade.occurredAt);
       });
     }
@@ -1229,6 +1239,15 @@ async function loadSpinInfo() {
   }
 }
 
+function showWheelPrize(data) {
+ const center=document.querySelector('.wheel-center');if(!center)return;
+ const prize=Number(data.spinReward??data.baseReward??data.amount)||0,bonus=Number(data.bonusFooty)||0;
+ center.replaceChildren();center.classList.add('has-prize');
+ const label=document.createElement('small');label.textContent=data.vipMultiplier===2?'VIP x2':'YOU WON';
+ const line=document.createElement('span');line.className='wheel-prize-line';const main=document.createElement('strong');main.textContent=formatCurrency(prize);line.append(main);
+ if(bonus>0){const extra=document.createElement('span');extra.className='wheel-prize-bonus';extra.textContent=' + '+formatCurrency(bonus);extra.title='Extra Footy from spin bonuses';line.append(extra);}
+ const currency=document.createElement('small');currency.textContent='FOOTY';center.append(label,line,currency);center.setAttribute('aria-label',`${prize} Footy${data.vipMultiplier===2?' (VIP doubled)':''}${bonus>0?` plus ${bonus} bonus Footy`:''}`);
+}
 async function spinWheel() {
   if (isSpinning) return;
   isSpinning = true;
@@ -1236,6 +1255,7 @@ async function spinWheel() {
   if (spinButton) spinButton.disabled = true;
   const resultEl = document.getElementById('spinResult');
   resultEl.textContent = '';
+  const center=document.querySelector('.wheel-center');if(center){center.classList.remove('has-prize');center.textContent='...';}
 
   try {
     const res = await fetch(`${API_URL}/spin-wheel`, {
@@ -1280,7 +1300,8 @@ async function spinWheel() {
       clearTimeout(fallback);
       wheel?.removeEventListener('transitionend', onEnd);
       normalizeWheelRotation();
-      resultEl.innerHTML = `✅ You won <strong>${amount} Footy</strong>! Your balance is now ${data.balance} Footy.`;
+      showWheelPrize(data);
+      resultEl.textContent = `You won ${formatCurrency(amount)} Footy. Your balance is now ${formatCurrency(data.balance)} Footy.`;
       document.getElementById('spinButton').disabled = false;
       isSpinning = false;
       loadUsers();
@@ -1495,7 +1516,7 @@ async function loadUsers() {
     if (!res.ok) throw new Error('Server offline');
     const users = await res.json();
     const user = users.find(u => u.id === currentUserId);
-    if (user) document.getElementById('balance').textContent = `Balance: ${user.balance} Footy`;
+    if (user) document.getElementById('balance').textContent = `Balance: ${formatCurrency(user.balance)} Footy`;
 
     currentUserIsAdmin = !!(user && user.isAdmin === true);
     window.dispatchEvent(new Event('footy-role-changed'));
@@ -1554,7 +1575,7 @@ async function updateBalance() {
       return;
     }
 
-    balanceEl.textContent = `Balance: ${user.balance} Footy`;
+    balanceEl.textContent = `Balance: ${formatCurrency(user.balance)} Footy`;
   } catch (error) {
     console.error('Error updating balance:', error);
     isServerOnline = false;
@@ -1661,7 +1682,7 @@ async function viewAdminAccount() {
 
     const vipUntil = account.vipUntil ? parseTimestamp(account.vipUntil) : null;
     const hasVip = vipUntil && vipUntil.getTime() > Date.now();
-    document.getElementById('adminAccountBalance').textContent = `${account.balance || 0} Footy`;
+    document.getElementById('adminAccountBalance').textContent = `${formatCurrency(account.balance || 0)} Footy`;
     document.getElementById('adminAccountLastOnline').textContent = formatAdminDate(account.lastOnline);
     document.getElementById('adminAccountVip').textContent = hasVip ? `Active until ${vipUntil.toLocaleString()}` : 'Not VIP';
 
@@ -1886,6 +1907,7 @@ function loadPackForEditing() {
   document.getElementById('packShopEnabled').checked=pack?.shop?.enabled===true;
   document.getElementById('packShopPrice').value=pack?.shop?.price||10;
   document.getElementById('packShopCurrency').value=pack?.shop?.currency||'footy';
+  const cooldown=pack?.shop?.cooldownMinutes||0;document.getElementById('packShopCooldownHours').value=Math.floor(cooldown/60);document.getElementById('packShopCooldownMinutes').value=cooldown%60;
   builderRewardCards=structuredClone(pack?.rewardCards||[]);updatePackBuilderPreview();
   saveButton.textContent = pack ? 'Save Pack Changes' : 'Save New Pack';
 }
@@ -1898,12 +1920,14 @@ async function savePack() {
   const name = nameInput && nameInput.value.trim();
   if (!name) return alert('Enter a pack name');
   if (!cardIds.length&&!builderRewardCards.length) return alert('Add at least one collection card or extra reward.');
+  const cooldownHours=Number(document.getElementById('packShopCooldownHours').value),cooldownMinutes=Number(document.getElementById('packShopCooldownMinutes').value);
+  if(!Number.isSafeInteger(cooldownHours)||cooldownHours<0||!Number.isSafeInteger(cooldownMinutes)||cooldownMinutes<0||cooldownMinutes>59||cooldownHours*60+cooldownMinutes>525600)return alert('Enter whole cooldown hours and 0-59 additional minutes, up to 365 days.');
 
   try {
     const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {
       method: packId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-      body: JSON.stringify({ name, cardIds, color, appearance:{base:color,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value},rewardCards:builderRewardCards,shop:{enabled:document.getElementById('packShopEnabled').checked,price:Number(document.getElementById('packShopPrice').value),currency:document.getElementById('packShopCurrency').value} })
+      body: JSON.stringify({ name, cardIds, color, appearance:{base:color,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value},rewardCards:builderRewardCards,shop:{enabled:document.getElementById('packShopEnabled').checked,price:Number(document.getElementById('packShopPrice').value),currency:document.getElementById('packShopCurrency').value,cooldownMinutes:cooldownHours*60+cooldownMinutes} })
     });
     if (!res.ok) return alert(await res.text());
     await loadPacks();
@@ -2371,7 +2395,7 @@ function renderDailyPackFeature(items) {
   const art=document.createElement('div');art.className='opening-pack marketplace-pack-icon';art.textContent='PACK';art.setAttribute('aria-hidden','true');
   art.style.setProperty('--pack-color',/^#[0-9a-f]{6}$/i.test(item.packColor||'')?item.packColor:'#667eea');
   const name=document.createElement('h3');name.textContent=item.name;
-  const detail=document.createElement('p');detail.textContent=`${item.payablePrice ?? item.price} ${item.currencyName||'Footy'} - ${item.stock} left${item.expiresAt?' - Available until '+new Date(item.expiresAt).toLocaleString():''}`;
+  const detail=document.createElement('p');detail.textContent=`${formatCurrency(item.payablePrice ?? item.price,item.currency||'footy')} ${item.currencyName||'Footy'} - ${item.stock} left${item.expiresAt?' - Available until '+new Date(item.expiresAt).toLocaleString():''}`;
   const button=document.createElement('button');button.className='btn btn-primary';button.dataset.uiNav='marketplace';button.textContent='View daily pack in marketplace';
   button.addEventListener('click',()=>requestAnimationFrame(()=>{
     const row=document.querySelector('[data-todays-pack]');if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.focus({preventScroll:true});}
@@ -2426,15 +2450,15 @@ async function loadItems() {
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
-      itemPrice.textContent = `${item.price} ${item.currencyName || 'Footy'}${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
+      itemPrice.textContent = `${formatCurrency(item.price,item.currency||'footy')} ${item.currencyName || 'Footy'}${item.stock > 1 ? ` · ${item.stock} left` : ''}${item.perUserLimit ? ` · max ${item.perUserLimit}/user` : ''}`;
 
       if(item.vipDiscountPercent>0) {
         const deal=document.createElement('span');deal.className='market-vip-deal';
-        deal.textContent=`VIP ${item.vipDiscountPercent}% off: ${item.vipPrice} ${item.currencyName||'Footy'}${item.vipDiscountApplied?' - applied to your purchase':' - with active VIP'}`;
+        deal.textContent=`VIP ${item.vipDiscountPercent}% off: ${formatCurrency(item.vipPrice,item.currency||'footy')} ${item.currencyName||'Footy'}${item.vipDiscountApplied?' - applied to your purchase':' - with active VIP'}`;
         itemPrice.prepend(document.createTextNode('Regular price: '));itemPrice.append(document.createElement('br'),deal);
       }
       if(Number.isFinite(item.payablePrice)&&item.payablePrice<item.price){
-        const payable=document.createElement('strong');payable.className='market-payable';payable.textContent=`You pay ${item.payablePrice} ${item.currencyName||'Footy'}`;itemPrice.append(document.createElement('br'),payable);
+        const payable=document.createElement('strong');payable.className='market-payable';payable.textContent=`You pay ${formatCurrency(item.payablePrice,item.currency||'footy')} ${item.currencyName||'Footy'}`;itemPrice.append(document.createElement('br'),payable);
       }
       const isOwner = String(item.sellerId) === String(currentUserId);
 
@@ -2781,6 +2805,64 @@ async function listSelectedItem() {
 }
 
 /* ------------------ INVENTORY ------------------ */
+let inventoryHideDuplicates = false;
+let inventoryCountMode = 'total', inventoryCounterItems = null, inventoryCardCatalog = null, inventoryCatalogAt = 0, inventoryCatalogPending = null;
+try { inventoryHideDuplicates = localStorage.getItem(`inventory-hide-duplicates:${currentUserId}`) === 'true'; } catch {}
+try { if (localStorage.getItem(`inventory-count-mode:${currentUserId}`) === 'collection') inventoryCountMode = 'collection'; } catch {}
+function inventoryCardIdentity(item) {
+  if (item.itemType && item.itemType !== 'card') return '';
+  let filename = '';
+  try { filename = item.imageUrl ? decodeURIComponent(new URL(item.imageUrl, location.href).pathname.split('/').pop()) : ''; } catch {}
+  return filename || String(item.cardId || item.name || '').trim();
+}
+function renderInventoryCardCount() {
+  const output = document.getElementById('inventoryCardCount'), select = document.getElementById('inventoryCountMode');
+  if (!output) return;
+  if (select) select.value = inventoryCountMode;
+  const cards = inventoryCounterItems?.map(inventoryCardIdentity).filter(Boolean);
+  output.textContent = !cards ? '\u2014' : inventoryCountMode === 'total' ? String(cards.length) : `${new Set(cards).size} / ${inventoryCardCatalog ? inventoryCardCatalog.size : '\u2014'}`;
+  output.title = inventoryCountMode === 'total' ? 'Owned cards, including duplicates. Packs are excluded.' : 'Unique owned cards / all collectible cards. Search and Hide duplicates do not change this count.';
+}
+async function refreshInventoryCardCount() {
+  renderInventoryCardCount();
+  if (inventoryCountMode !== 'collection' || inventoryCardCatalog && Date.now() - inventoryCatalogAt < 60000) return;
+  try {
+    if (!inventoryCatalogPending) inventoryCatalogPending = fetch(`${API_URL}/card-images`).then(async response => {
+      if (!response.ok) throw Error('Could not load collectible card catalog.');
+      const files = await response.json();
+      if (!Array.isArray(files)) throw Error('Invalid card catalog.');
+      inventoryCardCatalog = new Set(files.map(file => inventoryCardIdentity({ imageUrl: file })).filter(Boolean));
+      inventoryCatalogAt = Date.now();
+    }).finally(() => { inventoryCatalogPending = null; });
+    await inventoryCatalogPending;
+  } catch { /* Keep the owned count visible; an unavailable catalog shows a dash. */ }
+  renderInventoryCardCount();
+}
+function changeInventoryCountMode(mode) {
+  inventoryCountMode = mode === 'collection' ? 'collection' : 'total';
+  try { localStorage.setItem(`inventory-count-mode:${currentUserId}`, inventoryCountMode); } catch {}
+  refreshInventoryCardCount();
+}
+function applyInventoryDuplicates() {
+  const seen = new Set();
+  document.querySelectorAll('#inventoryItems > li').forEach(row => {
+    const key = row.dataset.inventoryCardKey;
+    row.hidden = !!(inventoryHideDuplicates && key && seen.has(key));
+    if (key) seen.add(key);
+  });
+  const button = document.getElementById('inventoryDuplicatesToggle');
+  if (button) {
+    button.textContent = inventoryHideDuplicates ? 'Show duplicates' : 'Hide duplicates';
+    button.setAttribute('aria-pressed', String(inventoryHideDuplicates));
+  }
+  // Reapply the existing search count after changing visibility, without a fetch.
+  document.getElementById('studioFilter-inventoryItems')?.dispatchEvent(new Event('input'));
+}
+function toggleInventoryDuplicates() {
+  inventoryHideDuplicates = !inventoryHideDuplicates;
+  try { localStorage.setItem(`inventory-hide-duplicates:${currentUserId}`, String(inventoryHideDuplicates)); } catch {}
+  applyInventoryDuplicates();
+}
 function updateInventorySellModeButton() {
   const sellModeButton = document.getElementById('inventorySellModeToggle');
   if (!sellModeButton) return;
@@ -2812,6 +2894,8 @@ async function loadInventory() {
 
     const inventoryItems = await inventoryRes.json();
     const tiers = await tiersRes.json();
+    inventoryCounterItems = inventoryItems;
+    refreshInventoryCardCount();
     inventoryPacks=inventoryItems.filter(item=>item.itemType==='pack'&&!item.listedForSale);updatePackOpenAll();
     const sellPriceByCard = {};
 
@@ -2836,6 +2920,7 @@ async function loadInventory() {
 
     inventoryItems.forEach(item => {
       const li = document.createElement('li');
+      li.dataset.inventoryCardKey = inventoryCardIdentity(item);
       if (item.itemType === 'pack') {
         const packIcon = document.createElement('div');
         packIcon.className = 'pack-inventory-icon';
@@ -2900,6 +2985,7 @@ async function loadInventory() {
       list.appendChild(li);
     });
 
+    applyInventoryDuplicates();
     updateInventorySellModeButton();
   } catch (error) {
     console.error('Error loading inventory:', error);
@@ -3179,7 +3265,7 @@ function renderGemWallet() {
     const tile = document.createElement('div');
     tile.className = `gem-balance-tile${recipe.unlocked ? '' : ' is-locked'}`;
     const count = document.createElement('strong');
-    count.textContent = Number(gemConverterData.gems[recipe.gemKey] || 0).toLocaleString();
+    count.textContent = Number(gemConverterData.gems[recipe.gemKey] || 0).toLocaleString(undefined,{maximumFractionDigits:0});
     const name = document.createElement('span');
     name.textContent = recipe.gemName;
     const state = document.createElement('small');
@@ -3239,9 +3325,9 @@ function renderGemCards() {
   if (!eligible.length) container.textContent = 'No available cards for this gem.';
   const count = gemSelection.size;
   const cost = count && recipe?.costs ? recipe.costs[count - 1] : 0;
-  document.getElementById('gemQuote').textContent = `${count}/3 cards loaded / ${count ? (recipe?.rewards?.[count-1] ?? [0,3,7,12][count]) : 0} gems / ${cost} Footy (balance: ${gemConverterData?.balance || 0})`;
+  document.getElementById('gemQuote').textContent = `${count}/3 cards loaded / ${count ? (recipe?.rewards?.[count-1] ?? [0,3,7,12][count]) : 0} gems / ${formatCurrency(cost)} Footy (balance: ${gemConverterData?.balance || 0})`;
   document.getElementById('gemStart').disabled = gemBusy || gemLoading || !count || !recipe?.unlocked || !recipe?.costs || cost > gemConverterData.balance;
-  document.getElementById('gemStart').textContent = gemBusy ? 'Working...' : `Start converter - ${cost} Footy`;
+  document.getElementById('gemStart').textContent = gemBusy ? 'Working...' : `Start converter - ${formatCurrency(cost)} Footy`;
   document.getElementById('gemRecipe').disabled = gemBusy || gemLoading;
   renderGemUpgrade();
   const slots = document.getElementById('gemSlots');
@@ -3289,7 +3375,7 @@ async function startGemConverter() {
     machine.classList.add('is-complete');
     document.getElementById('gemMachineLabel').textContent = `+${result.reward} ${result.gemName}!`;
     await new Promise(resolve => setTimeout(resolve, 900));
-    message = `Created ${result.reward} ${result.gemName} gems for ${result.cost} Footy. ${itemIds.length} cards consumed.${result.vipBonus ? " VIP bonus: +1 gem!" : ""}${result.amuletBonus ? ` Amulet bonus: +${result.amuletBonus} gems!` : ""}`;
+    message = `Created ${result.reward} ${result.gemName} gems for ${formatCurrency(result.cost)} Footy. ${itemIds.length} cards consumed.${result.vipBonus ? " VIP bonus: +1 gem!" : ""}${result.amuletBonus ? ` Amulet bonus: +${result.amuletBonus} gems!` : ""}`;
   } catch (error) {
     message = error.message || 'Conversion could not be confirmed. Refresh your inventory before trying again.';
   } finally {
@@ -3322,4 +3408,19 @@ async function upgradeGemConverter() {
     await loadGemConverter();
     document.getElementById('gemStatus').textContent = message;
   }
+}
+
+let adminTokenGrantBusy=false;
+async function loadAdminBrawlTokenOptions(){
+ const button=document.getElementById('adminGrantTokenButton'),select=document.getElementById('adminGrantToken');button.disabled=true;
+ try{const r=await fetch(`${API_URL}/api/brawl/admin/tokens`,{headers:resourceHeaders()});if(!r.ok)throw Error(await r.text());const data=await r.json();select.replaceChildren();for(const species of data.species){const option=document.createElement('option');option.value=species.id;option.textContent=species.name;select.append(option);}button.disabled=adminTokenGrantBusy||!select.options.length;}
+ catch(e){document.getElementById('adminGrantTokenStatus').textContent=e.message;}
+}
+async function grantBrawlTokensToPlayer(){
+ if(adminTokenGrantBusy)return;
+ const player=document.getElementById('grantResourceUser'),species=document.getElementById('adminGrantToken').value,quantity=Number(document.getElementById('adminGrantTokenQuantity').value),status=document.getElementById('adminGrantTokenStatus'),button=document.getElementById('adminGrantTokenButton');
+ if(!player.value||!species||!Number.isSafeInteger(quantity)||quantity<=0){status.textContent='Choose a player, token type and positive whole quantity.';return;}
+ adminTokenGrantBusy=true;button.disabled=true;status.textContent='Granting tokens...';
+ try{const r=await fetch(`${API_URL}/api/brawl/admin/tokens`,{method:'POST',headers:resourceHeaders(),body:JSON.stringify({userId:player.value,species,quantity})});if(!r.ok)throw Error(await r.text());const result=await r.json();status.textContent=`Granted ${result.quantity} ${result.species} tokens to ${player.selectedOptions[0].textContent}. New total: ${result.total}.`;}
+ catch(e){status.textContent=e.message||'Could not grant tokens.';}finally{adminTokenGrantBusy=false;button.disabled=false;}
 }

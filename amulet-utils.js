@@ -26,15 +26,37 @@ const EXCLUSIVES = [
  {id:'road:champion',name:"Champion's Laurel",power:'trophybonus',value:3,description:'+3 trophies per ranked win',milestone:1750},
  {id:'road:forge',name:'Eternal Furnace',power:'fullbatch',value:2,description:'+2 gems when converting exactly three cards',milestone:3000}
 ].map(entry=>({...entry,gemKey:'trophy-road',gemName:'Trophy road',tierName:'Trophy exclusive',exclusive:true,price:0}));
-const ALL_POWERS=[...POWERS,...EXTRA_POWERS];
+const NEW_POWERS=[
+ ['dailycooldown','Discovery Hourglass',8,0,40,'% shorter daily-pack cooldown'],
+ ['shopcooldown','Merchant Hourglass',8,0,40,'% shorter pack-shop purchase cooldowns'],
+ ['packshop','Pack Patron',4,0,30,'% off pack-shop prices (strongest applicable discount only)'],
+ ['packtokens','Token Cache',1,0,5,'extra creature tokens per token reward card opened in a pack'],
+ ['boostpower','Temporal Lens',10,0,50,'% extra time removed by each Skip or Leap']
+];
+// Keep saved item IDs stable while replacing three repeated designs per tier.
+const EXTRA_DESIGNS=[
+ [['Discovery Hourglass',{dailycooldown:8}],['Market Satchel',{packshop:3,pack:4}],['Pigment Pouch',{packtokens:1,pigment:1}],['Lucky Sundial',{boostpower:6,wheel:2}]],
+ [['Dawn Courier',{dailycooldown:6,wheelstreak:5}],['Merchant Hourglass',{shopcooldown:8,packshop:4}],['Scavenger Locket',{salvage:9,packgem:8}],['Apprentice Pendulum',{boostpower:7,converter:4}]],
+ [['First Light Charm',{dailycooldown:7,pack:7}],['Travellers Bargain',{packshop:5},'novip'],['Token Cache',{packtokens:1,pack:3}],['Emergency Reserve',{wheel:5,boostpower:8},'lowfunds']],
+ [['Geode Almanac',{dailycooldown:6,packgem:12}],['Dyers Market Seal',{shopcooldown:6,pigment:1}],['Ascenders Keepsake',{ascend:18,packtokens:1}],['Temporal Lens',{boostpower:10}]],
+ [['Discovery Hourglass',{dailycooldown:8}],['Festival Ledger',{shopcooldown:7,wheelstreak:8}],['Royal Expedition',{packtokens:2},'vip'],['Kilnkeepers Watch',{boostpower:8,fullbatch:1}]],
+ [['Colourwheel Compass',{dailycooldown:7,pigment:1},'diverse'],['Merchant Hourglass',{shopcooldown:8,packshop:4}],['Salvagers Bounty',{salvage:14,ascend:12}],['Patient Jeweller',{boostpower:9,gemshop:5}]],
+ [['Royal Dawn',{dailycooldown:10,vipdays:1}],['Wayfarers Charter',{shopcooldown:10,market:3}],['Token Cache',{packtokens:1,pack:3}],['Lean Times Lantern',{boostpower:12,pack:12},'lowfunds']],
+ [['Stormglass Beacon',{dailycooldown:8,wheel:4}],['Lightning Bazaar',{shopcooldown:9,packshop:3}],['Chromatic Cache',{packtokens:1,pigment:1},'diverse'],['Temporal Lens',{boostpower:10}]],
+ [['Discovery Hourglass',{dailycooldown:8}],['Sovereigns Writ',{packshop:6,vipdays:1}],['Summit Reliquary',{packtokens:2,packgem:15}],['Fivefold Orrery',{boostpower:15,fullbatch:1},'full']]
+];
+const EXTRA_KEYS=['discovery-clock','merchant-clock','token-cache','temporal-lens'];
+function extraDesigns(rank){return EXTRA_DESIGNS[rank%EXTRA_DESIGNS.length].map(([name,bonuses,condition],i)=>[EXTRA_KEYS[i],...(rank<EXTRA_DESIGNS.length?[name,bonuses,condition]:[`${name} of the Beyond`,{...bonuses,ascend:rank+5},condition])]);}
+const LEGACY_POWERS=[...POWERS,...EXTRA_POWERS];
+const ALL_POWERS=[...LEGACY_POWERS,...NEW_POWERS];
 const { SETS, CONDITIONS, active } = require('./amulet-designs');
 function designs(rank) {
-  if(SETS[rank])return SETS[rank];
+  if(SETS[rank])return [...SETS[rank],...extraDesigns(rank)];
   // Special tiers use mixed roles rather than rescaled standard-tier items.
   return Array.from({length:5},(_,i)=>{
-    const a=ALL_POWERS[(rank+i*3)%ALL_POWERS.length],b=ALL_POWERS[(rank*2+i*3+1)%ALL_POWERS.length];
+    const a=LEGACY_POWERS[(rank+i*3)%LEGACY_POWERS.length],b=LEGACY_POWERS[(rank*2+i*3+1)%LEGACY_POWERS.length];
     return [`special-${i}`,`${a[1]} & ${b[1]}`,{[a[0]]:a[2],[b[0]]:b[2]},['diverse',null,'rubystash','vip','full'][i]];
-  });
+  }).concat(extraDesigns(rank));
 }
 // Gentle rarity scaling; Ruby stays unchanged and rare tiers retain an advantage.
 const RARITY_POWER=[1,1.15,1.3,1.5,1.7,1.9,2.1,2.3,2.5,2.6,2.7,2.8,2.9,3];
@@ -51,12 +73,12 @@ function rebalanceAmulet(slot) {
  const match=String(slot.id||'').match(/:v2:(\d+):([^:]+)$/);
  if(!match)return slot.id?null:slot;
  const design=designs(Number(match[1])).find(entry=>entry[0]===match[2]);
- return design?{...slot,...designFields(design,Number(match[1])),price:22+designs(Number(match[1])).indexOf(design)*5}:null;
+ return design?{...slot,...designFields(design,Number(match[1])),price:22+Math.min(4,designs(Number(match[1])).indexOf(design))*5}:null;
 }
 function catalog(tiers) {
  return tiers.flatMap((tier,index)=>{
   const gem=gemIdentity(tier);
-  return designs(index).map((design,offset)=>({id:`${tier.id}:v2:${index}:${design[0]}`,...gem,tierRank:index,...designFields(design,index),price:22+offset*5}));
+  return designs(index).map((design,offset)=>({id:`${tier.id}:v2:${index}:${design[0]}`,...gem,tierRank:index,...designFields(design,index),price:22+Math.min(4,offset)*5}));
  }).concat(EXCLUSIVES);
 }
 function cleanAmulets(user,entries) {
@@ -64,6 +86,9 @@ function cleanAmulets(user,entries) {
  return {amulets:Object.fromEntries(Object.entries(user.amulets||{}).filter(([id])=>valid.has(id))),
   amuletSlots:(user.amuletSlots||[]).map(slot=>slot&&valid.has(slot.id)?rebalanceAmulet(slot):null)};
 }
+// Price discounts use the best offer; other active powers add across equipped copies.
+const PRICE_DISCOUNTS = new Set(['converter','vip','market','gemshop','packshop']);
+const PERCENT_LIMITS = new Set(['packgem','dailycooldown','shopcooldown']);
 function effects(user) {
  const result={};
  const slots=(user.amuletSlots||[]).slice(0,Math.max(1,Math.min(5,user.amuletSlotCount||1))).map(rebalanceAmulet).filter(Boolean);
@@ -71,12 +96,16 @@ function effects(user) {
   if(!active(slot.condition,user,slots))continue;
   for(const [power,value] of Object.entries(slot.bonuses||{[slot.power]:slot.value})){
    const rule=ALL_POWERS.find(rule=>rule[0]===power);
-   if(rule)result[power]=Math.max(result[power]||0,Math.min(slot.id==='road:forge'?2:rule[4],Number(value)||0));
+   if(rule){
+    const amount=Math.max(0,Math.min(slot.id==='road:forge'?2:rule[4],Number(value)||0));
+    result[power]=PRICE_DISCOUNTS.has(power)?Math.max(result[power]||0,amount):(result[power]||0)+amount;
+    if(PERCENT_LIMITS.has(power))result[power]=Math.min(100,result[power]);
+   }
   }
  }
  return result;
 }
-const round = value => Math.round(value * 100) / 100;
+const round = require('./public/currency-format').footy;
 const discounted = (price, percent) => round(price * (1 - (percent || 0) / 100));
 function changeAmulets(user, action, body, entries, now = Date.now()) {
   user={...user,...cleanAmulets(user,entries)};

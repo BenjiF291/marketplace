@@ -1,0 +1,78 @@
+{
+  "errors": [],
+  "reports": [
+    {
+      "kind": "rill-species",
+      "moves": [
+        {
+          "id": "basic",
+          "style": "rill-talon-strike",
+          "duration": 1.32,
+          "contact": 0.54,
+          "tracks": 58,
+          "finite": true,
+          "deformation": 0.34539495933600184,
+          "seam": 4.815340126640422e-9,
+          "positions": 2856
+        },
+        {
+          "id": "double",
+          "style": "rill-hooking-rake",
+          "duration": 1.42,
+          "contact": 0.54,
+          "tracks": 58,
+          "finite": true,
+          "deformation": 0.30406832877676065,
+          "seam": 6.344289760207289e-9,
+          "positions": 2856
+        },
+        {
+          "id": "lift",
+          "style": "rill-wing-fan",
+          "duration": 1.48,
+          "contact": 0.54,
+          "tracks": 58,
+          "finite": true,
+          "deformation": 0.1921137727772524,
+          "seam": 2.9534289458510443e-9,
+          "positions": 2856
+        }
+      ],
+      "timeline": [
+        {
+          "tailGap": null,
+          "name": "rill-species:basic",
+          "progress": 0.54,
+          "travel": 14.965372459063175,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        },
+        {
+          "tailGap": null,
+          "name": "rill-species:double",
+          "progress": 0.54,
+          "travel": 14.974735964943719,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        },
+        {
+          "tailGap": null,
+          "name": "rill-species:lift",
+          "progress": 0.54,
+          "travel": 0,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        }
+      ]
+    }
+  ]
+}

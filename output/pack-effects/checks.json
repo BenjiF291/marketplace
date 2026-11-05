@@ -1,0 +1,13 @@
+{
+  "themes": 5,
+  "errors": [],
+  "checks": [
+    "shared preview/real renderer",
+    "desktop/mobile",
+    "card advance",
+    "canvas pixels",
+    "cleanup/no surviving animation frames",
+    "equipped daily pack",
+    "reduced motion"
+  ]
+}

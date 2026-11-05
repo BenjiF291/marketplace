@@ -4,34 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Marketplace</title>
-  <link rel="preload" as="image" media="(orientation: landscape)" href="assets/village/loading-wallpaper.jpg" fetchpriority="high">
-  <link rel="preload" as="image" media="(orientation: portrait)" href="assets/village/loading-wallpaper-mobile.jpg" fetchpriority="high">
-  <link rel="stylesheet" href="style.css?v=card-cutouts1">
+  <link rel="preload" as="image" media="(orientation: landscape)" href="assets/village/loading-creatures-v5.jpg" fetchpriority="high">
+  <link rel="preload" as="image" media="(orientation: portrait)" href="assets/village/loading-creatures-mobile-v6.jpg" fetchpriority="high">
+  <link rel="stylesheet" href="style.css?v=wheel-prize1">
   <link rel="stylesheet" href="studio.css">
-  <link rel="stylesheet" href="ruby-shop.css?v=20261013-snail1">
+<link rel="stylesheet" href="card-brawl-lobby.css?v=1">
+  <link rel="stylesheet" href="ruby-shop.css?v=item-art3">
   <link rel="stylesheet" href="creature-book.css?v=12-owned-sort">
 <link rel="stylesheet" href="pack-cinema.css">
-<link rel="stylesheet" href="reward-opening.css?v=12">
+<link rel="stylesheet" href="reward-opening.css?v=actual-heads2">
 <link rel="stylesheet" href="pack-shop.css?v=1">
 <link rel="stylesheet" href="reward-gallery.css?v=2">
-<link rel="stylesheet" href="village.css?v=20261012-fox3d">
-<link rel="stylesheet" href="village-interiors.css">
+<link rel="stylesheet" href="village.css?v=water-edge2">
+<link rel="stylesheet" href="time-skips.css?v=mine-upgrade1">
+<link rel="stylesheet" href="village-interiors.css?v=arena-back2">
 <link rel="stylesheet" href="town-hall.css">
 <link rel="stylesheet" href="island-minigames.css">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#245950">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="assets/pwa/island-icon-180.png">
-  <script src="pwa.js" defer></script>
-<link rel="stylesheet" href="player-profile.css">
-<link rel="stylesheet" href="free-pack.css?v=collection-copy8">
-<link rel="stylesheet" href="stable.css?v=carousel2">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/kael-v2-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/kael-v2-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/kael-v2-512.png">
+  <script src="pwa.js?v=kael-icons2" defer></script>
+<link rel="stylesheet" href="player-profile.css?v=new-seals1">
+<link rel="stylesheet" href="free-pack.css?v=card-order1">
+<link rel="stylesheet" href="stable.css?v=stable-stage3">
+<link rel="stylesheet" href="creature-feeding.css?v=brawl-only-upgrades2">
+<link rel="preload" as="image" href="assets/village/creature-brawl-loading-v2.jpg">
+<link rel="stylesheet" href="creature-brawl.css?v=closed-dialog1">
+<link rel="stylesheet" href="creature-brawl-status-icons.css?v=above-nameplate1">
+<link rel="stylesheet" href="creature-brawl-profile.css?v=battle-profile1">
+<link rel="stylesheet" href="dye-theme.css?v=rich1">
 </head>
 <body class="island-app">
 <section id="islandLoading" role="status">
 <div class="island-loader-content">
-<picture><source media="(orientation: portrait)" srcset="assets/village/loading-wallpaper-mobile.jpg"><img class="island-loading-wallpaper" src="assets/village/loading-wallpaper.jpg" alt="Pets and villagers in their seaside village" fetchpriority="high"></picture>
+<picture><source media="(orientation: portrait)" srcset="assets/village/loading-creatures-mobile-v6.jpg"><img class="island-loading-wallpaper" src="assets/village/loading-creatures-v5.jpg" alt="Kael and Rill overlooking their magical island" fetchpriority="high"></picture>
 <div class="island-name-sign"><span data-island-name>Your island</span></div>
 <div class="island-loading-bottom"><label>Preparing your island <span data-load-percent>0%</span></label><progress max="100" value="0" aria-label="Island loading progress"></progress><small data-load-stage>Setting sail...</small></div>
 </div>
@@ -39,7 +49,7 @@
 </section>
 <script src="island-loading.js"></script>
 <script src="ascend-utils.js"></script>
-<script src="gem-colors.js"></script>
+<script src="gem-colors.js?v=rich-dye1"></script>
 
 <div class="container">
   <header class="header">
@@ -146,6 +156,13 @@
             <button id="adminGrantGemButton" class="btn btn-primary" onclick="grantGemsToPlayer()" disabled>Grant Gems</button>
             <p id="adminGrantGemStatus" role="status"></p>
           </div>
+          <div class="form-group">
+            <h3>Brawl tokens</h3>
+            <label for="adminGrantToken">Creature tokens</label><select id="adminGrantToken" class="input-field"></select>
+            <label for="adminGrantTokenQuantity">Token quantity</label><input id="adminGrantTokenQuantity" type="number" min="1" step="1" value="50" class="input-field">
+            <button id="adminGrantTokenButton" class="btn btn-primary" onclick="grantBrawlTokensToPlayer()" disabled>Grant Brawl Tokens</button>
+            <p id="adminGrantTokenStatus" role="status"></p>
+          </div>
           <label for="grantAmuletSelect">Amulet</label><select id="grantAmuletSelect" class="input-field"></select>
           <label for="grantAmuletQuantity">Amulet quantity</label><input id="grantAmuletQuantity" type="number" min="1" step="1" value="1" class="input-field">
           <button class="btn btn-primary" onclick="grantResource('amulet', this)">Grant Amulet</button>
@@ -172,6 +189,11 @@
           <label class="input-label"><input id="packShopEnabled" type="checkbox"> Show in the pack shop</label>
           <label class="input-label" for="packShopPrice">Shop price</label>
           <input id="packShopPrice" type="number" min="0.01" step="0.01" value="10" class="input-field">
+          <label class="input-label" for="packShopCooldownHours">Purchase cooldown hours</label>
+          <input id="packShopCooldownHours" type="number" min="0" max="8760" step="1" value="0" class="input-field">
+          <label class="input-label" for="packShopCooldownMinutes">Additional minutes</label>
+          <input id="packShopCooldownMinutes" type="number" min="0" max="59" step="1" value="0" class="input-field">
+          <p class="battle-help">After buying this pack, each player waits this long before buying it again. Set both to 0 for no cooldown. Changes apply from each player's last purchase.</p>
           <label class="input-label" for="packShopCurrency">Shop currency</label>
           <select id="packShopCurrency" class="input-field"><option value="footy">Footy</option><option value="bronze">Ruby</option><option value="rare-bronze">Garnet</option><option value="silver">Moonstone</option><option value="rare-silver">Opal</option><option value="gold">Citrine</option><option value="rare-gold">Emerald</option><option value="platinum">Sapphire</option><option value="lightning">Amethyst</option><option value="ultra">Diamond</option></select>
           <label class="input-label">Cards in this pack</label>
@@ -269,7 +291,7 @@
 
     <section id="amuletSection" class="card" style="display:none">
       <h2>Amulet sanctuary</h2>
-      <p>Equip your powers. Amulets stay active until removed, and can be removed after five days. Only the strongest of each power applies.</p>
+      <p>Equip your powers. Amulets stay active until removed, and can be removed after five days. Equipped bonuses stack. Percentage price discounts use only the highest discount; chances and cooldown reductions stop at 100%.</p>
       <h3>Your equipped amulets</h3><div id="amuletSlots" class="amulet-grid"></div>
       <button id="unlockAmuletSlot" class="btn btn-primary" onclick="amuletAction('unlock', {expectedCount: amuletState.slotCount})">Unlock slot</button>
       <h3>Your amulet inventory</h3><div id="amuletOwned" class="amulet-grid"></div>
@@ -290,6 +312,7 @@
     </section>
 
     <section id="battleGameSection" class="card battle-game-section" style="display: none;">
+      <button type="button" class="btn btn-primary" onclick="CreatureBrawl.open()">Creature Brawl ? 3 vs 3</button>
       <h2>⚔️ Battle</h2>
       <details id="practiceBattle" class="gem-converter" ontoggle="if(this.open) loadPracticeSetup()">
         <summary>Play against Bob</summary>
@@ -381,6 +404,7 @@
     </section>
 
     <section id="battleSection" class="card battle-section" style="display: none;">
+      <button type="button" class="btn btn-primary" onclick="CreatureBrawl.open()">Creature Brawl · 3 vs 3</button>
       <h2>🧩 BCM</h2>
       <div class="form-group">
         <label class="input-label" for="battleCardName">Card name</label>
@@ -439,10 +463,12 @@
     <!-- Inventory Section -->
     <section id="inventorySection" class="card inventory-section" style="display: none;">
       <div class="inventory-header-row">
+        <label class="inventory-card-counter"><select id="inventoryCountMode" aria-label="Inventory card counter mode" onchange="changeInventoryCountMode(this.value)"><option value="total">Total cards</option><option value="collection">Collection progress</option></select><output id="inventoryCardCount" aria-live="polite">—</output></label>
         <h2>🎒 Inventory</h2>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="inventoryOpenAll" onclick="openAllPacks()" class="btn btn-success" disabled>Open all packs</button>
           <button onclick="openRubyItemInventory()" class="btn">Items &amp; consumables</button>
+          <button id="inventoryDuplicatesToggle" type="button" onclick="toggleInventoryDuplicates()" class="btn" aria-pressed="false">Hide duplicates</button>
           <button id="inventorySellModeToggle" onclick="toggleInventorySellMode()" class="btn btn-warning">Sell Mode: Off</button>
           <button id="openAscendMenuBtn" onclick="openAscendMenu()" class="btn btn-primary">Ascend</button>
         </div>
@@ -527,7 +553,7 @@
             <div class="wheel-segment" style="--i:5"><span>24</span></div>
           </div>
           <div class="wheel-pointer-top"></div>
-          <div class="wheel-center">Go</div>
+          <div class="wheel-center" aria-live="polite">Go</div>
         </div>
       </div>
       <button id="spinButton" onclick="spinWheel()" class="btn btn-success">Spin the Wheel</button>
@@ -581,14 +607,16 @@
 
 <script src="card-mask-files.js?v=4"></script>
 <script src="card-cutouts.js?v=3"></script>
-<script src="reward-card-art.js?v=8"></script>
-<script src="reward-opening.js?v=13"></script>
+<script src="reward-card-art.js?v=token-heads1"></script>
+<script src="pack-effects.js?v=1"></script>
+<script src="reward-opening.js?v=actual-heads2"></script>
 <script src="reward-gallery.js?v=1"></script>
-<script src="pack-cinema.js?v=regular-builder1"></script>
-<script src="session-network.js?v=cover-timeout1"></script>
-<script src="app.js?v=reward-only4"></script>
-<script src="amulets.js"></script>
-<script src="gem-workshop.js"></script>
+<script src="pack-cinema.js?v=effects-upgrade1"></script>
+<script src="session-network.js?v=network-opt1"></script>
+<script src="currency-format.js?v=1"></script>
+<script src="app.js?v=wheel-prize1"></script>
+<script src="amulets.js?v=admin-tokens1-amulet-timers1"></script>
+<script src="gem-workshop.js?v=rich-dye1"></script>
 <div id="dyeTray" hidden aria-label="Dye palette">
   <strong>Dye mode</strong><p>Select a dye, then click an interface area. Tabs still switch pages. Only final changes cost dye.</p>
   <div id="dyeTrayColors"></div>
@@ -601,35 +629,46 @@
 <script src="practice-engine.js?v=20261012-fox3d"></script>
 <script src="brawl-turns.js?v=20261012-fox3d"></script>
 <script src="battle-effects.js"></script>
-<script src="practice-battle.js?v=20261012-fox3d"></script>
-<script src="studio.js"></script>
-<script src="companions.js?v=stable-rotate2"></script>
+<script src="practice-battle.js?v=last-used-deck1"></script>
+<script src="studio.js?v=inventory-duplicates1"></script>
+<script src="card-brawl-lobby.js?v=1"></script>
+<script src="companions.js?v=stable-stage3"></script>
 <script src="companion-explorer.js"></script>
 <script src="pet-interactions.js"></script>
-<script src="ruby-shop.js?v=20261013-snail1"></script>
-<script src="village-hit-shapes.js"></script>
+<script src="village-hit-shapes.js?v=hit-fallback1"></script>
 <script src="village-art.js?v=stable-painted1"></script>
 <script src="hall-world.js"></script>
-<script src="wardrobe.js"></script>
+<script src="wardrobe.js?v=clothing-rarities1"></script>
 <script src="hall-art.js"></script>
 <script src="hall-character-art.js?v=2-collectible-clip"></script>
+<script src="shop-item-art.js?v=1"></script>
+<script src="ruby-shop.js?v=item-art3"></script>
 <script src="town-hall.js"></script>
-<script src="village-interiors.js?v=20261013-snail1"></script>
+<script src="village-interiors.js?v=arena-back2"></script>
 <script src="village-grid.js"></script>
 <script src="village-layout.js?v=stable-unlock1"></script>
 <script src="village-walking.js"></script>
-<script src="village-plots.js?v=20261013-snail1"></script>
-<script src="pet-care-room.js"></script>
-<script src="village-care.js"></script>
-<script src="market-street.js"></script>
+<script src="time-skips.js?v=1"></script>
+<script src="village-plots.js?v=mine-costs2"></script>
+<script src="pet-care-room.js?v=pet-heading1"></script>
+<script src="village-care.js?v=toolbar-lock1"></script>
+<script src="market-street.js?v=clothing-rarities1"></script>
 <script src="island-minigames.js"></script>
-<script src="player-profile.js"></script>
-<script src="stable-animals.js"></script>
-<script src="stable.js?v=carousel2"></script>
-<script src="village.js?v=20261013-bookready"></script>
-<script src="free-pack.js?v=collection-copy11"></script>
-<script src="pack-shop.js?v=pack-art6"></script>
-<script src="island-tools.js?v=pack-shop4"></script>
-<script src="creature-order.js?v=2"></script><script src="creature-book.js?v=21-stable-rotate"></script>
+<script src="achievement-notifications.js?v=1"></script>
+<script src="player-profile.js?v=new-seals1"></script>
+<script src="stable-animals.js?v=velkris1"></script>
+<script src="creature-brawl-catalog.js?v=kael-shadow4"></script>
+<script src="creature-brawl-engine.js?v=balance2"></script>
+<script src="creature-brawl-event-queue.js?v=1"></script>
+<script src="creature-brawl-status-icons.js?v=power-effects1"></script>
+<script src="creature-feeding.js?v=brawl-only-upgrades2"></script>
+<script src="creature-brawl-profile.js?v=battle-profile1"></script>
+<script src="creature-brawl.js?v=battle-profile1"></script>
+<script src="stable.js?v=stable-clean4"></script>
+<script src="village.js?v=continuous-sea1"></script>
+<script src="free-pack.js?v=clothing-rarities1"></script>
+<script src="pack-shop.js?v=token-heads1"></script>
+<script src="island-tools.js?v=parchment-tools3"></script>
+<script src="creature-order.js?v=2"></script><script src="creature-book.js?v=stable-stage3"></script>
 </body>
 </html>

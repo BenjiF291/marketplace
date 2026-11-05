@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 function harness(fetch) {
   let timeout, cleared = 0;
-  const context = { window: { fetch }, API_URL: 'https://api.example.com', location: { href: 'https://game.example.com/' }, URL, Response, AbortController, DOMException,
+  const context = { window: { fetch, dispatchEvent() {} }, API_URL: 'https://api.example.com', location: { href: 'https://game.example.com/' }, Event, URL, Headers, Response, AbortController, DOMException,
     setTimeout(fn) { timeout = fn; return 1; }, clearTimeout() { cleared++; } };
   vm.runInNewContext(fs.readFileSync('public/session-network.js', 'utf8'), context);
   return { fetch: context.window.fetch, expire: () => timeout(), cleared: () => cleared };
@@ -38,4 +38,22 @@ test('caller cancellation is preserved and 204 responses remain valid', async ()
   });
   await assert.rejects(h.fetch('https://api.example.com/action', { signal: controller.signal }), { name: 'AbortError' });
   assert.equal((await h.fetch('https://api.example.com/action')).status, 204);
+});
+
+test('concurrent identical reads share transport but have independent bodies; later reads stay fresh', async () => {
+ let calls=0,release; const gate=new Promise(r=>release=r);
+ const h=harness(async()=>{calls++;await gate;return new Response('{"ok":true}');});
+ const a=h.fetch('https://api.example.com/inventory',{headers:{'X-User-Id':'a'}});
+ const b=h.fetch('https://api.example.com/inventory',{headers:{'X-User-Id':'a'}});
+ const c=h.fetch('https://api.example.com/inventory',{headers:{'X-User-Id':'b'}});
+ assert.equal(calls,2);release();
+ for(const response of await Promise.all([a,b,c])) assert.deepEqual(await response.json(),{ok:true});
+ await h.fetch('https://api.example.com/inventory',{headers:{'X-User-Id':'a'}});assert.equal(calls,3);
+});
+test('writes prevent subsequent reads from joining an older in-flight read',async()=>{
+ let calls=0,release;const gate=new Promise(r=>release=r);
+ const h=harness(async()=>{calls++;await gate;return new Response('{}');});
+ const a=h.fetch('https://api.example.com/inventory');
+ const write=h.fetch('https://api.example.com/buy',{method:'POST'});
+ const b=h.fetch('https://api.example.com/inventory');assert.equal(calls,3);release();await Promise.all([a,write,b]);
 });

@@ -1,0 +1,197 @@
+{
+  "errors": [],
+  "reports": [
+    {
+      "kind": "brugar",
+      "maxLift": 0.0053598508423220136,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 48,
+      "distinctPoses": 31,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "brugar-species",
+      "maxLift": 0.0057758487516810075,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 53,
+      "distinctPoses": 36,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "velkris",
+      "maxLift": 0.007922497437533309,
+      "modes": [
+        "scuttle"
+      ],
+      "frames": 54,
+      "distinctPoses": 37,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "fox",
+      "maxLift": 0.007915466277622251,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 58,
+      "distinctPoses": 43,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "snail",
+      "maxLift": 0.011919069998193138,
+      "modes": [
+        "crawl"
+      ],
+      "frames": 58,
+      "distinctPoses": 41,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "dragon",
+      "maxLift": 0.45,
+      "modes": [
+        "flight"
+      ],
+      "frames": 118,
+      "distinctPoses": 85,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "rill",
+      "maxLift": 0.32,
+      "modes": [
+        "flight"
+      ],
+      "frames": 50,
+      "distinctPoses": 33,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "krynn",
+      "maxLift": 0.007853065158438075,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 54,
+      "distinctPoses": 38,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "kanji",
+      "maxLift": 0.0078120287146681115,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 51,
+      "distinctPoses": 37,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "trusk",
+      "maxLift": 0.00564207657831644,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 47,
+      "distinctPoses": 31,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "fenra",
+      "maxLift": 0.36,
+      "modes": [
+        "flight"
+      ],
+      "frames": 53,
+      "distinctPoses": 37,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    },
+    {
+      "kind": "tharos",
+      "maxLift": 0.006443083522239993,
+      "modes": [
+        "sprint"
+      ],
+      "frames": 53,
+      "distinctPoses": 36,
+      "home": 0,
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "effects": 0
+    }
+  ]
+}

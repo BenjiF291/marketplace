@@ -2,7 +2,7 @@
    a timed-out purchase or reward may already have been committed by the server. */
 (() => {
   const nativeFetch = window.fetch.bind(window);
-  window.fetch = async (input, options = {}) => {
+  const gameFetch = async (input, options = {}) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.href);
     const apiOrigin = typeof API_URL === 'undefined' ? location.origin : new URL(API_URL, location.href).origin;
     if (url.origin !== apiOrigin || /\.(?:glb|js|css|png|jpg|webp|svg)$/i.test(url.pathname)) return nativeFetch(input, options);
@@ -20,10 +20,32 @@
         status: response.status, statusText: response.statusText, headers: response.headers
       });
       Object.defineProperties(buffered, { url: { value: response.url }, redirected: { value: response.redirected }, type: { value: response.type } });
+      const method=String(options.method||input?.method||'GET').toUpperCase();if(response.ok&&!['GET','HEAD'].includes(method)&&!url.pathname.startsWith('/advancements/'))window.dispatchEvent(new Event('game-progress-changed'));
       return buffered;
     } finally {
       clearTimeout(timer);
       signal?.removeEventListener('abort', abort);
     }
+  };
+  // Share only concurrent reads, scoped by every header (including player identity).
+  // Never retain player responses, combine writes, or combine caller-owned abort signals.
+  const pending = new Map();
+  let generation = 0;
+  window.fetch = (input, options = {}) => {
+    const method = String(options.method || input?.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD'].includes(method)) { generation++; return gameFetch(input, options); }
+    if (options.signal || (typeof input !== 'string' && !(input instanceof URL))) return gameFetch(input, options);
+    const headers = [...new Headers(options.headers).entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+    const key = JSON.stringify([generation, String(input), method, headers, options.credentials, options.cache, options.mode, options.redirect, options.integrity]);
+    let request = pending.get(key);
+    if (!request) {
+      request = gameFetch(input, options).finally(() => pending.delete(key));
+      pending.set(key, request);
+    }
+    return request.then(response => {
+      const copy = response.clone();
+      Object.defineProperties(copy, { url: { value: response.url }, redirected: { value: response.redirected }, type: { value: response.type } });
+      return copy;
+    });
   };
 })();

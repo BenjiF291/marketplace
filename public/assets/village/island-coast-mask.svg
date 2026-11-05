@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1505 1045">
+ <defs>
+  <linearGradient id="edgeX"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset=".12" stop-color="white"/><stop offset=".88" stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+  <linearGradient id="edgeY" x2="0" y2="1"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset=".16" stop-color="white"/><stop offset=".84" stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+  <mask style="mask-type:alpha" id="fadeX" maskUnits="userSpaceOnUse" x="0" y="0" width="1505" height="1045"><rect width="1505" height="1045" fill="url(#edgeX)"/></mask>
+  <mask style="mask-type:alpha" id="waterEdges" maskUnits="userSpaceOnUse" x="0" y="0" width="1505" height="1045"><rect width="1505" height="1045" fill="url(#edgeY)" mask="url(#fadeX)"/></mask>
+  <filter id="rim" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="shore" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="48"/></filter>
+  <!-- Coastline includes tree tips, cliff faces and offshore rocks. White cores
+       preserve their source pixels; only the surrounding water is feathered. -->
+  <g id="land" fill="white">
+   <path d="M163 93 230 74 324 63 390 132 468 66 509 37 554 79 577 42 633 135 694 73 751 104 820 47 832 19 850 76 882 7 908 59 944 14 985 10 1009 70 1047 61 1071 116 1110 62 1142 106 1184 112 1229 77 1260 136 1294 124 1343 163 1364 224 1395 186 1422 252 1374 300 1406 352 1452 346 1478 410 1496 446 1499 553 1452 592 1412 651 1363 672 1318 642 1311 727 1271 802 1210 823 1140 850 1066 875 980 858 940 884 878 858 826 870 797 844 742 868 696 879 644 852 604 924 535 950 469 955 429 937 378 951 320 924 277 885 259 837 195 835 169 789 198 746 151 694 99 692 66 661 78 587 106 539 97 486 67 448 87 393 103 334 149 304 173 259 177 210 151 175Z"/>
+   <path d="M158 83 185 69 232 90 274 131 302 91 336 124 355 212 322 258 287 246 278 178 229 167 199 224 146 239 126 215 148 151Z"/>
+   <ellipse cx="150" cy="84" rx="40" ry="32"/><ellipse cx="87" cy="187" rx="39" ry="42"/><ellipse cx="48" cy="226" rx="28" ry="35"/>
+   <ellipse cx="49" cy="392" rx="33" ry="54"/><ellipse cx="41" cy="541" rx="24" ry="23"/><ellipse cx="40" cy="613" rx="32" ry="49"/>
+   <ellipse cx="118" cy="797" rx="43" ry="54"/><ellipse cx="180" cy="915" rx="32" ry="41"/>
+   <ellipse cx="544" cy="965" rx="31" ry="26"/><ellipse cx="688" cy="925" rx="24" ry="34"/><ellipse cx="888" cy="932" rx="73" ry="48"/>
+   <ellipse cx="1157" cy="891" rx="35" ry="57"/><ellipse cx="1364" cy="824" rx="97" ry="79"/>
+   <ellipse cx="1441" cy="674" rx="30" ry="24"/><ellipse cx="1450" cy="622" rx="24" ry="30"/><ellipse cx="1440" cy="310" rx="29" ry="39"/>
+   <ellipse cx="1311" cy="91" rx="34" ry="39"/><ellipse cx="694" cy="101" rx="30" ry="32"/>
+  </g>
+ </defs>
+ <g mask="url(#waterEdges)"><use href="#land" filter="url(#shore)" stroke="white" stroke-width="65"/></g>
+ <use href="#land" filter="url(#rim)"/>
+</svg>

@@ -8,6 +8,13 @@ const practiceCacheKey = `practice-cards:${currentUserId}`;
 function rememberPracticeCards(cards) {
   try { localStorage.setItem(practiceCacheKey, JSON.stringify(cards)); } catch (error) { console.warn('Practice cache unavailable', error); }
 }
+const practiceLastDeckKey = `practice-last-deck:${currentUserId}`;
+function rememberPracticeDeck() {
+  try { localStorage.setItem(practiceLastDeckKey, JSON.stringify([...practiceSelection])); } catch (_) {}
+}
+function lastPracticeDeck() {
+  try { const ids=JSON.parse(localStorage.getItem(practiceLastDeckKey)||'[]');return Array.isArray(ids)?ids.filter(id=>typeof id==='string'):[]; } catch (_) { return []; }
+}
 function practiceStarterCards() { return PracticeEngine.trainingCards(); }
 let practicePool = [];
 const practiceSaveKey = `computer-battle:${currentUserId}`;
@@ -27,7 +34,14 @@ function loadPracticeSetup() {
   practiceCards = cards.length >= 6 ? cards : practiceStarterCards();
   const valid = new Set(practiceCards.map(card => card.battleCardId));
   practiceSelection = new Set([...practiceSelection].filter(id => valid.has(id)));
-  if (!practiceSelection.size) { const initial=[];for(const card of practiceCards)if(initial.length<6&&PracticeEngine.validSpecials([...initial,card]))initial.push(card);practiceSelection=new Set(initial.map(card=>card.battleCardId)); }
+  if (!practiceSelection.size) {
+    const initial=[],byId=new Map(practiceCards.map(card=>[card.battleCardId,card]));
+    for(const card of [...lastPracticeDeck().map(id=>byId.get(id)).filter(Boolean),...practiceCards]){
+      if(initial.length>=6)break;
+      if(!initial.some(c=>c.battleCardId===card.battleCardId)&&PracticeEngine.validSpecials([...initial,card]))initial.push(card);
+    }
+    practiceSelection=new Set(initial.map(card=>card.battleCardId));
+  }
   document.getElementById('practiceNote').textContent = cards.length >= 6 ? 'Using your last loaded battle inventory. Choose six cards, at most one special. Bob uses mostly your inventory plus up to two outside cards, matched by side strength. Ranked Brawl adapts to your Skill Level.' : 'Using six free starter cards. Load six owned battle cards online to battle with your own deck.';
   renderPracticePicker();
 }
@@ -69,7 +83,7 @@ async function startPracticeBattle() {
     practiceGame={...initial,first:initial.turn,selected:null,finished:false,difficulty,mode:ranked?'skill':'training',skillResult:null,forfeitedSkill:session?.forfeitedSkill||null,seed:session?.seed??Math.floor(Math.random()*2147483647),sessionId:session?.id||null,computerTurn:0,moves:[],strength:{target:generated.target,average:generated.average,playerAverage:generated.playerAverage}, trophyMessage:''};
     if(session?.live) {practiceGame.timed=true;practiceGame.live=session.live;Object.assign(practiceGame,session.live);}
     else if(!ranked&&[...initial.player,...initial.computer].some(card=>PracticeEngine.ability(card)==='mirror-interrupt')){practiceGame.timed=true;practiceGame.live=BrawlTurns.create(initial,difficulty,practiceGame.seed);Object.assign(practiceGame,practiceGame.live);}
-    persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
+    rememberPracticeDeck();persistPractice();document.getElementById('practiceSetup').hidden=true;document.getElementById('practiceArena').hidden=false;
     renderPracticeBattle();loadTrophyPath();if(initial.turn==='computer')runPracticeComputer();
   } catch(error){document.getElementById('practiceNote').textContent=error.message+' Ranked Brawl needs a connection and a current login. Choose Training to play without progression.';}
   finally {button.disabled=false;}

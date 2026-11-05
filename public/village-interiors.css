@@ -82,3 +82,12 @@ body.village-interior[data-village-building=blacksmith][data-village-station=own
 .village-interior[data-village-building=forge] .village-forge-guide{display:block}
 .village-interior .gem-balance-card{background:#fff3d4;border-color:#b5955f}
 .village-interior [id]{scroll-margin-top:125px}
+/* Arena choices already have their own lobby; keep only the return/navigation bar. */
+body[data-village-building=arena] .village-interior-chrome{min-height:0;background:none}
+body[data-village-building=arena] .village-interior-chrome>.village-interior-art,
+body[data-village-building=arena] .village-interior-chrome>.village-interior-heading,
+body[data-village-building=arena] .village-interior-chrome>.village-stations,
+body[data-village-building=arena] .village-interior-chrome::after{display:none}
+body[data-village-building=arena] .village-interior-chrome{position:sticky;top:0;z-index:90;background:#211c18}
+body[data-village-building=arena] .village-interior-bar{position:relative;inset:auto;min-height:48px;padding:8px 12px}
+body[data-village-building=arena] .village-interior-bar>button{min-height:36px;flex-shrink:0}

@@ -16,7 +16,7 @@
 The shop now has five amulets per tier, with curated roles, combinations, and
 loadout conditions. This replaces the old seven-per-tier catalog. See
 [AMULETS.md](AMULETS.md) for the full current catalog and retirement behavior.
-The strongest active bonus per family applies; duplicate effects do not add.
+Equipped amulet bonuses add, including duplicate copies. Percentage price discounts use only the highest applicable discount. Chances and cooldown reductions stop at 100%.
 Slot prices and the five-day removal lock are unchanged. Trophy-road exclusives
 are retained. Conditional rewards are checked against current account state.
 

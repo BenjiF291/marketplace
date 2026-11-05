@@ -1811,3 +1811,12 @@ body.dye-mode #dyeHeaderControls { position: fixed; top: 10px; right: 10px; z-in
 
 /* Match each mask to object-fit:contain without changing source card pixels. */
 img.card-image-cutout{object-fit:contain!important;object-position:center!important;background:transparent!important;border:0!important;border-radius:0!important;mask-mode:alpha;mask-size:contain;mask-position:center;mask-repeat:no-repeat;-webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat}
+
+#inventoryItems>li[hidden]{display:none!important}
+.inventory-header-row{flex-wrap:wrap}
+.inventory-card-counter{display:inline-flex!important;align-items:center;gap:10px;margin:0!important;padding:5px 10px;border:1px solid #b49a65;border-radius:9px;background:#f4ecd9;color:#293f34;max-width:100%}
+.inventory-card-counter select{font:inherit;font-size:12px;border:0!important;background:transparent!important;color:inherit!important;padding:5px!important;min-height:30px!important;max-width:180px}
+.inventory-card-counter output{font:bold 18px Georgia;white-space:nowrap;min-width:32px;text-align:center;font-variant-numeric:tabular-nums}
+
+.wheel-center.has-prize{width:116px;height:116px;flex-direction:column;gap:4px;border:3px solid #e6c77b;background:radial-gradient(circle at 35% 25%,#fff9dc,#e6c982);color:#49371f;box-shadow:0 3px 15px #30220855,inset 0 2px 8px #fff9;text-align:center}
+.wheel-center.has-prize small{font:800 10px/1.2 system-ui;letter-spacing:1px}.wheel-prize-line{display:flex;align-items:baseline;justify-content:center;gap:2px;max-width:110px;font:800 22px/1.1 system-ui;white-space:nowrap}.wheel-prize-bonus{font-size:13px;color:#397536}

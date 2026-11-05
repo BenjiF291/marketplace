@@ -124,3 +124,10 @@ body[data-ruby-profile="royal"] #currentUsername {padding:12px;border:3px double
 .island-pet:has([data-dragon-3d]){width:40px;height:36px}
 
 .island-pet:has([data-snail-3d]){width:32px;height:28px}
+.shop-item-art{position:relative;display:grid;place-items:center;box-sizing:border-box;width:100%;height:148px;min-height:0;overflow:hidden;border:1px solid #bca37266;border-radius:9px;background:radial-gradient(ellipse at 50% 38%,#f8eac7,#d7c294 75%);box-shadow:inset 0 1px #fff2d299,inset 0 -8px 20px #9b78491a}
+.shop-item-art>svg,.ruby-tile .shop-item-art>svg{display:block;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;overflow:hidden;filter:drop-shadow(0 3px 2px #76542c30)}
+.shop-item-art>img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 3px #65492233)}
+.shop-item-art>.reward-wrapper-sample{height:90%;width:auto;aspect-ratio:7/10}
+.market-good>.shop-item-art{margin-bottom:12px}.player-stall-stock .shop-item-art{height:100px}.wardrobe-swatch>.shop-item-art{height:100%;width:100%}
+.ruby-tile .shop-item-art.companion-portrait{height:180px}.ruby-tile:has(.shop-item-art){min-width:0}
+@media(max-width:600px){.shop-item-art{height:126px}.ruby-tile .shop-item-art.companion-portrait{height:145px}}

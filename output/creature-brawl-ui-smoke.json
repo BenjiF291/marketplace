@@ -1,0 +1,81 @@
+{
+  "errors": [],
+  "ranked": {
+    "instances": {
+      "3da7c692-e29b-4120-9d58-6b9118471cb8": {
+        "id": "3da7c692-e29b-4120-9d58-6b9118471cb8",
+        "kind": "rill-species",
+        "ordinal": 0,
+        "grade": 1
+      },
+      "0d833b56-7e27-431f-b361-88854736b203": {
+        "id": "0d833b56-7e27-431f-b361-88854736b203",
+        "kind": "rill-species",
+        "ordinal": 1,
+        "grade": 1
+      },
+      "127847dc-3d48-4d98-bc15-04d73fca5a44": {
+        "id": "127847dc-3d48-4d98-bc15-04d73fca5a44",
+        "kind": "brugar-species",
+        "ordinal": 0,
+        "grade": 1
+      },
+      "dd0fc09f-799b-44cc-8628-a05a9d024beb": {
+        "id": "dd0fc09f-799b-44cc-8628-a05a9d024beb",
+        "kind": "krynn-species",
+        "ordinal": 0,
+        "grade": 1
+      }
+    },
+    "tokens": {
+      "rill": 1,
+      "brugar": 1
+    },
+    "rating": 20,
+    "sequence": 1,
+    "selected": [
+      "3da7c692-e29b-4120-9d58-6b9118471cb8",
+      "0d833b56-7e27-431f-b361-88854736b203",
+      "127847dc-3d48-4d98-bc15-04d73fca5a44"
+    ],
+    "paidWins": 1,
+    "activeMatch": null,
+    "rewardDay": "2026-10-18",
+    "clearedStages": [
+      0
+    ],
+    "ladder": 1,
+    "lastMatch": "98b6c0c0-ca8e-4b2a-a8b6-3dbe070631f5"
+  },
+  "practice": {
+    "instances": {},
+    "tokens": {},
+    "rating": 0,
+    "sequence": 1,
+    "selected": [],
+    "paidWins": 0,
+    "activeMatch": null,
+    "lastMatch": "f44c8ce7-5790-4e9e-b365-f2d25d333421"
+  },
+  "checks": [
+    "six independent rigged actors, one shared canvas",
+    "duplicate target clicks locked",
+    "real index arena navigation",
+    "team selection/replacement",
+    "opponent inspection",
+    "default basic attack, hover previews, immediate target attacks",
+    "refresh resume",
+    "full ranked battle/results",
+    "viewport canvas and bottom-left cluster at 1920x1080, 1366x768, 844x390 and 390x844",
+    "real fullscreen entry/exit keeps saved match",
+    "HUD clicks do not submit actions",
+    "abandon confirmation preserved",
+    "large Tharos/Fenra/Brugar practice models",
+    "active battle exit/reentry disposes scene",
+    "three power icons",
+    "390px layout",
+    "existing Skystones return",
+    "marketplace return",
+    "unowned practice full battle/no rewards"
+  ]
+}

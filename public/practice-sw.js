@@ -1,8 +1,8 @@
 /* Same URL/scope as the old practice worker, so existing installations migrate. */
-const CACHE='island-public-v7';
+const CACHE='island-public-v10';
 const root=new URL(self.registration.scope);
 const offline=new URL('offline.html',root).href;
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([offline,new URL('assets/pwa/island-icon-v3-192.png',root).href]))));
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([offline,new URL('assets/pwa/kael-v2-192.png',root).href]))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>(k.startsWith('island-public-')&&k!==CACHE)||k.startsWith('battle-practice-shell-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('message',event=>{if(event.data?.type==='ACTIVATE_UPDATE')self.skipWaiting();});
 self.addEventListener('fetch',event=>{
@@ -16,9 +16,13 @@ self.addEventListener('fetch',event=>{
  if(request.headers.has('Authorization')||request.headers.has('X-User-Id')||request.headers.has('X-Hall-Token'))return;
  event.respondWith((async()=>{
   try{
-   const response=await fetch(request,{cache:'no-cache'});
+   // Artwork is public and changes infrequently. Reuse it for at most an hour.
+   // Code still checks the server so unversioned imports pick up deployments.
+   const artwork=asset&&/\.(png|jpg|jpeg|webp|svg|woff2?)$/i.test(url.pathname);
+   if(artwork){const cached=await caches.match(request),date=Date.parse(cached?.headers.get('date')||'');if(cached&&Number.isFinite(date)&&Date.now()-date<3600000)return cached;}
+   const response=await fetch(request);
    if(asset&&response.ok&&!response.redirected&&!response.headers.get('content-type')?.includes('text/html')){
-    const copy=response.clone();event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.put(request,copy);const keys=await cache.keys();const runtime=keys.filter(k=>k.url!==offline&&!k.url.endsWith('/assets/pwa/island-icon-v3-192.png'));await Promise.all(runtime.slice(0,Math.max(0,runtime.length-180)).map(k=>cache.delete(k)));})().catch(()=>{}));
+    const copy=response.clone();event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.put(request,copy);const keys=await cache.keys();const runtime=keys.filter(k=>k.url!==offline&&!k.url.endsWith('/assets/pwa/kael-v2-192.png'));await Promise.all(runtime.slice(0,Math.max(0,runtime.length-180)).map(k=>cache.delete(k)));})().catch(()=>{}));
    }
    return response;
   }catch{

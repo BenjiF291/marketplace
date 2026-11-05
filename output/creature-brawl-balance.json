@@ -1,0 +1,113 @@
+{
+  "rulesVersion": "creature-brawl-v1",
+  "method": "Each roster entry leads a three-class team against every other leader. Identical grade 1 stats; alternating deterministic priority. Same species can appear twice only as distinct instances.",
+  "battles": 289,
+  "wins": 148,
+  "draws": 2,
+  "averageActivations": 38,
+  "leaders": [
+    {
+      "kind": "krynn-species",
+      "wins": 16,
+      "losses": 1,
+      "draws": 0
+    },
+    {
+      "kind": "rill",
+      "wins": 13,
+      "losses": 4,
+      "draws": 0
+    },
+    {
+      "kind": "fenra-species",
+      "wins": 12,
+      "losses": 4,
+      "draws": 1
+    },
+    {
+      "kind": "rill-species",
+      "wins": 11,
+      "losses": 6,
+      "draws": 0
+    },
+    {
+      "kind": "talren",
+      "wins": 11,
+      "losses": 6,
+      "draws": 0
+    },
+    {
+      "kind": "defender-rill",
+      "wins": 11,
+      "losses": 6,
+      "draws": 0
+    },
+    {
+      "kind": "fox",
+      "wins": 10,
+      "losses": 7,
+      "draws": 0
+    },
+    {
+      "kind": "krynn",
+      "wins": 10,
+      "losses": 7,
+      "draws": 0
+    },
+    {
+      "kind": "brugar-species",
+      "wins": 9,
+      "losses": 8,
+      "draws": 0
+    },
+    {
+      "kind": "fenra",
+      "wins": 8,
+      "losses": 8,
+      "draws": 1
+    },
+    {
+      "kind": "veyrin",
+      "wins": 8,
+      "losses": 9,
+      "draws": 0
+    },
+    {
+      "kind": "tharos",
+      "wins": 8,
+      "losses": 9,
+      "draws": 0
+    },
+    {
+      "kind": "dragon",
+      "wins": 7,
+      "losses": 10,
+      "draws": 0
+    },
+    {
+      "kind": "northern-talren",
+      "wins": 5,
+      "losses": 12,
+      "draws": 0
+    },
+    {
+      "kind": "brugar",
+      "wins": 4,
+      "losses": 13,
+      "draws": 0
+    },
+    {
+      "kind": "defender-talren",
+      "wins": 4,
+      "losses": 13,
+      "draws": 0
+    },
+    {
+      "kind": "snail",
+      "wins": 1,
+      "losses": 16,
+      "draws": 0
+    }
+  ],
+  "drawRate": 0.7
+}

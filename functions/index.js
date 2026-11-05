@@ -6,6 +6,7 @@ const cors = require('cors');
 admin.initializeApp();
 const db = admin.firestore();
 
+const roundFooty = n => Math.round((Number(n)+Number.EPSILON)*100)/100;
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -64,7 +65,8 @@ app.get('/users', async (req, res) => {
 
 // Transfer
 app.post('/transfer', async (req, res) => {
-  const { fromId, toUsername, amount } = req.body;
+  const { fromId, toUsername, amount: rawAmount } = req.body;
+  const amount = typeof rawAmount==='number'?roundFooty(rawAmount):NaN;
 
   try {
     const usersRef = db.collection('users');
@@ -89,11 +91,11 @@ app.post('/transfer', async (req, res) => {
 
     await db.runTransaction(async (transaction) => {
       transaction.update(usersRef.doc(fromId), {
-        balance: fromUser.balance - amount
+        balance: roundFooty(Number(fromUser.balance) - amount)
       });
 
       transaction.update(toDoc.ref, {
-        balance: toUser.balance + amount
+        balance: roundFooty(Number(toUser.balance) + amount)
       });
     });
 
@@ -207,11 +209,11 @@ app.post('/buy', async (req, res) => {
 
     await db.runTransaction(async (transaction) => {
       transaction.update(usersRef.doc(buyerId), {
-        balance: buyer.balance - item.price
+        balance: roundFooty(Number(buyer.balance) - roundFooty(item.price))
       });
 
       transaction.update(usersRef.doc(item.sellerId), {
-        balance: seller.balance + item.price
+        balance: roundFooty(Number(seller.balance) + roundFooty(item.price))
       });
 
       transaction.update(itemsRef.doc(itemId), {

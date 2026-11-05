@@ -1,0 +1,11 @@
+Generated with built-in imagegen using the in-game Kael poster and Rill artwork as references.
+Icon: close-up Kael portrait, charcoal fur, upright horns, golden eyes, black wings, teal forest, gold rim light; no text.
+Loading: Kael and Rill overlooking a magical island with waterfalls and ruins; quiet lower area for loading UI. Correct relative heights to Kael 5m / Rill 2.6m; reduce Rill while preserving the scene.
+
+Loading v3 (built-in imagegen): use exact Kael and Rill model posters; preserve faces and anatomy, four legs plus two separate leathery bat wings for Kael; natural short feathered tail for Rill. Kael standing calmly looking down at Rill looking up beside his paw, shared ground plane, larger Kael, island overlook, dark quiet lower quarter. No text.
+
+Loading v4 (built-in imagegen): precise edit of v3 using Rill model poster: move small secondary wings below large wings, restore layered tapered upturned feathered tail; preserve Kael, scene, proportions and pose.
+
+Loading v5 (built-in imagegen): replace only broad Rill tail with 3-5 long thin tapered turquoise streamer feathers, narrow airy parallel bundle, gentle upward curve; preserve all other anatomy and scenery.
+
+Mobile loading v6 (built-in imagegen): reframe approved landscape v5 as dedicated 9:16 portrait, zoom out and extend island scenery; preserve Kael wing anatomy and Rill thin streamer tail, full silhouettes central, quiet top for title and dark bottom for progress.

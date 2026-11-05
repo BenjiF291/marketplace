@@ -1,0 +1,75 @@
+{
+  "errors": [],
+  "reports": [
+    {
+      "kind": "velkris",
+      "moves": [
+        {
+          "id": "basic",
+          "style": "fang-snap",
+          "duration": 0.92,
+          "contact": 0.54,
+          "tracks": 96,
+          "finite": true,
+          "deformation": 0.31757472541116627,
+          "seam": 2.1629347202178906e-9,
+          "positions": 1245
+        },
+        {
+          "id": "tail-strike",
+          "style": "stinger-strike",
+          "duration": 1.2,
+          "contact": 0.54,
+          "tracks": 96,
+          "finite": true,
+          "deformation": 2.4168964396809374,
+          "seam": 4.563583566596918e-8,
+          "positions": 1245
+        },
+        {
+          "id": "carapace-guard",
+          "style": "carapace-guard",
+          "duration": 1.24,
+          "contact": 0.54,
+          "tracks": 96,
+          "finite": true,
+          "deformation": 0.29155363700400616,
+          "seam": 8.505651738488496e-10,
+          "positions": 1245
+        }
+      ],
+      "timeline": [
+        {
+          "name": "velkris:basic",
+          "progress": 0.54,
+          "travel": 14.541142120419268,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        },
+        {
+          "name": "velkris:tail-strike",
+          "progress": 0.54,
+          "travel": 14.541368157347819,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        },
+        {
+          "name": "velkris:carapace-guard",
+          "progress": 0.54,
+          "travel": 0,
+          "state": "attack",
+          "restored": 0,
+          "yawDrift": 0,
+          "effects": 0,
+          "active": false
+        }
+      ]
+    }
+  ]
+}

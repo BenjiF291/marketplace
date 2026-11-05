@@ -1,0 +1,1420 @@
+{
+  "fox": {
+    "asset": "./assets/companions/fox-meshy-source.glb",
+    "joints": 23,
+    "jointNames": [
+      "Torso",
+      "Head_joint",
+      "Ear_left",
+      "Ear_right",
+      "Leg_0_hip",
+      "Leg_0_knee",
+      "Leg_0_paw",
+      "Leg_1_hip",
+      "Leg_1_knee",
+      "Leg_1_paw",
+      "Leg_2_hip",
+      "Leg_2_knee",
+      "Leg_2_paw",
+      "Leg_3_hip",
+      "Leg_3_knee",
+      "Leg_3_paw",
+      "Tail_bone_0",
+      "Tail_bone_1",
+      "Tail_bone_2",
+      "Tail_bone_3",
+      "Tail_bone_4",
+      "Tail_bone_5",
+      "Tail_bone_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.8658667148212542,
+        0,
+        -1.9439603039122697
+      ],
+      "max": [
+        0.874326229095459,
+        2.5999999046325684,
+        1.8927088975906372
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 4.8,
+        "tracks": 24,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      },
+      {
+        "name": "walk",
+        "duration": 0.9,
+        "tracks": 24,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      },
+      {
+        "name": "run",
+        "duration": 0.58,
+        "tracks": 24,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "snail": {
+    "asset": "./assets/companions/snail-meshy-source.glb",
+    "joints": 22,
+    "jointNames": [
+      "Torso",
+      "Shell_joint",
+      "Head_joint",
+      "Foot_wave_0",
+      "Foot_wave_1",
+      "Foot_wave_2",
+      "Foot_wave_3",
+      "Foot_wave_4",
+      "Foot_wave_5",
+      "Foot_wave_6",
+      "Foot_wave_7",
+      "Foot_wave_8",
+      "Feeler_upper_left_base",
+      "Feeler_upper_left_mid",
+      "Feeler_upper_left_tip",
+      "Feeler_upper_right_base",
+      "Feeler_upper_right_mid",
+      "Feeler_upper_right_tip",
+      "Feeler_lower_left_base",
+      "Feeler_lower_left_tip",
+      "Feeler_lower_right_base",
+      "Feeler_lower_right_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.8684855828953619,
+        0,
+        -1.9349675538943618
+      ],
+      "max": [
+        0.8684855440710315,
+        2.5999999046325684,
+        1.9389755333017547
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 4.8,
+        "tracks": 44,
+        "translationTracks": [
+          "Torso.position",
+          "Shell_joint.position",
+          "Head_joint.position",
+          "Foot_wave_0.position",
+          "Foot_wave_1.position",
+          "Foot_wave_2.position",
+          "Foot_wave_3.position",
+          "Foot_wave_4.position",
+          "Foot_wave_5.position",
+          "Foot_wave_6.position",
+          "Foot_wave_7.position",
+          "Foot_wave_8.position",
+          "Feeler_upper_left_base.position",
+          "Feeler_upper_left_mid.position",
+          "Feeler_upper_left_tip.position",
+          "Feeler_upper_right_base.position",
+          "Feeler_upper_right_mid.position",
+          "Feeler_upper_right_tip.position",
+          "Feeler_lower_left_base.position",
+          "Feeler_lower_left_tip.position",
+          "Feeler_lower_right_base.position",
+          "Feeler_lower_right_tip.position"
+        ]
+      },
+      {
+        "name": "crawl",
+        "duration": 2,
+        "tracks": 44,
+        "translationTracks": [
+          "Torso.position",
+          "Shell_joint.position",
+          "Head_joint.position",
+          "Foot_wave_0.position",
+          "Foot_wave_1.position",
+          "Foot_wave_2.position",
+          "Foot_wave_3.position",
+          "Foot_wave_4.position",
+          "Foot_wave_5.position",
+          "Foot_wave_6.position",
+          "Foot_wave_7.position",
+          "Foot_wave_8.position",
+          "Feeler_upper_left_base.position",
+          "Feeler_upper_left_mid.position",
+          "Feeler_upper_left_tip.position",
+          "Feeler_upper_right_base.position",
+          "Feeler_upper_right_mid.position",
+          "Feeler_upper_right_tip.position",
+          "Feeler_lower_left_base.position",
+          "Feeler_lower_left_tip.position",
+          "Feeler_lower_right_base.position",
+          "Feeler_lower_right_tip.position"
+        ]
+      },
+      {
+        "name": "fast_crawl",
+        "duration": 1.2,
+        "tracks": 44,
+        "translationTracks": [
+          "Torso.position",
+          "Shell_joint.position",
+          "Head_joint.position",
+          "Foot_wave_0.position",
+          "Foot_wave_1.position",
+          "Foot_wave_2.position",
+          "Foot_wave_3.position",
+          "Foot_wave_4.position",
+          "Foot_wave_5.position",
+          "Foot_wave_6.position",
+          "Foot_wave_7.position",
+          "Foot_wave_8.position",
+          "Feeler_upper_left_base.position",
+          "Feeler_upper_left_mid.position",
+          "Feeler_upper_left_tip.position",
+          "Feeler_upper_right_base.position",
+          "Feeler_upper_right_mid.position",
+          "Feeler_upper_right_tip.position",
+          "Feeler_lower_left_base.position",
+          "Feeler_lower_left_tip.position",
+          "Feeler_lower_right_base.position",
+          "Feeler_lower_right_tip.position"
+        ]
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "dragon": {
+    "asset": "./assets/companions/dragon-meshy-source.glb",
+    "joints": 29,
+    "jointNames": [
+      "Torso",
+      "Head_joint",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_tip",
+      "Leg_0_hip",
+      "Leg_0_knee",
+      "Leg_0_paw",
+      "Leg_1_hip",
+      "Leg_1_knee",
+      "Leg_1_paw",
+      "Leg_2_hip",
+      "Leg_2_knee",
+      "Leg_2_paw",
+      "Leg_3_hip",
+      "Leg_3_knee",
+      "Leg_3_paw",
+      "Tail_bone_0",
+      "Tail_bone_1",
+      "Tail_bone_2",
+      "Tail_bone_3",
+      "Tail_bone_4",
+      "Tail_bone_5",
+      "Tail_bone_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.3041521310806274,
+        0,
+        -1.7828458547592163
+      ],
+      "max": [
+        1.3028802000370487,
+        2.6001823727215707,
+        1.7828458547592163
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 4.8,
+        "tracks": 30,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      },
+      {
+        "name": "walk",
+        "duration": 1,
+        "tracks": 30,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      },
+      {
+        "name": "run",
+        "duration": 0.68,
+        "tracks": 30,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      },
+      {
+        "name": "fly",
+        "duration": 0.8,
+        "tracks": 30,
+        "translationTracks": [
+          "Torso.position"
+        ]
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "rill": {
+    "asset": "./assets/creatures/aeri-source.glb",
+    "joints": 29,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Neck_joint",
+      "Head_joint",
+      "Crest_joint",
+      "Beak_joint",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_tip",
+      "Leg_left_hip",
+      "Leg_left_knee",
+      "Foot_left",
+      "Toes_left",
+      "Leg_right_hip",
+      "Leg_right_knee",
+      "Foot_right",
+      "Toes_right",
+      "Tail_0",
+      "Tail_1",
+      "Tail_2",
+      "Tail_3",
+      "Tail_4",
+      "Tail_5",
+      "Tail_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.9858277128028523,
+        0,
+        -1.2384743207258846
+      ],
+      "max": [
+        0.9868078002288794,
+        2.601702306341021,
+        1.230534553527832
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 30,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "rill-species": {
+    "asset": "./assets/creatures/rill-species-source.glb",
+    "joints": 29,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Neck_joint",
+      "Head_joint",
+      "Crest_joint",
+      "Beak_joint",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_tip",
+      "Leg_left_hip",
+      "Leg_left_knee",
+      "Foot_left",
+      "Toes_left",
+      "Leg_right_hip",
+      "Leg_right_knee",
+      "Foot_right",
+      "Toes_right",
+      "Tail_0",
+      "Tail_1",
+      "Tail_2",
+      "Tail_3",
+      "Tail_4",
+      "Tail_5",
+      "Tail_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.026887838129852,
+        0,
+        -1.2760891245182546
+      ],
+      "max": [
+        1.026800151294413,
+        2.6006203120411713,
+        1.2781919240951538
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 30,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "brugar": {
+    "asset": "./assets/creatures/brakk-source.glb",
+    "joints": 34,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_upper_0",
+      "Tail_upper_1",
+      "Tail_upper_2",
+      "Tail_upper_3",
+      "Tail_upper_4",
+      "Tail_upper_club",
+      "Tail_lower_0",
+      "Tail_lower_1",
+      "Tail_lower_2",
+      "Tail_lower_3",
+      "Tail_lower_4",
+      "Tail_lower_club"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.9586149349618327,
+        0,
+        -1.6067843393202033
+      ],
+      "max": [
+        1.9567718505859375,
+        2.001830490096327,
+        1.6061532497406006
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 35,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "brugar-species": {
+    "asset": "./assets/creatures/brugar-species-source.glb",
+    "joints": 34,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_upper_0",
+      "Tail_upper_1",
+      "Tail_upper_2",
+      "Tail_upper_3",
+      "Tail_upper_4",
+      "Tail_upper_club",
+      "Tail_lower_0",
+      "Tail_lower_1",
+      "Tail_lower_2",
+      "Tail_lower_3",
+      "Tail_lower_4",
+      "Tail_lower_club"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -2.0795670216676667,
+        0,
+        -1.525708794593811
+      ],
+      "max": [
+        2.0744382716882726,
+        2.0026323504666954,
+        1.525708794593811
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 35,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "krynn": {
+    "asset": "./assets/creatures/virex-source.glb",
+    "joints": 37,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_upper_0",
+      "Tail_upper_1",
+      "Tail_upper_2",
+      "Tail_upper_3",
+      "Tail_upper_4",
+      "Tail_upper_5",
+      "Tail_upper_tip",
+      "Tail_lower_0",
+      "Tail_lower_1",
+      "Tail_lower_2",
+      "Tail_lower_3",
+      "Tail_lower_4",
+      "Tail_lower_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -2.0658237724392112,
+        0,
+        -1.7687819443787465
+      ],
+      "max": [
+        2.0615459102852896,
+        2,
+        1.7656790182523336
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 38,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "krynn-species": {
+    "asset": "./assets/creatures/krynn-species-source.glb",
+    "joints": 37,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_upper_0",
+      "Tail_upper_1",
+      "Tail_upper_2",
+      "Tail_upper_3",
+      "Tail_upper_4",
+      "Tail_upper_5",
+      "Tail_upper_tip",
+      "Tail_lower_0",
+      "Tail_lower_1",
+      "Tail_lower_2",
+      "Tail_lower_3",
+      "Tail_lower_4",
+      "Tail_lower_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -2.00498885656636,
+        0,
+        -1.7385016511255218
+      ],
+      "max": [
+        2.001608312082041,
+        2.0000000074505806,
+        1.7340699297007225
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 38,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "fenra": {
+    "asset": "./assets/creatures/saelis-source.glb",
+    "joints": 44,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_lower",
+      "Neck_joint",
+      "Head_joint",
+      "Crest_joint",
+      "Jaw_joint",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_feathers",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_feathers",
+      "Wing_right_tip",
+      "Tail_root",
+      "Tail_outer_0",
+      "Tail_outer_1",
+      "Tail_outer_tip",
+      "Tail_middle_0",
+      "Tail_middle_1",
+      "Tail_middle_tip",
+      "Tail_inner_0",
+      "Tail_inner_1",
+      "Tail_inner_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.3700064186925636,
+        0,
+        -1.0090981357591506
+      ],
+      "max": [
+        1.36919415672494,
+        2.6002517363189868,
+        1.0090409517288208
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 45,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "fenra-species": {
+    "asset": "./assets/creatures/fenra-species-source.glb",
+    "joints": 44,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_lower",
+      "Neck_joint",
+      "Head_joint",
+      "Crest_joint",
+      "Jaw_joint",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_feathers",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_feathers",
+      "Wing_right_tip",
+      "Tail_root",
+      "Tail_outer_0",
+      "Tail_outer_1",
+      "Tail_outer_tip",
+      "Tail_middle_0",
+      "Tail_middle_1",
+      "Tail_middle_tip",
+      "Tail_inner_0",
+      "Tail_inner_1",
+      "Tail_inner_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.395953613640259,
+        0,
+        -1.0031576019592008
+      ],
+      "max": [
+        1.3930748210036121,
+        2.6003360269309583,
+        1.003707572290482
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 45,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "veyrin": {
+    "asset": "./assets/creatures/kael-source.glb",
+    "joints": 43,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Horn_left",
+      "Horn_right",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_fingers",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_fingers",
+      "Wing_right_tip",
+      "Tail_curve_0",
+      "Tail_curve_1",
+      "Tail_curve_2",
+      "Tail_curve_3",
+      "Tail_curve_4",
+      "Tail_curve_5",
+      "Tail_curve_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.7031686404853872,
+        0,
+        -1.8499886986140492
+      ],
+      "max": [
+        1.6986157849819288,
+        2.200000047683716,
+        1.8489328378223184
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 44,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "tharos": {
+    "asset": "./assets/creatures/tharos-source.glb",
+    "joints": 43,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Horn_left",
+      "Horn_right",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_fingers",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_fingers",
+      "Wing_right_tip",
+      "Tail_curve_0",
+      "Tail_curve_1",
+      "Tail_curve_2",
+      "Tail_curve_3",
+      "Tail_curve_4",
+      "Tail_curve_5",
+      "Tail_curve_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.5577474750728304,
+        -0.0009207567090535884,
+        -1.8619003491536525
+      ],
+      "max": [
+        1.552211939136364,
+        2.200000047683716,
+        1.8590857935300884
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 44,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "talren": {
+    "asset": "./assets/creatures/talren-source.glb",
+    "joints": 33,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Horn_left",
+      "Horn_right",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_curve_0",
+      "Tail_curve_1",
+      "Tail_curve_2",
+      "Tail_curve_3",
+      "Tail_curve_4",
+      "Tail_curve_5",
+      "Tail_curve_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.7983246263818321,
+        0,
+        -1.8203633050079955
+      ],
+      "max": [
+        0.8005602359771729,
+        2.200000047683716,
+        1.8160146474838257
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 34,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "northern-talren": {
+    "asset": "./assets/creatures/northern-talren-source.glb",
+    "joints": 33,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Horn_left",
+      "Horn_right",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_curve_0",
+      "Tail_curve_1",
+      "Tail_curve_2",
+      "Tail_curve_3",
+      "Tail_curve_4",
+      "Tail_curve_5",
+      "Tail_curve_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.6925507394239521,
+        0,
+        -1.9085105717579598
+      ],
+      "max": [
+        0.6925507187843323,
+        2.200000047683716,
+        1.905819296836853
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 34,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "defender-talren": {
+    "asset": "./assets/creatures/defender-talren-source.glb",
+    "joints": 33,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Horn_left",
+      "Horn_right",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_curve_0",
+      "Tail_curve_1",
+      "Tail_curve_2",
+      "Tail_curve_3",
+      "Tail_curve_4",
+      "Tail_curve_5",
+      "Tail_curve_tip"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -0.7264395356178284,
+        0,
+        -1.8575092675066163
+      ],
+      "max": [
+        0.7264395356178284,
+        2.200000047683716,
+        1.8553543090820312
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 34,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "defender-rill": {
+    "asset": "./assets/creatures/defender-rill-source.glb",
+    "joints": 29,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Neck_joint",
+      "Head_joint",
+      "Crest_joint",
+      "Beak_joint",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_tip",
+      "Leg_left_hip",
+      "Leg_left_knee",
+      "Foot_left",
+      "Toes_left",
+      "Leg_right_hip",
+      "Leg_right_knee",
+      "Foot_right",
+      "Toes_right",
+      "Tail_0",
+      "Tail_1",
+      "Tail_2",
+      "Tail_3",
+      "Tail_4",
+      "Tail_5",
+      "Tail_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.005155425317975,
+        0,
+        -1.3211911748792509
+      ],
+      "max": [
+        1.0056271417261684,
+        2.600988142287371,
+        1.3165453672409058
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 30,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "kanji": {
+    "asset": "./assets/creatures/kanji-source.glb",
+    "joints": 40,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Wing_left_root",
+      "Wing_left_elbow",
+      "Wing_left_wrist",
+      "Wing_left_feathers",
+      "Wing_left_tip",
+      "Wing_right_root",
+      "Wing_right_elbow",
+      "Wing_right_wrist",
+      "Wing_right_feathers",
+      "Wing_right_tip",
+      "Tail_0",
+      "Tail_1",
+      "Tail_2",
+      "Tail_3",
+      "Tail_4",
+      "Tail_5"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.362100759965195,
+        0,
+        -2.15748229918136
+      ],
+      "max": [
+        2.3527853181732747,
+        2.1996050933124045,
+        2.1074793338775635
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 41,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  },
+  "trusk": {
+    "asset": "./assets/creatures/trusk-source.glb",
+    "joints": 31,
+    "jointNames": [
+      "Pelvis",
+      "Torso",
+      "Chest_breath",
+      "Neck_joint",
+      "Head_joint",
+      "Jaw_joint",
+      "Ear_left",
+      "Ear_right",
+      "Leg_front_left_hip",
+      "Leg_front_left_knee",
+      "Foot_front_left",
+      "Toes_front_left",
+      "Leg_front_right_hip",
+      "Leg_front_right_knee",
+      "Foot_front_right",
+      "Toes_front_right",
+      "Leg_rear_left_hip",
+      "Leg_rear_left_knee",
+      "Foot_rear_left",
+      "Toes_rear_left",
+      "Leg_rear_right_hip",
+      "Leg_rear_right_knee",
+      "Foot_rear_right",
+      "Toes_rear_right",
+      "Tail_0",
+      "Tail_1",
+      "Tail_2",
+      "Tail_3",
+      "Tail_4",
+      "Tail_5",
+      "Tail_6"
+    ],
+    "skinnedMeshes": 1,
+    "bounds": {
+      "min": [
+        -1.5269538343901097,
+        0,
+        -1.9517939807605287
+      ],
+      "max": [
+        1.5349760112724304,
+        2.200000047683716,
+        2.280517816543579
+      ]
+    },
+    "clips": [
+      {
+        "name": "idle",
+        "duration": 8,
+        "tracks": 32,
+        "translationTracks": []
+      }
+    ],
+    "missing": [
+      "attack",
+      "cast",
+      "hit",
+      "defeat",
+      "victory"
+    ]
+  }
+}

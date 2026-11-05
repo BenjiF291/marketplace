@@ -6,9 +6,23 @@ Available to all authenticated accounts. Frontend and backend must deploy togeth
 
 ## XP and upgrades
 
-Cumulative thresholds for levels 1-10: **0, 100, 300, 650, 1150, 1850, 2850, 4200, 6000, 8500**. Level 2 unlocks Blacksmith/Ruby emporium, 3 companions, 4 dyes, 5 refinery, 6 Royal hall. Levels 7-10 are prestige levels for now. XP never exceeds 8500. The room shows current progress and the next unlock. Upgrades happen automatically, with a golden level-up celebration; reduced-motion preferences disable motion. Returning to the island refreshes its unlocked buildings.
+Cumulative thresholds for levels 1-10: **0, 100, 450, 1100, 2400, 4800, 8000, 12000, 16600, 22000**. Existing earned XP and retained levels are preserved; lowering thresholds can immediately unlock higher levels. No reset or XP conversion is required. Accounts already above 22000 retain their full XP; new XP awards stop at the current maximum. The room and island read the shared server progression profile.
 
-Small activity rewards replace the former resource-for-XP projects. Existing XP is preserved. There is no daily XP limit. XP stops at the maximum Town Hall level (8500 XP).
+The target is about 45 days from TH1 to TH6 with one daily visit. Estimates assume daily pack and wheel, one vault collection, completed mine shifts and farm/Time Bank work as available, plus three ranked Skystones games at roughly 50% wins. They exclude repeat logins, purchases and one-time activity bonuses. Staffing, unlocked/placed buildings, game results and chosen activities change actual progress. Upgrading mines increases staffing needs; the baseline uses ordinary mines.
+
+| Transition | XP gap | Estimated daily XP | Days for this level | Cumulative days |
+|---|---:|---:|---:|---:|
+| 1 ? 2 | 100 | 53 | 2 | 2 |
+| 2 ? 3 | 350 | 79 | 5 | 7 |
+| 3 ? 4 | 650 | 85 | 8 | 15 |
+| 4 ? 5 | 1300 | 111 | 12 | 27 |
+| 5 ? 6 | 2400 | 134 | 18 | 45 |
+| 6 ? 7 | 3200 | 146 | 22 | 67 |
+| 7 ? 8 | 4000 | 166 | 25 | 92 |
+| 8 ? 9 | 4600 | 166 | 28 | 120 |
+| 9 ? 10 | 5400 | 166 | 33 | 153 |
+
+Small activity rewards replace resource-for-XP projects. There is no daily XP limit. The room shows current progress and the next unlock; upgrades happen automatically. Returning to the island refreshes its unlocked buildings.
 
 | Completed activity | XP |
 |---|---:|

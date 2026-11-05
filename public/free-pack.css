@@ -1,4 +1,9 @@
 /* Wood and parchment corner tray; native dialogs keep the actions in the top layer. */
+.island-tools-toggle,#freePackLauncher{position:relative;overflow:visible}
+.island-pack-seal{position:absolute;top:-5px;right:-3px;z-index:5;display:grid;place-items:center;box-sizing:border-box;min-width:30px;width:30px;height:30px;pointer-events:none;border:1px solid #5399bd;border-radius:38% 56% 33% 49% / 44% 35% 58% 39%;clip-path:polygon(49% 2%,61% 6%,72% 3%,79% 13%,92% 19%,91% 32%,99% 43%,94% 55%,98% 67%,86% 75%,82% 89%,68% 90%,58% 99%,45% 94%,32% 98%,23% 86%,10% 82%,12% 67%,2% 57%,7% 44%,2% 31%,16% 24%,22% 10%,36% 12%);background:radial-gradient(circle at 32% 24%,#d1f2ff,#8fd0ed 45%,#60a6ca 76%,#4386ae);box-shadow:inset 1px 2px 2px #e8faffaa,inset -1px -2px 2px #346f9b88,0 2px 3px #082c4055;color:#336987;font:bold 19px/1 Georgia,serif;text-shadow:0 1px 0 #dcf6ff,-1px -1px 0 #3b7b9d66}
+.island-pack-seal::before{content:'';position:absolute;inset:4px;border:1px solid #5d9fbd;border-radius:50%;box-shadow:0 1px #d7f3ff99,inset 0 1px #d7f3ff66}
+.island-pack-seal[hidden]{display:none!important}
+.island-tools-toggle .island-pack-seal{left:auto;right:-10px;top:-10px}
 .island-tools{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));z-index:100;display:flex;align-items:flex-end;gap:5px;max-width:calc(100vw - 32px);color:#fff0c9}
 .island-tools[hidden],.island-tool-actions[hidden]{display:none!important}
 .island-tool-actions{display:flex;align-items:flex-end;gap:6px;padding:14px 12px 10px;border:1px solid #b6996266;border-radius:16px;background:repeating-linear-gradient(2deg,transparent 0 8px,#ead7a105 9px 10px),linear-gradient(180deg,#284b3c99,#18382fe8);box-shadow:inset 0 1px #f7dba52b,inset 0 -2px #071c2066,0 8px 20px #10282055;isolation:isolate}
@@ -25,3 +30,18 @@
 @media(min-width:651px){.free-pack-option{grid-template-columns:1.1fr 1.2fr 1.7fr .6fr .6fr .7fr auto}}
 .pack-reward-presets{padding:16px;margin:18px 0;border:1px solid #a98b54;border-radius:12px;background:linear-gradient(135deg,#fff0c9,#d5bb89)}.pack-reward-presets h3{margin-top:0}.pack-reward-presets button{margin:5px 8px 5px 0}.pack-reward-presets p{max-width:65ch}
 .pack-main-card{padding:16px;margin:20px 0;border:2px solid #ad8d52;border-radius:12px;background:#e1cea7}.pack-main-card-options{display:flex;gap:12px;overflow-x:auto;padding:12px 4px}.pack-main-card-item{flex:0 0 125px;text-align:center}.pack-main-card-art{position:relative;width:125px;aspect-ratio:7/10}.pack-main-card-art .reward-pack-card{border-width:4px;border-radius:12px}.pack-main-card-art .reward-card-ornament{display:none}.pack-main-card-art .reward-card-amount{font-size:17px}.pack-main-card-art .reward-card-name{font-size:10px}
+
+#freePackLauncher,.island-tools .island-tool-action{position:relative}.island-pack-seal{padding:0 3px;font-size:17px}.island-pack-seal::before{inset:5px;border-radius:44% 48% 42% 50%;transform:rotate(-8deg)}
+
+/* The island's compact parchment ledger, continued in the corner tools. */
+.island-tool-actions{align-items:center;gap:3px;padding:8px 9px 6px;border:1px solid #967440;border-radius:7px 11px 6px 9px;background:radial-gradient(ellipse at 25% 15%,#f1dfaf88,transparent 65%),repeating-linear-gradient(3deg,transparent 0 5px,#8e673208 6px 7px),linear-gradient(110deg,#d3b77b,#e8d3a0 45%,#cbb07a);box-shadow:inset 0 1px #fff1c2aa,inset 0 -2px 4px #8d672a25,0 3px 8px #152e3540}
+#islandTools .island-tool-action,#islandTools #creatureBookLauncher{flex:0 0 74px;box-sizing:border-box;width:74px;min-height:72px;gap:1px;padding:2px 3px;justify-content:flex-end;border:0;border-radius:5px;background:transparent;color:#3e4935;box-shadow:none}
+#islandTools .island-tool-art,#islandTools #creatureBookLauncher svg{width:43px;height:47px;filter:drop-shadow(0 2px 1px #74532635)}
+#islandTools .island-tool-label,#islandTools #creatureBookLauncher span{border:0;border-radius:0;background:none;box-shadow:none;padding:3px 0 1px;color:#3d4935;font:600 10px/1.2 Georgia,serif;text-shadow:0 1px #fff0c177}
+#islandTools .island-tool-action:hover,#islandTools #creatureBookLauncher:hover{background:#fff0bf55}
+#islandTools .island-tool-action[data-ready=true] .island-tool-label{color:#365841;background:none}
+#islandTools .island-tool-action:hover .island-tool-art{transform:translateY(-2px) rotate(-2deg);filter:drop-shadow(0 3px 2px #74532644)}
+.island-tools-toggle{width:30px;min-height:42px;border-color:#967440;border-radius:7px 4px 4px 8px;background:linear-gradient(110deg,#d3b77b,#e8d3a0 50%,#cbb07a);box-shadow:inset 0 1px #fff1c2aa,inset 0 -2px 4px #8d672a25,0 2px 4px #152e3540;color:#496448;text-shadow:0 1px #fff0c1}
+.village-map:has(>.island-tools) .village-footer{bottom:105px}
+@media(max-width:650px){.island-tool-actions{gap:2px;max-width:calc(100vw - 76px);padding:9px 7px 6px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#997a43 #d6bd88}#islandTools .island-tool-action,#islandTools #creatureBookLauncher{flex-basis:67px;width:67px;min-height:68px}#islandTools .island-tool-art,#islandTools #creatureBookLauncher svg{width:39px;height:43px}#islandTools .island-tool-label,#islandTools #creatureBookLauncher span{font-size:9px}.village-map:has(>.island-tools) .village-footer{bottom:110px}}
+.free-pack-card-order{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}.free-pack-card-order .free-pack-button{margin:0;padding:7px 12px;font-size:12px}.free-pack-card-order .free-pack-button:focus-visible{outline:3px solid #b99348;outline-offset:3px}

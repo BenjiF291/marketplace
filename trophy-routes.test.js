@@ -157,6 +157,13 @@ test('Master win grants one Ruby and modest Footy exactly once, using current el
  await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.equal(h.records['users/u'].gems.bronze,3);
 });
 
+test('battle amulets also increase ranked card-Brawl Footy without duplicate settlement',async()=>{
+ const initial={board:Array(16).fill(null),player:[],computer:[],turn:'player'};initial.board[0]={ownerId:'player'};
+ const h=harness({'users/u':{balance:0,amuletSlots:[{power:'battle',value:20}]},'brawlProfiles/u':{skillLevel:800,ratingVersion:2,placementsCompleted:5},'computerBattles/m':{userId:'u',status:'active',mode:'skill',skillAtStart:1000,difficulty:940,seed:1,initial}});
+ const result=await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.equal(result.status,200);assert.equal(result.payload.footy,12);assert.equal(h.records['users/u'].balance,12);
+ await h.invoke('/computer-battles/finish',{id:'m',moves:[]});assert.equal(h.records['users/u'].balance,12);
+});
+
 test('ranked start rejects two special cards using authoritative inventory',async()=>{
  const owned=engine.trainingCards();owned[0].linkedCardImage='Fighter_seb.png';owned[1].linkedCardImage='Mirror_ben.png';
  const h=harness({'users/u':{balance:100}},owned);

@@ -1,4 +1,4 @@
-﻿const KINDS=new Set(['fox','dragon','snail','rill','brugar','krynn','fenra','veyrin','tharos','talren','northern-talren','defender-talren','rill-species','brugar-species','krynn-species','fenra-species','defender-rill']);
+﻿const KINDS=new Set(require('./public/stable-animals').animals.map(a=>a.id));
 const RARITIES=new Set(['','common','rare','epic','legendary','unique']);
 function validateEntry(body,kind){
  if(!KINDS.has(kind))throw Error('Unknown creature');

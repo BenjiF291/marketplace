@@ -80,14 +80,14 @@ function renderAmulets() {
   }
   const unlock = document.getElementById('unlockAmuletSlot');
   unlock.disabled = amuletPending || amuletState.slotCount >= 5 || amuletState.balance < amuletState.slotPrices[amuletState.slotCount];
-  unlock.textContent = amuletState.slotCount >= 5 ? 'All five slots unlocked' : `Unlock slot ${amuletState.slotCount + 1} - ${amuletState.slotPrices[amuletState.slotCount]} Footy`;
+  unlock.textContent = amuletState.slotCount >= 5 ? 'All five slots unlocked' : `Unlock slot ${amuletState.slotCount + 1} - ${CurrencyFormat.format(amuletState.slotPrices[amuletState.slotCount])} Footy`;
   for (const entry of amuletState.catalog.filter(entry => amuletState.owned[entry.id] > 0)) {
     const tile = amuletTile(entry); tile.appendChild(amuletNode('strong', `${amuletState.owned[entry.id]} in inventory`)); owned.appendChild(tile);
   }
   if (!owned.children.length) owned.textContent = 'Your unequipped amulets will appear here.';
   const key = document.getElementById('amuletTier').value;
   const entries = amuletBrowseMode === 'all' ? amuletState.catalog : amuletState.catalog.filter(entry => entry.gemKey === key);
-  document.getElementById('amuletWallet').textContent = amuletBrowseMode === 'all' ? `All tiers / ${amuletState.balance} Footy` : key==='trophy-road'?'Earn these amulets from trophy milestones. They cannot be bought.':`${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${amuletState.balance} Footy`;
+  document.getElementById('amuletWallet').textContent = amuletBrowseMode === 'all' ? `All tiers / ${CurrencyFormat.format(amuletState.balance)} Footy` : key==='trophy-road'?'Earn these amulets from trophy milestones. They cannot be bought.':`${amuletState.gems[key] || 0} ${entries[0]?.gemName || 'gems'} available / ${CurrencyFormat.format(amuletState.balance)} Footy`;
   let previousGem = null;
   for (const entry of entries) {
     if (amuletBrowseMode === 'all' && previousGem !== entry.gemKey) {
@@ -116,7 +116,7 @@ async function amuletAction(action, body) {
   } catch (error) { message = error.message; }
   finally {
     amuletPending = false;
-    await loadAmulets(); await updateBalance();
+    await loadAmulets(); await updateBalance();window.dispatchEvent(new Event('pack-timers-changed'));
     document.getElementById('amuletStatus').textContent = message;
   }
 }
@@ -136,7 +136,7 @@ async function loadAmuletViewer() {
 async function loadGrantHub() {
   const status = document.getElementById('grantResourceStatus');
   try {
-    const [response, data] = await Promise.all([fetch(`${API_URL}/users`), resourceRequest('/amulets'), loadAdminGemOptions()]);
+    const [response, data] = await Promise.all([fetch(`${API_URL}/users`), resourceRequest('/amulets'), loadAdminGemOptions(), loadAdminBrawlTokenOptions()]);
     if (!response.ok) throw new Error('Could not load players');
     const users = await response.json();
     const select = document.getElementById('grantResourceUser');

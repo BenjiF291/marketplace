@@ -1,0 +1,38 @@
+{
+  "errors": [],
+  "reports": [
+    {
+      "kind": "rill",
+      "frames": 164,
+      "clawGap": 0.08417107347208395,
+      "airborne": true,
+      "home": 0,
+      "active": false,
+      "idle": "rill:idle-alert",
+      "takeoff": "rill:takeoff",
+      "landing": "rill:landing"
+    },
+    {
+      "kind": "rill-species",
+      "frames": 185,
+      "clawGap": 0.08428672229179117,
+      "airborne": true,
+      "home": 0,
+      "active": false,
+      "idle": "rill-species:idle-alert",
+      "takeoff": "rill-species:takeoff",
+      "landing": "rill-species:landing"
+    },
+    {
+      "kind": "defender-rill",
+      "frames": 205,
+      "clawGap": 0.06943271157858535,
+      "airborne": true,
+      "home": 0,
+      "active": false,
+      "idle": "defender-rill:idle-alert",
+      "takeoff": "defender-rill:takeoff",
+      "landing": "defender-rill:landing"
+    }
+  ]
+}

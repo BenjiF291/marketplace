@@ -2,3 +2,6 @@
 .player-profile .profile-crest{height:108px}.player-profile .profile-crest svg{display:block;width:100%!important;height:100%!important;max-width:none;max-height:none}@media(max-width:600px){.player-profile .profile-crest{height:75px}}
 
 .profile-search{box-sizing:border-box;width:100%;padding:12px 16px;margin:0 0 18px;border:1px solid #b3a17d;border-radius:14px;background:#fff7e4;color:#365848;font:inherit}
+
+.profile-badge{position:relative}.profile-new-seal{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:43px;height:43px;border:3px double #f2bc7a;border-radius:47% 53% 46% 54%;background:radial-gradient(circle at 35% 25%,#c06343,#7e2f28 75%);color:#ffe9b4;box-shadow:0 2px 4px #53241e55,inset 0 0 0 2px #6f251f;font:800 10px Georgia,serif;letter-spacing:.06em;transform:rotate(10deg)}
+@media(max-width:600px){.profile-new-seal{width:34px;height:34px;top:7px;right:7px;font-size:9px}}

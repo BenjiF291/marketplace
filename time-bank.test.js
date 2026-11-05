@@ -14,3 +14,32 @@ test('retrying the same boost receipt cannot spend or advance twice',()=>{const 
 test('time leaps advance the personal amulet removal lock',()=>{const u=user();u.amuletSlots=[{id:'charm',removableAt:now+5*24*H},null];u.timeBoosts={leap:1};apply(u,{action:'time-use',token:'leap',target:'amulet/0'});assert.equal(u.amuletSlots[0].removableAt,now+119*H);assert.equal(u.amuletSlots[1],null);});
 
 test('harvesting awards two XP per produced boost and never on repeated collection',()=>{const u={...user(),townHallXP:650};apply(u,{action:'bank-set',count:1});apply(u,{action:'bank-collect'},now+15*H);assert.equal(u.townHallXP,656);assert.throws(()=>apply(u,{action:'bank-collect'},now+15*H),/No time/);assert.equal(u.townHallXP,656);});
+
+test('Skips and Leaps advance daily and individual shop timers using current configuration',()=>{
+ const t=100*H,u={...user(),freePackLastClaimAt:t,packShopLastPurchases:{silver:t,bronze:t},timeBoosts:{skip:3,leap:2}},context={daily:{cooldownHours:7},packs:[{id:'silver',name:'Silver',shop:{enabled:true,cooldownMinutes:180}},{id:'bronze',name:'Bronze',shop:{enabled:true,cooldownMinutes:90}}]};
+ const targets=bank.profile(u,t,context).targets;assert.equal(targets.find(x=>x.id==='daily-pack').remaining,7*H);assert.equal(targets.find(x=>x.id==='pack/silver').remaining,3*H);
+ Object.assign(u,bank.action(u,{action:'time-use',target:'daily-pack',token:'skip',actionId:'daily-boost-once'},t,context));assert.equal(u.freePackLastClaimAt,t-H/3);
+ Object.assign(u,bank.action(u,{action:'time-use',target:'pack/silver',token:'leap',actionId:'shop-boost-once'},t,context));assert.equal(u.packShopLastPurchases.silver,t-H);assert.equal(u.packShopLastPurchases.bronze,t);
+ const before=structuredClone(u);Object.assign(u,bank.action(u,{action:'time-use',target:'pack/silver',token:'leap',actionId:'shop-boost-once'},t,context));assert.deepEqual(u,before);
+ assert.throws(()=>bank.action(u,{action:'time-use',target:'pack/missing',token:'skip'},t,context),/active personal timer/);
+ const ready={...u,freePackLastClaimAt:t-7*H};assert.throws(()=>bank.action(ready,{action:'time-use',target:'daily-pack',token:'skip'},t,context),/active personal timer/);
+});
+
+test('Temporal Lens extends boost duration and a boost never moves past readiness',()=>{
+ const t=100*H,u={...user(),freePackLastClaimAt:t,timeBoosts:{skip:1,leap:1},amuletSlots:[{power:'boostpower',value:10}]},context={daily:{cooldownHours:7}};
+ Object.assign(u,bank.action(u,{action:'time-use',target:'daily-pack',token:'skip'},t,context));assert.equal(u.freePackLastClaimAt,t-22*60000);
+ u.freePackLastClaimAt=t-7*H+5*60000;Object.assign(u,bank.action(u,{action:'time-use',target:'daily-pack',token:'leap'},t,context));assert.equal(require('./pack-timing').dailyNextAt(u,context.daily),t);
+});
+
+test('bulk boosts validate quantity, cap spending at readiness and preserve other balances',()=>{
+ const u={...user(),timeBoosts:{skip:10,leap:7},lastSpin:new Date(now)};
+ apply(u,{action:'time-use',token:'leap',target:'spin',count:3});assert.equal(u.lastSpin.getTime(),now-3*H);assert.deepEqual(u.timeBoosts,{skip:10,leap:4});
+ for(const count of [0,-1,1.5,'2',NaN,Infinity,Number.MAX_SAFE_INTEGER+1])assert.throws(()=>apply(u,{action:'time-use',token:'skip',target:'spin',count}),/whole number/);
+ assert.throws(()=>apply(u,{action:'time-use',token:'skip',target:'spin',count:11}),/enough/);
+ u.lastSpin=new Date(now-7*H+5*60000);apply(u,{action:'time-use',token:'skip',target:'spin',count:10});assert.equal(u.timeBoosts.skip,9);assert.equal(bank.profile(u,now).targets.some(t=>t.id==='spin'),false);
+});
+test('bulk farm boosts preserve yield intervals and scope every timer to its building',()=>{
+ const u={...user(),timeBoosts:{skip:10},farmJobs:{water:{started:now,ends:now+3*H,claimed:0,workers:[]}},lastSpin:new Date(now),petJourneys:{'pet:fox':{status:'travelling',endsAt:now+H}},petCareCooldowns:{'pet:fox':{play:now+H,feed:now+H}},amuletSlots:[{id:'test',removableAt:now+H}]};
+ apply(u,{action:'time-use',token:'skip',target:'farm/water',count:3});assert.equal(u.farmJobs.water.ends,now+2*H);assert.equal(u.farmJobs.water.ends-u.farmJobs.water.started,3*H);
+ const targets=Object.fromEntries(bank.targets(u,now).map(t=>[t.id,t]));assert.equal(targets['farm/water'].building,'farmhouse');assert.equal(targets.spin.building,'wheel');assert.equal(targets['journey/pet:fox'].building,'pets');assert.equal(targets['play/pet:fox'].building,'petstation');assert.equal(targets['amulet/0'].building,'blacksmith');
+});

@@ -1,0 +1,25 @@
+/* Rich gem pigment instead of the previous 90–94% white wash. */
+body[data-dye-background],body.studio-ui[data-dye-background],body.studio-ui[data-dye-background],body.studio-ui[data-dye-background]{background:linear-gradient(135deg,var(--dye-background),var(--dye-background-deep))}
+body[data-dye-header] :is(.header,.studio-topbar),body.studio-ui[data-dye-header] :is(.header,.studio-topbar){background:linear-gradient(110deg,var(--dye-header),var(--dye-header-deep));color:var(--dye-header-ink);border-color:var(--dye-header)}
+body[data-dye-navigation] :is(.tab-group,.studio-sidebar),body.studio-ui[data-dye-navigation] :is(.tab-group,.studio-sidebar){background:var(--dye-navigation);color:var(--dye-navigation-ink);border-color:var(--dye-navigation-deep)}
+body[data-dye-navigation] :is(.tab-button,.studio-nav-button),body.studio-ui[data-dye-navigation] :is(.tab-button,.studio-nav-button){background:transparent;color:var(--dye-navigation-ink)}
+body[data-dye-navigation] :is(.tab-button.active,.studio-nav-button.active),body.studio-ui[data-dye-navigation] :is(.tab-button.active,.studio-nav-button.active){background:var(--dye-navigation-surface);color:var(--dye-navigation-surfaceInk);box-shadow:inset 4px 0 var(--dye-navigation-deep)}
+body[data-dye-panels] .main-grid>section.card:not(#studioHome),body.studio-ui[data-dye-panels] .main-grid>section.card:not(#studioHome){background:var(--dye-panels-surface);color:var(--dye-panels-surfaceInk);--studio-ink:var(--dye-panels-surfaceInk);border-color:var(--dye-panels);box-shadow:inset 0 4px var(--dye-panels)}
+body[data-dye-panels] .main-grid>section.card:not(#studioHome)>:is(h2,h3,p,label),body.studio-ui[data-dye-panels] .main-grid>section.card:not(#studioHome)>:is(h2,h3,p,label){color:inherit}
+body[data-dye-buttons] .btn-primary,body.studio-ui[data-dye-buttons] .btn-primary{background:var(--dye-buttons);color:var(--dye-buttons-ink);border-color:var(--dye-buttons-deep);box-shadow:inset 0 1px #ffffff30,0 2px 5px #0002}
+body[data-dye-success] .btn-success,body.studio-ui[data-dye-success] .btn-success{background:var(--dye-success);color:var(--dye-success-ink);border-color:var(--dye-success-deep)}
+body[data-dye-inputs] .input-field,body.studio-ui[data-dye-inputs] .input-field{background:var(--dye-inputs-surface);color:var(--dye-inputs-surfaceInk);border:2px solid var(--dye-inputs)}
+body[data-dye-inputs] .input-field::placeholder,body.studio-ui[data-dye-inputs] .input-field::placeholder{color:inherit;opacity:.75}
+body[data-dye-balance] .balance-display,body.studio-ui[data-dye-balance] .balance-display{background:linear-gradient(120deg,var(--dye-balance),var(--dye-balance-deep));color:var(--dye-balance-ink)}
+body[data-dye-balance] .balance-display #balance,body.studio-ui[data-dye-balance] .balance-display #balance{color:var(--dye-balance-ink)}
+body[data-dye-converter] .gem-converter,body.studio-ui[data-dye-converter] .gem-converter{background:var(--dye-converter-surface);color:var(--dye-converter-surfaceInk);border-color:var(--dye-converter)}
+body[data-dye-machine] .gem-machine,body.studio-ui[data-dye-machine] .gem-machine{background:radial-gradient(ellipse,var(--dye-machine),var(--dye-machine-deep));color:var(--dye-machine-ink)}
+body[data-dye-amulets] #amuletSection,body.studio-ui[data-dye-amulets] #amuletSection{background:var(--dye-amulets-surface);color:var(--dye-amulets-surfaceInk);border-color:var(--dye-amulets)}
+body[data-dye-slots] .amulet-empty,body.studio-ui[data-dye-slots] .amulet-empty{background:var(--dye-slots-surface);color:var(--dye-slots-surfaceInk);border:2px solid var(--dye-slots)}
+body[data-dye-notices] :is(#gemStatus,#amuletStatus,#gemWorkshopStatus,#spinResult),body.studio-ui[data-dye-notices] :is(#gemStatus,#amuletStatus,#gemWorkshopStatus,#spinResult){background:var(--dye-notices-surface);color:var(--dye-notices-surfaceInk);border-left:4px solid var(--dye-notices)}
+body[data-dye-header] .studio-topbar :is(h1,.studio-brand,.studio-subtitle),body[data-dye-navigation] .studio-sidebar :is(a,button,span,p,h2,h3),body.studio-ui[data-dye-header] .studio-topbar :is(h1,.studio-brand,.studio-subtitle),body.studio-ui[data-dye-navigation] .studio-sidebar :is(a,button,span,p,h2,h3){color:inherit}
+body[data-dye-converter] .gem-converter>:is(summary,h3,p),body.studio-ui[data-dye-converter] .gem-converter>:is(summary,h3,p){color:inherit}
+body.studio-ui[data-dye-navigation] .studio-nav-group button{color:var(--dye-navigation-ink)}
+body.studio-ui[data-dye-navigation] .studio-nav-group button:is(.is-current,:hover){background:var(--dye-navigation-surface);color:var(--dye-navigation-surfaceInk);box-shadow:inset 3px 0 var(--dye-navigation-deep)}
+body.studio-ui[data-dye-header] .studio-breadcrumb span,body.studio-ui[data-dye-header] .studio-search-button{color:var(--dye-header-ink)}
+body.studio-ui[data-dye-inputs] .card .input-field{background:var(--dye-inputs-surface);color:var(--dye-inputs-surfaceInk);border-color:var(--dye-inputs)}

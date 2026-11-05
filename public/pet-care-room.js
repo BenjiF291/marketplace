@@ -33,7 +33,11 @@
    if(s.dragging||s.node.classList.contains('care-drop-target')||s.node.matches(':hover,:focus-visible'))continue;
    if(s.mode==='walk'&&s.goal){const dx=s.goal.x-s.x,dy=(s.goal.y-s.y)*2,d=Math.hypot(dx,dy),step=(s.node.dataset.kind==='snail'?7:13)*dt;
     if(d<step||reduced.matches){s.x=s.goal.x;s.y=s.goal.y;s.mode=s.goal.activity;s.until=now+({rest:7000,eat:6500,play:7000,drink:4000,idle:2200}[s.mode]||2200);s.goal=null;}
-    else{s.x+=dx/d*step;s.y+=dy/d*step/2;s.node.style.setProperty('--facing',dx<0?'-1':'1');}
+    else{const oldX=s.x,oldY=s.y;s.x+=dx/d*step;s.y+=dy/d*step/2;
+     // Heading uses rendered room pixels, not the route's weighted percentages.
+     const room=s.node.parentElement,px=(s.x-oldX)*room.clientWidth/100,py=(s.y-oldY)*room.clientHeight/100;
+     s.node.dataset.heading=String(Math.atan2(px,py));s.travelled=(s.travelled||0)+Math.hypot(px,py);s.node.dataset.walkDistance=String(s.travelled);
+     s.node.style.setProperty('--facing',dx<0?'-1':'1');}
    }else if(now>s.until){s.request=null;const occupied=[...pets.values()].some(o=>o!==s&&o.node?.isConnected&&(o.mode==='rest'||o.goal?.activity==='rest'));const choice=Math.random(),bowlBusy=[...pets.values()].some(o=>o!==s&&o.node?.isConnected&&(['drink','eat'].includes(o.mode)||['drink','eat'].includes(o.goal?.activity))); if(choice<.22&&!occupied)goal(s,77,17,'rest');else if(choice<.4&&!bowlBusy)goal(s,80,75,'drink');else goal(s,28+Math.random()*40,30+Math.random()*49,'idle');}
    s.node.dataset.activity=s.mode;s.node.style.left=s.x+'%';s.node.style.top=s.y+'%';s.node.style.zIndex=String(Math.round(s.y));const label=s.mode==='rest'?'z z z':s.mode==='eat'?'\u2665':s.mode==='drink'?'. . .':'';if(s.prop.textContent!==label)s.prop.textContent=label;
    if(s.mode==='play')s.prop.classList.add('care-ball');else s.prop.classList.remove('care-ball');

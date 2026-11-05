@@ -1,6 +1,6 @@
 # Amulet redesign
 
-Five shop items per tier. Nine standard tiers have 45 distinct designs; some familiar effects remain, with combinations and account/loadout conditions creating different uses. Special tiers beyond Ultra use five mixed-role designs instead of the old stat-growth curve. Bonuses in the same family use the highest active value, never a sum. No amulet changes card teeth or AI strength.
+Five shop items per tier. Nine standard tiers have 45 distinct designs; some familiar effects remain, with combinations and account/loadout conditions creating different uses. Special tiers beyond Ultra use five mixed-role designs instead of the old stat-growth curve. Active bonuses in the same family add across equipped amulets, including multiple owned copies. Percentage price discounts (converter, VIP, host market, amulet shop and pack shop) use only the highest applicable value. Chances and cooldown reductions add up to 100%; per-amulet design limits and reward-specific limits remain. No amulet changes card teeth or AI strength.
 
 Retired shop IDs give no effects immediately after backend deployment. Opening the amulet page removes retired inventory entries and clears their slots transactionally, without refunds. Trophy-road exclusive IDs remain valid. Existing slot purchases are retained. New amulets retain the five-day removal lock. No live accounts have been modified during development.
 

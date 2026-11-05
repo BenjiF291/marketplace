@@ -1,0 +1,248 @@
+{
+  "source": "Existing rigged GLB with a preview-only central chest weight correction",
+  "bones": [
+    {
+      "name": "Torso",
+      "parent": "Dragon_entity"
+    },
+    {
+      "name": "Head_joint",
+      "parent": "Torso"
+    },
+    {
+      "name": "Wing_left_root",
+      "parent": "Torso"
+    },
+    {
+      "name": "Wing_left_elbow",
+      "parent": "Wing_left_root"
+    },
+    {
+      "name": "Wing_left_wrist",
+      "parent": "Wing_left_elbow"
+    },
+    {
+      "name": "Wing_left_tip",
+      "parent": "Wing_left_wrist"
+    },
+    {
+      "name": "Wing_right_root",
+      "parent": "Torso"
+    },
+    {
+      "name": "Wing_right_elbow",
+      "parent": "Wing_right_root"
+    },
+    {
+      "name": "Wing_right_wrist",
+      "parent": "Wing_right_elbow"
+    },
+    {
+      "name": "Wing_right_tip",
+      "parent": "Wing_right_wrist"
+    },
+    {
+      "name": "Leg_0_hip",
+      "parent": "Torso"
+    },
+    {
+      "name": "Leg_0_knee",
+      "parent": "Leg_0_hip"
+    },
+    {
+      "name": "Leg_0_paw",
+      "parent": "Leg_0_knee"
+    },
+    {
+      "name": "Leg_1_hip",
+      "parent": "Torso"
+    },
+    {
+      "name": "Leg_1_knee",
+      "parent": "Leg_1_hip"
+    },
+    {
+      "name": "Leg_1_paw",
+      "parent": "Leg_1_knee"
+    },
+    {
+      "name": "Leg_2_hip",
+      "parent": "Torso"
+    },
+    {
+      "name": "Leg_2_knee",
+      "parent": "Leg_2_hip"
+    },
+    {
+      "name": "Leg_2_paw",
+      "parent": "Leg_2_knee"
+    },
+    {
+      "name": "Leg_3_hip",
+      "parent": "Torso"
+    },
+    {
+      "name": "Leg_3_knee",
+      "parent": "Leg_3_hip"
+    },
+    {
+      "name": "Leg_3_paw",
+      "parent": "Leg_3_knee"
+    },
+    {
+      "name": "Tail_bone_0",
+      "parent": "Torso"
+    },
+    {
+      "name": "Tail_bone_1",
+      "parent": "Tail_bone_0"
+    },
+    {
+      "name": "Tail_bone_2",
+      "parent": "Tail_bone_1"
+    },
+    {
+      "name": "Tail_bone_3",
+      "parent": "Tail_bone_2"
+    },
+    {
+      "name": "Tail_bone_4",
+      "parent": "Tail_bone_3"
+    },
+    {
+      "name": "Tail_bone_5",
+      "parent": "Tail_bone_4"
+    },
+    {
+      "name": "Tail_bone_6",
+      "parent": "Tail_bone_5"
+    }
+  ],
+  "vertices": 63357,
+  "unnormalizedWeights": 0,
+  "embeddedClips": [
+    "idle",
+    "walk",
+    "run",
+    "fly"
+  ],
+  "missingJoints": [
+    "spine",
+    "jaw",
+    "individual toes"
+  ],
+  "attackDuration": 1.25,
+  "contact": 0.54,
+  "poseOnlySupportingPawDrift": {
+    "Leg_1_paw": 2.220446049250313e-16,
+    "Leg_2_paw": 1.1102230246251565e-16,
+    "Leg_3_paw": 1.1102230246251565e-16
+  },
+  "exactRecoveryMaxVertexError": 0,
+  "sampledEdgeRatios": {
+    "p99": 1.0609969813356923,
+    "maximum": 2.3723417965899545
+  },
+  "worstEdge": {
+    "ratio": 2.3723417965899545,
+    "time": 0.4,
+    "restLength": 0.039705173464661105,
+    "restPoints": [
+      [
+        -0.35453388094902044,
+        0.48109856247901917,
+        0.8083085119724276
+      ],
+      [
+        -0.35807178327389655,
+        0.5206295979414854,
+        0.8071765745785326
+      ]
+    ],
+    "influences": [
+      [
+        {
+          "bone": "Leg_0_knee",
+          "weight": 0.6089648604393005
+        },
+        {
+          "bone": "Leg_0_hip",
+          "weight": 0.39103513956069946
+        }
+      ],
+      [
+        {
+          "bone": "Leg_0_hip",
+          "weight": 0.6961451768875122
+        },
+        {
+          "bone": "Leg_0_knee",
+          "weight": 0.3020128607749939
+        },
+        {
+          "bone": "Torso",
+          "weight": 0.001841987599618733
+        }
+      ]
+    ]
+  },
+  "maxSampledVertexMovement": 0.4038839354587734,
+  "notes": [
+    "Normalized weights do not establish good anatomical weighting.",
+    "Current production claw asks for ~43 degree anticipation plus torso twist; conservative clamps can then flatten the motion.",
+    "The prior imported walk/run/fly study also deforms, independently of production attack code.",
+    "This test uses a fixed torso and three support chains. Linear blend skinning can still shear around the moving shoulder.",
+    "Pose-only paw stability excludes the existing whole-body parent lunge/lean.",
+    "No root translation or scale tracks; parent movement occurs once through BrawlArena.poseAttack."
+  ],
+  "beforeRepair": {
+    "sampledEdgeRatios": {
+      "p99": 1.0633692863848005,
+      "maximum": 15.723183725361618
+    },
+    "worstEdge": {
+      "ratio": 15.723183725361618,
+      "time": 0.5333333333333333,
+      "restLength": 0.008143267950643024,
+      "restPoints": [
+        [
+          0.0016893267983527007,
+          0.6029068737788965,
+          1.0468616331908438
+        ],
+        [
+          -0.0013892530920963893,
+          0.5970729767403887,
+          1.0516366519466376
+        ]
+      ],
+      "influences": [
+        [
+          {
+            "bone": "Leg_1_hip",
+            "weight": 0.8305178284645081
+          },
+          {
+            "bone": "Torso",
+            "weight": 0.16948215663433075
+          }
+        ],
+        [
+          {
+            "bone": "Leg_0_hip",
+            "weight": 0.8486664891242981
+          },
+          {
+            "bone": "Torso",
+            "weight": 0.1513335406780243
+          }
+        ]
+      ]
+    }
+  },
+  "repair": {
+    "changedVertices": 1325,
+    "region": "Central chest between the front legs; smooth torso attachment",
+    "sourceFileModified": false
+  }
+}

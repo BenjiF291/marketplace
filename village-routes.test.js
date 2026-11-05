@@ -4,7 +4,7 @@ function fixture(user,authenticate=async()=> 'admin',hall={level:1}){
  const db={collection:n=>({doc:()=>({get:async()=>{reads++;return {exists:n==='users'?!!user:true,data:()=>n==='users'?user:hall};}})})};
  db.runTransaction=async fn=>fn({get:async()=>{reads++;return {exists:!!user,data:()=>user};},update:(ref,update)=>{writes++;Object.assign(user,update);}});
  const tiers=Array.from({length:10},(_,i)=>({id:String(i),name:'Tier '+i}));
- require('./village-routes')({post:()=>{},get:(path,fn)=>{assert.equal(path,'/admin/village');handler=fn;}},db,authenticate,async()=>tiers);
+ require('./village-routes')({post:()=>{},get:(path,fn)=>{if(path==='/admin/village')handler=fn;}},db,authenticate,async()=>tiers);
  return {get writes(){return writes;},get reads(){return reads;},async call(){let status=200,body;const res={status(n){status=n;return res;},send(v){body=v;},json(v){body=v;}};await handler({},res);return {status,body};}};
 }
 test('village rejects missing sessions before reading an account and admits ordinary accounts',async()=>{
@@ -35,3 +35,11 @@ test('island naming is authenticated, validated, account-owned and safe to retry
 test('island profile returns the account name for other devices',async()=>{assert.equal((await fixture({islandName:'Willow Bay'}).call()).body.islandName,'Willow Bay');assert.equal((await fixture({}).call()).body.islandName,null);});
 
 test('first island visit preserves existing buildings once and future unlocks wait for placement',async()=>{const user={townHallXP:100},f=fixture(user);const first=await f.call();assert.equal(first.status,200);assert.ok(first.body.layout.positions.farmhouse!==undefined);assert.equal(first.body.layout.positions.petstation,undefined);user.townHallXP=300;const second=await f.call();assert.equal(second.body.level,2);assert.equal(second.body.layout.positions.petstation,undefined);assert.equal(f.writes,1);});
+
+test('Time skip timer listing authenticates the owner and never changes inventory',async()=>{
+ const handlers={},records={a:{timeBoosts:{skip:4},lastSpin:new Date()},b:{timeBoosts:{skip:99}}};let reads=0;
+ const db={collection:()=>({doc:id=>({get:async()=>{reads++;return {exists:!!records[id],data:()=>records[id]};}})})};
+ require('./village-routes')({get:(path,fn)=>handlers[path]=fn,post:()=>{}},db,async req=>{if(!req.identity)throw Error();return req.identity;},async()=>[]);
+ async function call(identity){let status=200,body;const res={status(n){status=n;return this;},send(v){body=v;},json(v){body=v;}};await handlers['/village/time-skips']({identity,query:{userId:'b'}},res);return {status,body};}
+ assert.equal((await call(null)).status,401);assert.equal(reads,0);const before=structuredClone(records),own=await call('a');assert.equal(own.status,200);assert.equal(own.body.inventory.skip,4);assert.equal(own.body.targets[0].building,'wheel');assert.deepEqual(records,before);
+});

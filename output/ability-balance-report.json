@@ -1,0 +1,146 @@
+{
+  "games": 760,
+  "meanTurns": 51.23684210526316,
+  "rows": [
+    {
+      "id": "fox",
+      "wins": 26,
+      "losses": 38,
+      "draws": 12,
+      "score": 0.421
+    },
+    {
+      "id": "snail",
+      "wins": 14,
+      "losses": 36,
+      "draws": 26,
+      "score": 0.355
+    },
+    {
+      "id": "dragon",
+      "wins": 38,
+      "losses": 36,
+      "draws": 2,
+      "score": 0.513
+    },
+    {
+      "id": "rill",
+      "wins": 27,
+      "losses": 39,
+      "draws": 10,
+      "score": 0.421
+    },
+    {
+      "id": "rill-species",
+      "wins": 37,
+      "losses": 23,
+      "draws": 16,
+      "score": 0.592
+    },
+    {
+      "id": "brugar",
+      "wins": 23,
+      "losses": 26,
+      "draws": 27,
+      "score": 0.48
+    },
+    {
+      "id": "brugar-species",
+      "wins": 26,
+      "losses": 34,
+      "draws": 16,
+      "score": 0.447
+    },
+    {
+      "id": "krynn",
+      "wins": 34,
+      "losses": 38,
+      "draws": 4,
+      "score": 0.474
+    },
+    {
+      "id": "krynn-species",
+      "wins": 48,
+      "losses": 22,
+      "draws": 6,
+      "score": 0.671
+    },
+    {
+      "id": "fenra",
+      "wins": 34,
+      "losses": 38,
+      "draws": 4,
+      "score": 0.474
+    },
+    {
+      "id": "fenra-species",
+      "wins": 48,
+      "losses": 22,
+      "draws": 6,
+      "score": 0.671
+    },
+    {
+      "id": "veyrin",
+      "wins": 31,
+      "losses": 39,
+      "draws": 6,
+      "score": 0.447
+    },
+    {
+      "id": "tharos",
+      "wins": 33,
+      "losses": 40,
+      "draws": 3,
+      "score": 0.454
+    },
+    {
+      "id": "talren",
+      "wins": 28,
+      "losses": 40,
+      "draws": 8,
+      "score": 0.421
+    },
+    {
+      "id": "northern-talren",
+      "wins": 18,
+      "losses": 30,
+      "draws": 28,
+      "score": 0.421
+    },
+    {
+      "id": "defender-talren",
+      "wins": 24,
+      "losses": 33,
+      "draws": 19,
+      "score": 0.441
+    },
+    {
+      "id": "defender-rill",
+      "wins": 37,
+      "losses": 26,
+      "draws": 13,
+      "score": 0.572
+    },
+    {
+      "id": "kanji",
+      "wins": 39,
+      "losses": 22,
+      "draws": 15,
+      "score": 0.612
+    },
+    {
+      "id": "trusk",
+      "wins": 26,
+      "losses": 34,
+      "draws": 16,
+      "score": 0.447
+    },
+    {
+      "id": "velkris",
+      "wins": 48,
+      "losses": 23,
+      "draws": 5,
+      "score": 0.664
+    }
+  ]
+}

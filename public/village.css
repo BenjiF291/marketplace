@@ -24,10 +24,11 @@
 @media(max-width:650px){.village-brand{padding:8px 12px}.village-brand h1{font-size:26px}.village-building-label{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.village-water-glints,.village-fireflies{animation:none}}
 
-/* The viewport is always water; island artwork fades into it without an image edge. */
+/* Repeating sea fills the viewport; village.js aligns it to the island camera. */
 .village-viewport{background-image:url('assets/village/ocean-painted.png');background-repeat:repeat;background-size:600px 600px}
 .village-world{background:transparent}
-.village-world>.village-terrain{mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect}
+/* An opaque coastline core protects land; feathering is confined to offshore water. */
+.village-world>.village-terrain{-webkit-mask-image:url('assets/village/island-coast-mask.svg?v=water-edge2');mask-image:url('assets/village/island-coast-mask.svg?v=water-edge2');-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;mask-composite:add}
 .village-building[hidden]{display:none!important}
 .village-appearing{animation:village-arrive .65s cubic-bezier(.2,.8,.2,1)}
 @keyframes village-arrive{from{opacity:0;translate:0 -24px;filter:brightness(1.8)}to{opacity:1;translate:0 0;filter:brightness(1)}}
@@ -133,12 +134,20 @@
 .village-building svg svg{width:revert;height:revert;filter:none;transition:none}
 .village-land-plot{transform:translate(-50%,-50%)}
 
-/* Separate resource counters, with account progression underneath. */
-.village-resource-bar{display:flex;flex-direction:column;gap:7px;background:none;border:0;padding:0;min-width:280px;color:#304b3b}
-.village-resource-counters{display:flex;gap:8px}.village-resource-counter{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-width:0;padding:7px 12px;background:#fff5dfef;border:1px solid #b5a17b;border-radius:12px;box-shadow:0 2px 6px #283c3020;white-space:nowrap;font-variant-numeric:tabular-nums}
-.village-resource-icon{display:flex;width:24px;height:26px;flex-shrink:0}.village-resource-icon svg{width:100%;height:100%}.village-resource-bar span+span{border:0;padding:0}
-.village-island-xp{padding:7px 10px;background:#fff5dfef;border:1px solid #b5a17b;border-radius:10px}.village-xp-label{display:flex;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:4px}.village-island-xp progress{display:block;width:100%;height:8px;border:0;border-radius:6px;overflow:hidden;background:#d7ccb2;accent-color:#47796a}.village-island-xp progress::-webkit-progress-bar{background:#d7ccb2;border-radius:6px}.village-island-xp progress::-webkit-progress-value{background:linear-gradient(90deg,#386b5c,#80a966);border-radius:6px}.village-island-xp progress::-moz-progress-bar{background:#47796a;border-radius:6px}
-@media(max-width:600px){.village-resource-bar{min-width:0;padding:0}.village-resource-counter{padding:6px 8px;gap:5px}.village-resource-counters{gap:6px}}
+/* Compact parchment resource slips and a narrow experience ledger. */
+.village-resource-bar{display:flex;flex:0 1 auto;flex-direction:column;gap:5px;width:max-content;max-width:min(330px,100%);min-width:0;margin-right:auto;background:none;border:0;padding:0;color:#3e4935}
+.village-resource-counters{display:flex;gap:5px}
+.village-resource-counter,.village-island-xp{border:1px solid #967440;border-radius:7px 9px 6px 8px;background:radial-gradient(ellipse at 25% 15%,#f1dfaf88,transparent 65%),repeating-linear-gradient(3deg,transparent 0 5px,#8e673208 6px 7px),linear-gradient(110deg,#d3b77b,#e8d3a0 45%,#cbb07a);box-shadow:inset 0 1px 0 #fff1c2aa,inset 0 -2px 4px #8d672a25,0 2px 4px #152e3540}
+.village-resource-counter{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 0 auto;min-width:0;padding:4px 9px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.village-resource-counter strong{font:700 13px/1.2 Georgia,serif;color:#334638;text-shadow:0 1px #fff0c177}
+.village-resource-icon{display:flex;width:18px;height:20px;flex-shrink:0}.village-resource-icon svg{width:100%;height:100%}.village-resource-bar span+span{border:0;padding:0}
+.village-island-xp{padding:5px 8px;border-radius:5px 7px 6px 5px}
+.village-xp-label{display:flex;justify-content:space-between;gap:14px;font:600 10px/1.2 Georgia,serif;margin-bottom:4px;color:#42503a;font-variant-numeric:tabular-nums}
+.village-island-xp progress{display:block;width:100%;height:5px;border:0;border-radius:3px;overflow:hidden;background:#9c8d62;accent-color:#577847;box-shadow:inset 0 1px 2px #59452155,0 1px #f9e4b180}
+.village-island-xp progress::-webkit-progress-bar{background:#a7976d;border-radius:3px;box-shadow:inset 0 1px 2px #59452155}
+.village-island-xp progress::-webkit-progress-value{background:linear-gradient(#9eb975,#537849);border-radius:3px;border-right:1px solid #48643b}
+.village-island-xp progress::-moz-progress-bar{background:linear-gradient(#9eb975,#537849);border-radius:3px}
+@media(max-width:600px){.village-resource-bar{flex-basis:auto;max-width:100%;padding:0}.village-resource-counter{padding:4px 7px;gap:4px}.village-resource-counter strong{font-size:12px}.village-resource-counters{gap:4px}.village-resource-icon{width:16px;height:18px}}
 
 .village-quick-actions{justify-content:center;gap:8px;flex-wrap:wrap}.village-quick-actions .village-entrance{font-size:18px!important;padding:12px 22px}.village-quick-actions button:disabled{opacity:.65;cursor:not-allowed}.village-quick-status{flex-basis:100%;background:#fff4db;color:#673d2d;border:1px solid #b89965;border-radius:10px;padding:10px;margin:0;text-align:center;font-size:13px}.village-quick-status[hidden]{display:none}
 @media(max-width:600px){.village-quick-actions .village-entrance{font-size:15px!important;padding:10px 16px}}
@@ -242,6 +251,27 @@
 .care-room-pet-card{padding:12px;margin-top:12px;border:1px solid #b7a071;border-radius:14px;background:#fffaf099;min-height:76px;overflow:hidden;}.care-menu-portrait{width:80px;height:80px;float:left;margin-right:12px;}.care-menu-portrait svg{width:100%;height:100%;}.care-room-pet-card h3{margin:4px 0 6px;}.care-room-pet-card small{display:block;font-size:12px;}.care-room-pet-card .village-primary{display:block;clear:both;width:100%;margin-top:10px;min-height:42px;font-size:13px;touch-action:manipulation;}
 
 /* Keep the moving map cheap to composite, especially on touch devices. */
-.village-world.village-panning *{animation-play-state:paused!important;transition:none!important}
+/* Keep residents alive while the camera moves; only building decoration pauses. */
+.village-world.village-panning *{transition:none!important}
+.village-world.village-panning .village-building,.village-world.village-panning .village-building *{animation-play-state:paused!important}
 .village-world.village-panning .village-building>svg,.village-world.village-panning .island-villager svg{filter:none!important}
 @media(pointer:coarse){.village-world .village-building>svg,.village-world .island-villager svg{filter:none!important}.village-world .village-building:hover>svg{translate:none}}
+
+/* 3D pets turn their rig toward the route; mirroring would reverse that heading. */
+.care-animal .companion-3d-art{transform:none}
+
+/* 3D pets turn toward their route instead of mirroring the rendered view. */
+.care-animal .companion-3d-art{transform:none}
+
+/* Direct farmhouse gathering controls: one ingredient, one pair of actions. */
+.farmhouse .care-controls{max-width:940px;background:#f2dfaf;border:2px solid #aa8450;box-shadow:0 8px 24px #39271122}
+.farm-gather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.farm-gather-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid #b89861;border-radius:14px;background:linear-gradient(135deg,#fff4d8,#e8ce96);box-shadow:inset 0 1px #fff9;min-width:0}
+.farm-gather-info{min-width:0;flex:1}.farm-gather-info h3{margin:0 0 4px;color:#4d3a22}.farm-gather-info small,.farm-gather-status{display:block;font-size:12px;line-height:1.5;color:#695536}.farm-gather-info progress{display:block;width:100%;height:8px;margin-top:7px;accent-color:#668744}.farm-gather-info progress[hidden]{display:none}
+.farm-gather-actions{display:flex;gap:7px;flex-shrink:0;align-items:center}.care-room .farm-gather-actions button{margin:0;min-height:52px;padding:8px 12px;min-width:90px;font-size:14px;border-radius:10px}
+.care-room .farm-gather-actions .farm-collect-icon{min-width:52px;width:52px;padding:5px;font-size:29px;background:linear-gradient(#fcdf87,#bb8c37);border:2px solid #ae823e;box-shadow:inset 0 1px #fff9;color:#463317}
+.farm-gather-row.has-harvest .farm-collect-icon{box-shadow:0 0 0 2px #f6d36b,inset 0 1px #fff9}.farm-gather-row.is-locked{filter:saturate(.35);opacity:.65}
+@media(max-width:800px){.farm-gather-grid{grid-template-columns:1fr}}@media(max-width:600px){.farmhouse .care-controls{padding:12px}.farm-gather-row{padding:12px 10px;gap:8px}.care-room .farm-gather-actions button{width:auto;min-width:78px;font-size:13px;padding:7px}.care-room .farm-gather-actions .farm-collect-icon{min-width:48px;width:48px;font-size:29px}.farm-gather-info h3{font-size:17px}}
+
+/* A failed/pending alpha mask must never make a building impossible to tap. */
+.village-building svg image.village-hit-fallback,.village-house svg image.village-hit-fallback,.village-ruby-mine svg image.village-hit-fallback,.village-mine svg image.village-hit-fallback{pointer-events:all!important;cursor:pointer}

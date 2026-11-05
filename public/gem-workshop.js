@@ -72,9 +72,12 @@ function applyGemTheme(theme) {
     if (theme[area]) {
       document.body.setAttribute(`data-dye-${area}`, '');
       document.body.style.setProperty(`--dye-${area}`, GemColors.color(theme[area]));
+      const palette=GemColors.dyePalette(theme[area]);
+      for(const [suffix,value] of Object.entries(palette))document.body.style.setProperty(`--dye-${area}-${suffix}`,value);
     } else {
       document.body.removeAttribute(`data-dye-${area}`);
       document.body.style.removeProperty(`--dye-${area}`);
+      for(const suffix of ['ink','surface','surfaceInk','deep'])document.body.style.removeProperty(`--dye-${area}-${suffix}`);
     }
   }
 }

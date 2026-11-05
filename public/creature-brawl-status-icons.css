@@ -1,0 +1,34 @@
+.cb-dialog[data-view=battle] .cb-unit .cb-statuses{top:auto;bottom:calc(100% + 8px);left:auto;right:0;width:max-content;display:flex;flex-flow:row-reverse nowrap;justify-content:flex-start;gap:4px;z-index:6;pointer-events:none;text-shadow:none}
+.cb-dialog .cb-statuses:empty{display:none!important}
+.cb-statuses .cb-effect-icon,.cb-effect-guide .cb-effect-icon{box-sizing:border-box;position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:29px;height:32px;padding:2px;border:2px solid #a69a7d;border-radius:6px 6px 10px 10px;background:linear-gradient(145deg,#3b3935,#1d2026);color:#e4ddcc;box-shadow:0 2px 5px #0007,inset 0 0 0 1px #ffffff12;pointer-events:auto;cursor:pointer}
+
+.cb-effect-icon svg{width:100%;height:100%;filter:drop-shadow(0 1px 1px #0008)}
+.cb-effect-duration{position:absolute;bottom:-3px;right:-3px;min-width:13px;height:14px;box-sizing:border-box;padding:0 3px;border:1px solid #ddc68b;border-radius:4px;background:#152f32;color:#fff3ca;font:700 10px/12px system-ui;text-align:center}
+.cb-statuses .cb-effect-icon:hover,.cb-statuses .cb-effect-icon:focus-visible{filter:brightness(1.2);outline:2px solid #ffe2a1;outline-offset:2px}
+.cb-effect-hero{width:60px;height:65px;color:#e4ddcc;background:#292c32;border:2px solid #a69a7d;border-radius:10px;padding:8px;box-sizing:border-box}.cb-effect-hero svg{width:100%;height:100%}
+.cb-effect-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin:20px 0}.cb-effect-guide-item{display:grid;grid-template-columns:34px 1fr;gap:3px 8px;align-items:center}.cb-effect-guide-item>.cb-effect-icon{grid-column:1;grid-row:1/3}.cb-effect-guide-item small{grid-column:2;color:#cbd4be;font-size:11px}.cb-effect-guide-item strong{font-size:13px}
+@media(max-width:600px){.cb-effect-guide-grid{grid-template-columns:1fr}.cb-dialog[data-view=battle] .cb-unit .cb-statuses{gap:3px}.cb-statuses .cb-effect-icon{width:26px;height:29px}.cb-effect-duration{font-size:9px}}
+.cb-effect-guide{inset:0;margin:auto;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+
+/* Enamel effect badges, with coloured silhouettes that remain distinct at battle size. */
+.cb-statuses .cb-effect-icon,.cb-effect-guide .cb-effect-icon{width:32px;height:35px;padding:2px;border:1px solid #b7a580;border-radius:8px 8px 11px 11px;background:radial-gradient(ellipse at 50% 0,#a59b8050,transparent 70%),linear-gradient(155deg,#35373b,#171a22);box-shadow:0 2px 4px #0009,inset 0 0 0 2px #171a22,inset 0 3px 0 2px #fff2d51c;color:#e4ddcc;isolation:isolate}
+
+.cb-effect-icon:before{content:'';position:absolute;inset:3px;border-radius:5px 5px 8px 8px;border-top:1px solid #fff2;pointer-events:none}
+.cb-effect-art{--enamel:#78c9ef;--edge:#d9f5ff;color:var(--edge)}
+.cb-effect-art .effect-fill{fill:var(--enamel);stroke:var(--edge)}
+.cb-effect-art .effect-glint{stroke:#fff4cf;fill:none;stroke-width:1.6}
+.cb-effect-art.effect-sword{--enamel:#e66ea8;--edge:#ffd2e8}
+.cb-effect-art.effect-armour{--enamel:#3ba5d9;--edge:#b7eeff}
+.cb-effect-art.effect-wing{--enamel:#6edcca;--edge:#d0fff1}
+.cb-effect-art.effect-fire{--enamel:#f18b35;--edge:#ffe38a}
+.cb-effect-art.effect-stars{--enamel:#c69aee;--edge:#f4e0ff}
+.cb-effect-art.effect-chain{--enamel:#8296bb;--edge:#d6e3ff}
+.cb-effect-art.effect-target{--enamel:#e3aa47;--edge:#fff0b1}
+.cb-effect-art.effect-immune{--enamel:#91cd91;--edge:#e5ffba}
+.cb-effect-art.effect-shield{--enamel:#608de4;--edge:#c6ddff}
+
+
+.cb-effect-duration{bottom:-4px;right:-4px;min-width:15px;height:15px;padding:0 3px;border-color:#c7aa70;border-radius:50%;background:linear-gradient(#34494a,#102325);color:#fff2c8;font:800 10px/13px system-ui;box-shadow:0 1px 2px #0009}
+.cb-effect-hero{background:radial-gradient(circle at 50% 0,#696454,#20232b);border-radius:14px;box-shadow:inset 0 0 0 3px #171a22,0 4px 12px #0004}
+@media(max-width:600px){.cb-statuses .cb-effect-icon{width:28px;height:31px}.cb-effect-duration{min-width:14px;height:14px;font-size:9px;line-height:12px}}
+@media(prefers-reduced-motion:no-preference){.cb-statuses .cb-effect-icon{transition:filter .15s,box-shadow .15s}.cb-statuses .cb-effect-icon:hover{box-shadow:0 0 8px #e7c37866,inset 0 0 0 2px #152b2d}}
