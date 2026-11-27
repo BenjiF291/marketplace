@@ -11,6 +11,8 @@ function harness(seed, randomInt) {
   const snap = key => ({ exists: !!records[key], id: key.split('/').pop(), ref: ref(key), data: () => structuredClone(records[key]) });
   function query(name, filters = []) {
     return { name, filters, doc: id => ref(`${name}/${id || 'new-item'}`),
+      get: async () => ({ docs: Object.keys(records).filter(key => key.startsWith(name + '/') &&
+        filters.every(([field, value]) => records[key][field] === value)).map(snap) }),
       where: (field, op, value) => query(name, [...filters, [field, value]]), orderBy: () => query(name, filters) };
   }
   const db = { collection: query, runTransaction: async fn => {
@@ -29,16 +31,18 @@ function harness(seed, randomInt) {
   require('./amulet-routes')(app, db, async () => []);
   const source = fs.readFileSync('server.js', 'utf8');
   const start = source.indexOf("app.post('/buy',"); const end = source.indexOf('/* ------------------ HISTORY', start);
-  vm.runInNewContext(source.slice(start, end), { app, db, require, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./marketplace-utils') });
-  for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack']) {
+  const brawlAuth = { authenticate: async req => req.header('X-User-Id') };
+  vm.runInNewContext(source.slice(start, end), { app, db, require, brawlAuth, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, ...require('./marketplace-utils') });
+  for (const route of ['/spin-wheel', '/buy-vip', '/gem-converter', '/open-pack', '/sell-tier-card']) {
     const index = source.indexOf(`app.post('${route}',`);
     const code = source.slice(index, source.indexOf('\n});', index) + 5);
-    vm.runInNewContext(code, { app, db, require, console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, brawlAuth:{authenticate:async()=> 'buyer'},rubyShop:require('./ruby-shop'), crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
+    vm.runInNewContext(code, { app, db, require, brawlAuth, path: require('node:path'), findTierForCard: async () => ({ sellPrice: 5 }),
+      console: { error() {} }, amuletEffects: effects, discounted, roundFooty: round, rubyShop:require('./ruby-shop'), crypto: {randomInt:randomInt||require('node:crypto').randomInt}, ...require('./gem-utils') });
   }
   const invoke = async (url, body, user = 'buyer', action) => {
     let status = 200, payload;
     const res = { status(code) { status = code; return this; }, send(value) { payload = value; }, json(value) { payload = value; } };
-    await handlers[url]({ body, header: () => user, params: { action } }, res);
+    await handlers[url]({ body, authenticatedUserId: user, header: () => user, params: { action } }, res);
     return { status, payload };
   };
   return { invoke, data: () => records };
@@ -47,6 +51,22 @@ function seed(currency = 'bronze') {
   return { 'users/buyer': { balance: 100, gems: { bronze: 20 } }, 'users/seller': { balance: 50, gems: { bronze: 2 } },
     'items/card': { sellerId: 'seller', sold: false, price: 7, currency, currencyName: 'Ruby' } };
 }
+test('trading and selling an upgraded card preserves the roll and releases variant ownership', async () => {
+  const data = seed('footy');
+  const upgrade = { baseCardId: 'Bronze_emma.png', variantId: 'Bronze_emma.png~epic', level: 'epic',
+    baseStats: { pow: 60 }, effectiveStats: { pow: 63 }, bonuses: { pow: 5 } };
+  data['items/old'] = { buyerId: 'seller', sold: true, listedForSale: true, imageUrl: '/images/Bronze_emma.png', upgrade };
+  Object.assign(data['items/card'], { itemType: 'card', sourceItemId: 'old', imageUrl: '/images/Bronze_emma.png', upgrade });
+  data['cardUpgrades/old'] = { ...upgrade, ownerId: 'seller' };
+  const h = harness(data);
+  assert.equal((await h.invoke('/buy', { itemId: 'card', buyerId: 'buyer' })).status, 200);
+  assert.equal(h.data()['cardUpgrades/old'], undefined);
+  assert.equal(h.data()['items/old'], undefined);
+  assert.deepEqual({ ...h.data()['cardUpgrades/card'] }, { ...upgrade, ownerId: 'buyer' });
+  assert.equal((await h.invoke('/sell-tier-card', { itemId: 'card' })).status, 200);
+  assert.equal(h.data()['cardUpgrades/card'], undefined);
+  assert.equal(h.data()['items/card'], undefined);
+});
 test('gem purchase debits and credits matching gems, leaves Footy unchanged, rejects second purchase', async () => {
   const h = harness(seed());
   const result = await h.invoke('/buy', { itemId: 'card', buyerId: 'buyer' });
@@ -218,3 +238,32 @@ test('completed market purchases award buyer and seller XP once; repeated owners
 
 test('one-per-player purchase remains locked after consuming or selling the purchased item',async()=>{const initial=seed();initial['items/card']={...initial['items/card'],limitOnePerUser:true,imageUrl:'/images/limited.png'};const h=harness(initial);assert.equal((await h.invoke('/buy',{itemId:'card',buyerId:'buyer'})).status,200);assert.deepEqual(Array.from(h.data()['users/buyer'].marketPurchaseKeys),['card:limited.png']);delete h.data()['items/card'];h.data()['items/another']={...initial['items/card']};const second=await h.invoke('/buy',{itemId:'another',buyerId:'buyer'});assert.equal(second.status,400);assert.match(second.payload,/only buy.*once/);});
 test('legacy fractional gem listing and wallets use whole actual transaction amounts',async()=>{const initial=seed();initial['items/card'].price=1.8;initial['users/buyer'].gems.bronze=20.2;initial['users/seller'].gems.bronze=2.1;const h=harness(initial);const result=await h.invoke('/buy',{itemId:'card',buyerId:'buyer',expectedPrice:2});assert.equal(result.status,200);assert.equal(h.data()['users/buyer'].gems.bronze,19);assert.equal(h.data()['users/seller'].gems.bronze,5);});
+
+
+test('admin food grants use the feeding inventory and reject invalid grants', async()=>{
+ const data=seed();data['users/seller'].isAdmin=true;data['users/buyer'].rubyItems={food:2,other:7};const h=harness(data);
+ const grant=(rubyItemId,quantity=3,actor='seller')=>h.invoke('/admin/grant-resource',{userId:'buyer',kind:'ruby-item',rubyItemId,quantity},actor);
+ assert.equal((await grant('food',3,'buyer')).status,403);
+ for(const id of ['food','food:trail','food:feast']){assert.equal((await grant(id)).status,200);assert.equal(require('./creature-growth').foods(h.data()['users/buyer']).find(f=>f.id===id).owned,id==='food'?5:3);}
+ assert.equal(h.data()['users/buyer'].rubyItems.other,7);
+ for(const quantity of [0,-1,1.5])assert.equal((await grant('food',quantity)).status,400);
+ assert.equal((await grant('food:invalid')).status,400);
+ assert.equal(h.data()['users/buyer'].rubyItems.food,5);
+});
+
+test('an unconfigured Ben-Bal Daily Pack remains in inventory after an open attempt', async () => {
+  const daily = require('./ben-bal-rewards');
+  const data = seed();
+  data['items/daily'] = {
+    name: 'Daily Pack', itemType: 'pack', packId: daily.packId, source: daily.source,
+    buyerId: 'buyer', sold: true, listedForSale: false
+  };
+  const h = harness(data);
+  const missing = await h.invoke('/open-pack', { itemId: 'daily' });
+  assert.deepEqual(missing, { status: 400, payload: daily.unconfigured });
+  assert.deepEqual(h.data(), data);
+  data['packs/' + daily.definitionId()] = { name: 'Daily Pack', cardIds: [], rewardCards: [] };
+  const empty = harness(data);
+  assert.deepEqual(await empty.invoke('/open-pack', { itemId: 'daily' }), missing);
+  assert.deepEqual(empty.data(), data);
+});

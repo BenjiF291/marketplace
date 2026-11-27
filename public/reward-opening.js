@@ -37,21 +37,21 @@
     card.append(ornament,amount,picture,el('h3','reward-card-name',info.name));return card;}
  const defaultColors={base:'#75432b',accent:'#cf9859',trim:'#ffe1a0'};
  function applyPackColors(node,appearance={}){for(const [key,fallback] of Object.entries(defaultColors)){const value=appearance?.[key];node.style.setProperty('--wrapper-'+key,/^#[0-9a-f]{6}$/i.test(value||'')?value:fallback);}}
- function cover(name,appearance){const shell=el('div','pack-design-preview');applyPackColors(shell,appearance);shell.append(el('span','pack-design-kicker','ISLAND TREASURES'),el('span','pack-design-jewel','\u2726'),el('strong','pack-design-title',name||'Your pack'),el('span','pack-design-caption','COLLECT / DISCOVER / ENJOY'));return shell;}
+ function addSeals(pack){pack.append(el('span','pack-cover-seal pack-cover-top'),el('span','pack-cover-seal pack-cover-bottom'));}
+ function cover(name,appearance){const shell=el('div','pack-design-preview');applyPackColors(shell,appearance);shell.append(el('span','pack-design-kicker','ISLAND TREASURES'),el('span','pack-design-jewel','\u2726'),el('strong','pack-design-title',name||'Your pack'),el('span','pack-design-caption','COLLECT / DISCOVER / ENJOY'));addSeals(shell);return shell;}
  function decorateDaily(pack){
    pack.classList.add('reward-opening-pack-daily');
-   const collage=el('span','reward-wrapper-collage');collage.setAttribute('aria-hidden','true');
-   const animal=window.StableAnimals?.animals?.find(a=>!['snail','fox','dragon'].includes(a.id));
-   const examples=[{kind:'card',id:'Genious_ben.png',amount:1},{kind:'boost',id:'skip',amount:1},{kind:'rubyItem',id:'compass:rare',label:'Compass',amount:1},{kind:'pack',id:'Discovery pack',amount:1},{kind:'amulet',id:'bronze',label:'Ruby amulet',gemKey:'bronze',amount:1},{kind:'animal',id:animal?.id||'fox',label:animal?.name||'Fox',rarity:animal?.rarity||'rare',amount:1},{kind:'footy',amount:12},{kind:'gem',id:'rare-bronze',amount:5},{kind:'gem',id:'bronze',amount:15}];
-   examples.forEach((reward,i)=>{const slot=el('span','reward-wrapper-sample');slot.dataset.sample=String(i);slot.append(createCard(reward));collage.append(slot);});
-   pack.querySelector('.reward-wrapper-face').append(collage);
-   pack.querySelector('.reward-wrapper-brand')?.remove();
-   pack.querySelector('.reward-wrapper-caption')?.remove();
+   addSeals(pack);
+   const face=pack.querySelector('.reward-wrapper-face');
+   const name=face.querySelector('.reward-wrapper-name')?.textContent||'Daily Pack';
+   const seal=el('img','reward-daily-seal');seal.src='assets/rewards/daily-sun-seal.svg';seal.alt='';seal.setAttribute('aria-hidden','true');
+   face.replaceChildren(seal,el('strong','reward-wrapper-name',name));
 
  }
  function dailyCover(name){const pack=el('div','reward-opening-pack'),face=el('span','reward-wrapper-face');face.append(el('span','reward-wrapper-name',name));pack.append(face);decorateDaily(pack);return pack;}
  window.RewardOpening={card:createCard,cover,dailyCover,play(options){
   active?.close();const previous=document.activeElement,d=el('dialog','reward-opening');active=d;d.tabIndex=-1;d.dataset.daily=String(!!options.daily);d.dataset.admin=String(options.admin===true||(typeof currentUserIsAdmin!=='undefined'&&currentUserIsAdmin===true));d.dataset.phase='ready';const theme=options.theme??document.body.dataset.rubyOpening;d.dataset.theme=['embers','aurora','starfall','tempest','sakura'].includes(theme)?theme:'standard';d.setAttribute('aria-label',options.name||'Open your pack');
+  const fragmentEffects=new Set();
   const timers=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let phase='ready',loading=false,busy=false,closed=false,completed=false,index=0,cards=[],effects=null;
   const schedule=(fn,delay)=>{const timer=setTimeout(()=>{timers.delete(timer);if(!closed)fn();},delay);timers.add(timer);return timer;};
   const header=el('header','reward-opening-header');header.append(el('span','reward-opening-brand','ISLAND TREASURES'),el('h2','',options.name||'Your pack'));
@@ -67,20 +67,62 @@
    pack.classList.add('reward-opening-pack-designed');applyPackColors(pack,options.appearance);
    pack.querySelector('.reward-wrapper-face').append(cover(options.name,options.appearance));
   }
+  const cracks=document.createElementNS('http://www.w3.org/2000/svg','svg');cracks.classList.add('reward-pack-cracks');cracks.setAttribute('viewBox','0 0 100 140');cracks.setAttribute('preserveAspectRatio','none');cracks.setAttribute('aria-hidden','true');
+  for(const line of ['M51 69 47 52 54 36 48 20 52 0 M51 69 56 88 48 106 54 122 49 140','M51 69 34 63 26 49 14 44 0 28 M51 69 68 77 76 94 90 100 100 116','M47 52 65 43 73 27 90 21 100 10 M48 106 31 112 21 127 0 134']){const path=document.createElementNS(cracks.namespaceURI,'path');path.setAttribute('d',line);path.setAttribute('pathLength','1');cracks.append(path);}pack.append(cracks);
+
+  const bloom=el('span','reward-pack-light-bloom');bloom.setAttribute('aria-hidden','true');stage.append(bloom);
+
+  const flash=el('span','reward-pack-burst-flash');flash.setAttribute('aria-hidden','true');stage.append(flash);
   const stack=el('div','reward-opening-stack');stack.hidden=true;stage.append(halo,pack,stack);
   const status=el('p','reward-opening-status','Tap the pack to open');status.setAttribute('role','status');status.setAttribute('aria-live','polite');const progress=el('p','reward-opening-progress');
   const advance=el('button','reward-opening-next','Open pack');advance.type='button';advance.hidden=true;advance.onclick=event=>{event.stopPropagation();return step();};
   d.append(header,controls,stage,status,progress,advance);document.body.append(d);
-  function present(result){
+  const paint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  async function readyArt(container){
+   const sources=new Set([...container.querySelectorAll('img,image')].map(n=>n.getAttribute('src')||n.getAttribute('href')).filter(Boolean));
+   // Preload SVG image references too; hidden stacks otherwise defer their first paint.
+   let timeout;
+   try{await Promise.race([Promise.allSettled([...sources].map(src=>new Promise(resolve=>{
+    const image=new Image();image.onload=()=>{if(image.decode)image.decode().catch(()=>{}).then(resolve);else resolve();};image.onerror=resolve;image.src=src;
+   }))),new Promise(resolve=>{timeout=setTimeout(resolve,1800);})]);}finally{clearTimeout(timeout);}
+  }
+  function scatterWrapper(){
+   const bounds=pack.getBoundingClientRect(),canvas=el('canvas','reward-pack-fragments');canvas.setAttribute('aria-hidden','true');
+   const width=bounds.width*3,height=bounds.height*2.6,ratio=Math.min(devicePixelRatio||1,1.25);
+   canvas.width=Math.ceil(width*ratio);canvas.height=Math.ceil(height*ratio);canvas.style.width=width+'px';canvas.style.height=height+'px';
+   stage.append(canvas);const ctx=canvas.getContext('2d');if(!ctx){canvas.remove();return;}
+   ctx.setTransform(ratio,0,0,ratio,0,0);
+   const face=pack.querySelector('.pack-design-preview')||pack.querySelector('.reward-wrapper-face'),style=getComputedStyle(face),daily=pack.classList.contains('reward-opening-pack-daily');
+   const palette=[style.getPropertyValue('--wrapper-base').trim()||(daily?'#153d36':'#75432b'),style.getPropertyValue('--wrapper-accent').trim()||(daily?'#426f5d':'#cf9859'),style.getPropertyValue('--wrapper-trim').trim()||'#e5c380'];
+   const particles=Array.from({length:1000},(_,i)=>{const x=(i%25+.5)/25,y=(Math.floor(i/25)+.5)/40,angle=Math.atan2((y-.5)*1.4,x-.5)+(Math.random()-.5)*.7,speed=180+Math.random()*420;return {x:width/2+(x-.5)*bounds.width,y:height/2+(y-.5)*bounds.height,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-90,size:2+Math.random()*4,angle:Math.random()*6.28,spin:(Math.random()-.5)*20,color:palette[y<.07||y>.93?2:Math.random()<.18?2:i%2]};});
+   let frame=0,start,last=0,dead=false;
+   const dispose=()=>{if(dead)return;dead=true;cancelAnimationFrame(frame);canvas.remove();fragmentEffects.delete(dispose);};fragmentEffects.add(dispose);
+   function draw(now){if(dead||closed){dispose();return;}if(start===undefined)start=now;const t=(now-start)/1000;if(t>.75){dispose();return;}frame=requestAnimationFrame(draw);if(now-last<32)return;last=now;
+    ctx.clearRect(0,0,width,height);ctx.globalAlpha=Math.min(1,(.75-t)/.28);
+    for(const p of particles){ctx.save();ctx.translate(p.x+p.vx*t,p.y+p.vy*t+180*t*t);ctx.rotate(p.angle+p.spin*t);ctx.scale(Math.max(.15,Math.abs(Math.cos(p.angle+t*7))),1);ctx.fillStyle=p.color;ctx.beginPath();ctx.moveTo(-p.size,-p.size*.7);ctx.lineTo(p.size*.8,-p.size*.45);ctx.lineTo(p.size*.5,p.size);ctx.lineTo(-p.size*.6,p.size*.4);ctx.closePath();ctx.fill();ctx.restore();}
+   }
+   frame=requestAnimationFrame(draw);
+  }
+  async function present(result){
      const rewards=RewardCardArt.normalize(result);if(!rewards.length)throw Error('This pack has no reward cards.');
      if(!options.preview&&rewards.some(reward=>reward.kind==='brawlToken'))window.dispatchEvent(new Event('brawl-tokens-packed'));
+   if(rewards.some(reward=>reward.kind==='card')) await window.CardDisplayNames?.load();
+   if(closed)return;
    cards=rewards.map((reward,i)=>{const card=createCard(reward);card.style.setProperty('--depth',i);card.dataset.depth=String(i);card.setAttribute('aria-hidden',String(i!==0));stack.append(card);return card;});
-   phase='opening';d.dataset.phase=phase;effects?.burst('open');status.textContent='Unsealing your treasures...';
-   schedule(()=>{pack.hidden=true;pack.querySelector('.reward-wrapper-collage')?.remove();stack.hidden=false;phase='cards';d.dataset.phase=phase;showStatus();d.focus();},reduced?0:650);
+   // Lay out the stack invisibly before the wrapper animation, rather than at the reveal.
+   stack.style.visibility='hidden';stack.hidden=false;
+   await readyArt(stack);await paint();if(closed)return;
+   phase='opening';d.dataset.phase=phase;effects=window.PackEffects?.mount(d,d.dataset.theme);status.textContent='Light is breaking through the pack...';
+   if(!reduced)schedule(()=>{
+    d.dataset.burst='true';effects?.burst('open');
+    scatterWrapper();
+    pack.hidden=true;
+   },1100);
+   schedule(()=>{pack.hidden=true;fragmentEffects.forEach(dispose=>dispose());delete d.dataset.burst;stack.style.visibility='';stack.hidden=false;phase='cards';d.dataset.phase=phase;effects?.dispose();effects=null;showStatus();d.focus();},reduced?0:1850);
   }
-  function showStatus(){effects?.burst('card');advance.hidden=false;status.textContent='Tap anywhere to reveal the next card';progress.textContent=`${index+1} / ${cards.length}`;advance.textContent=index===cards.length-1?'Collect & finish':'Next card';const card=cards[index];d.setAttribute('aria-label',`${options.name||'Your pack'}: ${card.querySelector('.reward-card-name').textContent}, card ${index+1} of ${cards.length}`);}
+  function showStatus(){advance.hidden=false;status.textContent='Tap anywhere to reveal the next card';progress.textContent=`${index+1} / ${cards.length}`;advance.textContent=index===cards.length-1?'Collect & finish':'Next card';const card=cards[index];d.setAttribute('aria-label',`${options.name||'Your pack'}: ${card.querySelector('.reward-card-name').textContent}, card ${index+1} of ${cards.length}`);}
   async function open(){if(loading||phase!=='ready')return;loading=true;close.disabled=true;pack.disabled=true;advance.disabled=true;status.textContent='Opening your pack...';
-   try{let result=options.result||await options.open();if(result.choices){if(!options.choose)throw Error('Choose a reward before continuing.');result=await options.choose(result.choices);if(!result){d.close();return;}}if(!closed)present(result);}
+   try{let result=options.result||await options.open();if(result.choices){if(!options.choose)throw Error('Choose a reward before continuing.');result=await options.choose(result.choices);if(!result){d.close();return;}}if(!closed)await present(result);}
    catch(error){if(!closed){status.textContent=error.message+' Tap the pack to try again.';phase='ready';d.dataset.phase='ready';}}
    finally{loading=false;close.disabled=false;pack.disabled=false;advance.disabled=false;}
   }
@@ -94,7 +136,7 @@
   pack.onclick=event=>{event.stopPropagation();return step();};d.onclick=event=>{if(event.target.closest?.('.island-tools'))return;step();};
   d.addEventListener('keydown',event=>{if(event.target!==d||!['Enter',' '].includes(event.key))return;event.preventDefault();step();});
   d.addEventListener('cancel',event=>{if(loading||busy){event.preventDefault();return;}});
-  d.addEventListener('close',()=>{closed=true;effects?.dispose();timers.forEach(clearTimeout);timers.clear();d.remove();if(active===d)active=null;options.onClose?.(completed);if(previous?.isConnected)previous.focus();},{once:true});
-  d.showModal();effects=window.PackEffects?.mount(d,d.dataset.theme);effects?.setPreview(!!options.preview);pack.focus();if(options.result||options.autoStart)open();return d;
+  d.addEventListener('close',()=>{closed=true;effects?.dispose();fragmentEffects.forEach(dispose=>dispose());timers.forEach(clearTimeout);timers.clear();d.remove();if(active===d)active=null;options.onClose?.(completed);if(previous?.isConnected)previous.focus();},{once:true});
+  d.showModal();pack.focus();if(options.result||options.autoStart)paint().then(()=>{if(!closed)open();});return d;
  }};
 })();

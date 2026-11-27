@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "package:card-data": "node package-card-data.cjs"
   },
   "dependencies": {
     "compression": "^1.8.2",

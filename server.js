@@ -1,12 +1,14 @@
 const { vipPercent, vipPrice } = require('./marketplace-utils');
+const { MAX_PACK_CARDS } = require('./public/pack-limits');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { admin, db } = require('./firebase-server');
 require('dotenv').config();
+const { admin, db } = require('./firebase-server');
 
 const rubyShop = require('./ruby-shop');
+const dailyPack = require('./ben-bal-rewards');
 const app = express();
 const brawlAuth = require('./brawl-auth')(db);
 const { getAscendTierInfo, getAscendTierFromCardName, formatTierLabel, normalizeAscendString, canonicalizeCardKey } = require('./ascend-utils');
@@ -15,6 +17,7 @@ const battleTimeouts = require('./battle-timeout').createTimeoutService(db, amul
 setInterval(() => battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error)), 15000).unref();
 battleTimeouts.recover().catch(error => console.error('Battle timer recovery:', error));
 const { sortCardsByTier } = require('./card-order');
+const { imageFilenames, registerCardData } = require('./card-data');
 const battleEngine = require('./public/practice-engine');
 const { validateBattleCard } = require('./battle-utils');
 const { gemIdentity, converterProgress, upgradeConverter, requireUnlockedTier, gemRecipe, validateGemCards } = require('./gem-utils');
@@ -49,6 +52,40 @@ app.use((req, res, next) => {
 });
 
 require('./http-optimization')(app, path.join(__dirname, 'public'));
+
+async function requireSession(req, res, next) {
+  try { req.authenticatedUserId = await brawlAuth.authenticate(req); }
+  catch { return res.status(401).send('Please log in again.'); }
+  next();
+}
+
+async function requireAdministrator(req, res, next) {
+  if (!await userIsAdmin(req.authenticatedUserId)) return res.status(403).send('Forbidden');
+  next();
+}
+
+async function identifyViewer(req, res, next) {
+  if (req.header('Authorization')) return requireSession(req, res, next);
+  next();
+}
+
+app.get(['/users', '/items'], identifyViewer);
+app.get(['/inventory', '/history', '/gem-converter', '/gem-workshop', '/amulets', '/battle-inventory', '/battle-decks',
+  '/battle-matches', '/battle-matches/:matchId'], requireSession);
+app.post(['/transfer', '/spin-wheel', '/buy', '/items', '/delete-item', '/open-pack', '/ascend',
+  '/sell-tier-card', '/gem-converter', '/gem-converter/upgrade', '/gem-workshop/:action', '/amulets/:action',
+  '/buy-vip', '/battle-decks',
+  '/battle-matches', '/battle-matches/:matchId/cancel', '/battle-matches/:matchId/deck',
+  '/battle-matches/:matchId/ready', '/battle-matches/:matchId/place'], requireSession);
+app.delete('/battle-decks/:deckId', requireSession);
+app.get(['/packs', '/admin/market-listings/planned', '/test-items'], requireSession, requireAdministrator);
+app.post(['/grant-item', '/grant-pack', '/grant-gems', '/admin/grant-resource', '/items/image', '/packs', '/make-admin',
+  '/ascend-tier-config', '/ascend-tier-assignment', '/admin/battle-cards', '/admin/market-listings',
+  '/admin/market-listings/planned/:planId/dismiss'], requireSession, requireAdministrator);
+app.put(['/packs/:packId', '/ascend-tier-config/:tierId', '/admin/battle-cards/:cardId/power'],
+  requireSession, requireAdministrator);
+app.delete(['/ascend-tier-config/:tierId', '/admin/battle-cards/:cardId', '/admin/market-listings/planned/:planId'],
+  requireSession, requireAdministrator);
 
 const { createDailyPackService, dailyPrice } = require('./daily-packs');
 const ensureDailyPack = createDailyPackService({
@@ -182,6 +219,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
   let imageUrl = null;
   let packId = null;
   let packColor = null;
+  let packDefinition;
   const stock = Number(quantity);
   const maxPerUser = Number(perUserLimit) || 0;
 
@@ -197,6 +235,7 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
     const packDoc = await db.collection('packs').doc(productId).get();
     if (!packDoc.exists) throw new Error('Pack not found');
     packId = packDoc.id;
+    packDefinition = packDoc.data();
     itemName = `${packDoc.data().name} Pack`;
     packColor = packDoc.data().color || '#667eea';
   }
@@ -224,7 +263,10 @@ async function createMarketplaceListingEntries({ sellerId, itemType, productId, 
   });
 
   for (let i = 0; i < stock; i++) {
-    batch.set(db.collection('items').doc(), {
+    const item = db.collection('items').doc();
+    const proof = require('./card-upgrades').markPack(batch, db, item, sellerId, packId, packDefinition);
+    batch.set(item, {
+      ...proof,
       name: itemName,
       itemType,
       packId,
@@ -335,41 +377,7 @@ async function userIsAdmin(userId) {
   return userDoc.exists && userDoc.data().isAdmin === true;
 }
 
-/* ------------------ INITIALIZE ADMIN ------------------ */
-async function initializeTestUsers() {
-  try {
-    const usersRef = db.collection('users');
 
-    // Prefer an existing 'admin' username (lowercase) if present, otherwise 'Admin'
-    let adminSnap = await usersRef.where('username', '==', 'admin').get();
-    if (adminSnap.empty) {
-      adminSnap = await usersRef.where('username', '==', 'Admin').get();
-    }
-
-    if (adminSnap.empty) {
-      // No existing admin-like user found; create a new lowercase 'admin' account
-      await usersRef.add({
-        username: 'admin',
-        passwordHash: hashPassword('banana68'),
-        balance: 1000,
-        isAdmin: true,
-        createdAt: new Date()
-      });
-      console.log('Created test user: admin');
-    } else {
-      const adminDoc = adminSnap.docs[0];
-      if (adminDoc.data().isAdmin !== true) {
-        await adminDoc.ref.update({ isAdmin: true });
-        console.log(`Updated existing user ${adminDoc.data().username} to admin role`);
-      }
-    }
-
-  } catch (error) {
-    console.error('Error initializing admin:', error);
-  }
-}
-
-initializeTestUsers();
 
 /* ------------------ HEALTH CHECK ------------------ */
 app.get('/health', (req, res) => {
@@ -1031,6 +1039,8 @@ app.get('/users', async (req, res) => {
     // Self/account refreshes need one document; player pickers still need the directory.
     const snapshot = userId ? await usersRef.doc(userId).get() : await usersRef.get();
     const docs = userId ? (snapshot.exists ? [snapshot] : []) : snapshot.docs;
+    const viewerId = req.authenticatedUserId;
+    const isAdmin = userId && viewerId && viewerId !== userId && await userIsAdmin(viewerId);
 
     const users = [];
     docs.forEach(doc => {
@@ -1038,12 +1048,14 @@ app.get('/users', async (req, res) => {
       users.push({
         id: doc.id,
         username: data.username,
-        balance: data.balance,
-        isAdmin: data.isAdmin === true,
-        createdAt: serializeDate(data.createdAt),
-        lastOnline: serializeDate(data.lastOnline),
-        lastSpin: serializeDate(data.lastSpin),
-        vipUntil: serializeDate(data.vipUntil)
+        ...(viewerId === doc.id || isAdmin ? {
+          balance: data.balance,
+          isAdmin: data.isAdmin === true,
+          createdAt: serializeDate(data.createdAt),
+          lastOnline: serializeDate(data.lastOnline),
+          lastSpin: serializeDate(data.lastSpin),
+          vipUntil: serializeDate(data.vipUntil)
+        } : {})
       });
     });
 
@@ -1057,6 +1069,7 @@ app.get('/users', async (req, res) => {
 /* ------------------ SPIN WHEEL ------------------ */
 app.post('/spin-wheel', async (req, res) => {
   const { userId } = req.body;
+  if (req.authenticatedUserId !== userId) return res.status(403).send('Forbidden');
 
   if (!userId || typeof userId !== 'string') {
     return res.status(400).send('Invalid userId');
@@ -1141,7 +1154,9 @@ app.post('/spin-wheel', async (req, res) => {
 
 /* ------------------ TRANSFER ------------------ */
 app.post('/transfer', async (req, res) => {
-  const { fromId, toUsername, amount: rawAmount } = req.body;
+  const { toUsername, amount: rawAmount } = req.body;
+  const fromId = req.authenticatedUserId;
+  if (req.body.fromId !== undefined && req.body.fromId !== fromId) return res.status(403).send('Forbidden');
   const amount = typeof rawAmount === 'number' ? roundFooty(rawAmount) : NaN;
 
   if (!fromId || typeof fromId !== 'string') {
@@ -1231,7 +1246,7 @@ app.post('/transfer', async (req, res) => {
 app.get('/items', async (req, res) => {
   try {
     const itemsRef = db.collection('items');
-    const viewerId = req.header('X-User-Id');
+    const viewerId = req.authenticatedUserId;
     const [snapshot, usersSnapshot, viewerDoc] = await Promise.all([
       itemsRef.get(),
       db.collection('users').where('isAdmin', '==', true).get(),
@@ -1254,6 +1269,18 @@ app.get('/items', async (req, res) => {
     const groupIds=[...new Set(snapshot.docs.map(d=>d.data()).filter(i=>i.sold!==true&&i.listingGroupId).map(i=>i.listingGroupId))];
     const groupDocs=viewerId?await Promise.all(groupIds.map(id=>db.collection('marketListingGroups').doc(id).get())):[];
     const purchaseGroups=new Map(groupDocs.filter(d=>d.exists).map(d=>[d.id,d.data()]));
+    const upgrades = require('./card-upgrades');
+    const marked = snapshot.docs.filter(doc => {
+      const item = doc.data();
+      return item.sold !== true && item.upgrade && upgrades.inventoryKey(item.sourceItemId);
+    });
+    const upgradeByListing = new Map(await Promise.all(marked.map(async doc => {
+      const item = doc.data();
+      const record = (await upgrades.variant(db, item.sourceItemId).get()).data();
+      if (record?.ownerId !== item.sellerId) return [doc.id, null];
+      const { ownerId, ...upgrade } = record;
+      return [doc.id, upgrade];
+    })));
     snapshot.forEach(doc => {
       const data = doc.data();
       if (data.sold !== true && data.itemType !== 'battle-card') {
@@ -1272,6 +1299,7 @@ app.get('/items', async (req, res) => {
           sellerId: data.sellerId || '',
           isHostListing: hostIds.has(data.sellerId),
           imageUrl: data.imageUrl || null,
+          ...(upgradeByListing.get(doc.id) ? { upgrade: upgradeByListing.get(doc.id) } : {}),
           itemType: data.itemType || (data.packId ? 'pack' : 'card'),
           packColor: data.packColor || '#667eea',
           packId: data.packId || null,
@@ -1353,21 +1381,18 @@ app.post('/items/image', async (req, res) => {
 /* ------------------ CARD IMAGE LIST ------------------ */
 app.get('/card-images', async (req, res) => {
   try {
-    const imagesDir = path.join(__dirname, 'public', 'images');
-    if (!fs.existsSync(imagesDir)) {
-      return res.json([]);
-    }
-
-    const files = fs.readdirSync(imagesDir)
-      .filter(file => ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(path.extname(file).toLowerCase()))
-      .sort();
-
+    const files = await imageFilenames(__dirname);
+    if (!files.length) return res.json([]);
     res.json(sortCardsByTier(files.map(name => ({ name })), await getAscendTierConfig()).map(card => card.name));
   } catch (error) {
     console.error('Error reading card images:', error);
     res.status(500).send('Error reading card images');
   }
 });
+
+registerCardData(app, __dirname);
+require('./ben-bal-routes')(app, db, brawlAuth.authenticate, __dirname);
+require('./upgrader-routes')(app, db, brawlAuth.authenticate, __dirname);
 
 /* ------------------ ASCEND TIERS ------------------ */
 app.get('/ascend-tier-config', async (req, res) => {
@@ -1491,7 +1516,8 @@ app.delete('/ascend-tier-config/:tierId', async (req, res) => {
 
 app.post('/ascend-tier-assignment', async (req, res) => {
   const requesterId = req.header('X-User-Id');
-  const { tierId, type, value, action } = req.body;
+  const { tierId, type, value, values, action } = req.body;
+  const bulk = values !== undefined;
 
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
@@ -1502,28 +1528,42 @@ app.post('/ascend-tier-assignment', async (req, res) => {
   if (!['card', 'pack'].includes(type)) {
     return res.status(400).send('Invalid assignment type');
   }
-  if (!value || typeof value !== 'string' || !value.trim()) {
-    return res.status(400).send('Invalid value');
-  }
   if (!['add', 'remove'].includes(action)) {
     return res.status(400).send('Invalid action');
+  }
+  if (bulk && (type !== 'card' || action !== 'add' || !Array.isArray(values) || value !== undefined)) {
+    return res.status(400).send('Invalid bulk card assignment');
+  }
+  const requested = bulk ? values : [value];
+  if (!requested.length || requested.some(entry => typeof entry !== 'string' || !entry.trim())) {
+    return res.status(400).send(bulk ? 'Invalid card selection: expected a list of card filenames' : 'Invalid value');
+  }
+  const identifiers = [...new Set(requested.map(entry => entry.trim()))];
+  if (type === 'card' && identifiers.some(id => id === '.' || id === '..' || /[/\\:\x00-\x1f\x7f]/.test(id))) {
+    return res.status(400).send('Invalid card identifier: expected a catalogue filename');
   }
 
   try {
     const tierRef = db.collection('ascendTiers').doc(tierId);
-    const tierDoc = await tierRef.get();
-    if (!tierDoc.exists) return res.status(404).send('Tier not found');
-
-    const tierData = tierDoc.data();
     const field = type === 'card' ? 'cards' : 'packs';
-    const values = Array.isArray(tierData[field]) ? tierData[field] : [];
-    const trimmed = type === 'card' ? path.basename(value.trim()) : value.trim();
-    const nextValues = action === 'add'
-      ? [...new Set([...values, trimmed])]
-      : values.filter(entry => String(entry) !== String(trimmed));
-
-    await tierRef.update({ [field]: nextValues, updatedAt: new Date() });
-    res.json({ success: true, [field]: nextValues });
+    const catalogue = bulk ? new Set(await imageFilenames(__dirname)) : null;
+    const result = await db.runTransaction(async transaction => {
+      const tierDoc = await transaction.get(tierRef);
+      if (!tierDoc.exists) return null;
+      const stored = tierDoc.data()[field];
+      const current = Array.isArray(stored) ? stored : [];
+      const members = new Set(current);
+      const alreadyAssigned = identifiers.filter(id => members.has(id));
+      const unavailable = identifiers.filter(id => !members.has(id) && catalogue && !catalogue.has(id));
+      const added = identifiers.filter(id => !members.has(id) && (!catalogue || catalogue.has(id)));
+      const next = action === 'add'
+        ? [...new Set([...current, ...added])]
+        : current.filter(entry => String(entry) !== identifiers[0]);
+      if (!bulk || added.length) transaction.update(tierRef, { [field]: next, updatedAt: new Date() });
+      return { success: unavailable.length === 0, [field]: next, ...(bulk && { added, alreadyAssigned, unavailable }) };
+    });
+    if (!result) return res.status(404).send('Tier not found');
+    res.json(result);
   } catch (error) {
     console.error('Error updating tier assignments:', error);
     res.status(500).send('Could not update tier assignments');
@@ -1531,7 +1571,20 @@ app.post('/ascend-tier-assignment', async (req, res) => {
 });
 
 /* ------------------ PACKS ------------------ */
-app.get('/pack-design/:packId',async(req,res)=>{try{const doc=await db.collection('packs').doc(req.params.packId).get();if(!doc.exists)return res.status(404).send('Pack not found');const pack=doc.data();res.json({name:pack.name,color:pack.color||'#667eea',appearance:pack.appearance||null});}catch{res.status(400).send('Could not load pack design');}});
+app.get('/pack-design/:packId', async (req, res) => {
+  try {
+    const daily = req.params.packId === dailyPack.packId;
+    const doc = await db.collection('packs').doc(daily ? dailyPack.definitionId() : req.params.packId).get();
+    if (!doc.exists) {
+      if (daily) return res.json({ name: 'Daily Pack', color: '#93722a', appearance: null });
+      return res.status(404).send('Pack not found');
+    }
+    const pack = doc.data();
+    return res.json({ name: daily ? 'Daily Pack' : pack.name, color: pack.color || '#667eea', appearance: pack.appearance || null });
+  } catch {
+    return res.status(400).send('Could not load pack design');
+  }
+});
 app.get('/packs', async (req, res) => {
   const requesterId = req.header('X-User-Id');
   if (!requesterId || !(await userIsAdmin(requesterId))) {
@@ -1554,11 +1607,15 @@ app.post('/packs', async (req, res) => {
   if (!requesterId || !(await userIsAdmin(requesterId))) {
     return res.status(403).send('Forbidden');
   }
+  if (require('./card-upgrades').requiresPackProof(req.body)) {
+    try { await brawlAuth.authenticate(req); }
+    catch { return res.status(401).send('Please log in to configure protected pack rewards.'); }
+  }
   if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
     return res.status(400).send('Enter a pack name up to 80 characters');
   }
-  if (!Array.isArray(cardIds) || cardIds.length > 100) {
-    return res.status(400).send('Choose up to 100 cards');
+  if (!Array.isArray(cardIds) || cardIds.length > MAX_PACK_CARDS) {
+    return res.status(400).send(`Choose up to ${MAX_PACK_CARDS} cards`);
   }
   if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
@@ -1600,8 +1657,8 @@ app.put('/packs/:packId', async (req, res) => {
   if (!name || typeof name !== 'string' || !name.trim() || name.trim().length > 80) {
     return res.status(400).send('Enter a pack name up to 80 characters');
   }
-  if (!Array.isArray(cardIds) || cardIds.length > 100) {
-    return res.status(400).send('Choose up to 100 cards');
+  if (!Array.isArray(cardIds) || cardIds.length > MAX_PACK_CARDS) {
+    return res.status(400).send(`Choose up to ${MAX_PACK_CARDS} cards`);
   }
   if (color !== undefined && !isValidPackColor(color)) return res.status(400).send('Invalid pack color');
 
@@ -1619,6 +1676,11 @@ app.put('/packs/:packId', async (req, res) => {
     const packDoc = await packRef.get();
     if (!packDoc.exists) return res.status(404).send('Pack not found');
 
+    const { requiresPackProof } = require('./card-upgrades');
+    if (requiresPackProof(req.body) || requiresPackProof(packDoc.data())) {
+      try { await brawlAuth.authenticate(req); }
+      catch { return res.status(401).send('Please log in to configure protected pack rewards.'); }
+    }
 
     const extras=require('./pack-builder').validate(req.body,await require('./free-pack-routes').catalog(db));
     await packRef.update({ name: name.trim(), cardIds: cards, color: color || '#667eea', ...extras, updatedAt: new Date() });
@@ -1653,6 +1715,9 @@ app.post('/grant-pack', async (req, res) => {
     if (!packDoc.exists) return res.status(400).send('Pack not found');
 
     const pack = packDoc.data();
+    const upgrades = require('./card-upgrades');
+    const batchSize = upgrades.requiresPackProof(pack) ? 250 : 500;
+    if (batchSize === 250 && await brawlAuth.authenticate(req) !== requesterId) throw Error('Please log in again.');
     const writes = [];
     recipientSnapshot.docs.forEach(recipientDoc => {
       for (let i = 0; i < qty; i++) writes.push({
@@ -1670,11 +1735,13 @@ app.post('/grant-pack', async (req, res) => {
         createdAt: new Date()
       });
     });
-    for (let start = 0; start < writes.length; start += 500) {
+    for (let start = 0; start < writes.length; start += batchSize) {
       const batch = db.batch();
-      writes.slice(start, start + 500).forEach(write => {
+      writes.slice(start, start + batchSize).forEach(write => {
         const { recipientId, ...packItem } = write;
-        batch.set(db.collection('items').doc(), { ...packItem, buyerId: recipientId });
+        const item = db.collection('items').doc();
+        const proof = upgrades.markPack(batch, db, item, recipientId, packId, pack);
+        batch.set(item, { ...packItem, buyerId: recipientId, ...proof });
       });
       await batch.commit();
     }
@@ -1686,6 +1753,7 @@ app.post('/grant-pack', async (req, res) => {
 });
 
 app.post('/open-pack', async (req, res) => {
+  const dailyPack = require('./ben-bal-rewards');
   const requesterId = req.header('X-User-Id');
   const { itemId } = req.body;
   if (!requesterId || typeof requesterId !== 'string') return res.status(401).send('Missing X-User-Id header');
@@ -1704,11 +1772,28 @@ app.post('/open-pack', async (req, res) => {
         throw new Error('You cannot open this pack');
       }
 
-      const packDoc = await transaction.get(db.collection('packs').doc(packItem.packId));
+      const earnedDailyPack = packItem.packId === dailyPack.packId;
+      if (earnedDailyPack || packItem.source === dailyPack.source) {
+        try { await brawlAuth.authenticate(req); }
+        catch { throw Error('Please log in again to open a Daily Pack.'); }
+      }
+      const definitionId = earnedDailyPack ? dailyPack.definitionId() : packItem.packId;
+      const packDoc = await transaction.get(db.collection('packs').doc(definitionId));
       if (!packDoc.exists || !require('./pack-builder').hasRewards(packDoc.data())) {
+        if (earnedDailyPack) throw Error(dailyPack.unconfigured);
         throw new Error('Pack has no available cards');
       }
       const pack = packDoc.data();
+      const upgrades = require('./card-upgrades');
+      const proofRef = upgrades.packProof(db, itemId);
+      const proof = (await transaction.get(proofRef)).data();
+      if (upgrades.requiresPackProof(pack)) {
+        try { await brawlAuth.authenticate(req); }
+        catch { throw Object.assign(Error('Please log in again to open this pack.'), { code: 'PACK_SESSION_REQUIRED' }); }
+        if (proof?.ownerId !== requesterId || proof?.packId !== packItem.packId) {
+          throw Error('This older or unverified pack cannot grant protected rewards.');
+        }
+      }
       let cardId = pack.cardIds?.length?pack.cardIds[crypto.randomInt(pack.cardIds.length)]:null;
       const cardRef = db.collection('items').doc();
       const openerRef = db.collection('users').doc(requesterId);
@@ -1721,7 +1806,7 @@ app.post('/open-pack', async (req, res) => {
       } else if(req.body.compass){
         if(!pack.cardIds?.length)throw Error('This pack has no collection cards for a compass');
         const tierDocs=await transaction.get(db.collection('ascendTiers').orderBy('order','asc'));
-        if(!rubyShop.compassAllowed(req.body.compass,packItem.packId,tierDocs.docs.map(doc=>({...doc.data(),id:doc.id}))))throw new Error('This compass cannot open that pack tier');
+        if(!rubyShop.compassAllowed(req.body.compass,definitionId,tierDocs.docs.map(doc=>({...doc.data(),id:doc.id}))))throw new Error('This compass cannot open that pack tier');
         const owned=rubyShop.spend(opener.data(),req.body.compass);
         picks=rubyShop.choices(pack.cardIds);
         transaction.update(openerRef,{rubyItems:owned});
@@ -1730,8 +1815,14 @@ app.post('/open-pack', async (req, res) => {
       }
       const extraRewards=require('./free-pack').tokenProgress(opener.data(),require('./free-pack').rewardAmulets(opener.data(),require('./pack-builder').draw(pack,rewardCatalog,opener.data()))),extraPacks=new Map();
       for(const reward of extraRewards)if(reward.kind==='pack'&&!extraPacks.has(reward.id)){const doc=await transaction.get(db.collection('packs').doc(reward.id));if(!doc.exists||!require('./pack-builder').hasRewards(doc.data()))throw Error('A reward pack is unavailable');extraPacks.set(reward.id,doc.data());}
+      const awardWrites = extraRewards.reduce((sum, reward) => sum + (['card','pack'].includes(reward.kind)
+        ? reward.amount * (upgrades.requiresPackProof(extraPacks.get(reward.id)) ? 2 : 1) : 0), 0);
+      if (awardWrites > 450) throw Error('This pack would award too many inventory items.');
+      if (extraRewards.some(reward => upgrades.kinds.includes(reward.kind))) {
+        await upgrades.grant(transaction, db, requesterId, extraRewards);
+      }
       const rewardUpdate=require('./free-pack').apply(opener.data(),extraRewards);
-      for(const reward of extraRewards)if(['card','pack'].includes(reward.kind))for(let i=0;i<reward.amount;i++){const meta=extraPacks.get(reward.id);transaction.set(db.collection('items').doc(),{name:meta?.name||('Card '+reward.id),itemType:reward.kind,packId:meta?reward.id:null,packColor:meta?.color||null,imageUrl:reward.kind==='card'?'/images/'+reward.id:null,price:0,sellerId:requesterId,buyerId:requesterId,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-reward'});}
+      for(const reward of extraRewards)if(['card','pack'].includes(reward.kind))for(let i=0;i<reward.amount;i++){const meta=extraPacks.get(reward.id);const item=db.collection('items').doc();const proof=upgrades.markPack(transaction,db,item,requesterId,reward.id,meta);transaction.set(item,{...proof,name:meta?.name||('Card '+reward.id),itemType:reward.kind,packId:meta?reward.id:null,packColor:meta?.color||null,imageUrl:reward.kind==='card'?'/images/'+reward.id:null,price:0,sellerId:requesterId,buyerId:requesterId,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-reward'});}
       if(extraRewards.length)transaction.update(openerRef,rewardUpdate);
       const hallXP=require('./town-hall-progress').gameplay(opener.data(),'pack');if(Object.keys(hallXP).length)transaction.update(openerRef,hallXP);
       const packBonus = amuletEffects(opener.data() || {}).pack || 0;
@@ -1751,14 +1842,16 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
+      if (proof) transaction.delete(proofRef);
       const packName = packItem.name || (pack.name ? (/\bpack$/i.test(pack.name) ? pack.name : `${pack.name} Pack`) : 'Pack');
       return { cardId, packBonus, rubyBonus, packName, extraRewards, appearance:pack.appearance, packColor: packItem.packColor || pack.color || '#667eea' };
     });
     if(result.choices)return res.json(result);
     res.json({ success: true, extraRewards:result.extraRewards, appearance:result.appearance||null, packBonus: result.packBonus, rubyBonus: result.rubyBonus, packName: result.packName, cardId: result.cardId, imageUrl: result.cardId?`/images/${result.cardId}`:null, packColor: result.packColor });
   } catch (error) {
-    const expectedErrors = ['Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This pack has no collection cards for a compass', 'This compass cannot open that pack tier', 'You do not own this item'];
-    if (expectedErrors.includes(error.message)) return res.status(400).send(error.message);
+    if (error.code === 'PACK_SESSION_REQUIRED' || error.message === 'Please log in again to open a Daily Pack.') return res.status(401).send(error.message);
+    const expectedErrors = [dailyPack.unconfigured, 'Pack not found', 'You cannot open this pack', 'Pack has no available cards', 'This pack has no collection cards for a compass', 'This compass cannot open that pack tier', 'You do not own this item', 'This older or unverified pack cannot grant protected rewards.'];
+    if (error.code === 'EMPTY_RANDOM_CARD_POOL' || expectedErrors.includes(error.message)) return res.status(400).send(error.message);
     console.error('Error opening pack:', error);
     res.status(500).send('Could not open pack');
   }
@@ -1766,7 +1859,7 @@ app.post('/open-pack', async (req, res) => {
 
 /* ------------------ GRANT ITEM ------------------ */
 app.post('/grant-item', async (req, res) => {
-  const requesterId = req.header('X-User-Id');
+  const requesterId = req.authenticatedUserId;
   const { username, cardId, quantity } = req.body;
 
   if (!requesterId || typeof requesterId !== 'string') {
@@ -1945,6 +2038,13 @@ app.post('/admin/market-listings', async (req, res) => {
   }
 
   try {
+    if (itemType === 'pack' && typeof productId === 'string' && !productId.includes('/')) {
+      const pack = (await db.collection('packs').doc(productId).get()).data();
+      if (require('./card-upgrades').requiresPackProof(pack)) {
+        try { await brawlAuth.authenticate(req); }
+        catch { return res.status(401).send('Please log in to list a pack with protected rewards.'); }
+      }
+    }
     const money = await listingCurrency(currency);
     if (currency !== 'footy' && !Number.isSafeInteger(price)) return res.status(400).send('Gem prices must be whole numbers');
     if (scheduledDate && scheduledDate.getTime() > Date.now()) {
@@ -2032,6 +2132,7 @@ app.post('/items', async (req, res) => {
 
     await db.runTransaction(async transaction => {
     let sourceItem = null;
+    let upgrade = null;
     // If listing from inventory, verify ownership and preserve its type (including packs).
     if (!sourceItemId && sellerDoc.data().isAdmin !== true) throw new Error('Select an inventory item');
     if (sourceItemId) {
@@ -2041,6 +2142,16 @@ app.post('/items', async (req, res) => {
         throw new Error('Selected inventory item is unavailable');
       }
       sourceItem = sourceItemDoc.data();
+      if (!sourceItem.packId) {
+        const upgrades = require('./card-upgrades');
+        const record = (await transaction.get(upgrades.variant(db, sourceItemId))).data();
+        if (record || sourceItem.upgrade) {
+          if (await brawlAuth.authenticate(req) !== sellerId) throw Error('Please log in to list an upgraded card.');
+          if (record?.ownerId !== sellerId) throw Error('This upgrade record is unavailable.');
+          const { ownerId, ...publicUpgrade } = record;
+          upgrade = publicUpgrade;
+        }
+      }
       transaction.update(sourceItemRef, { listedForSale: true });
     }
 
@@ -2053,6 +2164,8 @@ app.post('/items', async (req, res) => {
       buyerId: null,
       purchasedAt: null,
       sourceItemId: sourceItemId || null,
+      ...(upgrade ? { upgrade } : {}),
+      ...(sourceItem?.upgradePack ? { upgradePack: true } : {}),
       hallBuyers: sourceItem?.hallBuyers||[],hallSellers: sourceItem?.hallSellers||[],
       imageUrl: sourceItem ? sourceItem.imageUrl || null : imageUrl || null,
       itemType: sourceItem ? sourceItem.itemType || 'card' : 'card',
@@ -2075,6 +2188,7 @@ app.post('/items', async (req, res) => {
 /* ------------------ DELETE ITEM ------------------ */
 app.post('/delete-item', async (req, res) => {
   const { itemId, userId } = req.body;
+  if (req.authenticatedUserId !== userId) return res.status(403).send('Forbidden');
 
   if (!itemId || typeof itemId !== 'string') {
     return res.status(400).send('Invalid itemId');
@@ -2236,6 +2350,37 @@ app.post('/buy', async (req, res) => {
         }
       }
 
+      let transferredUpgrade;
+      let transferredEffectiveness;
+      if (item.upgrade && !sourceItemRef) throw Error('This upgrade record is unavailable.');
+      if (sourceItemRef && !item.packId) {
+        const upgrades = require('./card-upgrades');
+        const record = (await transaction.get(upgrades.variant(db, sourceItemRef.id))).data();
+        const preparation = (await transaction.get(upgrades.progress(db, sourceItemRef.id))).data();
+        if (preparation?.ownerId === item.sellerId) {
+          if (await brawlAuth.authenticate(req) !== buyerId) throw Error('Please log in to buy this prepared card.');
+          transferredEffectiveness = preparation;
+        }
+        if (record || item.upgrade || sourceItemDoc?.data()?.upgrade) {
+          if (await brawlAuth.authenticate(req) !== buyerId) throw Error('Please log in to buy this upgraded card.');
+          if (record?.ownerId !== item.sellerId) throw Error('This upgrade record is unavailable.');
+          if (upgrades.duplicate(await transaction.get(upgrades.variants(db, buyerId)), record.baseCardId, record.level)) {
+            throw Error('You already own this upgraded variant.');
+          }
+          transferredUpgrade = record;
+        }
+      }
+      let transferredProof;
+      let originalProof;
+      if (item.upgradePack || sourceItemDoc?.data()?.upgradePack) {
+        const upgrades = require('./card-upgrades');
+        if (await brawlAuth.authenticate(req) !== buyerId) throw Error('Please log in to buy this pack.');
+        originalProof = upgrades.packProof(db, (sourceItemRef || itemRef).id);
+        const proof = (await transaction.get(originalProof)).data();
+        if (proof?.ownerId !== item.sellerId || proof?.packId !== item.packId) throw Error('This pack cannot be verified.');
+        transferredProof = { ...proof, ownerId: buyerId };
+      }
+
       const hallBuyers=Array.isArray(item.hallBuyers)?item.hallBuyers:[],hallSellers=Array.isArray(item.hallSellers)?item.hallSellers:[];
       const buyerXP=!hallBuyers.includes(buyerId)&&hallBuyers.length<32?require('./town-hall-progress').gameplay(buyer,'market purchase'):{};
       const sellerXP=!hallSellers.includes(item.sellerId)&&hallSellers.length<32?require('./town-hall-progress').gameplay(seller,'market sale'):{};
@@ -2252,6 +2397,7 @@ app.post('/buy', async (req, res) => {
         transaction.update(sellerRef, { gems: sellerGems,...sellerXP });
       }
 
+      const { ownerId: previousOwner, ...publicUpgrade } = transferredUpgrade || {};
       transaction.update(itemRef, {
         sold: true,
         buyerId: buyerId,
@@ -2260,7 +2406,9 @@ app.post('/buy', async (req, res) => {
         purchasePrice,
         sellerPayment,
         hallBuyers:[...new Set([...hallBuyers,buyerId])].slice(0,32),hallSellers:[...new Set([...hallSellers,item.sellerId])].slice(0,32),
-        purchasedViaMarketplace: true
+        purchasedViaMarketplace: true,
+        ...(transferredUpgrade ? { upgrade: publicUpgrade } : {}),
+        ...(transferredProof ? { upgradePack: true } : {})
       });
 
       if (listingGroupRef) {
@@ -2275,6 +2423,21 @@ app.post('/buy', async (req, res) => {
       // Delete the original source inventory item atomically (if it exists)
       if (sourceItemDoc && sourceItemDoc.exists) {
         transaction.delete(sourceItemRef);
+      }
+      if (transferredUpgrade) {
+        const upgrades = require('./card-upgrades');
+        transaction.set(upgrades.variant(db, itemRef.id), { ...transferredUpgrade, ownerId: buyerId });
+        transaction.delete(upgrades.variant(db, sourceItemRef.id));
+      }
+      if (transferredEffectiveness) {
+        const { progress } = require('./card-upgrades');
+        transaction.set(progress(db, itemRef.id), { ...transferredEffectiveness, ownerId: buyerId });
+        transaction.delete(progress(db, sourceItemRef.id));
+      }
+      if (transferredProof) {
+        const newProof = require('./card-upgrades').packProof(db, itemRef.id);
+        transaction.set(newProof, transferredProof);
+        if (originalProof.id !== newProof.id) transaction.delete(originalProof);
       }
 
       return { purchasePrice, hasHostDiscount, listedPrice: basePrice, currencyName: item.currencyName || 'Footy' };
@@ -2350,6 +2513,8 @@ app.get('/history', async (req, res) => {
         id: doc.id,
         direction: 'bought',
         itemName: item.name || 'Unknown item',
+        imageUrl: item.imageUrl || null,
+        itemType: item.itemType || (item.packId ? 'pack' : undefined),
         counterparty: usernames.get(item.sellerId) || 'Unknown user',
         amount: item.purchasePrice ?? item.price ?? 0,
         currencyName: item.currencyName || 'Footy',
@@ -2362,6 +2527,8 @@ app.get('/history', async (req, res) => {
         id: doc.id,
         direction: 'sold',
         itemName: item.name || 'Unknown item',
+        imageUrl: item.imageUrl || null,
+        itemType: item.itemType || (item.packId ? 'pack' : undefined),
         counterparty: usernames.get(item.buyerId) || 'Unknown user',
         amount: item.sellerPayment ?? item.price ?? 0,
         currencyName: item.currencyName || 'Footy',
@@ -2419,7 +2586,7 @@ app.post('/ascend', async (req, res) => {
 
     const matchingCards = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(item => item.itemType !== 'pack' && item.itemType !== 'battle-card' && item.listedForSale !== true)
+      .filter(item => item.itemType !== 'pack' && item.itemType !== 'battle-card' && item.listedForSale !== true && !item.upgrade)
       .filter(item => item.imageUrl && path.basename(item.imageUrl) === cleanedCardKey);
 
     if (matchingCards.length < 3) {
@@ -2435,17 +2602,23 @@ app.post('/ascend', async (req, res) => {
 
     const pack = packDoc.data();
     const packName = pack.name || 'Pack';
+    if (require('./card-upgrades').requiresPackProof(pack)) {
+      return res.status(400).send('Choose an Ascend reward pack without protected rewards.');
+    }
 
     await db.runTransaction(async transaction => {
       const ascendUserRef = db.collection('users').doc(requesterId);
       const ascendUser = await transaction.get(ascendUserRef);
       const latestCards = await transaction.getAll(...selectedCards.map(card => itemsRef.doc(card.id)));
-      if (latestCards.some(doc => !doc.exists || doc.data().buyerId !== requesterId || doc.data().listedForSale === true)) throw new Error('Selected cards are no longer available');
+      if (latestCards.some(doc => !doc.exists || doc.data().buyerId !== requesterId || doc.data().listedForSale === true || doc.data().upgrade)) throw new Error('Selected cards are no longer available');
+      const variantRefs = selectedCards.map(card => require('./card-upgrades').variant(db, card.id));
+      if ((await transaction.getAll(...variantRefs)).some(doc => doc.exists)) throw Error('Select Normal cards to ascend.');
       const ascendBonus = amuletEffects(ascendUser.data() || {}).ascend || 0;
       const ascendXP=require('./town-hall-progress').gameplay(ascendUser.data(),'ascension');if(Object.keys(ascendXP).length)transaction.update(ascendUserRef,ascendXP);
       if (ascendBonus) transaction.update(ascendUserRef, { balance: roundFooty(Number(ascendUser.data().balance || 0) + ascendBonus) });
       selectedCards.forEach(card => {
         transaction.delete(itemsRef.doc(card.id));
+        transaction.delete(require('./card-upgrades').progress(db, card.id));
       });
 
       transaction.set(itemsRef.doc(), {
@@ -2505,11 +2678,21 @@ app.post('/sell-tier-card', async (req, res) => {
       const latestUserDoc = await transaction.get(userRef);
       const latestItem = await transaction.get(itemRef);
       if (!latestItem.exists || latestItem.data().buyerId !== requesterId || latestItem.data().listedForSale === true) throw new Error('Card no longer available');
+      const upgradedRef = require('./card-upgrades').variant(db, itemId);
+      const variant = (await transaction.get(upgradedRef)).data();
+      const preparationRef = require('./card-upgrades').progress(db, itemId);
+      const preparation = await transaction.get(preparationRef);
+      if (variant || latestItem.data().upgrade) {
+        if (await brawlAuth.authenticate(req) !== requesterId) throw Error('Please log in to sell this upgraded card.');
+        if (variant?.ownerId !== requesterId) throw Error('This upgrade record is unavailable.');
+      }
       const latestUser = latestUserDoc.data() || {};
       const updatedBalance = roundFooty(Number(latestUser.balance || 0) + Number(tier.sellPrice) * (1 + (amuletEffects(latestUser).salvage || 0) / 100));
 
       transaction.update(userRef, { balance: updatedBalance,...require('./town-hall-progress').gameplay(latestUser,'card sale') });
       transaction.delete(itemRef);
+      if (variant) transaction.delete(upgradedRef);
+      if (preparation.exists) transaction.delete(preparationRef);
       return roundFooty(updatedBalance - Number(latestUser.balance || 0));
     });
 
@@ -2611,6 +2794,8 @@ app.post('/gem-converter', async (req, res) => {
       requireUnlockedTier(tierSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })), user.data(), tierId);
       const tier = { ...tierDoc.data(), id: tierDoc.id };
       validateGemCards(cards.map(card => card.exists ? card.data() : null), itemIds, tier, userId);
+      const upgraded = await transaction.getAll(...itemIds.map(id => require('./card-upgrades').variant(db, id)));
+      if (upgraded.some(doc => doc.exists)) throw Error('Select Normal cards to convert.');
       const recipe = gemRecipe(tier, itemIds.length, converterProgress(tierSnapshot.docs.map(doc=>({...doc.data(),id:doc.id})),user.data()).level);
       recipe.cost = discounted(recipe.cost, amuletEffects(user.data()).converter);
       let fuelUpdate={};
@@ -2631,6 +2816,7 @@ app.post('/gem-converter', async (req, res) => {
       const newBalance = Math.round((balance - recipe.cost) * 100) / 100;
       transaction.update(userRef, { balance: newBalance, gems, ...fuelUpdate,...require('./town-hall-progress').gameplay(user.data(),'conversion') });
       refs.forEach(ref => transaction.delete(ref));
+      itemIds.forEach(id => transaction.delete(require('./card-upgrades').progress(db, id)));
       return { ...recipe, gems, balance: newBalance };
     });
     res.json(result);
@@ -2666,13 +2852,19 @@ app.get('/inventory', async (req, res) => {
       .get();
 
     const inventoryItems = [];
+    const records = await require('./card-upgrades').variants(db, userId).get();
+    const variants = new Map(records.docs.map(doc => {
+      const { ownerId, ...upgrade } = doc.data();
+      return [doc.id, upgrade];
+    }));
     snapshot.forEach(doc => {
-      const data = doc.data();
+      const { upgrade: unverified, ...data } = doc.data();
       // Filter out items that are currently listed for sale
       if (data.listedForSale !== true && data.itemType !== 'battle-card') {
         inventoryItems.push({
           id: doc.id,
-          ...data
+          ...data,
+          ...(variants.has(doc.id) ? { upgrade: variants.get(doc.id) } : {})
         });
       }
     });

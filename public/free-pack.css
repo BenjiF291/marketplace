@@ -45,3 +45,5 @@
 .village-map:has(>.island-tools) .village-footer{bottom:105px}
 @media(max-width:650px){.island-tool-actions{gap:2px;max-width:calc(100vw - 76px);padding:9px 7px 6px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#997a43 #d6bd88}#islandTools .island-tool-action,#islandTools #creatureBookLauncher{flex-basis:67px;width:67px;min-height:68px}#islandTools .island-tool-art,#islandTools #creatureBookLauncher svg{width:39px;height:43px}#islandTools .island-tool-label,#islandTools #creatureBookLauncher span{font-size:9px}.village-map:has(>.island-tools) .village-footer{bottom:110px}}
 .free-pack-card-order{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}.free-pack-card-order .free-pack-button{margin:0;padding:7px 12px;font-size:12px}.free-pack-card-order .free-pack-button:focus-visible{outline:3px solid #b99348;outline-offset:3px}
+.random-card-pool-preview { grid-column: 1 / -1; margin: 0 0 8px; }
+.random-card-pool-preview[hidden] { display: none; }

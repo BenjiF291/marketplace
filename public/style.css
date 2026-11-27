@@ -1144,6 +1144,99 @@ body {
   border-radius: 6px;
 }
 
+#tierCardAssignmentStatus:empty, [data-tier-card-status]:empty, #adminCardPicker [role="status"]:empty {
+  display: none;
+}
+
+#tierCardAssignmentStatus, [data-tier-card-status] {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e3f4e9;
+  color: #193229;
+}
+
+#adminCardPicker {
+  box-sizing: border-box;
+  width: min(940px, 94vw);
+  max-width: none;
+  padding: clamp(10px, 2vw, 22px);
+  border: 1px solid #cbd5cb;
+  border-radius: 16px;
+  color: #193229;
+  background: #f6f7f0;
+  overflow: hidden;
+}
+
+#adminCardPicker::backdrop { background: #102b23cc; }
+
+.admin-card-picker-layout {
+  display: flex;
+  flex-direction: column;
+  height: min(740px, 84dvh);
+  gap: 8px;
+}
+
+.admin-card-picker-layout h2, .admin-card-picker-layout p { margin: 0; }
+#adminCardPicker [role="status"] {
+  max-height: min(20dvh, 120px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.admin-card-picker-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-card-picker-controls input[type="search"] {
+  flex: 1 1 210px;
+  min-width: 0;
+  margin: 0;
+}
+.admin-card-picker-controls select { max-width: 100%; }
+.admin-card-picker-controls output { margin-inline-end: auto; }
+#adminCardPicker .pack-card-picker {
+  position: relative;
+  user-select: none;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  align-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 108px), 1fr));
+  overscroll-behavior: contain;
+}
+#adminCardPicker .card-area-selection {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  border: 1px solid #0876d1;
+  background: #1687e43b;
+  pointer-events: none;
+}
+#adminCardPicker .pack-card-option {
+  align-content: start;
+  padding: 6px;
+  border: 2px solid #d2dcd2;
+  border-radius: 8px;
+  background: white;
+  font-size: .85rem;
+}
+#adminCardPicker .pack-card-option[hidden] { display: none; }
+#adminCardPicker .pack-card-option:has(:checked) {
+  border-color: #258454;
+  background: #e3f4e9;
+}
+#adminCardPicker .pack-card-option:has(:disabled) {
+  cursor: default;
+  background: #e9ece7;
+}
+#adminCardPicker .pack-card-option img {
+  aspect-ratio: 5 / 7;
+  object-fit: contain;
+}
+#adminCardPicker .pack-card-option input { accent-color: #258454; }
+
 .saved-packs {
   list-style: none;
   display: grid;

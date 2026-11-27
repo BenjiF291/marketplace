@@ -1,0 +1,5089 @@
+{
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "filename": "Bronze_emma.png",
+      "id": "Bronze_emma.png",
+      "name": "Emma Huismans",
+      "tier": "Bronze",
+      "overall": 15,
+      "stats": {
+        "pow": 4,
+        "ama": 4,
+        "size": 49,
+        "rang": 17,
+        "loy": 12,
+        "acu": 5
+      },
+      "imageUrl": "/images/Bronze_emma.png"
+    },
+    {
+      "filename": "Bronze_jan.png",
+      "id": "Bronze_jan.png",
+      "name": "Jan Briestra",
+      "tier": "Bronze",
+      "overall": 15,
+      "stats": {
+        "pow": 4,
+        "ama": 3,
+        "size": 50,
+        "rang": 17,
+        "loy": 14,
+        "acu": 4
+      },
+      "imageUrl": "/images/Bronze_jan.png"
+    },
+    {
+      "filename": "Bronze_koen.png",
+      "id": "Bronze_koen.png",
+      "name": "Koen Huismans",
+      "tier": "Bronze",
+      "overall": 15,
+      "stats": {
+        "pow": 3,
+        "ama": 4,
+        "size": 50,
+        "rang": 17,
+        "loy": 15,
+        "acu": 3
+      },
+      "imageUrl": "/images/Bronze_koen.png"
+    },
+    {
+      "filename": "Fighter_olivia.png",
+      "id": "Fighter_olivia.png",
+      "name": "Olivia Liesker",
+      "tier": "Fighter",
+      "overall": 80,
+      "stats": {
+        "pow": 80,
+        "ama": null,
+        "size": 65,
+        "rang": null,
+        "loy": null,
+        "acu": 95
+      },
+      "imageUrl": "/images/Fighter_olivia.png"
+    },
+    {
+      "filename": "Fighter_seb.png",
+      "id": "Fighter_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Fighter",
+      "overall": 96,
+      "stats": {
+        "pow": 96,
+        "ama": null,
+        "size": 95,
+        "rang": null,
+        "loy": null,
+        "acu": 97
+      },
+      "imageUrl": "/images/Fighter_seb.png"
+    },
+    {
+      "filename": "Genious_ben.png",
+      "id": "Genious_ben.png",
+      "name": "Benjamin Liesker",
+      "tier": "Genius",
+      "overall": 93,
+      "stats": {
+        "pow": 91,
+        "ama": 93,
+        "size": 99,
+        "rang": 82,
+        "loy": 99,
+        "acu": 85
+      },
+      "imageUrl": "/images/Genious_ben.png"
+    },
+    {
+      "filename": "Genious_boris.png",
+      "id": "Genious_boris.png",
+      "name": "Boris Liesker",
+      "tier": "Genius",
+      "overall": 91,
+      "stats": {
+        "pow": 93,
+        "ama": 98,
+        "size": 90,
+        "rang": 85,
+        "loy": 90,
+        "acu": 80
+      },
+      "imageUrl": "/images/Genious_boris.png"
+    },
+    {
+      "filename": "Genious_seb.png",
+      "id": "Genious_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Genius",
+      "overall": 93,
+      "stats": {
+        "pow": 94,
+        "ama": 95,
+        "size": 82,
+        "rang": 94,
+        "loy": 99,
+        "acu": 91
+      },
+      "imageUrl": "/images/Genious_seb.png"
+    },
+    {
+      "filename": "Gold_lotte.png",
+      "id": "Gold_lotte.png",
+      "name": "Lotte Liesker",
+      "tier": "Gold",
+      "overall": 58,
+      "stats": {
+        "pow": 65,
+        "ama": 20,
+        "size": 89,
+        "rang": 58,
+        "loy": 60,
+        "acu": 57
+      },
+      "imageUrl": "/images/Gold_lotte.png"
+    },
+    {
+      "filename": "Gold_patricia.png",
+      "id": "Gold_patricia.png",
+      "name": "Patricia Liesker",
+      "tier": "Gold",
+      "overall": 58,
+      "stats": {
+        "pow": 65,
+        "ama": 20,
+        "size": 89,
+        "rang": 58,
+        "loy": 60,
+        "acu": 57
+      },
+      "imageUrl": "/images/Gold_patricia.png"
+    },
+    {
+      "filename": "Gold_paul.png",
+      "id": "Gold_paul.png",
+      "name": "Paul Liesker",
+      "tier": "Gold",
+      "overall": 59,
+      "stats": {
+        "pow": 70,
+        "ama": 20,
+        "size": 92,
+        "rang": 58,
+        "loy": 60,
+        "acu": 57
+      },
+      "imageUrl": "/images/Gold_paul.png"
+    },
+    {
+      "filename": "Gold_sven.png",
+      "id": "Gold_sven.png",
+      "name": "Sven Heeren",
+      "tier": "Gold",
+      "overall": 59,
+      "stats": {
+        "pow": 70,
+        "ama": 20,
+        "size": 92,
+        "rang": 58,
+        "loy": 60,
+        "acu": 57
+      },
+      "imageUrl": "/images/Gold_sven.png"
+    },
+    {
+      "filename": "Lightning_meintje.png",
+      "id": "Lightning_meintje.png",
+      "name": "Meintje Heeren",
+      "tier": "Lightling",
+      "overall": 78,
+      "stats": {
+        "pow": 69,
+        "ama": 80,
+        "size": 78,
+        "rang": 81,
+        "loy": 90,
+        "acu": 70
+      },
+      "imageUrl": "/images/Lightning_meintje.png"
+    },
+    {
+      "filename": "Lightning_naomi.png",
+      "id": "Lightning_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Lightling",
+      "overall": 82,
+      "stats": {
+        "pow": 76,
+        "ama": 93,
+        "size": 64,
+        "rang": 81,
+        "loy": 98,
+        "acu": 79
+      },
+      "imageUrl": "/images/Lightning_naomi.png"
+    },
+    {
+      "filename": "Lightning_olvia.png",
+      "id": "Lightning_olvia.png",
+      "name": "Olivia Liesker",
+      "tier": "Lightling",
+      "overall": 78,
+      "stats": {
+        "pow": 80,
+        "ama": 71,
+        "size": 65,
+        "rang": 78,
+        "loy": 78,
+        "acu": 95
+      },
+      "imageUrl": "/images/Lightning_olvia.png"
+    },
+    {
+      "filename": "Low_naomi.png",
+      "id": "Low_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Low-pointers",
+      "overall": 52,
+      "stats": {
+        "pow": 59,
+        "ama": 70,
+        "size": 57,
+        "rang": 14,
+        "loy": 50,
+        "acu": 63
+      },
+      "imageUrl": "/images/Low_naomi.png"
+    },
+    {
+      "filename": "Low_olivia.png",
+      "id": "Low_olivia.png",
+      "name": "Olivia Liesker",
+      "tier": "Low-pointers",
+      "overall": 45,
+      "stats": {
+        "pow": 62,
+        "ama": 10,
+        "size": 63,
+        "rang": 40,
+        "loy": 40,
+        "acu": 60
+      },
+      "imageUrl": "/images/Low_olivia.png"
+    },
+    {
+      "filename": "Low_thomas.png",
+      "id": "Low_thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Low-pointers",
+      "overall": 57,
+      "stats": {
+        "pow": 80,
+        "ama": 93,
+        "size": 64,
+        "rang": 14,
+        "loy": 30,
+        "acu": 60
+      },
+      "imageUrl": "/images/Low_thomas.png"
+    },
+    {
+      "filename": "MOTM_seb.png",
+      "id": "MOTM_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "MOTM",
+      "overall": 99,
+      "stats": {
+        "pow": 99,
+        "ama": 99,
+        "size": 99,
+        "rang": 99,
+        "loy": 99,
+        "acu": 99
+      },
+      "imageUrl": "/images/MOTM_seb.png"
+    },
+    {
+      "filename": "Mini_brecht.png",
+      "id": "Mini_brecht.png",
+      "name": "Brecht Heeren",
+      "tier": "Mini",
+      "overall": 76,
+      "stats": {
+        "pow": 62,
+        "ama": 78,
+        "size": null,
+        "rang": 78,
+        "loy": 87,
+        "acu": 76
+      },
+      "imageUrl": "/images/Mini_brecht.png"
+    },
+    {
+      "filename": "Mini_klaasje.png",
+      "id": "Mini_klaasje.png",
+      "name": "Klaasje Heeren",
+      "tier": "Mini",
+      "overall": 74,
+      "stats": {
+        "pow": 71,
+        "ama": 71,
+        "size": null,
+        "rang": 78,
+        "loy": 81,
+        "acu": 66
+      },
+      "imageUrl": "/images/Mini_klaasje.png"
+    },
+    {
+      "filename": "Mini_naomi.png",
+      "id": "Mini_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Mini",
+      "overall": 90,
+      "stats": {
+        "pow": 76,
+        "ama": 93,
+        "size": null,
+        "rang": 81,
+        "loy": 98,
+        "acu": 79
+      },
+      "imageUrl": "/images/Mini_naomi.png"
+    },
+    {
+      "filename": "Mini_olivia.png",
+      "id": "Mini_olivia.png",
+      "name": "Olivia Liesker",
+      "tier": "Mini",
+      "overall": 80,
+      "stats": {
+        "pow": 80,
+        "ama": 71,
+        "size": null,
+        "rang": 78,
+        "loy": 78,
+        "acu": 95
+      },
+      "imageUrl": "/images/Mini_olivia.png"
+    },
+    {
+      "filename": "Mini_thomas.png",
+      "id": "Mini_thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Mini",
+      "overall": 94,
+      "stats": {
+        "pow": 93,
+        "ama": 97,
+        "size": null,
+        "rang": 89,
+        "loy": 99,
+        "acu": 90
+      },
+      "imageUrl": "/images/Mini_thomas.png"
+    },
+    {
+      "filename": "Mini_truus.png",
+      "id": "Mini_truus.png",
+      "name": "Truus Heeren",
+      "tier": "Mini",
+      "overall": 66,
+      "stats": {
+        "pow": 60,
+        "ama": 61,
+        "size": null,
+        "rang": 81,
+        "loy": 65,
+        "acu": 65
+      },
+      "imageUrl": "/images/Mini_truus.png"
+    },
+    {
+      "filename": "Mirror_ben.png",
+      "id": "Mirror_ben.png",
+      "name": "Benjamin Liesker",
+      "tier": "Mirror",
+      "overall": 1,
+      "stats": {
+        "pow": 1,
+        "ama": 1,
+        "size": 1,
+        "rang": 1,
+        "loy": 1,
+        "acu": 1
+      },
+      "imageUrl": "/images/Mirror_ben.png"
+    },
+    {
+      "filename": "Mirror_boris.png",
+      "id": "Mirror_boris.png",
+      "name": "Boris Liesker",
+      "tier": "Mirror",
+      "overall": 9,
+      "stats": {
+        "pow": 21,
+        "ama": 3,
+        "size": 1,
+        "rang": 9,
+        "loy": 1,
+        "acu": 18
+      },
+      "imageUrl": "/images/Mirror_boris.png"
+    },
+    {
+      "filename": "Mirror_brecht.png",
+      "id": "Mirror_brecht.png",
+      "name": "Brecht Heeren",
+      "tier": "Mirror",
+      "overall": 27,
+      "stats": {
+        "pow": 38,
+        "ama": 22,
+        "size": 42,
+        "rang": 22,
+        "loy": 13,
+        "acu": 24
+      },
+      "imageUrl": "/images/Mirror_brecht.png"
+    },
+    {
+      "filename": "Mirror_klaasje.png",
+      "id": "Mirror_klaasje.png",
+      "name": "Klaasje Heeren",
+      "tier": "Mirror",
+      "overall": 27,
+      "stats": {
+        "pow": 26,
+        "ama": 29,
+        "size": 31,
+        "rang": 22,
+        "loy": 19,
+        "acu": 34
+      },
+      "imageUrl": "/images/Mirror_klaasje.png"
+    },
+    {
+      "filename": "Mirror_meintje.png",
+      "id": "Mirror_meintje.png",
+      "name": "Meintje Heeren",
+      "tier": "Mirror",
+      "overall": 22,
+      "stats": {
+        "pow": 31,
+        "ama": 20,
+        "size": 22,
+        "rang": 19,
+        "loy": 10,
+        "acu": 30
+      },
+      "imageUrl": "/images/Mirror_meintje.png"
+    },
+    {
+      "filename": "Mirror_naomi.png",
+      "id": "Mirror_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Mirror",
+      "overall": 18,
+      "stats": {
+        "pow": 24,
+        "ama": 7,
+        "size": 36,
+        "rang": 19,
+        "loy": 2,
+        "acu": 21
+      },
+      "imageUrl": "/images/Mirror_naomi.png"
+    },
+    {
+      "filename": "Mirror_olivia.png",
+      "id": "Mirror_olivia.png",
+      "name": "Olivia Liesker",
+      "tier": "Mirror",
+      "overall": 22,
+      "stats": {
+        "pow": 20,
+        "ama": 29,
+        "size": 35,
+        "rang": 22,
+        "loy": 22,
+        "acu": 5
+      },
+      "imageUrl": "/images/Mirror_olivia.png"
+    },
+    {
+      "filename": "Mirror_seb.png",
+      "id": "Mirror_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Mirror",
+      "overall": 5,
+      "stats": {
+        "pow": 4,
+        "ama": 11,
+        "size": 5,
+        "rang": 1,
+        "loy": 3,
+        "acu": 3
+      },
+      "imageUrl": "/images/Mirror_seb.png"
+    },
+    {
+      "filename": "Mirror_thomas.png",
+      "id": "Mirror_thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Mirror",
+      "overall": 11,
+      "stats": {
+        "pow": 7,
+        "ama": 3,
+        "size": 30,
+        "rang": 11,
+        "loy": 2,
+        "acu": 10
+      },
+      "imageUrl": "/images/Mirror_thomas.png"
+    },
+    {
+      "filename": "Mirror_truus.png",
+      "id": "Mirror_truus.png",
+      "name": "Truus Heeren",
+      "tier": "Mirror",
+      "overall": 36,
+      "stats": {
+        "pow": 40,
+        "ama": 39,
+        "size": 45,
+        "rang": 19,
+        "loy": 35,
+        "acu": 35
+      },
+      "imageUrl": "/images/Mirror_truus.png"
+    },
+    {
+      "filename": "Platinum_bjorn.png",
+      "id": "Platinum_bjorn.png",
+      "name": "Björn Liesker",
+      "tier": "Platinum",
+      "overall": 65,
+      "stats": {
+        "pow": 81,
+        "ama": 40,
+        "size": 93,
+        "rang": 58,
+        "loy": 60,
+        "acu": 59
+      },
+      "imageUrl": "/images/Platinum_bjorn.png"
+    },
+    {
+      "filename": "Platinum_brecht.png",
+      "id": "Platinum_brecht.png",
+      "name": "Brecht Heeren",
+      "tier": "Platinum",
+      "overall": 73,
+      "stats": {
+        "pow": 62,
+        "ama": 78,
+        "size": 58,
+        "rang": 78,
+        "loy": 87,
+        "acu": 76
+      },
+      "imageUrl": "/images/Platinum_brecht.png"
+    },
+    {
+      "filename": "Platinum_klaasje.png",
+      "id": "Platinum_klaasje.png",
+      "name": "Klaasje Heeren",
+      "tier": "Platinum",
+      "overall": 73,
+      "stats": {
+        "pow": 74,
+        "ama": 71,
+        "size": 69,
+        "rang": 78,
+        "loy": 81,
+        "acu": 66
+      },
+      "imageUrl": "/images/Platinum_klaasje.png"
+    },
+    {
+      "filename": "Platinum_shrek.png",
+      "id": "Platinum_shrek.png",
+      "name": "Shrek",
+      "tier": "Platinum",
+      "overall": 65,
+      "stats": {
+        "pow": 99,
+        "ama": 10,
+        "size": 99,
+        "rang": 69,
+        "loy": 80,
+        "acu": 30
+      },
+      "imageUrl": "/images/Platinum_shrek.png"
+    },
+    {
+      "filename": "Platinum_truus.png",
+      "id": "Platinum_truus.png",
+      "name": "Truus Heeren",
+      "tier": "Platinum",
+      "overall": 73,
+      "stats": {
+        "pow": 60,
+        "ama": 61,
+        "size": 55,
+        "rang": 81,
+        "loy": 65,
+        "acu": 65
+      },
+      "imageUrl": "/images/Platinum_truus.png"
+    },
+    {
+      "filename": "Rare-bronze_jop.png",
+      "id": "Rare-bronze_jop.png",
+      "name": "Jop Kiemstra",
+      "tier": "Rare Bronze",
+      "overall": 28,
+      "stats": {
+        "pow": 11,
+        "ama": 23,
+        "size": 55,
+        "rang": 58,
+        "loy": 2,
+        "acu": 20
+      },
+      "imageUrl": "/images/Rare-bronze_jop.png"
+    },
+    {
+      "filename": "Rare-bronze_liza.png",
+      "id": "Rare-bronze_liza.png",
+      "name": "Liza Muis",
+      "tier": "Rare Bronze",
+      "overall": 28,
+      "stats": {
+        "pow": 21,
+        "ama": 4,
+        "size": 60,
+        "rang": 58,
+        "loy": 20,
+        "acu": 5
+      },
+      "imageUrl": "/images/Rare-bronze_liza.png"
+    },
+    {
+      "filename": "Rare-bronze_pieter.png",
+      "id": "Rare-bronze_pieter.png",
+      "name": "Pieter Rox",
+      "tier": "Rare Bronze",
+      "overall": 25,
+      "stats": {
+        "pow": 20,
+        "ama": 38,
+        "size": 14,
+        "rang": 34,
+        "loy": 40,
+        "acu": 5
+      },
+      "imageUrl": "/images/Rare-bronze_pieter.png"
+    },
+    {
+      "filename": "Rare-bronze_ravi.png",
+      "id": "Rare-bronze_ravi.png",
+      "name": "Ravi Lang",
+      "tier": "Rare Bronze",
+      "overall": 33,
+      "stats": {
+        "pow": 17,
+        "ama": 42,
+        "size": 36,
+        "rang": 41,
+        "loy": 56,
+        "acu": 7
+      },
+      "imageUrl": "/images/Rare-bronze_ravi.png"
+    },
+    {
+      "filename": "Rare-bronze_sara.png",
+      "id": "Rare-bronze_sara.png",
+      "name": "Sara Liesker",
+      "tier": "Rare Bronze",
+      "overall": 22,
+      "stats": {
+        "pow": 40,
+        "ama": 1,
+        "size": 70,
+        "rang": 17,
+        "loy": 1,
+        "acu": 3
+      },
+      "imageUrl": "/images/Rare-bronze_sara.png"
+    },
+    {
+      "filename": "Rare-gold_julia.png",
+      "id": "Rare-gold_julia.png",
+      "name": "Julia de Haan",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 79,
+        "ama": 64,
+        "size": 66,
+        "rang": 53,
+        "loy": 49,
+        "acu": 71
+      },
+      "imageUrl": "/images/Rare-gold_julia.png"
+    },
+    {
+      "filename": "Rare-silver_karen.png",
+      "id": "Rare-silver_karen.png",
+      "name": "Karen Gilla",
+      "tier": "Rare Silver",
+      "overall": 44,
+      "stats": {
+        "pow": 45,
+        "ama": 30,
+        "size": 46,
+        "rang": 40,
+        "loy": 44,
+        "acu": 60
+      },
+      "imageUrl": "/images/Rare-silver_karen.png"
+    },
+    {
+      "filename": "Rare-silver_poppy.png",
+      "id": "Rare-silver_poppy.png",
+      "name": "Poppy Duin",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 33,
+        "ama": 70,
+        "size": 57,
+        "rang": 40,
+        "loy": 70,
+        "acu": 20
+      },
+      "imageUrl": "/images/Rare-silver_poppy.png"
+    },
+    {
+      "filename": "Rare-silver_stijn.png",
+      "id": "Rare-silver_stijn.png",
+      "name": "Stijn Igma",
+      "tier": "Rare Silver",
+      "overall": 41,
+      "stats": {
+        "pow": 60,
+        "ama": 55,
+        "size": 60,
+        "rang": 40,
+        "loy": 11,
+        "acu": 20
+      },
+      "imageUrl": "/images/Rare-silver_stijn.png"
+    },
+    {
+      "filename": "Silver_eva.png",
+      "id": "Silver_eva.png",
+      "name": "Eva Kortboom",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 37,
+        "ama": 20,
+        "size": 40,
+        "rang": 40,
+        "loy": 33,
+        "acu": 57
+      },
+      "imageUrl": "/images/Silver_eva.png"
+    },
+    {
+      "filename": "Silver_frank.png",
+      "id": "Silver_frank.png",
+      "name": "Frank cle Lange",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 32,
+        "ama": 39,
+        "size": 60,
+        "rang": 40,
+        "loy": 20,
+        "acu": 40
+      },
+      "imageUrl": "/images/Silver_frank.png"
+    },
+    {
+      "filename": "Silver_lizzy.png",
+      "id": "Silver_lizzy.png",
+      "name": "Lizzy Kortboom",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 36,
+        "ama": 50,
+        "size": 37,
+        "rang": 40,
+        "loy": 38,
+        "acu": 20
+      },
+      "imageUrl": "/images/Silver_lizzy.png"
+    },
+    {
+      "filename": "Silver_silvia.png",
+      "id": "Silver_silvia.png",
+      "name": "Silvia Peters",
+      "tier": "Silver",
+      "overall": 36,
+      "stats": {
+        "pow": 40,
+        "ama": 22,
+        "size": 57,
+        "rang": 35,
+        "loy": 20,
+        "acu": 41
+      },
+      "imageUrl": "/images/Silver_silvia.png"
+    },
+    {
+      "filename": "Super-ben.png",
+      "id": "Super-ben.png",
+      "name": "Benjamin Liesker",
+      "tier": "Super",
+      "overall": 99,
+      "stats": {
+        "pow": 99,
+        "ama": 99,
+        "size": 99,
+        "rang": 99,
+        "loy": 99,
+        "acu": 99
+      },
+      "imageUrl": "/images/Super-ben.png"
+    },
+    {
+      "filename": "Ultra-seb.png",
+      "id": "Ultra-seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Ultra",
+      "overall": 98,
+      "stats": {
+        "pow": 96,
+        "ama": 89,
+        "size": 95,
+        "rang": 99,
+        "loy": 97,
+        "acu": 97
+      },
+      "imageUrl": "/images/Ultra-seb.png"
+    },
+    {
+      "filename": "Ultra-thomas.png",
+      "id": "Ultra-thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Ultra",
+      "overall": 91,
+      "stats": {
+        "pow": 93,
+        "ama": 97,
+        "size": 70,
+        "rang": 89,
+        "loy": 98,
+        "acu": 90
+      },
+      "imageUrl": "/images/Ultra-thomas.png"
+    },
+    {
+      "filename": "Ultra_abel.png",
+      "id": "Ultra_abel.png",
+      "name": "Abel Goli",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 98,
+        "ama": 96,
+        "size": 93,
+        "rang": 81,
+        "loy": 99,
+        "acu": 94
+      },
+      "imageUrl": "/images/Ultra_abel.png"
+    },
+    {
+      "filename": "Ultra_boris.png",
+      "id": "Ultra_boris.png",
+      "name": "Boris Liesker",
+      "tier": "Ultra",
+      "overall": 92,
+      "stats": {
+        "pow": 79,
+        "ama": 97,
+        "size": 99,
+        "rang": 91,
+        "loy": 99,
+        "acu": 82
+      },
+      "imageUrl": "/images/Ultra_boris.png"
+    },
+    {
+      "filename": "Ultra_frederic.png",
+      "id": "Ultra_frederic.png",
+      "name": "Frederic Palm",
+      "tier": "Ultra",
+      "overall": 90,
+      "stats": {
+        "pow": 90,
+        "ama": 95,
+        "size": 92,
+        "rang": 81,
+        "loy": 90,
+        "acu": 89
+      },
+      "imageUrl": "/images/Ultra_frederic.png"
+    },
+    {
+      "filename": "Ultra_lotje.png",
+      "id": "Ultra_lotje.png",
+      "name": "Lotje Lientra",
+      "tier": "Ultra",
+      "overall": 95,
+      "stats": {
+        "pow": 97,
+        "ama": 99,
+        "size": 98,
+        "rang": 81,
+        "loy": 99,
+        "acu": 95
+      },
+      "imageUrl": "/images/Ultra_lotje.png"
+    },
+    {
+      "filename": "bronze_ari.png",
+      "id": "bronze_ari.png",
+      "name": "Ari Hoofmans",
+      "tier": "Bronze",
+      "overall": 13,
+      "stats": {
+        "pow": 26,
+        "ama": 17,
+        "size": 7,
+        "rang": 14,
+        "loy": 2,
+        "acu": 9
+      },
+      "imageUrl": "/images/bronze_ari.png"
+    },
+    {
+      "filename": "bronze_dani-van-der-horst_728f631b0f273cb9914743412ef6efddb9b7a7320d6602b413c09fa2ca3f0c00.png",
+      "id": "728f631b0f273cb9914743412ef6efddb9b7a7320d6602b413c09fa2ca3f0c00",
+      "name": "Dani van der Horst",
+      "tier": "Bronze",
+      "overall": 4,
+      "stats": {
+        "pow": 4,
+        "ama": 5,
+        "size": 4,
+        "rang": 1,
+        "loy": 4,
+        "acu": 6
+      },
+      "imageUrl": "/images/bronze_dani-van-der-horst_728f631b0f273cb9914743412ef6efddb9b7a7320d6602b413c09fa2ca3f0c00.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_elin-visser_bb9919658a2a8d512f904230277e974a622cd5a680969bae3d9344ea68f88b09.png",
+      "id": "bb9919658a2a8d512f904230277e974a622cd5a680969bae3d9344ea68f88b09",
+      "name": "Elin Visser",
+      "tier": "Bronze",
+      "overall": 10,
+      "stats": {
+        "pow": 1,
+        "ama": 10,
+        "size": 10,
+        "rang": 16,
+        "loy": 12,
+        "acu": 11
+      },
+      "imageUrl": "/images/bronze_elin-visser_bb9919658a2a8d512f904230277e974a622cd5a680969bae3d9344ea68f88b09.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_elise-de-vries-smit_4ca08d3f324b60506978501dbe68ebf7026b5ada6888d7a5b3d6ce8cda3779a5.png",
+      "id": "4ca08d3f324b60506978501dbe68ebf7026b5ada6888d7a5b3d6ce8cda3779a5",
+      "name": "Elise de Vries-Smit",
+      "tier": "Bronze",
+      "overall": 10,
+      "stats": {
+        "pow": 24,
+        "ama": 7,
+        "size": 9,
+        "rang": 9,
+        "loy": 3,
+        "acu": 10
+      },
+      "imageUrl": "/images/bronze_elise-de-vries-smit_4ca08d3f324b60506978501dbe68ebf7026b5ada6888d7a5b3d6ce8cda3779a5.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_emilia-van-der-veen_3edcc9eb8247f739ff08c36d6c9cd1332e34837215763c73b0ad95410945f81b.png",
+      "id": "3edcc9eb8247f739ff08c36d6c9cd1332e34837215763c73b0ad95410945f81b",
+      "name": "Emilia van der Veen",
+      "tier": "Bronze",
+      "overall": 10,
+      "stats": {
+        "pow": 11,
+        "ama": 9,
+        "size": 5,
+        "rang": 16,
+        "loy": 18,
+        "acu": 1
+      },
+      "imageUrl": "/images/bronze_emilia-van-der-veen_3edcc9eb8247f739ff08c36d6c9cd1332e34837215763c73b0ad95410945f81b.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_esmee-verbeek_03a37b058a9f6c63be33d134b84b5ea954d0606e7fbc21efa176c051a46a8507.png",
+      "id": "03a37b058a9f6c63be33d134b84b5ea954d0606e7fbc21efa176c051a46a8507",
+      "name": "Esmée Verbeek",
+      "tier": "Bronze",
+      "overall": 8,
+      "stats": {
+        "pow": 1,
+        "ama": 12,
+        "size": 7,
+        "rang": 8,
+        "loy": 7,
+        "acu": 13
+      },
+      "imageUrl": "/images/bronze_esmee-verbeek_03a37b058a9f6c63be33d134b84b5ea954d0606e7fbc21efa176c051a46a8507.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_julian-peters_dd8fc2f80951e490a83d5564a617938d0bff98f3103fa91634a8262ad0dd4a6c.png",
+      "id": "dd8fc2f80951e490a83d5564a617938d0bff98f3103fa91634a8262ad0dd4a6c",
+      "name": "Julian Peters",
+      "tier": "Bronze",
+      "overall": 17,
+      "stats": {
+        "pow": 9,
+        "ama": 22,
+        "size": 30,
+        "rang": 10,
+        "loy": 15,
+        "acu": 16
+      },
+      "imageUrl": "/images/bronze_julian-peters_dd8fc2f80951e490a83d5564a617938d0bff98f3103fa91634a8262ad0dd4a6c.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_lea-jacobs_b31b58ef4e5ef11a921f6264e6d77666b080b9c47445c763a01e2fd64bdc42cf.png",
+      "id": "b31b58ef4e5ef11a921f6264e6d77666b080b9c47445c763a01e2fd64bdc42cf",
+      "name": "Lea Jacobs",
+      "tier": "Bronze",
+      "overall": 17,
+      "stats": {
+        "pow": 18,
+        "ama": 6,
+        "size": 15,
+        "rang": 21,
+        "loy": 16,
+        "acu": 26
+      },
+      "imageUrl": "/images/bronze_lea-jacobs_b31b58ef4e5ef11a921f6264e6d77666b080b9c47445c763a01e2fd64bdc42cf.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_lucas-van-ginkel_697afab46a47d8187f3c6eda8038fa0c1017029817a059c9d80431f0d8530dd0.png",
+      "id": "697afab46a47d8187f3c6eda8038fa0c1017029817a059c9d80431f0d8530dd0",
+      "name": "Lucas van Ginkel",
+      "tier": "Bronze",
+      "overall": 1,
+      "stats": {
+        "pow": 2,
+        "ama": 1,
+        "size": 1,
+        "rang": 1,
+        "loy": 2,
+        "acu": 1
+      },
+      "imageUrl": "/images/bronze_lucas-van-ginkel_697afab46a47d8187f3c6eda8038fa0c1017029817a059c9d80431f0d8530dd0.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_lucas-van-nieuwenhuizen_33db1bd7513d7ab7d6f5a0246dbac521b5df04956604e37cd640a21d9b0de14c.png",
+      "id": "33db1bd7513d7ab7d6f5a0246dbac521b5df04956604e37cd640a21d9b0de14c",
+      "name": "Lucas van Nieuwenhuizen",
+      "tier": "Bronze",
+      "overall": 8,
+      "stats": {
+        "pow": 10,
+        "ama": 1,
+        "size": 10,
+        "rang": 9,
+        "loy": 8,
+        "acu": 10
+      },
+      "imageUrl": "/images/bronze_lucas-van-nieuwenhuizen_33db1bd7513d7ab7d6f5a0246dbac521b5df04956604e37cd640a21d9b0de14c.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_mats-martin_ca16dedd0d1cc47504e80943df6e1e005ae4b680477a04510f83314b9984e8f1.png",
+      "id": "ca16dedd0d1cc47504e80943df6e1e005ae4b680477a04510f83314b9984e8f1",
+      "name": "Mats Martin",
+      "tier": "Bronze",
+      "overall": 5,
+      "stats": {
+        "pow": 4,
+        "ama": 7,
+        "size": 6,
+        "rang": 1,
+        "loy": 5,
+        "acu": 7
+      },
+      "imageUrl": "/images/bronze_mats-martin_ca16dedd0d1cc47504e80943df6e1e005ae4b680477a04510f83314b9984e8f1.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_merel-verbeek_8e299e17c4a35ee3bd74743f6c4fa45a5af28f7034431daae74b97d2dc7ba53d.png",
+      "id": "8e299e17c4a35ee3bd74743f6c4fa45a5af28f7034431daae74b97d2dc7ba53d",
+      "name": "Merel Verbeek",
+      "tier": "Bronze",
+      "overall": 9,
+      "stats": {
+        "pow": 13,
+        "ama": 8,
+        "size": 8,
+        "rang": 8,
+        "loy": 9,
+        "acu": 8
+      },
+      "imageUrl": "/images/bronze_merel-verbeek_8e299e17c4a35ee3bd74743f6c4fa45a5af28f7034431daae74b97d2dc7ba53d.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_mia-van-der-laan_13685e9ab0b7edf64a1c140d27de85e7df2ef422351b210062cdac29ca14230b.png",
+      "id": "13685e9ab0b7edf64a1c140d27de85e7df2ef422351b210062cdac29ca14230b",
+      "name": "Mia van der Laan",
+      "tier": "Bronze",
+      "overall": 16,
+      "stats": {
+        "pow": 19,
+        "ama": 17,
+        "size": 14,
+        "rang": 15,
+        "loy": 15,
+        "acu": 16
+      },
+      "imageUrl": "/images/bronze_mia-van-der-laan_13685e9ab0b7edf64a1c140d27de85e7df2ef422351b210062cdac29ca14230b.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_morgan-de-jong_2fb107a3432b0ddd019cf75925b344e273a6153c67b4550f8ac85e92189db332.png",
+      "id": "2fb107a3432b0ddd019cf75925b344e273a6153c67b4550f8ac85e92189db332",
+      "name": "Morgan de Jong",
+      "tier": "Bronze",
+      "overall": 10,
+      "stats": {
+        "pow": 11,
+        "ama": 1,
+        "size": 7,
+        "rang": 17,
+        "loy": 17,
+        "acu": 7
+      },
+      "imageUrl": "/images/bronze_morgan-de-jong_2fb107a3432b0ddd019cf75925b344e273a6153c67b4550f8ac85e92189db332.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_nika-costa_3a25bbff6947601507aee2cee1bb0774b1a6c69e63caf081db395dee5e7fcdef.png",
+      "id": "3a25bbff6947601507aee2cee1bb0774b1a6c69e63caf081db395dee5e7fcdef",
+      "name": "Nika Costa",
+      "tier": "Bronze",
+      "overall": 19,
+      "stats": {
+        "pow": 8,
+        "ama": 13,
+        "size": 8,
+        "rang": 28,
+        "loy": 9,
+        "acu": 48
+      },
+      "imageUrl": "/images/bronze_nika-costa_3a25bbff6947601507aee2cee1bb0774b1a6c69e63caf081db395dee5e7fcdef.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_noor-brouwer_f0c78f7b739e90692df8906f7e1adead1d4783a20448557d886c55e7357cbfd7.png",
+      "id": "f0c78f7b739e90692df8906f7e1adead1d4783a20448557d886c55e7357cbfd7",
+      "name": "Noor Brouwer",
+      "tier": "Bronze",
+      "overall": 4,
+      "stats": {
+        "pow": 1,
+        "ama": 1,
+        "size": 1,
+        "rang": 1,
+        "loy": 19,
+        "acu": 1
+      },
+      "imageUrl": "/images/bronze_noor-brouwer_f0c78f7b739e90692df8906f7e1adead1d4783a20448557d886c55e7357cbfd7.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_olivia-de-vries-smit_861d454086b30c26fa00d486946f860be01307e477dfb54286bd6799ba01388a.png",
+      "id": "861d454086b30c26fa00d486946f860be01307e477dfb54286bd6799ba01388a",
+      "name": "Olivia de Vries-Smit",
+      "tier": "Bronze",
+      "overall": 19,
+      "stats": {
+        "pow": 5,
+        "ama": 10,
+        "size": 51,
+        "rang": 20,
+        "loy": 11,
+        "acu": 17
+      },
+      "imageUrl": "/images/bronze_olivia-de-vries-smit_861d454086b30c26fa00d486946f860be01307e477dfb54286bd6799ba01388a.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_pascal-brick_2eeafed20122e473592ef1bed259655f7e1d08d8cdb152c4d8e10c841f653ffa.png",
+      "id": "2eeafed20122e473592ef1bed259655f7e1d08d8cdb152c4d8e10c841f653ffa",
+      "name": "Pascal Brick",
+      "tier": "Bronze",
+      "overall": 10,
+      "stats": {
+        "pow": 5,
+        "ama": 10,
+        "size": 1,
+        "rang": 24,
+        "loy": 4,
+        "acu": 16
+      },
+      "imageUrl": "/images/bronze_pascal-brick_2eeafed20122e473592ef1bed259655f7e1d08d8cdb152c4d8e10c841f653ffa.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_quinn-dekker_caa5646e59af13ab396d8d7c441b5844ac09cd30f8d11d67ae7466596990d98f.png",
+      "id": "caa5646e59af13ab396d8d7c441b5844ac09cd30f8d11d67ae7466596990d98f",
+      "name": "Quinn Dekker",
+      "tier": "Bronze",
+      "overall": 14,
+      "stats": {
+        "pow": 15,
+        "ama": 2,
+        "size": 13,
+        "rang": 18,
+        "loy": 22,
+        "acu": 14
+      },
+      "imageUrl": "/images/bronze_quinn-dekker_caa5646e59af13ab396d8d7c441b5844ac09cd30f8d11d67ae7466596990d98f.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_sanne-van-den-berg_fdf90d7fb44eb78911c13fcb3b5e1507221297a030ba91e3014490ad830e5632.png",
+      "id": "fdf90d7fb44eb78911c13fcb3b5e1507221297a030ba91e3014490ad830e5632",
+      "name": "Sanne van den Berg",
+      "tier": "Bronze",
+      "overall": 16,
+      "stats": {
+        "pow": 14,
+        "ama": 22,
+        "size": 14,
+        "rang": 18,
+        "loy": 14,
+        "acu": 14
+      },
+      "imageUrl": "/images/bronze_sanne-van-den-berg_fdf90d7fb44eb78911c13fcb3b5e1507221297a030ba91e3014490ad830e5632.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_vera-haan_057ef022c2bd82d55b828fb0d544ad5cae386e377d065a0b1d25f1cb5aa45ac3.png",
+      "id": "057ef022c2bd82d55b828fb0d544ad5cae386e377d065a0b1d25f1cb5aa45ac3",
+      "name": "Vera Haan",
+      "tier": "Bronze",
+      "overall": 12,
+      "stats": {
+        "pow": 16,
+        "ama": 12,
+        "size": 1,
+        "rang": 21,
+        "loy": 13,
+        "acu": 9
+      },
+      "imageUrl": "/images/bronze_vera-haan_057ef022c2bd82d55b828fb0d544ad5cae386e377d065a0b1d25f1cb5aa45ac3.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_viktor-tan_d182132db9762e180766d4f2b3b0adc7382652980e261c2cfcded2d8c4aea1a1.png",
+      "id": "d182132db9762e180766d4f2b3b0adc7382652980e261c2cfcded2d8c4aea1a1",
+      "name": "Viktor Tan",
+      "tier": "Bronze",
+      "overall": 16,
+      "stats": {
+        "pow": 18,
+        "ama": 10,
+        "size": 13,
+        "rang": 30,
+        "loy": 11,
+        "acu": 14
+      },
+      "imageUrl": "/images/bronze_viktor-tan_d182132db9762e180766d4f2b3b0adc7382652980e261c2cfcded2d8c4aea1a1.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_viktor-vega_481f784fb0a38988fd11be35a14b12e2b2086508e76c71951840ab47d6e3c9c4.png",
+      "id": "481f784fb0a38988fd11be35a14b12e2b2086508e76c71951840ab47d6e3c9c4",
+      "name": "Viktor Vega",
+      "tier": "Bronze",
+      "overall": 7,
+      "stats": {
+        "pow": 6,
+        "ama": 3,
+        "size": 7,
+        "rang": 6,
+        "loy": 11,
+        "acu": 9
+      },
+      "imageUrl": "/images/bronze_viktor-vega_481f784fb0a38988fd11be35a14b12e2b2086508e76c71951840ab47d6e3c9c4.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "bronze_wout-vink_29fcb1daba8d80fd39547558ec357342ae83a95c81058f9ae67d92b9eedfc3b9.png",
+      "id": "29fcb1daba8d80fd39547558ec357342ae83a95c81058f9ae67d92b9eedfc3b9",
+      "name": "Wout Vink",
+      "tier": "Bronze",
+      "overall": 12,
+      "stats": {
+        "pow": 12,
+        "ama": 17,
+        "size": 10,
+        "rang": 15,
+        "loy": 6,
+        "acu": 12
+      },
+      "imageUrl": "/images/bronze_wout-vink_29fcb1daba8d80fd39547558ec357342ae83a95c81058f9ae67d92b9eedfc3b9.png",
+      "collectible": {
+        "templateId": "image19.png"
+      }
+    },
+    {
+      "filename": "gold_amina-nguyen_2db5bbe72936d65bfc800581aee4810331ef1bdd69b508ab9fe3635aae40a8ce.png",
+      "id": "2db5bbe72936d65bfc800581aee4810331ef1bdd69b508ab9fe3635aae40a8ce",
+      "name": "Amina Nguyen",
+      "tier": "Gold",
+      "overall": 51,
+      "stats": {
+        "pow": 44,
+        "ama": 57,
+        "size": 53,
+        "rang": 51,
+        "loy": 56,
+        "acu": 45
+      },
+      "imageUrl": "/images/gold_amina-nguyen_2db5bbe72936d65bfc800581aee4810331ef1bdd69b508ab9fe3635aae40a8ce.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_anna-bos_172c845362fddfaa8cf34215bae76c8082110372f874b9c00797434301a8aa61.png",
+      "id": "172c845362fddfaa8cf34215bae76c8082110372f874b9c00797434301a8aa61",
+      "name": "Anna Bos",
+      "tier": "Gold",
+      "overall": 54,
+      "stats": {
+        "pow": 55,
+        "ama": 56,
+        "size": 59,
+        "rang": 59,
+        "loy": 58,
+        "acu": 37
+      },
+      "imageUrl": "/images/gold_anna-bos_172c845362fddfaa8cf34215bae76c8082110372f874b9c00797434301a8aa61.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_anne-wouters_e4e6666546e7d9df54d3afb42ecb1d32cb2e0cdc991a6009431da073f2992487.png",
+      "id": "e4e6666546e7d9df54d3afb42ecb1d32cb2e0cdc991a6009431da073f2992487",
+      "name": "Anne Wouters",
+      "tier": "Gold",
+      "overall": 58,
+      "stats": {
+        "pow": 59,
+        "ama": 58,
+        "size": 67,
+        "rang": 44,
+        "loy": 60,
+        "acu": 60
+      },
+      "imageUrl": "/images/gold_anne-wouters_e4e6666546e7d9df54d3afb42ecb1d32cb2e0cdc991a6009431da073f2992487.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_ariel-moreau_bbe36904beb95ff87d392862c568a59a58a5cddb6574a601b2b0c5397a6fb98c.png",
+      "id": "bbe36904beb95ff87d392862c568a59a58a5cddb6574a601b2b0c5397a6fb98c",
+      "name": "Ariel Moreau",
+      "tier": "Gold",
+      "overall": 57,
+      "stats": {
+        "pow": 52,
+        "ama": 49,
+        "size": 52,
+        "rang": 77,
+        "loy": 60,
+        "acu": 52
+      },
+      "imageUrl": "/images/gold_ariel-moreau_bbe36904beb95ff87d392862c568a59a58a5cddb6574a601b2b0c5397a6fb98c.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_daan-van-leeuwen_4dccf93792b533847bd1e06e87cd1366713c8bf90a325f477eaa1105f541ed33.png",
+      "id": "4dccf93792b533847bd1e06e87cd1366713c8bf90a325f477eaa1105f541ed33",
+      "name": "Daan van Leeuwen",
+      "tier": "Gold",
+      "overall": 57,
+      "stats": {
+        "pow": 58,
+        "ama": 57,
+        "size": 57,
+        "rang": 60,
+        "loy": 49,
+        "acu": 61
+      },
+      "imageUrl": "/images/gold_daan-van-leeuwen_4dccf93792b533847bd1e06e87cd1366713c8bf90a325f477eaa1105f541ed33.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_elena-verstappen_c0aee2abab33f8f74ce24b83b01c8ba8469cce2ff696802214069f1846e1116e.png",
+      "id": "c0aee2abab33f8f74ce24b83b01c8ba8469cce2ff696802214069f1846e1116e",
+      "name": "Elena Verstappen",
+      "tier": "Gold",
+      "overall": 55,
+      "stats": {
+        "pow": 43,
+        "ama": 55,
+        "size": 58,
+        "rang": 56,
+        "loy": 58,
+        "acu": 60
+      },
+      "imageUrl": "/images/gold_elena-verstappen_c0aee2abab33f8f74ce24b83b01c8ba8469cce2ff696802214069f1846e1116e.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_emilia-schipper_fd8c3d481a27c1a065d4b793be242b926c644b6f39263f68a00e73d1e503c7a4.png",
+      "id": "fd8c3d481a27c1a065d4b793be242b926c644b6f39263f68a00e73d1e503c7a4",
+      "name": "Emilia Schipper",
+      "tier": "Gold",
+      "overall": 56,
+      "stats": {
+        "pow": 53,
+        "ama": 53,
+        "size": 57,
+        "rang": 60,
+        "loy": 52,
+        "acu": 61
+      },
+      "imageUrl": "/images/gold_emilia-schipper_fd8c3d481a27c1a065d4b793be242b926c644b6f39263f68a00e73d1e503c7a4.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_femke-dijkstra_aa68b36d31273b44f9d32c9676fa77e641b87c4c5fa111c36791a94964f258bb.png",
+      "id": "aa68b36d31273b44f9d32c9676fa77e641b87c4c5fa111c36791a94964f258bb",
+      "name": "Femke Dijkstra",
+      "tier": "Gold",
+      "overall": 51,
+      "stats": {
+        "pow": 48,
+        "ama": 53,
+        "size": 58,
+        "rang": 60,
+        "loy": 51,
+        "acu": 36
+      },
+      "imageUrl": "/images/gold_femke-dijkstra_aa68b36d31273b44f9d32c9676fa77e641b87c4c5fa111c36791a94964f258bb.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_femke-schneider_c47ce7ed236fff5e167eeab1d2590c98d9e12034e614af1100c0699a87bf05af.png",
+      "id": "c47ce7ed236fff5e167eeab1d2590c98d9e12034e614af1100c0699a87bf05af",
+      "name": "Femke Schneider",
+      "tier": "Gold",
+      "overall": 59,
+      "stats": {
+        "pow": 57,
+        "ama": 40,
+        "size": 55,
+        "rang": 85,
+        "loy": 52,
+        "acu": 65
+      },
+      "imageUrl": "/images/gold_femke-schneider_c47ce7ed236fff5e167eeab1d2590c98d9e12034e614af1100c0699a87bf05af.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_jesse-schouten_cc1b6bbbe6a44fb13aff3dc31b0b4489bde7988c4e91e161ef5f023024cde939.png",
+      "id": "cc1b6bbbe6a44fb13aff3dc31b0b4489bde7988c4e91e161ef5f023024cde939",
+      "name": "Jesse Schouten",
+      "tier": "Gold",
+      "overall": 56,
+      "stats": {
+        "pow": 53,
+        "ama": 72,
+        "size": 55,
+        "rang": 54,
+        "loy": 40,
+        "acu": 62
+      },
+      "imageUrl": "/images/gold_jesse-schouten_cc1b6bbbe6a44fb13aff3dc31b0b4489bde7988c4e91e161ef5f023024cde939.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_joep-van-beek_cfab396e563f3e87181034a69246cd4d342f5cb3c4b7e589bc16799193843650.png",
+      "id": "cfab396e563f3e87181034a69246cd4d342f5cb3c4b7e589bc16799193843650",
+      "name": "Joep van Beek",
+      "tier": "Gold",
+      "overall": 56,
+      "stats": {
+        "pow": 55,
+        "ama": 52,
+        "size": 74,
+        "rang": 57,
+        "loy": 51,
+        "acu": 47
+      },
+      "imageUrl": "/images/gold_joep-van-beek_cfab396e563f3e87181034a69246cd4d342f5cb3c4b7e589bc16799193843650.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_jules-vega_b407ae71496ff7be684341d9f3f471303517c2881dfbcd108257c1d2421d56f6.png",
+      "id": "b407ae71496ff7be684341d9f3f471303517c2881dfbcd108257c1d2421d56f6",
+      "name": "Jules Vega",
+      "tier": "Gold",
+      "overall": 54,
+      "stats": {
+        "pow": 52,
+        "ama": 47,
+        "size": 50,
+        "rang": 61,
+        "loy": 55,
+        "acu": 59
+      },
+      "imageUrl": "/images/gold_jules-vega_b407ae71496ff7be684341d9f3f471303517c2881dfbcd108257c1d2421d56f6.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_luuk-jacobs_cfdc601d1426aca955019955d9e31af2aa5e4d27e76afe04e4e591150a73881c.png",
+      "id": "cfdc601d1426aca955019955d9e31af2aa5e4d27e76afe04e4e591150a73881c",
+      "name": "Luuk Jacobs",
+      "tier": "Gold",
+      "overall": 57,
+      "stats": {
+        "pow": 63,
+        "ama": 53,
+        "size": 51,
+        "rang": 60,
+        "loy": 58,
+        "acu": 57
+      },
+      "imageUrl": "/images/gold_luuk-jacobs_cfdc601d1426aca955019955d9e31af2aa5e4d27e76afe04e4e591150a73881c.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_luuk-veldman_35ee2bda03bf7e5ada3d802d489edbfb39d0d687eb450268b115e5ed9ca4462a.png",
+      "id": "35ee2bda03bf7e5ada3d802d489edbfb39d0d687eb450268b115e5ed9ca4462a",
+      "name": "Luuk Veldman",
+      "tier": "Gold",
+      "overall": 51,
+      "stats": {
+        "pow": 57,
+        "ama": 42,
+        "size": 56,
+        "rang": 51,
+        "loy": 51,
+        "acu": 49
+      },
+      "imageUrl": "/images/gold_luuk-veldman_35ee2bda03bf7e5ada3d802d489edbfb39d0d687eb450268b115e5ed9ca4462a.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_mikkel-moreno_afd3499b78ee4b84310f022d6ded16dbfe44ae9e1843a5b7f498610344b324d3.png",
+      "id": "afd3499b78ee4b84310f022d6ded16dbfe44ae9e1843a5b7f498610344b324d3",
+      "name": "Mikkel Moreno",
+      "tier": "Gold",
+      "overall": 59,
+      "stats": {
+        "pow": 66,
+        "ama": 56,
+        "size": 36,
+        "rang": 62,
+        "loy": 67,
+        "acu": 67
+      },
+      "imageUrl": "/images/gold_mikkel-moreno_afd3499b78ee4b84310f022d6ded16dbfe44ae9e1843a5b7f498610344b324d3.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_noud-van-den-bosch_f04fa3859908a4aec4120a7e6cc81963205f4203974627aafc564a826751e51c.png",
+      "id": "f04fa3859908a4aec4120a7e6cc81963205f4203974627aafc564a826751e51c",
+      "name": "Noud van den Bosch",
+      "tier": "Gold",
+      "overall": 53,
+      "stats": {
+        "pow": 56,
+        "ama": 46,
+        "size": 54,
+        "rang": 53,
+        "loy": 60,
+        "acu": 49
+      },
+      "imageUrl": "/images/gold_noud-van-den-bosch_f04fa3859908a4aec4120a7e6cc81963205f4203974627aafc564a826751e51c.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_puck-hendriks_fa02f3fc69788348d4ed186ad398f374098607ccd53956a345a17811b20ce8d3.png",
+      "id": "fa02f3fc69788348d4ed186ad398f374098607ccd53956a345a17811b20ce8d3",
+      "name": "Puck Hendriks",
+      "tier": "Gold",
+      "overall": 52,
+      "stats": {
+        "pow": 53,
+        "ama": 54,
+        "size": 29,
+        "rang": 53,
+        "loy": 58,
+        "acu": 65
+      },
+      "imageUrl": "/images/gold_puck-hendriks_fa02f3fc69788348d4ed186ad398f374098607ccd53956a345a17811b20ce8d3.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_rafael-van-veen_c03909fd7d004eceeaea116ba5d703c856cd9a01e7c7b1c2eda6fe583632bc80.png",
+      "id": "c03909fd7d004eceeaea116ba5d703c856cd9a01e7c7b1c2eda6fe583632bc80",
+      "name": "Rafael van Veen",
+      "tier": "Gold",
+      "overall": 58,
+      "stats": {
+        "pow": 56,
+        "ama": 63,
+        "size": 57,
+        "rang": 63,
+        "loy": 58,
+        "acu": 51
+      },
+      "imageUrl": "/images/gold_rafael-van-veen_c03909fd7d004eceeaea116ba5d703c856cd9a01e7c7b1c2eda6fe583632bc80.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_remi-van-gelder_71dc25d1e97cd59b775213535cfdd92a3b9171da8118e0391c0770b13c0774ed.png",
+      "id": "71dc25d1e97cd59b775213535cfdd92a3b9171da8118e0391c0770b13c0774ed",
+      "name": "Remi van Gelder",
+      "tier": "Gold",
+      "overall": 56,
+      "stats": {
+        "pow": 53,
+        "ama": 54,
+        "size": 60,
+        "rang": 67,
+        "loy": 50,
+        "acu": 52
+      },
+      "imageUrl": "/images/gold_remi-van-gelder_71dc25d1e97cd59b775213535cfdd92a3b9171da8118e0391c0770b13c0774ed.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_robin-kramer_ab7e2c14fda7b89557399a7eade00a34b6fac5ad115b02a3aad2e007d73ecb54.png",
+      "id": "ab7e2c14fda7b89557399a7eade00a34b6fac5ad115b02a3aad2e007d73ecb54",
+      "name": "Robin Kramer",
+      "tier": "Gold",
+      "overall": 50,
+      "stats": {
+        "pow": 56,
+        "ama": 37,
+        "size": 49,
+        "rang": 53,
+        "loy": 53,
+        "acu": 52
+      },
+      "imageUrl": "/images/gold_robin-kramer_ab7e2c14fda7b89557399a7eade00a34b6fac5ad115b02a3aad2e007d73ecb54.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_ruben-van-veen_36fc2e6153e7eb62b4d4bdf8ec68852a6d62d991e1ff3b39332e52a039491cb4.png",
+      "id": "36fc2e6153e7eb62b4d4bdf8ec68852a6d62d991e1ff3b39332e52a039491cb4",
+      "name": "Ruben van Veen",
+      "tier": "Gold",
+      "overall": 50,
+      "stats": {
+        "pow": 41,
+        "ama": 55,
+        "size": 64,
+        "rang": 44,
+        "loy": 46,
+        "acu": 50
+      },
+      "imageUrl": "/images/gold_ruben-van-veen_36fc2e6153e7eb62b4d4bdf8ec68852a6d62d991e1ff3b39332e52a039491cb4.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_salma-dubois_9d39535f8375d85aced719c9ec00e7ec320cad9e162f831af30bbebb77c288de.png",
+      "id": "9d39535f8375d85aced719c9ec00e7ec320cad9e162f831af30bbebb77c288de",
+      "name": "Salma Dubois",
+      "tier": "Gold",
+      "overall": 54,
+      "stats": {
+        "pow": 51,
+        "ama": 47,
+        "size": 61,
+        "rang": 53,
+        "loy": 54,
+        "acu": 58
+      },
+      "imageUrl": "/images/gold_salma-dubois_9d39535f8375d85aced719c9ec00e7ec320cad9e162f831af30bbebb77c288de.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "gold_zora-haan_a88c00e871885d573aa7f5f4f6335958ed5af35de7700e97fba84446282795fb.png",
+      "id": "a88c00e871885d573aa7f5f4f6335958ed5af35de7700e97fba84446282795fb",
+      "name": "Zora Haan",
+      "tier": "Gold",
+      "overall": 56,
+      "stats": {
+        "pow": 37,
+        "ama": 66,
+        "size": 56,
+        "rang": 49,
+        "loy": 60,
+        "acu": 68
+      },
+      "imageUrl": "/images/gold_zora-haan_a88c00e871885d573aa7f5f4f6335958ed5af35de7700e97fba84446282795fb.png",
+      "collectible": {
+        "templateId": "image18.jpeg"
+      }
+    },
+    {
+      "filename": "lightning_amir-santos_696eb9edb5b03afbd105b2ccb3f9dd0a0f3dfe83e7cb04caeec892ada4e1616f.png",
+      "id": "696eb9edb5b03afbd105b2ccb3f9dd0a0f3dfe83e7cb04caeec892ada4e1616f",
+      "name": "Amir Santos",
+      "tier": "Lightling",
+      "overall": 77,
+      "stats": {
+        "pow": 77,
+        "ama": 79,
+        "size": 72,
+        "rang": 82,
+        "loy": 77,
+        "acu": 75
+      },
+      "imageUrl": "/images/lightning_amir-santos_696eb9edb5b03afbd105b2ccb3f9dd0a0f3dfe83e7cb04caeec892ada4e1616f.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_ariel-van-doorn_f96436d00c9aac42999f701b671aaf9742c882abf6b1211f58228c33c00ee818.png",
+      "id": "f96436d00c9aac42999f701b671aaf9742c882abf6b1211f58228c33c00ee818",
+      "name": "Ariel van Doorn",
+      "tier": "Lightling",
+      "overall": 76,
+      "stats": {
+        "pow": 74,
+        "ama": 71,
+        "size": 69,
+        "rang": 81,
+        "loy": 81,
+        "acu": 80
+      },
+      "imageUrl": "/images/lightning_ariel-van-doorn_f96436d00c9aac42999f701b671aaf9742c882abf6b1211f58228c33c00ee818.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_elena-marie-van-der-velden_3d9a698e78591018c18cf296045f410226b16262b3c91404aa5b412197eea9a1.png",
+      "id": "3d9a698e78591018c18cf296045f410226b16262b3c91404aa5b412197eea9a1",
+      "name": "Elena-Marie van der Velden",
+      "tier": "Lightling",
+      "overall": 85,
+      "stats": {
+        "pow": 84,
+        "ama": 78,
+        "size": 84,
+        "rang": 85,
+        "loy": 99,
+        "acu": 80
+      },
+      "imageUrl": "/images/lightning_elena-marie-van-der-velden_3d9a698e78591018c18cf296045f410226b16262b3c91404aa5b412197eea9a1.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_femke-koster_e79296a69877d0f64148baf8e01def21d5eb3b714ffda70248e51b558e500b5c.png",
+      "id": "e79296a69877d0f64148baf8e01def21d5eb3b714ffda70248e51b558e500b5c",
+      "name": "Femke Koster",
+      "tier": "Lightling",
+      "overall": 79,
+      "stats": {
+        "pow": 75,
+        "ama": 64,
+        "size": 88,
+        "rang": 80,
+        "loy": 87,
+        "acu": 80
+      },
+      "imageUrl": "/images/lightning_femke-koster_e79296a69877d0f64148baf8e01def21d5eb3b714ffda70248e51b558e500b5c.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_fien-kowalski_f961a64a58ad681d2f01fb42b89c4e136d3a6cc600c8972e9c7b4fdfa1e16754.png",
+      "id": "f961a64a58ad681d2f01fb42b89c4e136d3a6cc600c8972e9c7b4fdfa1e16754",
+      "name": "Fien Kowalski",
+      "tier": "Lightling",
+      "overall": 78,
+      "stats": {
+        "pow": 81,
+        "ama": 93,
+        "size": 76,
+        "rang": 78,
+        "loy": 71,
+        "acu": 69
+      },
+      "imageUrl": "/images/lightning_fien-kowalski_f961a64a58ad681d2f01fb42b89c4e136d3a6cc600c8972e9c7b4fdfa1e16754.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_fien-van-dam_7177e0fc780c0d2b2812d5f68fbdf410ed5359e36f7a51a8b2c1572954db4285.png",
+      "id": "7177e0fc780c0d2b2812d5f68fbdf410ed5359e36f7a51a8b2c1572954db4285",
+      "name": "Fien van Dam",
+      "tier": "Lightling",
+      "overall": 85,
+      "stats": {
+        "pow": 88,
+        "ama": 87,
+        "size": 85,
+        "rang": 90,
+        "loy": 83,
+        "acu": 77
+      },
+      "imageUrl": "/images/lightning_fien-van-dam_7177e0fc780c0d2b2812d5f68fbdf410ed5359e36f7a51a8b2c1572954db4285.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_ines-walker_932a4786e16162b01f80cc959c33a9999009ab4784bfb36ff851a01ceb494756.png",
+      "id": "932a4786e16162b01f80cc959c33a9999009ab4784bfb36ff851a01ceb494756",
+      "name": "Inès Walker",
+      "tier": "Lightling",
+      "overall": 88,
+      "stats": {
+        "pow": 91,
+        "ama": 70,
+        "size": 93,
+        "rang": 93,
+        "loy": 93,
+        "acu": 88
+      },
+      "imageUrl": "/images/lightning_ines-walker_932a4786e16162b01f80cc959c33a9999009ab4784bfb36ff851a01ceb494756.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_lina-meijer_2acfbf258fb9b74846ae2f187a73b9bdbdfe3009375f3a6cb3196e39f76ae5c5.png",
+      "id": "2acfbf258fb9b74846ae2f187a73b9bdbdfe3009375f3a6cb3196e39f76ae5c5",
+      "name": "Lina Meijer",
+      "tier": "Lightling",
+      "overall": 78,
+      "stats": {
+        "pow": 85,
+        "ama": 78,
+        "size": 83,
+        "rang": 69,
+        "loy": 84,
+        "acu": 69
+      },
+      "imageUrl": "/images/lightning_lina-meijer_2acfbf258fb9b74846ae2f187a73b9bdbdfe3009375f3a6cb3196e39f76ae5c5.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_mia-smit_5d79b4b84f43c319d74a3d8ab4af99575e0b1d42a1ab9d63b6240c60c330d7b8.png",
+      "id": "5d79b4b84f43c319d74a3d8ab4af99575e0b1d42a1ab9d63b6240c60c330d7b8",
+      "name": "Mia Smit",
+      "tier": "Lightling",
+      "overall": 77,
+      "stats": {
+        "pow": 76,
+        "ama": 77,
+        "size": 74,
+        "rang": 71,
+        "loy": 83,
+        "acu": 81
+      },
+      "imageUrl": "/images/lightning_mia-smit_5d79b4b84f43c319d74a3d8ab4af99575e0b1d42a1ab9d63b6240c60c330d7b8.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_noah-bennett_22dc55b4d7bc027a50b046d3abbe5fb7f58731f5b475e944f31dcf5c6ed6a0c0.png",
+      "id": "22dc55b4d7bc027a50b046d3abbe5fb7f58731f5b475e944f31dcf5c6ed6a0c0",
+      "name": "Noah Bennett",
+      "tier": "Lightling",
+      "overall": 80,
+      "stats": {
+        "pow": 47,
+        "ama": 90,
+        "size": 83,
+        "rang": 99,
+        "loy": 77,
+        "acu": 84
+      },
+      "imageUrl": "/images/lightning_noah-bennett_22dc55b4d7bc027a50b046d3abbe5fb7f58731f5b475e944f31dcf5c6ed6a0c0.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_noud-de-graaf_6cdf5d2e4c0479a0ed6d6f1cf0bbd825394e73d43bf4d3bec162f6c2d746d9ac.png",
+      "id": "6cdf5d2e4c0479a0ed6d6f1cf0bbd825394e73d43bf4d3bec162f6c2d746d9ac",
+      "name": "Noud de Graaf",
+      "tier": "Lightling",
+      "overall": 87,
+      "stats": {
+        "pow": 93,
+        "ama": 78,
+        "size": 99,
+        "rang": 85,
+        "loy": 83,
+        "acu": 84
+      },
+      "imageUrl": "/images/lightning_noud-de-graaf_6cdf5d2e4c0479a0ed6d6f1cf0bbd825394e73d43bf4d3bec162f6c2d746d9ac.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_robin-lefevre_2bad63c54f092bf9c16f2d3b12e46574458c5321137a2901d3b5fbc31a9dd716.png",
+      "id": "2bad63c54f092bf9c16f2d3b12e46574458c5321137a2901d3b5fbc31a9dd716",
+      "name": "Robin Lefèvre",
+      "tier": "Lightling",
+      "overall": 84,
+      "stats": {
+        "pow": 96,
+        "ama": 96,
+        "size": 81,
+        "rang": 44,
+        "loy": 95,
+        "acu": 92
+      },
+      "imageUrl": "/images/lightning_robin-lefevre_2bad63c54f092bf9c16f2d3b12e46574458c5321137a2901d3b5fbc31a9dd716.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_roos-van-rijn_db72310af0491c831406cc0db33c217162a13c083998ae131cacd0b6af2f4aa0.png",
+      "id": "db72310af0491c831406cc0db33c217162a13c083998ae131cacd0b6af2f4aa0",
+      "name": "Roos van Rijn",
+      "tier": "Lightling",
+      "overall": 81,
+      "stats": {
+        "pow": 87,
+        "ama": 86,
+        "size": 72,
+        "rang": 82,
+        "loy": 78,
+        "acu": 81
+      },
+      "imageUrl": "/images/lightning_roos-van-rijn_db72310af0491c831406cc0db33c217162a13c083998ae131cacd0b6af2f4aa0.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_ruben-van-der-baan_37587b5efcf3c3dd18fb6d8b1f38fbd53a8d0cdf638264e488bf8274a347af32.png",
+      "id": "37587b5efcf3c3dd18fb6d8b1f38fbd53a8d0cdf638264e488bf8274a347af32",
+      "name": "Ruben van der Baan",
+      "tier": "Lightling",
+      "overall": 82,
+      "stats": {
+        "pow": 93,
+        "ama": 50,
+        "size": 81,
+        "rang": 99,
+        "loy": 83,
+        "acu": 86
+      },
+      "imageUrl": "/images/lightning_ruben-van-der-baan_37587b5efcf3c3dd18fb6d8b1f38fbd53a8d0cdf638264e488bf8274a347af32.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "lightning_zoe-van-der-heijden_e32cdb1cad493bbf146c4a15c3601dc3aaf76d1a0a70e18ca8b0b28be49bd89f.png",
+      "id": "e32cdb1cad493bbf146c4a15c3601dc3aaf76d1a0a70e18ca8b0b28be49bd89f",
+      "name": "Zoë van der Heijden",
+      "tier": "Lightling",
+      "overall": 80,
+      "stats": {
+        "pow": 91,
+        "ama": 96,
+        "size": 77,
+        "rang": 84,
+        "loy": 71,
+        "acu": 61
+      },
+      "imageUrl": "/images/lightning_zoe-van-der-heijden_e32cdb1cad493bbf146c4a15c3601dc3aaf76d1a0a70e18ca8b0b28be49bd89f.png",
+      "collectible": {
+        "templateId": "image1.png"
+      }
+    },
+    {
+      "filename": "platinum_clara-van-wijk_31f0d4a9c7ae84baf033add8b6337ba3829787fe1e96b9049ddfde97330c1820.png",
+      "id": "31f0d4a9c7ae84baf033add8b6337ba3829787fe1e96b9049ddfde97330c1820",
+      "name": "Clara van Wijk",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 66,
+        "ama": 66,
+        "size": 61,
+        "rang": 67,
+        "loy": 64,
+        "acu": 78
+      },
+      "imageUrl": "/images/platinum_clara-van-wijk_31f0d4a9c7ae84baf033add8b6337ba3829787fe1e96b9049ddfde97330c1820.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_elias-lund_062a588a133ee11e5c932812bb91ea4a99d74a0109798c35ca5d8c48d92201d0.png",
+      "id": "062a588a133ee11e5c932812bb91ea4a99d74a0109798c35ca5d8c48d92201d0",
+      "name": "Elias Lund",
+      "tier": "Platinum",
+      "overall": 70,
+      "stats": {
+        "pow": 69,
+        "ama": 65,
+        "size": 70,
+        "rang": 76,
+        "loy": 70,
+        "acu": 70
+      },
+      "imageUrl": "/images/platinum_elias-lund_062a588a133ee11e5c932812bb91ea4a99d74a0109798c35ca5d8c48d92201d0.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_emil-ortega_01e092ec2aaa0c6330fbcab44be7f4bd229775b04ba59dfc3c5f7c44bb8b3837.png",
+      "id": "01e092ec2aaa0c6330fbcab44be7f4bd229775b04ba59dfc3c5f7c44bb8b3837",
+      "name": "Emil Ortega",
+      "tier": "Platinum",
+      "overall": 66,
+      "stats": {
+        "pow": 52,
+        "ama": 71,
+        "size": 74,
+        "rang": 68,
+        "loy": 63,
+        "acu": 68
+      },
+      "imageUrl": "/images/platinum_emil-ortega_01e092ec2aaa0c6330fbcab44be7f4bd229775b04ba59dfc3c5f7c44bb8b3837.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_esmee-horvat_5fe27c381f00b3109f35299a3c7aec20cd50ddc346bc06471168e585f26d051f.png",
+      "id": "5fe27c381f00b3109f35299a3c7aec20cd50ddc346bc06471168e585f26d051f",
+      "name": "Esmée Horvat",
+      "tier": "Platinum",
+      "overall": 74,
+      "stats": {
+        "pow": 66,
+        "ama": 75,
+        "size": 70,
+        "rang": 88,
+        "loy": 67,
+        "acu": 78
+      },
+      "imageUrl": "/images/platinum_esmee-horvat_5fe27c381f00b3109f35299a3c7aec20cd50ddc346bc06471168e585f26d051f.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_eva-marie-van-vliet_b380f3ca0625da23e8bc784a79dd32b2cbbc310c5e2ecbc8b6ad418c8ee5369a.png",
+      "id": "b380f3ca0625da23e8bc784a79dd32b2cbbc310c5e2ecbc8b6ad418c8ee5369a",
+      "name": "Eva-Marie van Vliet",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 63,
+        "ama": 47,
+        "size": 75,
+        "rang": 69,
+        "loy": 81,
+        "acu": 67
+      },
+      "imageUrl": "/images/platinum_eva-marie-van-vliet_b380f3ca0625da23e8bc784a79dd32b2cbbc310c5e2ecbc8b6ad418c8ee5369a.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_felix-vega_af23edb5fbedcee280c240c9247cc0159c887c78b46407c27f646a8a64a1aa92.png",
+      "id": "af23edb5fbedcee280c240c9247cc0159c887c78b46407c27f646a8a64a1aa92",
+      "name": "Felix Vega",
+      "tier": "Platinum",
+      "overall": 70,
+      "stats": {
+        "pow": 69,
+        "ama": 69,
+        "size": 82,
+        "rang": 64,
+        "loy": 71,
+        "acu": 65
+      },
+      "imageUrl": "/images/platinum_felix-vega_af23edb5fbedcee280c240c9247cc0159c887c78b46407c27f646a8a64a1aa92.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_hannah-bergman_c815ddb5575f6eaa1666b79005f8345735c16c67b4f6d618d7822aa925441274.png",
+      "id": "c815ddb5575f6eaa1666b79005f8345735c16c67b4f6d618d7822aa925441274",
+      "name": "Hannah Bergman",
+      "tier": "Platinum",
+      "overall": 66,
+      "stats": {
+        "pow": 73,
+        "ama": 78,
+        "size": 69,
+        "rang": 69,
+        "loy": 66,
+        "acu": 41
+      },
+      "imageUrl": "/images/platinum_hannah-bergman_c815ddb5575f6eaa1666b79005f8345735c16c67b4f6d618d7822aa925441274.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_hannah-van-der-baan_959a79297443c8faba8c069d109e535450d40ed2ab1fa652674a4a3016fdef2f.png",
+      "id": "959a79297443c8faba8c069d109e535450d40ed2ab1fa652674a4a3016fdef2f",
+      "name": "Hannah van der Baan",
+      "tier": "Platinum",
+      "overall": 68,
+      "stats": {
+        "pow": 64,
+        "ama": 82,
+        "size": 61,
+        "rang": 69,
+        "loy": 65,
+        "acu": 67
+      },
+      "imageUrl": "/images/platinum_hannah-van-der-baan_959a79297443c8faba8c069d109e535450d40ed2ab1fa652674a4a3016fdef2f.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_hugo-van-veen_30f4aca6ced719a97d72b7db4215436b798ca9dcba74531cfd5e69748b7d1219.png",
+      "id": "30f4aca6ced719a97d72b7db4215436b798ca9dcba74531cfd5e69748b7d1219",
+      "name": "Hugo van Veen",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 52,
+        "ama": 67,
+        "size": 73,
+        "rang": 68,
+        "loy": 72,
+        "acu": 70
+      },
+      "imageUrl": "/images/platinum_hugo-van-veen_30f4aca6ced719a97d72b7db4215436b798ca9dcba74531cfd5e69748b7d1219.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_imani-haddad_b425c93f46a750efb34155da77a0d10232fd340f2652a46f7b6c5f196db0b50f.png",
+      "id": "b425c93f46a750efb34155da77a0d10232fd340f2652a46f7b6c5f196db0b50f",
+      "name": "Imani Haddad",
+      "tier": "Platinum",
+      "overall": 72,
+      "stats": {
+        "pow": 71,
+        "ama": 83,
+        "size": 72,
+        "rang": 57,
+        "loy": 72,
+        "acu": 77
+      },
+      "imageUrl": "/images/platinum_imani-haddad_b425c93f46a750efb34155da77a0d10232fd340f2652a46f7b6c5f196db0b50f.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_julia-costa_15a51799a74aaf4707e510fc812f8dbcc004a45313d6cd4fef9249e999e99d8f.png",
+      "id": "15a51799a74aaf4707e510fc812f8dbcc004a45313d6cd4fef9249e999e99d8f",
+      "name": "Julia Costa",
+      "tier": "Platinum",
+      "overall": 69,
+      "stats": {
+        "pow": 68,
+        "ama": 70,
+        "size": 73,
+        "rang": 69,
+        "loy": 63,
+        "acu": 71
+      },
+      "imageUrl": "/images/platinum_julia-costa_15a51799a74aaf4707e510fc812f8dbcc004a45313d6cd4fef9249e999e99d8f.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_lou-haddad_03a496d43cacb9499ac827f2ed293121a435683a20fa06de0abdadbb2a28aa11.png",
+      "id": "03a496d43cacb9499ac827f2ed293121a435683a20fa06de0abdadbb2a28aa11",
+      "name": "Lou Haddad",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 67,
+        "ama": 65,
+        "size": 71,
+        "rang": 76,
+        "loy": 55,
+        "acu": 68
+      },
+      "imageUrl": "/images/platinum_lou-haddad_03a496d43cacb9499ac827f2ed293121a435683a20fa06de0abdadbb2a28aa11.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_lucas-van-der-heijden_08361aa80b6d3ec0c4993986d720a2f743dce2b5d4210fb9b5293fb639914300.png",
+      "id": "08361aa80b6d3ec0c4993986d720a2f743dce2b5d4210fb9b5293fb639914300",
+      "name": "Lucas van der Heijden",
+      "tier": "Platinum",
+      "overall": 73,
+      "stats": {
+        "pow": 69,
+        "ama": 69,
+        "size": 68,
+        "rang": 67,
+        "loy": 93,
+        "acu": 72
+      },
+      "imageUrl": "/images/platinum_lucas-van-der-heijden_08361aa80b6d3ec0c4993986d720a2f743dce2b5d4210fb9b5293fb639914300.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_matteo-de-graaf_d28af0a282d2ed6b3425e559598aa1bd7a63d0619715340f9cf957611c82813a.png",
+      "id": "d28af0a282d2ed6b3425e559598aa1bd7a63d0619715340f9cf957611c82813a",
+      "name": "Matteo de Graaf",
+      "tier": "Platinum",
+      "overall": 72,
+      "stats": {
+        "pow": 69,
+        "ama": 74,
+        "size": 76,
+        "rang": 77,
+        "loy": 70,
+        "acu": 66
+      },
+      "imageUrl": "/images/platinum_matteo-de-graaf_d28af0a282d2ed6b3425e559598aa1bd7a63d0619715340f9cf957611c82813a.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_milo-verstappen_7da811a209aac90a5a351e2b4e64f428d6380479f95d925f01af4fb5cd338cdd.png",
+      "id": "7da811a209aac90a5a351e2b4e64f428d6380479f95d925f01af4fb5cd338cdd",
+      "name": "Milo Verstappen",
+      "tier": "Platinum",
+      "overall": 65,
+      "stats": {
+        "pow": 63,
+        "ama": 57,
+        "size": 69,
+        "rang": 73,
+        "loy": 69,
+        "acu": 59
+      },
+      "imageUrl": "/images/platinum_milo-verstappen_7da811a209aac90a5a351e2b4e64f428d6380479f95d925f01af4fb5cd338cdd.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_noah-moreau_4663dd2ba97131c9fa933e8a9919471a296fd60426a5369a84c59816e2d21297.png",
+      "id": "4663dd2ba97131c9fa933e8a9919471a296fd60426a5369a84c59816e2d21297",
+      "name": "Noah Moreau",
+      "tier": "Platinum",
+      "overall": 69,
+      "stats": {
+        "pow": 70,
+        "ama": 68,
+        "size": 71,
+        "rang": 60,
+        "loy": 61,
+        "acu": 84
+      },
+      "imageUrl": "/images/platinum_noah-moreau_4663dd2ba97131c9fa933e8a9919471a296fd60426a5369a84c59816e2d21297.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_quinn-hendriks_f9270de65a798b12418d02df89ddbbbba308aa1a853eeb5adb6a3b51d9188630.png",
+      "id": "f9270de65a798b12418d02df89ddbbbba308aa1a853eeb5adb6a3b51d9188630",
+      "name": "Quinn Hendriks",
+      "tier": "Platinum",
+      "overall": 70,
+      "stats": {
+        "pow": 83,
+        "ama": 61,
+        "size": 68,
+        "rang": 65,
+        "loy": 67,
+        "acu": 76
+      },
+      "imageUrl": "/images/platinum_quinn-hendriks_f9270de65a798b12418d02df89ddbbbba308aa1a853eeb5adb6a3b51d9188630.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_roos-klein_b1765faaf02276999dc9b5bb7babfccf38511ba6f00a6d96294f6c55fdd82318.png",
+      "id": "b1765faaf02276999dc9b5bb7babfccf38511ba6f00a6d96294f6c55fdd82318",
+      "name": "Roos Klein",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 58,
+        "ama": 61,
+        "size": 77,
+        "rang": 70,
+        "loy": 69,
+        "acu": 67
+      },
+      "imageUrl": "/images/platinum_roos-klein_b1765faaf02276999dc9b5bb7babfccf38511ba6f00a6d96294f6c55fdd82318.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_salma-laurent_64fb8b1fdde66cf8a883d2a3fa3ce47a97a49a25859151ff1846ddcb2507bf73.png",
+      "id": "64fb8b1fdde66cf8a883d2a3fa3ce47a97a49a25859151ff1846ddcb2507bf73",
+      "name": "Salma Laurent",
+      "tier": "Platinum",
+      "overall": 71,
+      "stats": {
+        "pow": 69,
+        "ama": 84,
+        "size": 70,
+        "rang": 77,
+        "loy": 74,
+        "acu": 52
+      },
+      "imageUrl": "/images/platinum_salma-laurent_64fb8b1fdde66cf8a883d2a3fa3ce47a97a49a25859151ff1846ddcb2507bf73.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_salma-nouri_3401118af3cedd3d4ea4662d038cb772530bc529e92182b2f3dd1b1316b1be8a.png",
+      "id": "3401118af3cedd3d4ea4662d038cb772530bc529e92182b2f3dd1b1316b1be8a",
+      "name": "Salma Nouri",
+      "tier": "Platinum",
+      "overall": 68,
+      "stats": {
+        "pow": 61,
+        "ama": 71,
+        "size": 73,
+        "rang": 72,
+        "loy": 63,
+        "acu": 68
+      },
+      "imageUrl": "/images/platinum_salma-nouri_3401118af3cedd3d4ea4662d038cb772530bc529e92182b2f3dd1b1316b1be8a.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_sam-mensah_adefa41ce67b6a6ca5dbb26e497f8ef0d6983f16ef0c68b454a64c1136b02fbc.png",
+      "id": "adefa41ce67b6a6ca5dbb26e497f8ef0d6983f16ef0c68b454a64c1136b02fbc",
+      "name": "Sam Mensah",
+      "tier": "Platinum",
+      "overall": 72,
+      "stats": {
+        "pow": 76,
+        "ama": 84,
+        "size": 60,
+        "rang": 68,
+        "loy": 70,
+        "acu": 74
+      },
+      "imageUrl": "/images/platinum_sam-mensah_adefa41ce67b6a6ca5dbb26e497f8ef0d6983f16ef0c68b454a64c1136b02fbc.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_vera-vega_e70ec8fe0aa7e2b6dd1992e52f5eaff4c6965ff5bc486ad804768925b7702f61.png",
+      "id": "e70ec8fe0aa7e2b6dd1992e52f5eaff4c6965ff5bc486ad804768925b7702f61",
+      "name": "Vera Vega",
+      "tier": "Platinum",
+      "overall": 73,
+      "stats": {
+        "pow": 72,
+        "ama": 78,
+        "size": 89,
+        "rang": 61,
+        "loy": 72,
+        "acu": 66
+      },
+      "imageUrl": "/images/platinum_vera-vega_e70ec8fe0aa7e2b6dd1992e52f5eaff4c6965ff5bc486ad804768925b7702f61.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_viktor-van-gelder_19b1d057be061c2ad282862c74eb9566814f864e23d4956fe1cc6c0cbb99f06a.png",
+      "id": "19b1d057be061c2ad282862c74eb9566814f864e23d4956fe1cc6c0cbb99f06a",
+      "name": "Viktor van Gelder",
+      "tier": "Platinum",
+      "overall": 67,
+      "stats": {
+        "pow": 66,
+        "ama": 63,
+        "size": 71,
+        "rang": 70,
+        "loy": 63,
+        "acu": 69
+      },
+      "imageUrl": "/images/platinum_viktor-van-gelder_19b1d057be061c2ad282862c74eb9566814f864e23d4956fe1cc6c0cbb99f06a.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "platinum_zoe-van-den-berg_a24a6d567441a37ce79da9e30a23085b1725065c997317f77d7fbad606469f0c.png",
+      "id": "a24a6d567441a37ce79da9e30a23085b1725065c997317f77d7fbad606469f0c",
+      "name": "Zoë van den Berg",
+      "tier": "Platinum",
+      "overall": 69,
+      "stats": {
+        "pow": 73,
+        "ama": 69,
+        "size": 59,
+        "rang": 72,
+        "loy": 78,
+        "acu": 63
+      },
+      "imageUrl": "/images/platinum_zoe-van-den-berg_a24a6d567441a37ce79da9e30a23085b1725065c997317f77d7fbad606469f0c.png",
+      "collectible": {
+        "templateId": "image7.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_anouk-van-beek_b5cf03d139f8b98fb220eb1246c21364018d98b3841c4e63d5b927ceb31d0964.png",
+      "id": "b5cf03d139f8b98fb220eb1246c21364018d98b3841c4e63d5b927ceb31d0964",
+      "name": "Anouk van Beek",
+      "tier": "Rare Bronze",
+      "overall": 20,
+      "stats": {
+        "pow": 20,
+        "ama": 22,
+        "size": 22,
+        "rang": 12,
+        "loy": 18,
+        "acu": 26
+      },
+      "imageUrl": "/images/rare-bronze_anouk-van-beek_b5cf03d139f8b98fb220eb1246c21364018d98b3841c4e63d5b927ceb31d0964.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_anton-van-dongen_be966f53e1611384f0c373bc9ca9c40745e9d204f92ae7eb84eb00e4c8f029df.png",
+      "id": "be966f53e1611384f0c373bc9ca9c40745e9d204f92ae7eb84eb00e4c8f029df",
+      "name": "Anton van Dongen",
+      "tier": "Rare Bronze",
+      "overall": 29,
+      "stats": {
+        "pow": 32,
+        "ama": 30,
+        "size": 28,
+        "rang": 21,
+        "loy": 34,
+        "acu": 29
+      },
+      "imageUrl": "/images/rare-bronze_anton-van-dongen_be966f53e1611384f0c373bc9ca9c40745e9d204f92ae7eb84eb00e4c8f029df.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_benjamin-patel_69951ef1bfdc68394dc3bce76adaea59c2c7d22ac080cb442b337ca791f0d9da.png",
+      "id": "69951ef1bfdc68394dc3bce76adaea59c2c7d22ac080cb442b337ca791f0d9da",
+      "name": "Benjamin Patel",
+      "tier": "Rare Bronze",
+      "overall": 21,
+      "stats": {
+        "pow": 10,
+        "ama": 24,
+        "size": 24,
+        "rang": 19,
+        "loy": 22,
+        "acu": 27
+      },
+      "imageUrl": "/images/rare-bronze_benjamin-patel_69951ef1bfdc68394dc3bce76adaea59c2c7d22ac080cb442b337ca791f0d9da.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_dani-haan_927190f1aa0921eaac330876d159f25dea6a6e030284ea5026d322641f2a547f.png",
+      "id": "927190f1aa0921eaac330876d159f25dea6a6e030284ea5026d322641f2a547f",
+      "name": "Dani Haan",
+      "tier": "Rare Bronze",
+      "overall": 31,
+      "stats": {
+        "pow": 33,
+        "ama": 43,
+        "size": 31,
+        "rang": 25,
+        "loy": 38,
+        "acu": 16
+      },
+      "imageUrl": "/images/rare-bronze_dani-haan_927190f1aa0921eaac330876d159f25dea6a6e030284ea5026d322641f2a547f.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_eden-van-nieuwenhuizen_0ee4b324a256800bc539480650629255c656c907f402852bdf216cf1949c4fbd.png",
+      "id": "0ee4b324a256800bc539480650629255c656c907f402852bdf216cf1949c4fbd",
+      "name": "Eden van Nieuwenhuizen",
+      "tier": "Rare Bronze",
+      "overall": 26,
+      "stats": {
+        "pow": 32,
+        "ama": 26,
+        "size": 26,
+        "rang": 22,
+        "loy": 27,
+        "acu": 23
+      },
+      "imageUrl": "/images/rare-bronze_eden-van-nieuwenhuizen_0ee4b324a256800bc539480650629255c656c907f402852bdf216cf1949c4fbd.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_emma-wouters_80c80c657c2aa61929f208aca1921da53ca61f3aa0d3168a7e7210ecc650f6c3.png",
+      "id": "80c80c657c2aa61929f208aca1921da53ca61f3aa0d3168a7e7210ecc650f6c3",
+      "name": "Emma Wouters",
+      "tier": "Rare Bronze",
+      "overall": 28,
+      "stats": {
+        "pow": 36,
+        "ama": 34,
+        "size": 9,
+        "rang": 32,
+        "loy": 31,
+        "acu": 26
+      },
+      "imageUrl": "/images/rare-bronze_emma-wouters_80c80c657c2aa61929f208aca1921da53ca61f3aa0d3168a7e7210ecc650f6c3.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_fleur-romano_523b7d3338a3daca2a71c1546dc60f97ece50dad779eb8b5550d3890b1e5b69b.png",
+      "id": "523b7d3338a3daca2a71c1546dc60f97ece50dad779eb8b5550d3890b1e5b69b",
+      "name": "Fleur Romano",
+      "tier": "Rare Bronze",
+      "overall": 29,
+      "stats": {
+        "pow": 24,
+        "ama": 35,
+        "size": 27,
+        "rang": 39,
+        "loy": 21,
+        "acu": 28
+      },
+      "imageUrl": "/images/rare-bronze_fleur-romano_523b7d3338a3daca2a71c1546dc60f97ece50dad779eb8b5550d3890b1e5b69b.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_fleur-veldman_157d90bf3fb4a0303d628264467f840841eccd7a65773c88e24f2f097357bff1.png",
+      "id": "157d90bf3fb4a0303d628264467f840841eccd7a65773c88e24f2f097357bff1",
+      "name": "Fleur Veldman",
+      "tier": "Rare Bronze",
+      "overall": 25,
+      "stats": {
+        "pow": 21,
+        "ama": 23,
+        "size": 25,
+        "rang": 24,
+        "loy": 24,
+        "acu": 33
+      },
+      "imageUrl": "/images/rare-bronze_fleur-veldman_157d90bf3fb4a0303d628264467f840841eccd7a65773c88e24f2f097357bff1.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_helena-roos_e68c57ff3bc0b244487a18992eb2d052f1b4a2f120939381be2f7171c27ad286.png",
+      "id": "e68c57ff3bc0b244487a18992eb2d052f1b4a2f120939381be2f7171c27ad286",
+      "name": "Helena Roos",
+      "tier": "Rare Bronze",
+      "overall": 29,
+      "stats": {
+        "pow": 21,
+        "ama": 47,
+        "size": 20,
+        "rang": 37,
+        "loy": 36,
+        "acu": 13
+      },
+      "imageUrl": "/images/rare-bronze_helena-roos_e68c57ff3bc0b244487a18992eb2d052f1b4a2f120939381be2f7171c27ad286.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_imani-de-haas_8e5c9f73553570227e064aacc3d89445c5a81e7a162c98979a0d7a06335f7919.png",
+      "id": "8e5c9f73553570227e064aacc3d89445c5a81e7a162c98979a0d7a06335f7919",
+      "name": "Imani de Haas",
+      "tier": "Rare Bronze",
+      "overall": 30,
+      "stats": {
+        "pow": 35,
+        "ama": 27,
+        "size": 33,
+        "rang": 34,
+        "loy": 21,
+        "acu": 30
+      },
+      "imageUrl": "/images/rare-bronze_imani-de-haas_8e5c9f73553570227e064aacc3d89445c5a81e7a162c98979a0d7a06335f7919.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_iris-koster_8cae485e867e191ed415c71de43cc25f56683e6686cde2a8b6b7ff8f75099f7a.png",
+      "id": "8cae485e867e191ed415c71de43cc25f56683e6686cde2a8b6b7ff8f75099f7a",
+      "name": "Iris Koster",
+      "tier": "Rare Bronze",
+      "overall": 22,
+      "stats": {
+        "pow": 26,
+        "ama": 1,
+        "size": 29,
+        "rang": 17,
+        "loy": 32,
+        "acu": 27
+      },
+      "imageUrl": "/images/rare-bronze_iris-koster_8cae485e867e191ed415c71de43cc25f56683e6686cde2a8b6b7ff8f75099f7a.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_iris-prins_3295676522d9fa06c2673bfcd91b1619a1de794ff3c59b433c3b410969453d8b.png",
+      "id": "3295676522d9fa06c2673bfcd91b1619a1de794ff3c59b433c3b410969453d8b",
+      "name": "Iris Prins",
+      "tier": "Rare Bronze",
+      "overall": 32,
+      "stats": {
+        "pow": 41,
+        "ama": 45,
+        "size": 32,
+        "rang": 27,
+        "loy": 17,
+        "acu": 30
+      },
+      "imageUrl": "/images/rare-bronze_iris-prins_3295676522d9fa06c2673bfcd91b1619a1de794ff3c59b433c3b410969453d8b.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_lieke-jacobs_3a63875c095f059c2d7cf7c1ffe167b58233d063ea582b5003ff1bd89d26d9a4.png",
+      "id": "3a63875c095f059c2d7cf7c1ffe167b58233d063ea582b5003ff1bd89d26d9a4",
+      "name": "Lieke Jacobs",
+      "tier": "Rare Bronze",
+      "overall": 30,
+      "stats": {
+        "pow": 31,
+        "ama": 39,
+        "size": 6,
+        "rang": 31,
+        "loy": 35,
+        "acu": 38
+      },
+      "imageUrl": "/images/rare-bronze_lieke-jacobs_3a63875c095f059c2d7cf7c1ffe167b58233d063ea582b5003ff1bd89d26d9a4.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_lou-de-groot_c9e197b91ca2f8e1b0945773f141b6f6cf1bf891c2f33c6f28431b00641fe97a.png",
+      "id": "c9e197b91ca2f8e1b0945773f141b6f6cf1bf891c2f33c6f28431b00641fe97a",
+      "name": "Lou de Groot",
+      "tier": "Rare Bronze",
+      "overall": 21,
+      "stats": {
+        "pow": 25,
+        "ama": 21,
+        "size": 20,
+        "rang": 18,
+        "loy": 24,
+        "acu": 18
+      },
+      "imageUrl": "/images/rare-bronze_lou-de-groot_c9e197b91ca2f8e1b0945773f141b6f6cf1bf891c2f33c6f28431b00641fe97a.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_lucas-haddad_7b162539d4de279b57eaaa64a6018204cd5ce8e81d93bfe82c8929f7a6123a4b.png",
+      "id": "7b162539d4de279b57eaaa64a6018204cd5ce8e81d93bfe82c8929f7a6123a4b",
+      "name": "Lucas Haddad",
+      "tier": "Rare Bronze",
+      "overall": 27,
+      "stats": {
+        "pow": 30,
+        "ama": 20,
+        "size": 28,
+        "rang": 17,
+        "loy": 26,
+        "acu": 41
+      },
+      "imageUrl": "/images/rare-bronze_lucas-haddad_7b162539d4de279b57eaaa64a6018204cd5ce8e81d93bfe82c8929f7a6123a4b.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_max-van-dongen_38f1d25d213132c6df0962a555167fc8a08511da4b4e034dcda44b2e4f78c234.png",
+      "id": "38f1d25d213132c6df0962a555167fc8a08511da4b4e034dcda44b2e4f78c234",
+      "name": "Max van Dongen",
+      "tier": "Rare Bronze",
+      "overall": 27,
+      "stats": {
+        "pow": 18,
+        "ama": 63,
+        "size": 12,
+        "rang": 35,
+        "loy": 14,
+        "acu": 20
+      },
+      "imageUrl": "/images/rare-bronze_max-van-dongen_38f1d25d213132c6df0962a555167fc8a08511da4b4e034dcda44b2e4f78c234.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_nathan-dubois_8aff52eca03b7785190226fbd1f270ed531dac6bd2aabcea7bae65d665c8a500.png",
+      "id": "8aff52eca03b7785190226fbd1f270ed531dac6bd2aabcea7bae65d665c8a500",
+      "name": "Nathan Dubois",
+      "tier": "Rare Bronze",
+      "overall": 24,
+      "stats": {
+        "pow": 36,
+        "ama": 17,
+        "size": 30,
+        "rang": 15,
+        "loy": 22,
+        "acu": 24
+      },
+      "imageUrl": "/images/rare-bronze_nathan-dubois_8aff52eca03b7785190226fbd1f270ed531dac6bd2aabcea7bae65d665c8a500.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_nina-van-loon_895b99826438984ea055aa086fc31eb5ff7f672a98fc17ebd026cae5f5c15ef0.png",
+      "id": "895b99826438984ea055aa086fc31eb5ff7f672a98fc17ebd026cae5f5c15ef0",
+      "name": "Nina van Loon",
+      "tier": "Rare Bronze",
+      "overall": 27,
+      "stats": {
+        "pow": 23,
+        "ama": 32,
+        "size": 30,
+        "rang": 20,
+        "loy": 27,
+        "acu": 30
+      },
+      "imageUrl": "/images/rare-bronze_nina-van-loon_895b99826438984ea055aa086fc31eb5ff7f672a98fc17ebd026cae5f5c15ef0.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_quinn-van-gelder_ac0fba521df1538b120419f787d121b25545e8f2dadbb7f03c5e8494d7dc5959.png",
+      "id": "ac0fba521df1538b120419f787d121b25545e8f2dadbb7f03c5e8494d7dc5959",
+      "name": "Quinn van Gelder",
+      "tier": "Rare Bronze",
+      "overall": 23,
+      "stats": {
+        "pow": 1,
+        "ama": 24,
+        "size": 38,
+        "rang": 27,
+        "loy": 25,
+        "acu": 23
+      },
+      "imageUrl": "/images/rare-bronze_quinn-van-gelder_ac0fba521df1538b120419f787d121b25545e8f2dadbb7f03c5e8494d7dc5959.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_rafael-bernard_57ca58830672920829ad1208388b72584b4323fd0dada237c91637d5a749c720.png",
+      "id": "57ca58830672920829ad1208388b72584b4323fd0dada237c91637d5a749c720",
+      "name": "Rafael Bernard",
+      "tier": "Rare Bronze",
+      "overall": 34,
+      "stats": {
+        "pow": 36,
+        "ama": 27,
+        "size": 44,
+        "rang": 38,
+        "loy": 32,
+        "acu": 27
+      },
+      "imageUrl": "/images/rare-bronze_rafael-bernard_57ca58830672920829ad1208388b72584b4323fd0dada237c91637d5a749c720.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_rafael-martin_0c274df2e2202a1c3615f1c1bda0805b398cee000ed1041df043f6054fe26983.png",
+      "id": "0c274df2e2202a1c3615f1c1bda0805b398cee000ed1041df043f6054fe26983",
+      "name": "Rafael Martin",
+      "tier": "Rare Bronze",
+      "overall": 30,
+      "stats": {
+        "pow": 29,
+        "ama": 16,
+        "size": 31,
+        "rang": 35,
+        "loy": 34,
+        "acu": 35
+      },
+      "imageUrl": "/images/rare-bronze_rafael-martin_0c274df2e2202a1c3615f1c1bda0805b398cee000ed1041df043f6054fe26983.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_sofia-verbeek_73aeb8871ea4d3342ace56f2a350b826044c88b444c23899fb6352986c17b0ac.png",
+      "id": "73aeb8871ea4d3342ace56f2a350b826044c88b444c23899fb6352986c17b0ac",
+      "name": "Sofia Verbeek",
+      "tier": "Rare Bronze",
+      "overall": 33,
+      "stats": {
+        "pow": 36,
+        "ama": 27,
+        "size": 28,
+        "rang": 33,
+        "loy": 36,
+        "acu": 38
+      },
+      "imageUrl": "/images/rare-bronze_sofia-verbeek_73aeb8871ea4d3342ace56f2a350b826044c88b444c23899fb6352986c17b0ac.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-bronze_sofia-visser_76f393e9d566104e650bc05d7cd2715d59519ebfde6bd6fea3569e5bc8fa0203.png",
+      "id": "76f393e9d566104e650bc05d7cd2715d59519ebfde6bd6fea3569e5bc8fa0203",
+      "name": "Sofia Visser",
+      "tier": "Rare Bronze",
+      "overall": 22,
+      "stats": {
+        "pow": 21,
+        "ama": 27,
+        "size": 32,
+        "rang": 29,
+        "loy": 1,
+        "acu": 22
+      },
+      "imageUrl": "/images/rare-bronze_sofia-visser_76f393e9d566104e650bc05d7cd2715d59519ebfde6bd6fea3569e5bc8fa0203.png",
+      "collectible": {
+        "templateId": "image12.png"
+      }
+    },
+    {
+      "filename": "rare-gold_bram-horvat_c4c851222a4edf5cbe565e2d56ad6e14e7883f0227665107ae0e7d77eecf7fd0.png",
+      "id": "c4c851222a4edf5cbe565e2d56ad6e14e7883f0227665107ae0e7d77eecf7fd0",
+      "name": "Bram Horvat",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 46,
+        "ama": 61,
+        "size": 60,
+        "rang": 71,
+        "loy": 69,
+        "acu": 59
+      },
+      "imageUrl": "/images/rare-gold_bram-horvat_c4c851222a4edf5cbe565e2d56ad6e14e7883f0227665107ae0e7d77eecf7fd0.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_charlie-van-der-velden_09da76d6281cdf42bbff70223e783faa59c3eff1459eaeb95cdb3928fd38ccc6.png",
+      "id": "09da76d6281cdf42bbff70223e783faa59c3eff1459eaeb95cdb3928fd38ccc6",
+      "name": "Charlie van der Velden",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 55,
+        "ama": 56,
+        "size": 58,
+        "rang": 56,
+        "loy": 48,
+        "acu": 93
+      },
+      "imageUrl": "/images/rare-gold_charlie-van-der-velden_09da76d6281cdf42bbff70223e783faa59c3eff1459eaeb95cdb3928fd38ccc6.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_emma-kuiper_eb26b8a31d392e0934689648a41c4e6207197b6e7a85ef6b4bd9fa6cf2679bbd.png",
+      "id": "eb26b8a31d392e0934689648a41c4e6207197b6e7a85ef6b4bd9fa6cf2679bbd",
+      "name": "Emma Kuiper",
+      "tier": "Rare Gold",
+      "overall": 64,
+      "stats": {
+        "pow": 70,
+        "ama": 64,
+        "size": 77,
+        "rang": 47,
+        "loy": 64,
+        "acu": 62
+      },
+      "imageUrl": "/images/rare-gold_emma-kuiper_eb26b8a31d392e0934689648a41c4e6207197b6e7a85ef6b4bd9fa6cf2679bbd.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_erik-scholten_c6686225c7c98e60b8fd8298fd8910740038c1b5e526095c81d32720246d31c3.png",
+      "id": "c6686225c7c98e60b8fd8298fd8910740038c1b5e526095c81d32720246d31c3",
+      "name": "Erik Scholten",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 56,
+        "ama": 54,
+        "size": 55,
+        "rang": 51,
+        "loy": 89,
+        "acu": 67
+      },
+      "imageUrl": "/images/rare-gold_erik-scholten_c6686225c7c98e60b8fd8298fd8910740038c1b5e526095c81d32720246d31c3.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_eva-marie-kowalski_936d53a37fcaf54f1be53dc0a06c0b1937e7309de79288fe0e602fd6d41f7b95.png",
+      "id": "936d53a37fcaf54f1be53dc0a06c0b1937e7309de79288fe0e602fd6d41f7b95",
+      "name": "Eva-Marie Kowalski",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 65,
+        "ama": 59,
+        "size": 59,
+        "rang": 68,
+        "loy": 65,
+        "acu": 62
+      },
+      "imageUrl": "/images/rare-gold_eva-marie-kowalski_936d53a37fcaf54f1be53dc0a06c0b1937e7309de79288fe0e602fd6d41f7b95.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_eva-muller_82c1ba8ae38695eb582414ce83dea297597d974d75ad86670b36e703c24a2a36.png",
+      "id": "82c1ba8ae38695eb582414ce83dea297597d974d75ad86670b36e703c24a2a36",
+      "name": "Eva Müller",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 63,
+        "ama": 66,
+        "size": 53,
+        "rang": 58,
+        "loy": 82,
+        "acu": 44
+      },
+      "imageUrl": "/images/rare-gold_eva-muller_82c1ba8ae38695eb582414ce83dea297597d974d75ad86670b36e703c24a2a36.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_evi-van-der-linden_9368df85a33d2b673e4e7373c173f9500d280a1711c51ddde3ac8029c4355d55.png",
+      "id": "9368df85a33d2b673e4e7373c173f9500d280a1711c51ddde3ac8029c4355d55",
+      "name": "Evi van der Linden",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 60,
+        "ama": 59,
+        "size": 54,
+        "rang": 83,
+        "loy": 62,
+        "acu": 60
+      },
+      "imageUrl": "/images/rare-gold_evi-van-der-linden_9368df85a33d2b673e4e7373c173f9500d280a1711c51ddde3ac8029c4355d55.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_fien-van-den-berg_6e705df36d1286092ac3065d7f16968fba181c7a634aadc3ab61274358c3718b.png",
+      "id": "6e705df36d1286092ac3065d7f16968fba181c7a634aadc3ab61274358c3718b",
+      "name": "Fien van den Berg",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 63,
+        "ama": 55,
+        "size": 55,
+        "rang": 60,
+        "loy": 74,
+        "acu": 59
+      },
+      "imageUrl": "/images/rare-gold_fien-van-den-berg_6e705df36d1286092ac3065d7f16968fba181c7a634aadc3ab61274358c3718b.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_fleur-kramer_f3c5f4221ba80aa276144e2e96380eb77e989a95b5576337297525f33653ac72.png",
+      "id": "f3c5f4221ba80aa276144e2e96380eb77e989a95b5576337297525f33653ac72",
+      "name": "Fleur Kramer",
+      "tier": "Rare Gold",
+      "overall": 64,
+      "stats": {
+        "pow": 62,
+        "ama": 59,
+        "size": 57,
+        "rang": 81,
+        "loy": 64,
+        "acu": 61
+      },
+      "imageUrl": "/images/rare-gold_fleur-kramer_f3c5f4221ba80aa276144e2e96380eb77e989a95b5576337297525f33653ac72.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_jens-van-leeuwen_435215e41dc03b187b2e7914e20556a36d69db5a49254e56960277848f35dca6.png",
+      "id": "435215e41dc03b187b2e7914e20556a36d69db5a49254e56960277848f35dca6",
+      "name": "Jens van Leeuwen",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 57,
+        "ama": 59,
+        "size": 64,
+        "rang": 76,
+        "loy": 57,
+        "acu": 65
+      },
+      "imageUrl": "/images/rare-gold_jens-van-leeuwen_435215e41dc03b187b2e7914e20556a36d69db5a49254e56960277848f35dca6.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_jules-rossi_3da58bc0233fe2ac3d2f2ee84b7c2eaba66a89ffeacd471ecc0bb529aaed25a9.png",
+      "id": "3da58bc0233fe2ac3d2f2ee84b7c2eaba66a89ffeacd471ecc0bb529aaed25a9",
+      "name": "Jules Rossi",
+      "tier": "Rare Gold",
+      "overall": 64,
+      "stats": {
+        "pow": 69,
+        "ama": 67,
+        "size": 59,
+        "rang": 65,
+        "loy": 60,
+        "acu": 64
+      },
+      "imageUrl": "/images/rare-gold_jules-rossi_3da58bc0233fe2ac3d2f2ee84b7c2eaba66a89ffeacd471ecc0bb529aaed25a9.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_lara-bianchi_57772b7bfe548db0d07a956431474c2d4af3c3c3948468d0ab689f4500702d70.png",
+      "id": "57772b7bfe548db0d07a956431474c2d4af3c3c3948468d0ab689f4500702d70",
+      "name": "Lara Bianchi",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 63,
+        "ama": 64,
+        "size": 65,
+        "rang": 67,
+        "loy": 54,
+        "acu": 65
+      },
+      "imageUrl": "/images/rare-gold_lara-bianchi_57772b7bfe548db0d07a956431474c2d4af3c3c3948468d0ab689f4500702d70.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_lea-van-vliet_24890efa86db1ddd2e6e365e6497e021280e4a78c90ced8d661428cd1f24c2d8.png",
+      "id": "24890efa86db1ddd2e6e365e6497e021280e4a78c90ced8d661428cd1f24c2d8",
+      "name": "Lea van Vliet",
+      "tier": "Rare Gold",
+      "overall": 60,
+      "stats": {
+        "pow": 59,
+        "ama": 75,
+        "size": 55,
+        "rang": 51,
+        "loy": 60,
+        "acu": 60
+      },
+      "imageUrl": "/images/rare-gold_lea-van-vliet_24890efa86db1ddd2e6e365e6497e021280e4a78c90ced8d661428cd1f24c2d8.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_liam-van-den-bosch_218004d47e83084ff477643fa574521c35993259c50c789300cf6d93cc75ab68.png",
+      "id": "218004d47e83084ff477643fa574521c35993259c50c789300cf6d93cc75ab68",
+      "name": "Liam van den Bosch",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 66,
+        "ama": 60,
+        "size": 47,
+        "rang": 66,
+        "loy": 60,
+        "acu": 67
+      },
+      "imageUrl": "/images/rare-gold_liam-van-den-bosch_218004d47e83084ff477643fa574521c35993259c50c789300cf6d93cc75ab68.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_luca-romano_ef44b849e375ce400830f77937136d549439dd940148e9389260c8f941bbaf48.png",
+      "id": "ef44b849e375ce400830f77937136d549439dd940148e9389260c8f941bbaf48",
+      "name": "Luca Romano",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 68,
+        "ama": 70,
+        "size": 58,
+        "rang": 70,
+        "loy": 56,
+        "acu": 44
+      },
+      "imageUrl": "/images/rare-gold_luca-romano_ef44b849e375ce400830f77937136d549439dd940148e9389260c8f941bbaf48.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_lucas-lefevre_3f85f949509e4d3a6db119896fa1c365ee462dc5a5b333687ca80547474416c6.png",
+      "id": "3f85f949509e4d3a6db119896fa1c365ee462dc5a5b333687ca80547474416c6",
+      "name": "Lucas Lefèvre",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 60,
+        "ama": 51,
+        "size": 60,
+        "rang": 76,
+        "loy": 58,
+        "acu": 67
+      },
+      "imageUrl": "/images/rare-gold_lucas-lefevre_3f85f949509e4d3a6db119896fa1c365ee462dc5a5b333687ca80547474416c6.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_lucca-schneider_e3b49f86108010affc14ad97ea646af38380ee617e827832d0b214cbf92bb384.png",
+      "id": "e3b49f86108010affc14ad97ea646af38380ee617e827832d0b214cbf92bb384",
+      "name": "Lucca Schneider",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 55,
+        "ama": 60,
+        "size": 69,
+        "rang": 58,
+        "loy": 48,
+        "acu": 76
+      },
+      "imageUrl": "/images/rare-gold_lucca-schneider_e3b49f86108010affc14ad97ea646af38380ee617e827832d0b214cbf92bb384.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_marie-deller_11aec72a13020358d204596c1b0b23ba6ca6a91cee85a2415be371caa77341a3.png",
+      "id": "11aec72a13020358d204596c1b0b23ba6ca6a91cee85a2415be371caa77341a3",
+      "name": "Marie Deller",
+      "tier": "Rare Gold",
+      "overall": 60,
+      "stats": {
+        "pow": 67,
+        "ama": 69,
+        "size": 20,
+        "rang": 50,
+        "loy": 95,
+        "acu": 59
+      },
+      "imageUrl": "/images/rare-gold_marie-deller_11aec72a13020358d204596c1b0b23ba6ca6a91cee85a2415be371caa77341a3.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_mateo-popescu_e44579fcd69e872c35bfb3c83dbceb9c08ed4b26dee8d410027011439db93b80.png",
+      "id": "e44579fcd69e872c35bfb3c83dbceb9c08ed4b26dee8d410027011439db93b80",
+      "name": "Mateo Popescu",
+      "tier": "Rare Gold",
+      "overall": 64,
+      "stats": {
+        "pow": 68,
+        "ama": 64,
+        "size": 58,
+        "rang": 67,
+        "loy": 68,
+        "acu": 59
+      },
+      "imageUrl": "/images/rare-gold_mateo-popescu_e44579fcd69e872c35bfb3c83dbceb9c08ed4b26dee8d410027011439db93b80.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_maya-novak_58b0a4653cdbd6e418ccabe29978bf9161de7b901f93d37d41be9d66c950bcfb.png",
+      "id": "58b0a4653cdbd6e418ccabe29978bf9161de7b901f93d37d41be9d66c950bcfb",
+      "name": "Maya Novák",
+      "tier": "Rare Gold",
+      "overall": 64,
+      "stats": {
+        "pow": 69,
+        "ama": 70,
+        "size": 39,
+        "rang": 71,
+        "loy": 73,
+        "acu": 62
+      },
+      "imageUrl": "/images/rare-gold_maya-novak_58b0a4653cdbd6e418ccabe29978bf9161de7b901f93d37d41be9d66c950bcfb.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_milan-van-der-heijden_bb2ecb79bf686f75244f51cb9cdf620fafcdca692bab75691864f5cb73ddc559.png",
+      "id": "bb2ecb79bf686f75244f51cb9cdf620fafcdca692bab75691864f5cb73ddc559",
+      "name": "Milan van der Heijden",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 55,
+        "ama": 60,
+        "size": 61,
+        "rang": 54,
+        "loy": 64,
+        "acu": 78
+      },
+      "imageUrl": "/images/rare-gold_milan-van-der-heijden_bb2ecb79bf686f75244f51cb9cdf620fafcdca692bab75691864f5cb73ddc559.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_milo-laurent_c8e1d0f4af18f1d1b056c2e796c2314a155fab58ebead69f57a03c9d33ce42d8.png",
+      "id": "c8e1d0f4af18f1d1b056c2e796c2314a155fab58ebead69f57a03c9d33ce42d8",
+      "name": "Milo Laurent",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 64,
+        "ama": 63,
+        "size": 63,
+        "rang": 51,
+        "loy": 62,
+        "acu": 69
+      },
+      "imageUrl": "/images/rare-gold_milo-laurent_c8e1d0f4af18f1d1b056c2e796c2314a155fab58ebead69f57a03c9d33ce42d8.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_morgan-muller_0c8fbe8173a9a8656d9df8ff552ab820b6aa6ffeb5f6ccfff6610da3caaed1d3.png",
+      "id": "0c8fbe8173a9a8656d9df8ff552ab820b6aa6ffeb5f6ccfff6610da3caaed1d3",
+      "name": "Morgan Müller",
+      "tier": "Rare Gold",
+      "overall": 60,
+      "stats": {
+        "pow": 55,
+        "ama": 57,
+        "size": 60,
+        "rang": 71,
+        "loy": 56,
+        "acu": 61
+      },
+      "imageUrl": "/images/rare-gold_morgan-muller_0c8fbe8173a9a8656d9df8ff552ab820b6aa6ffeb5f6ccfff6610da3caaed1d3.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_nathan-brouwer_5cbe7ac1d5729395229e7848f3dff11a38068a88ce85206bf044d4af2a82a4ba.png",
+      "id": "5cbe7ac1d5729395229e7848f3dff11a38068a88ce85206bf044d4af2a82a4ba",
+      "name": "Nathan Brouwer",
+      "tier": "Rare Gold",
+      "overall": 61,
+      "stats": {
+        "pow": 65,
+        "ama": 63,
+        "size": 61,
+        "rang": 55,
+        "loy": 50,
+        "acu": 72
+      },
+      "imageUrl": "/images/rare-gold_nathan-brouwer_5cbe7ac1d5729395229e7848f3dff11a38068a88ce85206bf044d4af2a82a4ba.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_remi-rahman_00918d51c22d00a9c666eec7cf7119c0d9c2973ba9e755c87efe0fbd4d3e664e.png",
+      "id": "00918d51c22d00a9c666eec7cf7119c0d9c2973ba9e755c87efe0fbd4d3e664e",
+      "name": "Remi Rahman",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 48,
+        "ama": 49,
+        "size": 77,
+        "rang": 67,
+        "loy": 72,
+        "acu": 59
+      },
+      "imageUrl": "/images/rare-gold_remi-rahman_00918d51c22d00a9c666eec7cf7119c0d9c2973ba9e755c87efe0fbd4d3e664e.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_remy-rat_d7ce21b22b8c168e0e15389f67a17ad0fb291c206e932686ad0aec1d3079ffa3.png",
+      "id": "d7ce21b22b8c168e0e15389f67a17ad0fb291c206e932686ad0aec1d3079ffa3",
+      "name": "Remy Rat",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 86,
+        "ama": 55,
+        "size": 29,
+        "rang": 65,
+        "loy": 77,
+        "acu": 65
+      },
+      "imageUrl": "/images/rare-gold_remy-rat_d7ce21b22b8c168e0e15389f67a17ad0fb291c206e932686ad0aec1d3079ffa3.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_rowan-fischer_997aa9ccc811177e1da6edb185aff5afdabf4b4dafe5859110a3f6657407138e.png",
+      "id": "997aa9ccc811177e1da6edb185aff5afdabf4b4dafe5859110a3f6657407138e",
+      "name": "Rowan Fischer",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 60,
+        "ama": 68,
+        "size": 67,
+        "rang": 68,
+        "loy": 55,
+        "acu": 54
+      },
+      "imageUrl": "/images/rare-gold_rowan-fischer_997aa9ccc811177e1da6edb185aff5afdabf4b4dafe5859110a3f6657407138e.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-gold_sasha-van-wijk_327e9261b75fbacd4c7f6f85a8d2a3e426b2bf490016c80a985d68e74930fdba.png",
+      "id": "327e9261b75fbacd4c7f6f85a8d2a3e426b2bf490016c80a985d68e74930fdba",
+      "name": "Sasha van Wijk",
+      "tier": "Rare Gold",
+      "overall": 63,
+      "stats": {
+        "pow": 58,
+        "ama": 71,
+        "size": 70,
+        "rang": 62,
+        "loy": 53,
+        "acu": 64
+      },
+      "imageUrl": "/images/rare-gold_sasha-van-wijk_327e9261b75fbacd4c7f6f85a8d2a3e426b2bf490016c80a985d68e74930fdba.png",
+      "collectible": {
+        "templateId": "image17.png"
+      }
+    },
+    {
+      "filename": "rare-silver_adam-van-dam_016b899839506eeb709509d6a34f2e82112ffe89a788ab1631982f9195a2fb7f.png",
+      "id": "016b899839506eeb709509d6a34f2e82112ffe89a788ab1631982f9195a2fb7f",
+      "name": "Adam van Dam",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 45,
+        "ama": 42,
+        "size": 51,
+        "rang": 51,
+        "loy": 55,
+        "acu": 44
+      },
+      "imageUrl": "/images/rare-silver_adam-van-dam_016b899839506eeb709509d6a34f2e82112ffe89a788ab1631982f9195a2fb7f.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_anton-prins_dc98bdb241bbba3725d1ff7873d130d56b53fd2671c1af023e9b6961e062ff1e.png",
+      "id": "dc98bdb241bbba3725d1ff7873d130d56b53fd2671c1af023e9b6961e062ff1e",
+      "name": "Anton Prins",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 55,
+        "ama": 46,
+        "size": 46,
+        "rang": 47,
+        "loy": 47,
+        "acu": 47
+      },
+      "imageUrl": "/images/rare-silver_anton-prins_dc98bdb241bbba3725d1ff7873d130d56b53fd2671c1af023e9b6961e062ff1e.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_ariel-van-der-linden_6a4ea3592e31c777bba6c1ef85df19d7bc71a3d019487a4acd99585147205e0a.png",
+      "id": "6a4ea3592e31c777bba6c1ef85df19d7bc71a3d019487a4acd99585147205e0a",
+      "name": "Ariel van der Linden",
+      "tier": "Rare Silver",
+      "overall": 45,
+      "stats": {
+        "pow": 48,
+        "ama": 35,
+        "size": 43,
+        "rang": 43,
+        "loy": 48,
+        "acu": 53
+      },
+      "imageUrl": "/images/rare-silver_ariel-van-der-linden_6a4ea3592e31c777bba6c1ef85df19d7bc71a3d019487a4acd99585147205e0a.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_arthur-dubois_8e5ac2410c00a318d2fb7aa0af2ca70f4075c4f5416a4533c3e8ab878ccb8b8f.png",
+      "id": "8e5ac2410c00a318d2fb7aa0af2ca70f4075c4f5416a4533c3e8ab878ccb8b8f",
+      "name": "Arthur Dubois",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 44,
+        "ama": 47,
+        "size": 44,
+        "rang": 43,
+        "loy": 40,
+        "acu": 70
+      },
+      "imageUrl": "/images/rare-silver_arthur-dubois_8e5ac2410c00a318d2fb7aa0af2ca70f4075c4f5416a4533c3e8ab878ccb8b8f.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_dani-o-connor_3c0db2c50655a285b6feaad22a931bfed2a60e4eb148134787a864a93d9b2472.png",
+      "id": "3c0db2c50655a285b6feaad22a931bfed2a60e4eb148134787a864a93d9b2472",
+      "name": "Dani O'Connor",
+      "tier": "Rare Silver",
+      "overall": 45,
+      "stats": {
+        "pow": 52,
+        "ama": 28,
+        "size": 66,
+        "rang": 46,
+        "loy": 45,
+        "acu": 33
+      },
+      "imageUrl": "/images/rare-silver_dani-o-connor_3c0db2c50655a285b6feaad22a931bfed2a60e4eb148134787a864a93d9b2472.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_ellis-van-der-zwaan_f73bc12b2905261045617ed15830eba75d53cd65e86e470cc1c5044475d6027c.png",
+      "id": "f73bc12b2905261045617ed15830eba75d53cd65e86e470cc1c5044475d6027c",
+      "name": "Ellis van der Zwaan",
+      "tier": "Rare Silver",
+      "overall": 47,
+      "stats": {
+        "pow": 48,
+        "ama": 43,
+        "size": 49,
+        "rang": 48,
+        "loy": 47,
+        "acu": 47
+      },
+      "imageUrl": "/images/rare-silver_ellis-van-der-zwaan_f73bc12b2905261045617ed15830eba75d53cd65e86e470cc1c5044475d6027c.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_felix-van-nieuwenhuizen_1ea7c6dbbe9536797ef4618b71f51cb0fa1c576f06be893019aa2bd31c66e15d.png",
+      "id": "1ea7c6dbbe9536797ef4618b71f51cb0fa1c576f06be893019aa2bd31c66e15d",
+      "name": "Felix van Nieuwenhuizen",
+      "tier": "Rare Silver",
+      "overall": 46,
+      "stats": {
+        "pow": 52,
+        "ama": 38,
+        "size": 51,
+        "rang": 50,
+        "loy": 39,
+        "acu": 46
+      },
+      "imageUrl": "/images/rare-silver_felix-van-nieuwenhuizen_1ea7c6dbbe9536797ef4618b71f51cb0fa1c576f06be893019aa2bd31c66e15d.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_imani-lindstrom_80644fca55a2529153279a42c8981dd072cc646b880906e9daad1c25e5cc3fc0.png",
+      "id": "80644fca55a2529153279a42c8981dd072cc646b880906e9daad1c25e5cc3fc0",
+      "name": "Imani Lindström",
+      "tier": "Rare Silver",
+      "overall": 40,
+      "stats": {
+        "pow": 36,
+        "ama": 54,
+        "size": 36,
+        "rang": 40,
+        "loy": 38,
+        "acu": 36
+      },
+      "imageUrl": "/images/rare-silver_imani-lindstrom_80644fca55a2529153279a42c8981dd072cc646b880906e9daad1c25e5cc3fc0.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_isa-van-pelt_eeb8403c9853d10f3c7496627c07e1d6dac55eaacd6e8fd557976188f57caa02.png",
+      "id": "eeb8403c9853d10f3c7496627c07e1d6dac55eaacd6e8fd557976188f57caa02",
+      "name": "Isa van Pelt",
+      "tier": "Rare Silver",
+      "overall": 45,
+      "stats": {
+        "pow": 68,
+        "ama": 38,
+        "size": 43,
+        "rang": 51,
+        "loy": 35,
+        "acu": 35
+      },
+      "imageUrl": "/images/rare-silver_isa-van-pelt_eeb8403c9853d10f3c7496627c07e1d6dac55eaacd6e8fd557976188f57caa02.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_leo-patel_6e801c5dc02fa71c2fda734ba6c56c5ffe742bf1cdd78495d8c3825a07840c27.png",
+      "id": "6e801c5dc02fa71c2fda734ba6c56c5ffe742bf1cdd78495d8c3825a07840c27",
+      "name": "Leo Patel",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 36,
+        "ama": 71,
+        "size": 46,
+        "rang": 42,
+        "loy": 48,
+        "acu": 45
+      },
+      "imageUrl": "/images/rare-silver_leo-patel_6e801c5dc02fa71c2fda734ba6c56c5ffe742bf1cdd78495d8c3825a07840c27.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_levi-bennett_804785ed90634414ea7774641ad268a010e8f5895a23b1b4c11a2500a2d2f887.png",
+      "id": "804785ed90634414ea7774641ad268a010e8f5895a23b1b4c11a2500a2d2f887",
+      "name": "Levi Bennett",
+      "tier": "Rare Silver",
+      "overall": 46,
+      "stats": {
+        "pow": 43,
+        "ama": 50,
+        "size": 50,
+        "rang": 46,
+        "loy": 44,
+        "acu": 43
+      },
+      "imageUrl": "/images/rare-silver_levi-bennett_804785ed90634414ea7774641ad268a010e8f5895a23b1b4c11a2500a2d2f887.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_levi-de-boer_d25b73785ef958fd509ac99f8cd8cf3089cae8efa212602efae24b2832fcf8ce.png",
+      "id": "d25b73785ef958fd509ac99f8cd8cf3089cae8efa212602efae24b2832fcf8ce",
+      "name": "Levi de Boer",
+      "tier": "Rare Silver",
+      "overall": 47,
+      "stats": {
+        "pow": 43,
+        "ama": 50,
+        "size": 51,
+        "rang": 47,
+        "loy": 42,
+        "acu": 49
+      },
+      "imageUrl": "/images/rare-silver_levi-de-boer_d25b73785ef958fd509ac99f8cd8cf3089cae8efa212602efae24b2832fcf8ce.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_liam-van-pelt_9d1b862e3a1c9f9b43a7b9e844acd7bce219ee29050bc088b7739f55cb83dc5c.png",
+      "id": "9d1b862e3a1c9f9b43a7b9e844acd7bce219ee29050bc088b7739f55cb83dc5c",
+      "name": "Liam van Pelt",
+      "tier": "Rare Silver",
+      "overall": 47,
+      "stats": {
+        "pow": 46,
+        "ama": 47,
+        "size": 51,
+        "rang": 44,
+        "loy": 53,
+        "acu": 41
+      },
+      "imageUrl": "/images/rare-silver_liam-van-pelt_9d1b862e3a1c9f9b43a7b9e844acd7bce219ee29050bc088b7739f55cb83dc5c.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_lieke-walker_e3e7972bd0aed18713430c0af1cc8ef13c5bfa73f4e421dfbd67ce352ea4dacc.png",
+      "id": "e3e7972bd0aed18713430c0af1cc8ef13c5bfa73f4e421dfbd67ce352ea4dacc",
+      "name": "Lieke Walker",
+      "tier": "Rare Silver",
+      "overall": 43,
+      "stats": {
+        "pow": 36,
+        "ama": 47,
+        "size": 41,
+        "rang": 34,
+        "loy": 60,
+        "acu": 40
+      },
+      "imageUrl": "/images/rare-silver_lieke-walker_e3e7972bd0aed18713430c0af1cc8ef13c5bfa73f4e421dfbd67ce352ea4dacc.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_mateo-van-den-broek_a93535a43a502454c6a7cd507fe7a0ef77bac4534d1c98a864219a4b7c95ae42.png",
+      "id": "a93535a43a502454c6a7cd507fe7a0ef77bac4534d1c98a864219a4b7c95ae42",
+      "name": "Mateo van den Broek",
+      "tier": "Rare Silver",
+      "overall": 47,
+      "stats": {
+        "pow": 32,
+        "ama": 53,
+        "size": 52,
+        "rang": 47,
+        "loy": 50,
+        "acu": 48
+      },
+      "imageUrl": "/images/rare-silver_mateo-van-den-broek_a93535a43a502454c6a7cd507fe7a0ef77bac4534d1c98a864219a4b7c95ae42.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_maud-moreno_a7c71d11e08d48d4c9b516d06674883c369066505ba11e5725687095866683b0.png",
+      "id": "a7c71d11e08d48d4c9b516d06674883c369066505ba11e5725687095866683b0",
+      "name": "Maud Moreno",
+      "tier": "Rare Silver",
+      "overall": 45,
+      "stats": {
+        "pow": 45,
+        "ama": 54,
+        "size": 46,
+        "rang": 45,
+        "loy": 34,
+        "acu": 46
+      },
+      "imageUrl": "/images/rare-silver_maud-moreno_a7c71d11e08d48d4c9b516d06674883c369066505ba11e5725687095866683b0.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_maya-willems_4ee363b3f176d47b7e6b161bc396fff0bd0240862ac1092abd581572c876c45f.png",
+      "id": "4ee363b3f176d47b7e6b161bc396fff0bd0240862ac1092abd581572c876c45f",
+      "name": "Maya Willems",
+      "tier": "Rare Silver",
+      "overall": 48,
+      "stats": {
+        "pow": 44,
+        "ama": 45,
+        "size": 48,
+        "rang": 48,
+        "loy": 51,
+        "acu": 52
+      },
+      "imageUrl": "/images/rare-silver_maya-willems_4ee363b3f176d47b7e6b161bc396fff0bd0240862ac1092abd581572c876c45f.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_nathan-popescu_46af7fedc0bfdeb5ca1ca74c51f162b5bf5976b0bb7bc5bd1227a28552db3a85.png",
+      "id": "46af7fedc0bfdeb5ca1ca74c51f162b5bf5976b0bb7bc5bd1227a28552db3a85",
+      "name": "Nathan Popescu",
+      "tier": "Rare Silver",
+      "overall": 46,
+      "stats": {
+        "pow": 46,
+        "ama": 41,
+        "size": 46,
+        "rang": 37,
+        "loy": 60,
+        "acu": 46
+      },
+      "imageUrl": "/images/rare-silver_nathan-popescu_46af7fedc0bfdeb5ca1ca74c51f162b5bf5976b0bb7bc5bd1227a28552db3a85.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_nina-willems_dd9ba44dab62e6775a7c54b8b0cee4c2e94458ea1a7423a527351a129593a604.png",
+      "id": "dd9ba44dab62e6775a7c54b8b0cee4c2e94458ea1a7423a527351a129593a604",
+      "name": "Nina Willems",
+      "tier": "Rare Silver",
+      "overall": 49,
+      "stats": {
+        "pow": 56,
+        "ama": 50,
+        "size": 45,
+        "rang": 43,
+        "loy": 48,
+        "acu": 52
+      },
+      "imageUrl": "/images/rare-silver_nina-willems_dd9ba44dab62e6775a7c54b8b0cee4c2e94458ea1a7423a527351a129593a604.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_quinn-van-dongen_f765b161a9cab848832c64585b93a9ff1aee125688098b9803521f92149a4681.png",
+      "id": "f765b161a9cab848832c64585b93a9ff1aee125688098b9803521f92149a4681",
+      "name": "Quinn van Dongen",
+      "tier": "Rare Silver",
+      "overall": 41,
+      "stats": {
+        "pow": 30,
+        "ama": 42,
+        "size": 38,
+        "rang": 48,
+        "loy": 41,
+        "acu": 47
+      },
+      "imageUrl": "/images/rare-silver_quinn-van-dongen_f765b161a9cab848832c64585b93a9ff1aee125688098b9803521f92149a4681.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_remy-van-der-pol_01a6286ff099f83c0488868c23a2f90ec04f59b2f00564766cb1609d2c838b89.png",
+      "id": "01a6286ff099f83c0488868c23a2f90ec04f59b2f00564766cb1609d2c838b89",
+      "name": "Remy van der Pol",
+      "tier": "Rare Silver",
+      "overall": 44,
+      "stats": {
+        "pow": 47,
+        "ama": 43,
+        "size": 27,
+        "rang": 50,
+        "loy": 52,
+        "acu": 45
+      },
+      "imageUrl": "/images/rare-silver_remy-van-der-pol_01a6286ff099f83c0488868c23a2f90ec04f59b2f00564766cb1609d2c838b89.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_roos-van-zanten_b9601d696ef71dad88a6468bcfc9deed2e420e0f48b8239fbf5c161a0b4e2c5e.png",
+      "id": "b9601d696ef71dad88a6468bcfc9deed2e420e0f48b8239fbf5c161a0b4e2c5e",
+      "name": "Roos van Zanten",
+      "tier": "Rare Silver",
+      "overall": 42,
+      "stats": {
+        "pow": 45,
+        "ama": 37,
+        "size": 32,
+        "rang": 41,
+        "loy": 45,
+        "acu": 52
+      },
+      "imageUrl": "/images/rare-silver_roos-van-zanten_b9601d696ef71dad88a6468bcfc9deed2e420e0f48b8239fbf5c161a0b4e2c5e.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_sam-boom_47adba1262a815240954af4c1862d8a1683424e50da5cceeb11a4c961c5712fe.png",
+      "id": "47adba1262a815240954af4c1862d8a1683424e50da5cceeb11a4c961c5712fe",
+      "name": "Sam Boom",
+      "tier": "Rare Silver",
+      "overall": 42,
+      "stats": {
+        "pow": 40,
+        "ama": 49,
+        "size": 43,
+        "rang": 43,
+        "loy": 35,
+        "acu": 42
+      },
+      "imageUrl": "/images/rare-silver_sam-boom_47adba1262a815240954af4c1862d8a1683424e50da5cceeb11a4c961c5712fe.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_sem-meijer_61451607384c3bd5c6c3d331eb781a08307ec595f42df830913be9867d9d39f6.png",
+      "id": "61451607384c3bd5c6c3d331eb781a08307ec595f42df830913be9867d9d39f6",
+      "name": "Sem Meijer",
+      "tier": "Rare Silver",
+      "overall": 42,
+      "stats": {
+        "pow": 47,
+        "ama": 45,
+        "size": 45,
+        "rang": 28,
+        "loy": 40,
+        "acu": 47
+      },
+      "imageUrl": "/images/rare-silver_sem-meijer_61451607384c3bd5c6c3d331eb781a08307ec595f42df830913be9867d9d39f6.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "rare-silver_wout-van-der-werf_05a2ab54228d4bd4c26d4baccdfbe083f9f781c5ed1a5682c0c84bc77a7dd4c9.png",
+      "id": "05a2ab54228d4bd4c26d4baccdfbe083f9f781c5ed1a5682c0c84bc77a7dd4c9",
+      "name": "Wout van der Werf",
+      "tier": "Rare Silver",
+      "overall": 41,
+      "stats": {
+        "pow": 44,
+        "ama": 30,
+        "size": 34,
+        "rang": 44,
+        "loy": 57,
+        "acu": 37
+      },
+      "imageUrl": "/images/rare-silver_wout-van-der-werf_05a2ab54228d4bd4c26d4baccdfbe083f9f781c5ed1a5682c0c84bc77a7dd4c9.png",
+      "collectible": {
+        "templateId": "image22.jpeg"
+      }
+    },
+    {
+      "filename": "silver_amina-van-eijk_428146d247864b54bfe7fecbb86c60f52e3ed91f5c91f4f725c4cb63c78a16e3.png",
+      "id": "428146d247864b54bfe7fecbb86c60f52e3ed91f5c91f4f725c4cb63c78a16e3",
+      "name": "Amina van Eijk",
+      "tier": "Silver",
+      "overall": 36,
+      "stats": {
+        "pow": 34,
+        "ama": 39,
+        "size": 32,
+        "rang": 25,
+        "loy": 47,
+        "acu": 39
+      },
+      "imageUrl": "/images/silver_amina-van-eijk_428146d247864b54bfe7fecbb86c60f52e3ed91f5c91f4f725c4cb63c78a16e3.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_anne-hendriks_180a9ac214d0e496a43056a8dd515538f5ad1099db7e077b478b019767132df7.png",
+      "id": "180a9ac214d0e496a43056a8dd515538f5ad1099db7e077b478b019767132df7",
+      "name": "Anne Hendriks",
+      "tier": "Silver",
+      "overall": 38,
+      "stats": {
+        "pow": 78,
+        "ama": 34,
+        "size": 28,
+        "rang": 23,
+        "loy": 32,
+        "acu": 33
+      },
+      "imageUrl": "/images/silver_anne-hendriks_180a9ac214d0e496a43056a8dd515538f5ad1099db7e077b478b019767132df7.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_anne-muller_dfd09b353b6afbfe8c350ffbc42ad71f9daabce2aaf2f5ce0734257e0e57e5fa.png",
+      "id": "dfd09b353b6afbfe8c350ffbc42ad71f9daabce2aaf2f5ce0734257e0e57e5fa",
+      "name": "Anne Müller",
+      "tier": "Silver",
+      "overall": 38,
+      "stats": {
+        "pow": 47,
+        "ama": 20,
+        "size": 46,
+        "rang": 41,
+        "loy": 44,
+        "acu": 30
+      },
+      "imageUrl": "/images/silver_anne-muller_dfd09b353b6afbfe8c350ffbc42ad71f9daabce2aaf2f5ce0734257e0e57e5fa.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_ariel-nowak_e2cd629d394d333ad1f08bb0935e9264b81543fab3e9e3cfc358cd485d97b6f4.png",
+      "id": "e2cd629d394d333ad1f08bb0935e9264b81543fab3e9e3cfc358cd485d97b6f4",
+      "name": "Ariel Nowak",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 32,
+        "ama": 32,
+        "size": 34,
+        "rang": 43,
+        "loy": 42,
+        "acu": 39
+      },
+      "imageUrl": "/images/silver_ariel-nowak_e2cd629d394d333ad1f08bb0935e9264b81543fab3e9e3cfc358cd485d97b6f4.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_arthur-jansen_3f530464f01a88356a08c2d9ec5eac472aa69aa0ac595c1d88fac7ff48f80e7e.png",
+      "id": "3f530464f01a88356a08c2d9ec5eac472aa69aa0ac595c1d88fac7ff48f80e7e",
+      "name": "Arthur Jansen",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 34,
+        "ama": 22,
+        "size": 38,
+        "rang": 40,
+        "loy": 44,
+        "acu": 44
+      },
+      "imageUrl": "/images/silver_arthur-jansen_3f530464f01a88356a08c2d9ec5eac472aa69aa0ac595c1d88fac7ff48f80e7e.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_cato-van-den-broek_8d8383e2426b3a8b122ea1ae3ff635ce64533d8e3f1a6f8f191f5c1404430dee.png",
+      "id": "8d8383e2426b3a8b122ea1ae3ff635ce64533d8e3f1a6f8f191f5c1404430dee",
+      "name": "Cato van den Broek",
+      "tier": "Silver",
+      "overall": 36,
+      "stats": {
+        "pow": 42,
+        "ama": 48,
+        "size": 35,
+        "rang": 19,
+        "loy": 34,
+        "acu": 38
+      },
+      "imageUrl": "/images/silver_cato-van-den-broek_8d8383e2426b3a8b122ea1ae3ff635ce64533d8e3f1a6f8f191f5c1404430dee.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_elias-de-groot_6ce5ff17ee1af79a4a35d070b4a1ce1eba09016b0c1bec689a9cca3b52266240.png",
+      "id": "6ce5ff17ee1af79a4a35d070b4a1ce1eba09016b0c1bec689a9cca3b52266240",
+      "name": "Elias de Groot",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 39,
+        "ama": 39,
+        "size": 37,
+        "rang": 33,
+        "loy": 33,
+        "acu": 53
+      },
+      "imageUrl": "/images/silver_elias-de-groot_6ce5ff17ee1af79a4a35d070b4a1ce1eba09016b0c1bec689a9cca3b52266240.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_felix-nguyen_3de90839259f7f9dd3e17c5c2f76385d70d2b015b8efd62c116fb0efdef03476.png",
+      "id": "3de90839259f7f9dd3e17c5c2f76385d70d2b015b8efd62c116fb0efdef03476",
+      "name": "Felix Nguyen",
+      "tier": "Silver",
+      "overall": 38,
+      "stats": {
+        "pow": 43,
+        "ama": 36,
+        "size": 44,
+        "rang": 28,
+        "loy": 35,
+        "acu": 42
+      },
+      "imageUrl": "/images/silver_felix-nguyen_3de90839259f7f9dd3e17c5c2f76385d70d2b015b8efd62c116fb0efdef03476.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_floris-fischer_3c8a29e61950bde2fcc8ad953fc0cc6820268886fd4fd1326a241572173c4db4.png",
+      "id": "3c8a29e61950bde2fcc8ad953fc0cc6820268886fd4fd1326a241572173c4db4",
+      "name": "Floris Fischer",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 39,
+        "ama": 46,
+        "size": 37,
+        "rang": 36,
+        "loy": 37,
+        "acu": 39
+      },
+      "imageUrl": "/images/silver_floris-fischer_3c8a29e61950bde2fcc8ad953fc0cc6820268886fd4fd1326a241572173c4db4.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_hannah-kuiper_a4ce016dc987f713890beb00bf7cfa8249b8ffa0664461574aae966465e35509.png",
+      "id": "a4ce016dc987f713890beb00bf7cfa8249b8ffa0664461574aae966465e35509",
+      "name": "Hannah Kuiper",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 44,
+        "ama": 42,
+        "size": 33,
+        "rang": 44,
+        "loy": 39,
+        "acu": 32
+      },
+      "imageUrl": "/images/silver_hannah-kuiper_a4ce016dc987f713890beb00bf7cfa8249b8ffa0664461574aae966465e35509.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_hugo-kuiper_aedb65b9e6749b5ddf2fcc46078676870dd00f348e543462a5aa7335481dbf2b.png",
+      "id": "aedb65b9e6749b5ddf2fcc46078676870dd00f348e543462a5aa7335481dbf2b",
+      "name": "Hugo Kuiper",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 43,
+        "ama": 45,
+        "size": 34,
+        "rang": 29,
+        "loy": 39,
+        "acu": 32
+      },
+      "imageUrl": "/images/silver_hugo-kuiper_aedb65b9e6749b5ddf2fcc46078676870dd00f348e543462a5aa7335481dbf2b.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_hugo-meijer_e3ed842ca1ba73af94b324985359171c3b1fe2c51f7d646bc8edcd05e553d10b.png",
+      "id": "e3ed842ca1ba73af94b324985359171c3b1fe2c51f7d646bc8edcd05e553d10b",
+      "name": "Hugo Meijer",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 37,
+        "ama": 39,
+        "size": 47,
+        "rang": 25,
+        "loy": 39,
+        "acu": 35
+      },
+      "imageUrl": "/images/silver_hugo-meijer_e3ed842ca1ba73af94b324985359171c3b1fe2c51f7d646bc8edcd05e553d10b.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_louise-van-loon_64aaa8e6bb91cdc920485e1b02136717dd2dcd234dd1ba9e8c3252c2d95fffb1.png",
+      "id": "64aaa8e6bb91cdc920485e1b02136717dd2dcd234dd1ba9e8c3252c2d95fffb1",
+      "name": "Louise van Loon",
+      "tier": "Silver",
+      "overall": 36,
+      "stats": {
+        "pow": 46,
+        "ama": 43,
+        "size": 31,
+        "rang": 20,
+        "loy": 38,
+        "acu": 38
+      },
+      "imageUrl": "/images/silver_louise-van-loon_64aaa8e6bb91cdc920485e1b02136717dd2dcd234dd1ba9e8c3252c2d95fffb1.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_luca-hendriks_045eef113bccfcbab0faa4fa42cd53e0af551b1789e44856748a61035a34bd15.png",
+      "id": "045eef113bccfcbab0faa4fa42cd53e0af551b1789e44856748a61035a34bd15",
+      "name": "Luca Hendriks",
+      "tier": "Silver",
+      "overall": 35,
+      "stats": {
+        "pow": 22,
+        "ama": 35,
+        "size": 30,
+        "rang": 39,
+        "loy": 41,
+        "acu": 43
+      },
+      "imageUrl": "/images/silver_luca-hendriks_045eef113bccfcbab0faa4fa42cd53e0af551b1789e44856748a61035a34bd15.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_lucca-haan_bdcac312fffdd74b8c9dccb5c22f87c017a04f90d41dd73020f8873287fe2eb1.png",
+      "id": "bdcac312fffdd74b8c9dccb5c22f87c017a04f90d41dd73020f8873287fe2eb1",
+      "name": "Lucca Haan",
+      "tier": "Silver",
+      "overall": 35,
+      "stats": {
+        "pow": 41,
+        "ama": 42,
+        "size": 28,
+        "rang": 32,
+        "loy": 48,
+        "acu": 19
+      },
+      "imageUrl": "/images/silver_lucca-haan_bdcac312fffdd74b8c9dccb5c22f87c017a04f90d41dd73020f8873287fe2eb1.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_mats-post_e037b97c1562dea2a23ac615c00e9716a8e1dce22d02d294aec7ee6a6565e7db.png",
+      "id": "e037b97c1562dea2a23ac615c00e9716a8e1dce22d02d294aec7ee6a6565e7db",
+      "name": "Mats Post",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 39,
+        "ama": 44,
+        "size": 25,
+        "rang": 41,
+        "loy": 42,
+        "acu": 43
+      },
+      "imageUrl": "/images/silver_mats-post_e037b97c1562dea2a23ac615c00e9716a8e1dce22d02d294aec7ee6a6565e7db.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_maud-okafor_a8cb6e7f94b05f18da81de59e0217f0ac21065b2334fabc262258fb6db9e6d7d.png",
+      "id": "a8cb6e7f94b05f18da81de59e0217f0ac21065b2334fabc262258fb6db9e6d7d",
+      "name": "Maud Okafor",
+      "tier": "Silver",
+      "overall": 38,
+      "stats": {
+        "pow": 32,
+        "ama": 41,
+        "size": 41,
+        "rang": 37,
+        "loy": 44,
+        "acu": 33
+      },
+      "imageUrl": "/images/silver_maud-okafor_a8cb6e7f94b05f18da81de59e0217f0ac21065b2334fabc262258fb6db9e6d7d.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_mees-dekker_06e676d5ebcee546dc0999c59675d2298b9e2e0e4cd7abd4a8e0eb9b549b55bf.png",
+      "id": "06e676d5ebcee546dc0999c59675d2298b9e2e0e4cd7abd4a8e0eb9b549b55bf",
+      "name": "Mees Dekker",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 39,
+        "ama": 37,
+        "size": 24,
+        "rang": 43,
+        "loy": 39,
+        "acu": 40
+      },
+      "imageUrl": "/images/silver_mees-dekker_06e676d5ebcee546dc0999c59675d2298b9e2e0e4cd7abd4a8e0eb9b549b55bf.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_mia-schouten_54d39b87c5d9f93221fcd7760c8b1fc0ffaede80c2e38415105e984b9ffa42ce.png",
+      "id": "54d39b87c5d9f93221fcd7760c8b1fc0ffaede80c2e38415105e984b9ffa42ce",
+      "name": "Mia Schouten",
+      "tier": "Silver",
+      "overall": 36,
+      "stats": {
+        "pow": 36,
+        "ama": 22,
+        "size": 42,
+        "rang": 45,
+        "loy": 35,
+        "acu": 36
+      },
+      "imageUrl": "/images/silver_mia-schouten_54d39b87c5d9f93221fcd7760c8b1fc0ffaede80c2e38415105e984b9ffa42ce.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_morgan-kowalski_a229c253a6cc4c5fb824a471a083ed11b456a6d6fa765a7a9f6ef8d2fbac4f83.png",
+      "id": "a229c253a6cc4c5fb824a471a083ed11b456a6d6fa765a7a9f6ef8d2fbac4f83",
+      "name": "Morgan Kowalski",
+      "tier": "Silver",
+      "overall": 35,
+      "stats": {
+        "pow": 27,
+        "ama": 45,
+        "size": 21,
+        "rang": 31,
+        "loy": 27,
+        "acu": 59
+      },
+      "imageUrl": "/images/silver_morgan-kowalski_a229c253a6cc4c5fb824a471a083ed11b456a6d6fa765a7a9f6ef8d2fbac4f83.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_rafael-dubois_6063bf6c08cf0c8c514348c6808317e3b6512b248eb36d35a67b71ed7a757551.png",
+      "id": "6063bf6c08cf0c8c514348c6808317e3b6512b248eb36d35a67b71ed7a757551",
+      "name": "Rafael Dubois",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 64,
+        "ama": 23,
+        "size": 30,
+        "rang": 26,
+        "loy": 40,
+        "acu": 39
+      },
+      "imageUrl": "/images/silver_rafael-dubois_6063bf6c08cf0c8c514348c6808317e3b6512b248eb36d35a67b71ed7a757551.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_robin-hofman_f92b609207d819aaaa621fe6944c269ebdbd9b4ab383dbfdbc3d6c10d976e2ca.png",
+      "id": "f92b609207d819aaaa621fe6944c269ebdbd9b4ab383dbfdbc3d6c10d976e2ca",
+      "name": "Robin Hofman",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 43,
+        "ama": 37,
+        "size": 34,
+        "rang": 38,
+        "loy": 29,
+        "acu": 41
+      },
+      "imageUrl": "/images/silver_robin-hofman_f92b609207d819aaaa621fe6944c269ebdbd9b4ab383dbfdbc3d6c10d976e2ca.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_roos-bos_c4a76a985922dfda82c206ec455e7735dbe883e9ab423af87a2a4686c4e4abe1.png",
+      "id": "c4a76a985922dfda82c206ec455e7735dbe883e9ab423af87a2a4686c4e4abe1",
+      "name": "Roos Bos",
+      "tier": "Silver",
+      "overall": 39,
+      "stats": {
+        "pow": 42,
+        "ama": 42,
+        "size": 28,
+        "rang": 39,
+        "loy": 39,
+        "acu": 44
+      },
+      "imageUrl": "/images/silver_roos-bos_c4a76a985922dfda82c206ec455e7735dbe883e9ab423af87a2a4686c4e4abe1.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_rosa-navarro_8c23b8b00dbe55fbca7dd1de9c9638619999e103aa43e3ec154dda2240ba3c9d.png",
+      "id": "8c23b8b00dbe55fbca7dd1de9c9638619999e103aa43e3ec154dda2240ba3c9d",
+      "name": "Rosa Navarro",
+      "tier": "Silver",
+      "overall": 37,
+      "stats": {
+        "pow": 45,
+        "ama": 36,
+        "size": 42,
+        "rang": 39,
+        "loy": 31,
+        "acu": 29
+      },
+      "imageUrl": "/images/silver_rosa-navarro_8c23b8b00dbe55fbca7dd1de9c9638619999e103aa43e3ec154dda2240ba3c9d.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "silver_zoe-moreau_a2993494b6233c696a9c0d6ed6d638f41b6e416af98a266efa78254e9685adca.png",
+      "id": "a2993494b6233c696a9c0d6ed6d638f41b6e416af98a266efa78254e9685adca",
+      "name": "Zoë Moreau",
+      "tier": "Silver",
+      "overall": 35,
+      "stats": {
+        "pow": 35,
+        "ama": 38,
+        "size": 39,
+        "rang": 32,
+        "loy": 45,
+        "acu": 21
+      },
+      "imageUrl": "/images/silver_zoe-moreau_a2993494b6233c696a9c0d6ed6d638f41b6e416af98a266efa78254e9685adca.png",
+      "collectible": {
+        "templateId": "image20.png"
+      }
+    },
+    {
+      "filename": "ultra_daan-van-doorn_d25b95806486bb6cd13eec645d5f5a856d5d6fbcf7f0a9ffbec8d48ab4f01b4a.png",
+      "id": "d25b95806486bb6cd13eec645d5f5a856d5d6fbcf7f0a9ffbec8d48ab4f01b4a",
+      "name": "Daan van Doorn",
+      "tier": "Ultra",
+      "overall": 91,
+      "stats": {
+        "pow": 97,
+        "ama": 90,
+        "size": 92,
+        "rang": 94,
+        "loy": 85,
+        "acu": 88
+      },
+      "imageUrl": "/images/ultra_daan-van-doorn_d25b95806486bb6cd13eec645d5f5a856d5d6fbcf7f0a9ffbec8d48ab4f01b4a.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_elias-khan_b0f1d53b5c7d27b4219e78de5d7570a880c9414030e70a02dd73bf644244b661.png",
+      "id": "b0f1d53b5c7d27b4219e78de5d7570a880c9414030e70a02dd73bf644244b661",
+      "name": "Elias Khan",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 95,
+        "ama": 94,
+        "size": 98,
+        "rang": 91,
+        "loy": 91,
+        "acu": 95
+      },
+      "imageUrl": "/images/ultra_elias-khan_b0f1d53b5c7d27b4219e78de5d7570a880c9414030e70a02dd73bf644244b661.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_ellis-van-der-horst_465ac201776d47f59b182216045711dd98f89c087e7be38941f69f889c9b9a73.png",
+      "id": "465ac201776d47f59b182216045711dd98f89c087e7be38941f69f889c9b9a73",
+      "name": "Ellis van der Horst",
+      "tier": "Ultra",
+      "overall": 98,
+      "stats": {
+        "pow": 98,
+        "ama": 98,
+        "size": 97,
+        "rang": 99,
+        "loy": 97,
+        "acu": 99
+      },
+      "imageUrl": "/images/ultra_ellis-van-der-horst_465ac201776d47f59b182216045711dd98f89c087e7be38941f69f889c9b9a73.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_erik-van-dijk_ed07ec04bbdac4894359e14b325d8e2e25276a44bb74c4b076bc38dea24a11ed.png",
+      "id": "ed07ec04bbdac4894359e14b325d8e2e25276a44bb74c4b076bc38dea24a11ed",
+      "name": "Erik van Dijk",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 93,
+        "ama": 99,
+        "size": 86,
+        "rang": 99,
+        "loy": 98,
+        "acu": 89
+      },
+      "imageUrl": "/images/ultra_erik-van-dijk_ed07ec04bbdac4894359e14b325d8e2e25276a44bb74c4b076bc38dea24a11ed.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_lars-post_2e59b7f543bcd178ecf3173960fd49ea2370535ee7dced5f96f9d1272aa1f850.png",
+      "id": "2e59b7f543bcd178ecf3173960fd49ea2370535ee7dced5f96f9d1272aa1f850",
+      "name": "Lars Post",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 94,
+        "ama": 86,
+        "size": 99,
+        "rang": 98,
+        "loy": 92,
+        "acu": 95
+      },
+      "imageUrl": "/images/ultra_lars-post_2e59b7f543bcd178ecf3173960fd49ea2370535ee7dced5f96f9d1272aa1f850.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_lina-laurent_59baec6ed0993d3638fd80a80b7be174d2a922b2945f9677d3948211c9fae446.png",
+      "id": "59baec6ed0993d3638fd80a80b7be174d2a922b2945f9677d3948211c9fae446",
+      "name": "Lina Laurent",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 99,
+        "ama": 98,
+        "size": 70,
+        "rang": 99,
+        "loy": 99,
+        "acu": 99
+      },
+      "imageUrl": "/images/ultra_lina-laurent_59baec6ed0993d3638fd80a80b7be174d2a922b2945f9677d3948211c9fae446.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_maya-van-pelt_990d5f59e03b07f2fc0e0bb9078afa45aa8bd834b8516d0b412157522850a4a6.png",
+      "id": "990d5f59e03b07f2fc0e0bb9078afa45aa8bd834b8516d0b412157522850a4a6",
+      "name": "Maya van Pelt",
+      "tier": "Ultra",
+      "overall": 92,
+      "stats": {
+        "pow": 96,
+        "ama": 76,
+        "size": 97,
+        "rang": 95,
+        "loy": 96,
+        "acu": 92
+      },
+      "imageUrl": "/images/ultra_maya-van-pelt_990d5f59e03b07f2fc0e0bb9078afa45aa8bd834b8516d0b412157522850a4a6.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_nika-verstappen_0f3e67ea25fc952412e1c70a8992f9057baf53c9b520e2a708d8941c6b87fc45.png",
+      "id": "0f3e67ea25fc952412e1c70a8992f9057baf53c9b520e2a708d8941c6b87fc45",
+      "name": "Nika Verstappen",
+      "tier": "Ultra",
+      "overall": 92,
+      "stats": {
+        "pow": 96,
+        "ama": 94,
+        "size": 98,
+        "rang": 97,
+        "loy": 99,
+        "acu": 68
+      },
+      "imageUrl": "/images/ultra_nika-verstappen_0f3e67ea25fc952412e1c70a8992f9057baf53c9b520e2a708d8941c6b87fc45.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_roos-van-der-baan_3b5ddd53cdb99be4e3209134f45b853c10b360b16159b2b83ee1980f65f19dc4.png",
+      "id": "3b5ddd53cdb99be4e3209134f45b853c10b360b16159b2b83ee1980f65f19dc4",
+      "name": "Roos van der Baan",
+      "tier": "Ultra",
+      "overall": 94,
+      "stats": {
+        "pow": 97,
+        "ama": 94,
+        "size": 99,
+        "rang": 97,
+        "loy": 97,
+        "acu": 80
+      },
+      "imageUrl": "/images/ultra_roos-van-der-baan_3b5ddd53cdb99be4e3209134f45b853c10b360b16159b2b83ee1980f65f19dc4.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "ultra_sofia-brouwer_c61e41ee74b95a3eb4db410a71c5a6f5bb310d5838500d0b9fa2f11c691153d4.png",
+      "id": "c61e41ee74b95a3eb4db410a71c5a6f5bb310d5838500d0b9fa2f11c691153d4",
+      "name": "Sofia Brouwer",
+      "tier": "Ultra",
+      "overall": 96,
+      "stats": {
+        "pow": 99,
+        "ama": 99,
+        "size": 81,
+        "rang": 99,
+        "loy": 99,
+        "acu": 99
+      },
+      "imageUrl": "/images/ultra_sofia-brouwer_c61e41ee74b95a3eb4db410a71c5a6f5bb310d5838500d0b9fa2f11c691153d4.png",
+      "collectible": {
+        "templateId": "image2.png"
+      }
+    },
+    {
+      "filename": "zz2-Fighter_seb.png",
+      "id": "zz2-Fighter_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Fighter",
+      "overall": 93,
+      "stats": {
+        "pow": 94,
+        "ama": null,
+        "size": 94,
+        "rang": null,
+        "loy": null,
+        "acu": 92
+      },
+      "imageUrl": "/images/zz2-Fighter_seb.png"
+    },
+    {
+      "filename": "zz2-Lightning_boris.png",
+      "id": "zz2-Lightning_boris.png",
+      "name": "Boris Liesker",
+      "tier": "Lightling",
+      "overall": 85,
+      "stats": {
+        "pow": 78,
+        "ama": 92,
+        "size": 99,
+        "rang": 70,
+        "loy": 99,
+        "acu": 70
+      },
+      "imageUrl": "/images/zz2-Lightning_boris.png"
+    },
+    {
+      "filename": "zz2-Lightning_naomi.png",
+      "id": "zz2-Lightning_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Lightling",
+      "overall": 76,
+      "stats": {
+        "pow": 72,
+        "ama": 88,
+        "size": 61,
+        "rang": 66,
+        "loy": 97,
+        "acu": 74
+      },
+      "imageUrl": "/images/zz2-Lightning_naomi.png"
+    },
+    {
+      "filename": "zz2-Lightning_thomas.png",
+      "id": "zz2-Lightning_thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Lightling",
+      "overall": 86,
+      "stats": {
+        "pow": 92,
+        "ama": 93,
+        "size": 66,
+        "rang": 74,
+        "loy": 99,
+        "acu": 89
+      },
+      "imageUrl": "/images/zz2-Lightning_thomas.png"
+    },
+    {
+      "filename": "zz2-MOTM_seb.png",
+      "id": "zz2-MOTM_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "MOTM",
+      "overall": 95,
+      "stats": {
+        "pow": 99,
+        "ama": 92,
+        "size": 99,
+        "rang": 89,
+        "loy": 96,
+        "acu": 97
+      },
+      "imageUrl": "/images/zz2-MOTM_seb.png"
+    },
+    {
+      "filename": "zz2-Platinum_meintje.png",
+      "id": "zz2-Platinum_meintje.png",
+      "name": "Meintje Liesker",
+      "tier": "Platinum",
+      "overall": 71,
+      "stats": {
+        "pow": 65,
+        "ama": 78,
+        "size": 70,
+        "rang": 64,
+        "loy": 80,
+        "acu": 69
+      },
+      "imageUrl": "/images/zz2-Platinum_meintje.png"
+    },
+    {
+      "filename": "zz3-Fighter_olivia.png",
+      "id": "zz3-Fighter_olivia.png",
+      "name": "Olivia Liesker",
+      "tier": "Fighter",
+      "overall": 78,
+      "stats": {
+        "pow": 78,
+        "ama": null,
+        "size": 63,
+        "rang": null,
+        "loy": null,
+        "acu": 92
+      },
+      "imageUrl": "/images/zz3-Fighter_olivia.png"
+    },
+    {
+      "filename": "zz3-Fighter_seb.png",
+      "id": "zz3-Fighter_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Fighter",
+      "overall": 95,
+      "stats": {
+        "pow": 94,
+        "ama": null,
+        "size": 95,
+        "rang": null,
+        "loy": null,
+        "acu": 96
+      },
+      "imageUrl": "/images/zz3-Fighter_seb.png"
+    },
+    {
+      "filename": "zz3-Lightning_boris.png",
+      "id": "zz3-Lightning_boris.png",
+      "name": "Boris liesker",
+      "tier": "Lightling",
+      "overall": 88,
+      "stats": {
+        "pow": 79,
+        "ama": 94,
+        "size": 99,
+        "rang": 83,
+        "loy": 99,
+        "acu": 75
+      },
+      "imageUrl": "/images/zz3-Lightning_boris.png"
+    },
+    {
+      "filename": "zz3-Lightning_meintje.png",
+      "id": "zz3-Lightning_meintje.png",
+      "name": "Meintje Heeren",
+      "tier": "Lightling",
+      "overall": 76,
+      "stats": {
+        "pow": 67,
+        "ama": 78,
+        "size": 75,
+        "rang": 73,
+        "loy": 89,
+        "acu": 71
+      },
+      "imageUrl": "/images/zz3-Lightning_meintje.png"
+    },
+    {
+      "filename": "zz3-Lightning_naomi.png",
+      "id": "zz3-Lightning_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Lightling",
+      "overall": 78,
+      "stats": {
+        "pow": 72,
+        "ama": 89,
+        "size": 61,
+        "rang": 70,
+        "loy": 97,
+        "acu": 77
+      },
+      "imageUrl": "/images/zz3-Lightning_naomi.png"
+    },
+    {
+      "filename": "zz3-Lightning_thomas.png",
+      "id": "zz3-Lightning_thomas.png",
+      "name": "Thomas Liesker",
+      "tier": "Lightling",
+      "overall": 89,
+      "stats": {
+        "pow": 92,
+        "ama": 94,
+        "size": 68,
+        "rang": 88,
+        "loy": 99,
+        "acu": 92
+      },
+      "imageUrl": "/images/zz3-Lightning_thomas.png"
+    },
+    {
+      "filename": "zz3-Mini_naomi.png",
+      "id": "zz3-Mini_naomi.png",
+      "name": "Naomi Liesker",
+      "tier": "Mini",
+      "overall": 81,
+      "stats": {
+        "pow": 72,
+        "ama": 89,
+        "size": null,
+        "rang": 70,
+        "loy": 97,
+        "acu": 77
+      },
+      "imageUrl": "/images/zz3-Mini_naomi.png"
+    },
+    {
+      "filename": "zz3-Mirror_klaasje.png",
+      "id": "zz3-Mirror_klaasje.png",
+      "name": "Klaasje Heeren",
+      "tier": "Mirror",
+      "overall": 33,
+      "stats": {
+        "pow": 30,
+        "ama": 33,
+        "size": 34,
+        "rang": 43,
+        "loy": 21,
+        "acu": 37
+      },
+      "imageUrl": "/images/zz3-Mirror_klaasje.png"
+    },
+    {
+      "filename": "zz3-Platinum_brecht.png",
+      "id": "zz3-Platinum_brecht.png",
+      "name": "Brecht Heeren",
+      "tier": "Platinum",
+      "overall": 68,
+      "stats": {
+        "pow": 61,
+        "ama": 62,
+        "size": 54,
+        "rang": 80,
+        "loy": 81,
+        "acu": 72
+      },
+      "imageUrl": "/images/zz3-Platinum_brecht.png"
+    },
+    {
+      "filename": "zz3-Ultra_seb.png",
+      "id": "zz3-Ultra_seb.png",
+      "name": "Sebastiën Liesker",
+      "tier": "Ultra",
+      "overall": 96,
+      "stats": {
+        "pow": 94,
+        "ama": 94,
+        "size": 95,
+        "rang": 99,
+        "loy": 95,
+        "acu": 96
+      },
+      "imageUrl": "/images/zz3-Ultra_seb.png"
+    },
+    {
+      "filename": "zz5-Bronze_Effie.png",
+      "id": "zz5-Bronze_Effie.png",
+      "name": "Effie Fons",
+      "tier": "Bronze",
+      "overall": 11,
+      "stats": {
+        "pow": 17,
+        "ama": 15,
+        "size": 11,
+        "rang": 2,
+        "loy": 4,
+        "acu": 19
+      },
+      "imageUrl": "/images/zz5-Bronze_Effie.png"
+    },
+    {
+      "filename": "zz5-Bronze_Mats.png",
+      "id": "zz5-Bronze_Mats.png",
+      "name": "Mats Paws",
+      "tier": "Bronze",
+      "overall": 17,
+      "stats": {
+        "pow": 20,
+        "ama": 11,
+        "size": 31,
+        "rang": 7,
+        "loy": 13,
+        "acu": 19
+      },
+      "imageUrl": "/images/zz5-Bronze_Mats.png"
+    },
+    {
+      "filename": "zz5-Gold_Sander.png",
+      "id": "zz5-Gold_Sander.png",
+      "name": "Sander Velder",
+      "tier": "Gold",
+      "overall": 57,
+      "stats": {
+        "pow": 17,
+        "ama": 85,
+        "size": 79,
+        "rang": 63,
+        "loy": 75,
+        "acu": 22
+      },
+      "imageUrl": "/images/zz5-Gold_Sander.png"
+    },
+    {
+      "filename": "zz5-Gold_Willem.png",
+      "id": "zz5-Gold_Willem.png",
+      "name": "Willem Wagens",
+      "tier": "Gold",
+      "overall": 52,
+      "stats": {
+        "pow": 63,
+        "ama": 47,
+        "size": 35,
+        "rang": 74,
+        "loy": 65,
+        "acu": 28
+      },
+      "imageUrl": "/images/zz5-Gold_Willem.png"
+    },
+    {
+      "filename": "zz5-Platinum_Donna.png",
+      "id": "zz5-Platinum_Donna.png",
+      "name": "Donna Red",
+      "tier": "Platinum",
+      "overall": 69,
+      "stats": {
+        "pow": 84,
+        "ama": 59,
+        "size": 46,
+        "rang": 76,
+        "loy": 72,
+        "acu": 76
+      },
+      "imageUrl": "/images/zz5-Platinum_Donna.png"
+    },
+    {
+      "filename": "zz5-Rare-Gold_Rob.png",
+      "id": "zz5-Rare-Gold_Rob.png",
+      "name": "Rob Paling",
+      "tier": "Rare Gold",
+      "overall": 62,
+      "stats": {
+        "pow": 41,
+        "ama": 36,
+        "size": 69,
+        "rang": 70,
+        "loy": 80,
+        "acu": 73
+      },
+      "imageUrl": "/images/zz5-Rare-Gold_Rob.png"
+    },
+    {
+      "filename": "zz5-Rare-Silver_Ted.png",
+      "id": "zz5-Rare-Silver_Ted.png",
+      "name": "Ted Groen",
+      "tier": "Rare Silver",
+      "overall": 46,
+      "stats": {
+        "pow": 34,
+        "ama": 52,
+        "size": 49,
+        "rang": 51,
+        "loy": 45,
+        "acu": 43
+      },
+      "imageUrl": "/images/zz5-Rare-Silver_Ted.png"
+    },
+    {
+      "filename": "zz5-Rare-bronze_Merel.png",
+      "id": "zz5-Rare-bronze_Merel.png",
+      "name": "Merel Bosman",
+      "tier": "Rare Bronze",
+      "overall": 27,
+      "stats": {
+        "pow": 3,
+        "ama": 63,
+        "size": 17,
+        "rang": 24,
+        "loy": 8,
+        "acu": 44
+      },
+      "imageUrl": "/images/zz5-Rare-bronze_Merel.png"
+    }
+  ]
+}

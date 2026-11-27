@@ -22,7 +22,7 @@
  ['trusk','Trusk','Trusk','assets/creatures/trusk-poster.png'],
  ['velkris','Velkris','Velkris','assets/creatures/velkris-poster.png']
  ].map(([id,name,species,poster])=>({id,name,species,poster,companion:['fox','snail','dragon'].includes(id)}));
- function inventory(user={}){return animals.filter(a=>!a.companion).map(a=>({...a,count:Math.max(0,Math.floor(Number(user.stableAnimals?.[a.id])||0))})).filter(a=>a.count>0);}
+ function inventory(user={}){return animals.map(a=>({...a,count:Math.max(0,Math.floor(Number(a.companion?user.rubyItems?.['pet:'+a.id]:user.stableAnimals?.[a.id])||0))})).filter(a=>a.count>0);}
  function residents(user={}){return inventory(user).flatMap(a=>Array.from({length:a.count},(_,ordinal)=>({...a,name:user.stableNames?.[a.id+':'+ordinal]||a.name,count:1,ordinal,instanceId:a.id+':'+ordinal})));}
  const api={animals,inventory,residents};if(typeof module!=='undefined')module.exports=api;else root.StableAnimals=api;
 })(typeof window==='undefined'?globalThis:window);

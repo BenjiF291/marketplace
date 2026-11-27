@@ -10,7 +10,7 @@
  const title=el('h2','The Ruby Cabinet');const status=el('p');status.setAttribute('role','status');
  const filter=el('select');filter.setAttribute('aria-label','Shop category');
  for(const [key,name] of [['all','Everything'],['pet','Companions'],['relic','Collectibles'],['opening','Pack effects'],['profile','Profile styles'],['supply','Utilities & food']]){const option=el('option',name);option.value=key;filter.append(option);}
- const list=el('div',undefined,'ruby-grid');dialog.append(close,title,status,filter,list);document.body.append(dialog);
+ const list=el('div',undefined,'ruby-grid'),potions=el('section');potions.hidden=true;dialog.append(close,title,status,filter,potions,list);document.body.append(dialog);
  const trigger=el('button','Ruby shop','btn');trigger.id='rubyShopButton';trigger.onclick=()=>window.MarketStreet.open({onExit:()=>{},onCards:()=>footyStudio.navigate('marketplace')});document.getElementById('dyeHeaderControls').prepend(trigger);
  const grantSelect=el('select');grantSelect.className='input-field';grantSelect.setAttribute('aria-label','Ruby shop item to grant');
  const grantQty=el('input');grantQty.className='input-field';grantQty.type='number';grantQty.min='1';grantQty.value='1';grantQty.setAttribute('aria-label','Ruby shop item quantity');
@@ -178,7 +178,7 @@
  window.refreshRubyItems=refresh;
  window.openRubyItemInventory=()=>open(true);
  window.openRubyStall=(kind)=>open(false,kind);
- async function open(owned=false,category=null){itemsOnly=owned;stallCategory=category;filter.hidden=!!category;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=category||(owned?'supply':'all');if(category)title.textContent=({pet:'Companion stall',relic:'Collectibles stall',opening:'Pack Effects Shop',profile:'Profile styles stall',supply:'Utilities stall'})[category];if(!dialog.open){if(document.body.dataset.villageBuilding==='cabinet')dialog.show();else dialog.showModal();}status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
+ async function open(owned=false,category=null){itemsOnly=owned;stallCategory=category;filter.hidden=!!category;title.textContent=owned?'Your items & consumables':'The Ruby Cabinet';filter.value=category||(owned?'supply':'all');if(category)title.textContent=({pet:'Companion stall',relic:'Collectibles stall',opening:'Pack Effects Shop',profile:'Profile styles stall',supply:'Utilities stall'})[category];if(!dialog.open){if(document.body.dataset.villageBuilding==='cabinet')dialog.show();else dialog.showModal();}potions.hidden=!owned;if(owned)window.UpgraderWorkshop?.showPotions(potions);status.textContent='Opening cabinet...';try{await refresh();}catch(e){status.textContent=e.message;}}
  filter.onchange=render;
 
  function choose(title,options,images=false){return new Promise(resolve=>{const d=el('dialog',undefined,'ruby-dialog');d.append(el('h2',title));const grid=el('div',undefined,'ruby-grid');d.append(grid);let selected;

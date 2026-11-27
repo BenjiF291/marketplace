@@ -68,9 +68,12 @@ test('collection pack tokens aggregate across cards without granting creatures o
 });
 test('claims persist five rewards and seven-hour cooldown; retries and simultaneous claims never double-award',async()=>{
  const h=harness();assert.equal((await h.invoke('get','/free-pack')).payload.canClaim,true);
- const [first,second]=await Promise.all([h.invoke('post','/free-pack/claim',{requestId:'claim-first'}),h.invoke('post','/free-pack/claim',{requestId:'claim-second'})]);
- assert.equal(first.status,200);assert.equal(second.status,400);assert.equal(first.payload.rewards.length,5);assert.equal(first.payload.nextAt-first.payload.claimedAt,7*3600000);
- const saved=structuredClone(h.records);assert.deepEqual((await h.invoke('post','/free-pack/claim',{requestId:'claim-first'})).payload,first.payload);assert.deepEqual(h.records,saved);
+ const requests=[{requestId:'claim-first'},{requestId:'claim-second'}];
+ const results=await Promise.all(requests.map(request=>h.invoke('post','/free-pack/claim',request)));
+ assert.deepEqual(results.map(result=>result.status).sort(),[200,400]);
+ const winner=results.findIndex(result=>result.status===200),first=results[winner];
+ assert.equal(first.payload.rewards.length,5);assert.equal(first.payload.nextAt-first.payload.claimedAt,7*3600000);
+ const saved=structuredClone(h.records);assert.deepEqual((await h.invoke('post','/free-pack/claim',requests[winner])).payload,first.payload);assert.deepEqual(h.records,saved);
  assert.equal((await h.invoke('get','/free-pack')).payload.canClaim,false);
  h.records['users/u'].freePackLastClaimAt-=7*3600000;assert.equal((await h.invoke('post','/free-pack/claim',{requestId:'claim-third'})).status,200);
 });

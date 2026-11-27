@@ -153,12 +153,18 @@ async function grantResource(kind, button) {
   const select = document.getElementById('grantResourceUser');
   const userId = select.value;
   const name = select.selectedOptions[0]?.textContent;
-  const quantity = Number(document.getElementById(kind === 'footy' ? 'grantFootyQuantity' : 'grantAmuletQuantity').value);
+  const quantity = Number(document.getElementById(kind === 'food' ? 'grantFoodQuantity' : kind === 'footy' ? 'grantFootyQuantity' : 'grantAmuletQuantity').value);
   const status = document.getElementById('grantResourceStatus');
+  if (!userId || !Number.isSafeInteger(quantity) || quantity < 1) {
+    status.textContent = 'Choose a player and a positive whole quantity.';
+    return;
+  }
   button.disabled = true;
   try {
-    await resourceRequest('/admin/grant-resource', { userId, kind, quantity, amuletId: document.getElementById('grantAmuletSelect').value });
-    status.textContent = `Granted ${quantity} ${kind === 'footy' ? 'Footy' : 'amulets'} to ${name}.`;
+    const food = document.getElementById('grantFoodSelect');
+    await resourceRequest('/admin/grant-resource', { userId, kind: kind === 'food' ? 'ruby-item' : kind, quantity, ...(kind === 'food' ? { rubyItemId: food.value } : { amuletId: document.getElementById('grantAmuletSelect').value }) });
+    status.textContent = `Granted ${quantity} ${kind === 'food' ? food.selectedOptions[0].textContent : kind === 'footy' ? 'Footy' : 'amulets'} to ${name}.`;
+    if (kind === 'food' && userId === currentUserId) window.dispatchEvent(new Event('pet-care-changed'));
     await updateBalance();
   } catch (error) { status.textContent = error.message; }
   finally { button.disabled = false; }

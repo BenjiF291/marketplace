@@ -2,13 +2,25 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
-function harness(fetch) {
+function harness(fetch, stored = {}) {
   let timeout, cleared = 0;
-  const context = { window: { fetch, dispatchEvent() {} }, API_URL: 'https://api.example.com', location: { href: 'https://game.example.com/' }, Event, URL, Headers, Response, AbortController, DOMException,
+  const context = { window: { fetch, dispatchEvent() {}, localStorage: { getItem: key => stored[key] } }, API_URL: 'https://api.example.com', location: { href: 'https://game.example.com/' }, Event, URL, Headers, Response, AbortController, DOMException,
     setTimeout(fn) { timeout = fn; return 1; }, clearTimeout() { cleared++; } };
   vm.runInNewContext(fs.readFileSync('public/session-network.js', 'utf8'), context);
   return { fetch: context.window.fetch, expire: () => timeout(), cleared: () => cleared };
 }
+test('adds the saved session only to Marketplace requests for the signed-in account', async () => {
+  const calls = [];
+  const h = harness(async (url, options) => {
+    calls.push(new Headers(options.headers).get('Authorization'));
+    return new Response('{}');
+  }, { userId: 'alice', sessionToken: 'fixture-token' });
+  for (const [url, id] of [['https://api.example.com/inventory', 'alice'],
+    ['https://api.example.com/inventory', 'bob'], ['https://other.example.com/inventory', 'alice']]) {
+    await h.fetch(url, { headers: { 'X-User-Id': id } });
+  }
+  assert.deepEqual(calls, ['Bearer fixture-token', null, null]);
+});
 test('production API requests preserve JSON, status and headers', async () => {
   const h = harness(async () => new Response('{"balance":42}', { status: 201, headers: { 'content-type': 'application/json' } }));
   const response = await h.fetch('https://api.example.com/buy', { method: 'POST' });

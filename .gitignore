@@ -3,5 +3,12 @@ database.db
 serviceAccountKey.json
 .env
 .env.local
+.env.*
+!.env.example
 .DS_Store
 .ui-tools/
+.card-creator/
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+/output/

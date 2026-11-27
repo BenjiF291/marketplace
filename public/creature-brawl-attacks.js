@@ -34,8 +34,7 @@ choreography.brugar.moves=[routine('twin-tail-sweep',1.36,{side:-1,turn:1.05,lun
 choreography['brugar-species'].moves=[routine('twin-tail-sweep',1.38,{side:1,turn:-1.05,lunge:0}),routine('tail-fortress',1.32),routine('twin-tail-smash',1.46,{turn:-1.15,lunge:0})];
 choreography.krynn.moves[2]=routine('forked-tail-whip',1.30,{delivery:'wave',side:-1});
 choreography['krynn-species'].moves[2]=routine('forked-tail-whip',1.34,{delivery:'wave',side:1});
-choreography.velkris.moves[1]=routine('fang-snap',1.20);
-choreography.velkris.moves[2]=routine('stinger-strike',1.24,{lunge:0});
+choreography.velkris.moves[1]=routine('stinger-strike',1.20,{lunge:0});
 choreography.dragon.moves[1]=routine('claw',1.18);
 choreography.dragon.moves[2]=routine('breath',1.22,{delivery:'wave'});
 choreography.fenra.moves[1]=routine('hoof',1.28);
@@ -148,13 +147,13 @@ export function buildCombatAnimations(model,kind,moves){
  if(isRill(kind))return buildRillAnimations(model,kind,moves);
  const profile=choreography[kind];if(!profile||profile.moves.length!==moves.length)throw Error('Missing choreography for '+kind);
  const a=anatomy(model),rest=new Map(a.bones.map(b=>[b.name,{q:b.quaternion.clone(),p:b.position.clone()}]));
- function clip(name,duration,poseAt,steps=40){
+ function clip(name,duration,poseAt,steps=40,solvedJoints=new Set()){
   const times=Array.from({length:steps+1},(_,i)=>i/steps*duration),tracks=[],frames=times.map((_,i)=>poseAt(i/steps));
-  for(const bone of a.bones){const rotations=[],positions=[],r=rest.get(bone.name);for(let i=0;i<=steps;i++){const p=frames[i].get(bone.name),q=r.q.clone();if(p)q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...combatRotation(bone.name,p.rotation))));rotations.push(...q.toArray());positions.push(r.p.x+(p?.position[0]||0),r.p.y+(p?.position[1]||0),r.p.z+(p?.position[2]||0));}
+  for(const bone of a.bones){const rotations=[],positions=[],r=rest.get(bone.name);for(let i=0;i<=steps;i++){const p=frames[i].get(bone.name),q=r.q.clone();if(p)q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(...(solvedJoints.has(bone.name)?p.rotation:combatRotation(bone.name,p.rotation)))));rotations.push(...q.toArray());positions.push(r.p.x+(p?.position[0]||0),r.p.y+(p?.position[1]||0),r.p.z+(p?.position[2]||0));}
    tracks.push(new THREE.QuaternionKeyframeTrack(bone.name+'.quaternion',times,rotations),new THREE.VectorKeyframeTrack(bone.name+'.position',times,positions));}
   return new THREE.AnimationClip(name,duration,tracks);
  }
- const actions=new Map(moves.map((move,i)=>{const spec={...profile.moves[i],...(profile.moves[i].style==='stinger-strike'?{tailStrikePose:stingerContact(model,a)}:{})},hostile=move.effects.some(e=>e.type==='damage');spec.delivery=spec.delivery||(!hostile?'support':move.target==='enemies'?'wave':'melee');const animation=clip(kind+':'+move.id,spec.duration,t=>actionPose(a,spec,t));return [move.id,{...spec,clip:animation}];}));
+ const actions=new Map(moves.map((move,i)=>{const spec={...profile.moves[i],...(profile.moves[i].style==='stinger-strike'?{tailStrikePose:stingerContact(model,a)}:{})},hostile=move.effects.some(e=>e.type==='damage');spec.delivery=spec.delivery||(!hostile?'support':move.target==='enemies'?'wave':'melee');const solvedJoints=new Set(spec.tailStrikePose?.map(([name])=>name));const animation=clip(kind+':'+move.id,spec.duration,t=>actionPose(a,spec,t),40,solvedJoints);return [move.id,{...spec,clip:animation}];}));
  const movement=locomotion[kind];
  const travel=clip(kind+':travel',profile.stride,t=>{
   const pose=new Map(),put=(names,x=0,y=0,z=0)=>names.forEach(n=>pose.set(n,{rotation:[x,y,z],position:[0,0,0]}));

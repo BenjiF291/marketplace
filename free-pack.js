@@ -1,4 +1,6 @@
 const {randomInt}=require('node:crypto');
+const {kind: randomCardKind}=require('./random-card-rewards');
+const upgradeKinds=require('./card-upgrades').kinds;
 const GEM_NAMES=require('./gem-utils').GEM_NAMES||{bronze:'Ruby','rare-bronze':'Garnet',silver:'Moonstone','rare-silver':'Opal',gold:'Citrine','rare-gold':'Emerald',platinum:'Sapphire',lightning:'Amethyst',ultra:'Diamond'};
 const options=(ruby,footy,skip,leap,garnet)=>[
  {kind:'gem',id:'bronze',min:ruby[0],max:ruby[1],chance:20},
@@ -15,8 +17,8 @@ function validate(value,catalog){
   if(typeof card.title!=='string'||!card.title.trim()||card.title.length>80||!Array.isArray(card.options)||!card.options.length||card.options.length>100)throw Error(`Card ${index+1} needs a title and 1-100 reward options.`);
   let sum=0;const options=card.options.map(option=>{
    const {kind,id,min,max,chance}=option;
-   if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal','brawlToken'].includes(kind))throw Error('Unknown reward type.');
-   if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min||max>10000||(['pack','card','animal'].includes(kind)&&max>20))throw Error('Use whole amounts from 1 to 10000 (up to 20 for cards, packs or animals).');
+   if(!['gem','footy','boost','rubyItem','amulet','pack','card','animal','brawlToken',randomCardKind,...upgradeKinds].includes(kind))throw Error('Unknown reward type.');
+   if(!Number.isInteger(min)||!Number.isInteger(max)||min<1||max<min||max>10000||(['pack','card','animal',randomCardKind].includes(kind)&&max>20))throw Error('Use whole amounts from 1 to 10000 (up to 20 for cards, packs or animals).');
    if(!Number.isFinite(chance)||chance<0||chance>100)throw Error('Chances must be between 0 and 100 percent.');
    if(kind!=='footy'&&!catalog[kind]?.some(entry=>entry.id===id))throw Error(`Choose an available ${kind} reward.`);
    sum+=chance;return {kind,id:kind==='footy'?'':id,min,max,chance};
@@ -24,7 +26,7 @@ function validate(value,catalog){
   if(Math.abs(sum-100)>.000001)throw Error(`Card ${index+1} chances must total 100% (currently ${sum}%).`);
   return {title:card.title.trim(),options};
  });
- const inventoryWrites=cards.reduce((sum,card)=>sum+Math.max(...card.options.map(o=>['pack','card'].includes(o.kind)?o.max:0)),0);
+ const inventoryWrites=cards.reduce((sum,card)=>sum+Math.max(...card.options.map(o=>['pack','card',randomCardKind].includes(o.kind)?o.max:0)),0);
  if(inventoryWrites>400)throw Error('Reduce collection card or pack quantities: at most 400 inventory items per claim.');
  const appearance={base:'#75432b',accent:'#cf9859',trim:'#ffe1a0'};
  for(const key of Object.keys(appearance))if(value.appearance?.[key]!==undefined){if(typeof value.appearance[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(value.appearance[key]))throw Error('Choose valid pack colors.');appearance[key]=value.appearance[key];}
@@ -34,6 +36,17 @@ function draw(config,random=randomInt,catalog={},user={}){const result=[],awarde
  const roll=random(1000000)/10000;let sum=0,selected;
  for(const option of card.options){sum+=option.chance;if(roll<sum){selected=option;break;}}
  if(!selected)selected=card.options.filter(o=>o.chance>0).at(-1);
+ if(selected.kind===randomCardKind){
+  const entry=catalog[randomCardKind]?.find(item=>item.id===selected.id);
+  if(!entry?.members?.length)throw Object.assign(Error('No eligible cards currently exist for '+(entry?.name||'this random card reward')+'.'), {code:'EMPTY_RANDOM_CARD_POOL'});
+  if(!Number.isInteger(selected.min)||!Number.isInteger(selected.max)||selected.min<1||selected.max<selected.min||selected.max>20)throw Error('Invalid random card quantity.');
+  const quantity=selected.min+random(selected.max-selected.min+1);
+  for(let i=0;i<quantity;i++){
+   const member=entry.members[random(entry.members.length)];
+   result.push({card:index+1,title:source.title,kind:'card',id:member.filename,amount:1,cardName:member.name});
+  }
+  continue;
+ }
  let id=selected.id;
  if(selected.kind==='brawlToken'&&id.startsWith('rarity:')||selected.kind==='rubyItem'&&id.startsWith('rarity:clothing:')){
   const pool=catalog[selected.kind]?.find(entry=>entry.id===id)?.members;
@@ -52,7 +65,7 @@ function apply(user,rewards){
  }
  return update;
 }
-function label(reward,catalog){const name=reward.kind==='footy'?'Footy':catalog[reward.kind]?.find(item=>item.id===reward.id)?.name||reward.id;return `${reward.amount} ${name}`;}
+function label(reward,catalog){const name=reward.kind==='footy'?'Footy':reward.cardName||catalog[reward.kind]?.find(item=>item.id===reward.id)?.name||reward.id;return `${reward.amount} ${name}`;}
 function rewardAmulets(user,rewards){const bonus=require('./amulet-utils').effects(user).packtokens||0;return rewards.map(reward=>{if(reward.kind!=='brawlToken'||!bonus)return reward;const amount=reward.amount+bonus;return {...reward,amount,...(reward.label?{label:reward.label.replace(/^\d+\s+/,amount+' ')}:{})};});}
 function tokenProgress(user,rewards){
  const catalog=require('./public/creature-brawl-catalog'),wallet=require('./creature-token-wallet').wallet(user.creatureBrawl);

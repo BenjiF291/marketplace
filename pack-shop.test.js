@@ -16,6 +16,18 @@ test('paid pack purchases charge once under retries and concurrent requests',asy
  const [a,b]=await Promise.all([h.invoke('post','/pack-shop/buy',body),h.invoke('post','/pack-shop/buy',body)]);assert.equal(a.status,200);assert.equal(b.payload.itemId,a.payload.itemId);assert.equal(h.records['users/u'].balance,75);assert.equal(Object.keys(h.records).filter(k=>k.startsWith('items/')).length,1);assert.equal(h.records['items/'+a.payload.itemId].buyerId,'u');
  assert.equal((await h.invoke('post','/pack-shop/buy',{...body,packId:'hidden'})).status,400);
 });
+test('buying a random-tier pack stores proof and leaves the reward unresolved', async () => {
+ const h=harness();
+ h.records['packs/bronze'].rewardCards=[{title:'Draw later',options:[
+  {kind:'randomCardByTier',id:'bronze:regular',min:1,max:1,chance:100}
+ ]}];
+ const result=await h.invoke('post','/pack-shop/buy',{packId:'bronze',price:25,currency:'footy',requestId:'random-purchase'});
+ assert.equal(result.status,200);
+ assert.deepEqual(h.records['upgradePackProofs/'+result.payload.itemId],{ownerId:'u',packId:'bronze'});
+ assert.equal(h.records['items/'+result.payload.itemId].itemType,'pack');
+ assert.equal(Object.keys(h.records).filter(key=>key.startsWith('items/')).length,1);
+ assert.equal(result.payload.cardId,undefined);
+});
 test('purchases reject stale prices, hidden offers and insufficient currency without charging',async()=>{
  const h=harness(),body={packId:'bronze',price:25,currency:'footy',requestId:'purchase-123'};
  assert.equal((await h.invoke('post','/pack-shop/buy',{...body,price:1})).status,400);assert.equal(h.records['users/u'].balance,100);
@@ -35,10 +47,11 @@ test('purchase cooldown is atomic, per-player/per-pack, expires, and preserves i
  const h=harness();h.records['packs/bronze'].shop.cooldownMinutes=150;
  h.records['packs/other']={...structuredClone(h.records['packs/bronze']),name:'Other'};h.records['users/v']={balance:100};
  const body={packId:'bronze',price:25,currency:'footy',requestId:'cooldown-first'};
- const results=await Promise.all([h.invoke('post','/pack-shop/buy',body),h.invoke('post','/pack-shop/buy',{...body,requestId:'cooldown-second'})]);
- assert.deepEqual(results.map(r=>r.status),[200,400]);assert.match(results[1].payload,/unlocks in/);assert.equal(h.records['users/u'].balance,75);
- const first=results[0].payload;assert.equal(first.nextAt-first.purchasedAt,150*60000);assert.equal(h.records['users/u'].packShopLastPurchases.bronze,first.purchasedAt);
- const replay=await h.invoke('post','/pack-shop/buy',body);assert.deepEqual(replay.payload,first);assert.equal(h.records['users/u'].balance,75);
+ const requests=[body,{...body,requestId:'cooldown-second'}];
+ const results=await Promise.all(requests.map(request=>h.invoke('post','/pack-shop/buy',request)));
+ assert.deepEqual(results.map(r=>r.status).sort(),[200,400]);assert.match(results.find(r=>r.status===400).payload,/unlocks in/);assert.equal(h.records['users/u'].balance,75);
+ const winner=results.findIndex(r=>r.status===200),first=results[winner].payload;assert.equal(first.nextAt-first.purchasedAt,150*60000);assert.equal(h.records['users/u'].packShopLastPurchases.bronze,first.purchasedAt);
+ const replay=await h.invoke('post','/pack-shop/buy',requests[winner]);assert.deepEqual(replay.payload,first);assert.equal(h.records['users/u'].balance,75);
  let shop=await h.invoke('get','/pack-shop');assert.equal(shop.payload.packs.find(p=>p.id==='bronze').nextAt,first.nextAt);
  assert.equal((await h.invoke('post','/pack-shop/buy',{...body,packId:'other',requestId:'cooldown-other'})).status,200);
  assert.equal((await h.invoke('post','/pack-shop/buy',{...body,requestId:'cooldown-user-v'},false,'v')).status,200);

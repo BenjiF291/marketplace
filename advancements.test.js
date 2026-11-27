@@ -4,7 +4,27 @@ test('secret metadata is omitted until earned except for real admin views',()=>{
 test('existing milestones count and earned badges survive reduced inventory',()=>{const u={townHallXP:8500,rubyItems:{'pet:fox':1,'pet:snail':1,'pet:dragon':1}};const earned=rules.earned(u,100);assert.equal(earned.hall10,100);assert.equal(earned.pets3,100);assert.equal(rules.earned({advancements:earned},200).pets3,100);});
 test('Town Hall gaps are rounded, legacy unlocks persist, new accounts use new thresholds',()=>{assert.equal(hall.THRESHOLDS[1],100);assert.equal(hall.THRESHOLDS[9],22000);assert.equal(hall.profile({townHallXP:100,townHallProgressVersion:2}).level,2);let old={townHallXP:650};assert.equal(hall.profile(old).level,4);old={...old,...hall.gameplay(old,'pack')};assert.equal(hall.profile(old).level,4);assert.equal(hall.profile(old).next,2400);});
 test('trophy road has wider gaps and stable original claim IDs',()=>{assert.equal(PATH[0].at,250);assert.equal(PATH.at(-1).at,50000);assert.equal(PATH[0].claimId,25);assert.equal(PATH.filter(r=>r.at<=125).length,0);assert.equal(new Set(PATH.map(r=>r.claimId)).size,PATH.length);});
-test('rating rapidly recovers a bad placement but a single loss stays limited',()=>{let state={ratingVersion:2,placementsCompleted:5,skillLevel:100};for(let i=0;i<10;i++)state=skill.settle(state,1,.98,state.skillLevel).state;assert.ok(state.skillLevel>650);const loss=skill.settle(state,-1,.2,state.skillLevel);assert.ok(loss.change.delta>=-25);let declining={ratingVersion:2,placementsCompleted:5,skillLevel:900};for(let i=0;i<8;i++)declining=skill.settle(declining,-1,.55,declining.skillLevel).state;assert.ok(declining.skillLevel<600);});
+test('ranked recovery applies the documented outcome and decision caps without a streak bonus',()=>{
+ let state={ratingVersion:2,placementsCompleted:5,skillLevel:100};
+ for(let i=0;i<10;i++){
+  const win=skill.settle(state,1,.98,state.skillLevel);
+  assert.equal(win.change.outcomePoints,6);
+  assert.equal(win.change.decisionPoints,40);
+  state=win.state;
+ }
+ assert.equal(state.skillLevel,560);
+ const loss=skill.settle(state,-1,.2,state.skillLevel);
+ assert.equal(loss.change.outcomePoints,-6);
+ assert.equal(loss.change.decisionPoints,27);
+ let declining={ratingVersion:2,placementsCompleted:5,skillLevel:900};
+ for(let i=0;i<8;i++){
+  const match=skill.settle(declining,-1,.55,declining.skillLevel);
+  assert.equal(match.change.outcomePoints,-6);
+  assert.ok(match.change.decisionPoints>=-40 && match.change.decisionPoints<0);
+  declining=match.state;
+ }
+ assert.equal(declining.skillLevel,620);
+});
 test('profile route derives admin permission from authenticated account and discovery is idempotent',async()=>{const data={a:{username:'A'},admin:{isAdmin:true}},handlers={};let writes=0;const snap=id=>({exists:!!data[id],data:()=>data[id]});const db={collection:()=>({doc:id=>({id})}),runTransaction:fn=>fn({get:async ref=>snap(ref.id),update:(ref,update)=>{writes++;Object.assign(data[ref.id],update);}})};require('./advancement-routes')({get:(p,f)=>handlers[p]=f,post:(p,f)=>handlers[p]=f},db,async req=>{if(!req.viewer)throw Error();return req.viewer;});async function call(path,req){let code=200,value;const res={status(c){code=c;return this;},send(v){value=v;},json(v){value=v;}};await handlers[path]({query:{},body:{},...req},res);return {code,value};}assert.equal((await call('/player-profile',{})).code,401);assert.ok(!(await call('/player-profile',{viewer:'a',query:{isAdmin:true}})).value.adminView);assert.ok((await call('/player-profile',{viewer:'admin',query:{player:'a'}})).value.adminView);await call('/advancements/discover',{viewer:'a',body:{game:'fishing'}});const before=writes;await call('/advancements/discover',{viewer:'a',body:{game:'fishing'}});assert.equal(writes,before);assert.equal((await call('/advancements/discover',{viewer:'a',body:{game:'fake'}})).code,400);});
 
 test('expanded catalogue has unique attainable targets and preserves earned badges',()=>{

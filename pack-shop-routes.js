@@ -10,7 +10,7 @@ module.exports=(app,db,authenticate)=>{
   return {serverNow:now,canEdit:u.isAdmin===true,catalog,daily:{id:'daily',daily:true,name:config.name,cards:rules.amuletOdds(u,require('./unique-creature-rewards').cards(config.cards,catalog,u)),enabled:config.enabled,nextAt:timing.dailyNextAt(u,config)},packs:packs.docs.filter(d=>d.data().shop?.enabled&&require('./pack-builder').hasRewards(d.data())).map(d=>{const p=d.data();return {id:d.id,name:p.name,appearance:p.appearance||{base:p.color,accent:p.color},price:timing.shopPrice(u,p.shop),basePrice:p.shop.price,currency:p.shop.currency,cooldownMinutes:cooldown(p.shop),nextAt:nextPurchase(u,d.id,cooldown(p.shop)),cards:rules.amuletOdds(u,require('./unique-creature-rewards').cards(odds(p),catalog,u))};})};
  });
  route('post','/pack-shop/buy',async(id,body)=>{
-  const rewardCatalog=await require('./free-pack-routes').catalog(db);
+  const rewardCatalog=await require('./free-pack-routes').catalog(db,{ includeRandomCards: false });
   if(typeof body.packId!=='string'||!body.packId||body.packId.includes('/')||typeof body.requestId!=='string'||!/^[a-zA-Z0-9-]{8,80}$/.test(body.requestId))throw Error('Invalid purchase request.');
   return db.runTransaction(async tx=>{
    const userRef=db.collection('users').doc(id),packRef=db.collection('packs').doc(body.packId),receiptRef=db.collection('packShopPurchases').doc(id+'_'+body.requestId);
@@ -29,7 +29,8 @@ module.exports=(app,db,authenticate)=>{
    else{if(!Number.isSafeInteger(offer.price))throw Error('Invalid gem price.');const gems=wallet.wallet(u.gems);if((gems[offer.currency]||0)<price)throw Error('Not enough '+rules.GEM_NAMES[offer.currency]+'.');gems[offer.currency]-=price;update={gems};}
    update.packShopLastPurchases={...u.packShopLastPurchases,[body.packId]:now};
    const item=db.collection('items').doc(),receipt={itemId:item.id,packId:body.packId,name:p.name,price,currency:offer.currency,appearance:p.appearance||null,packColor:p.color||'#667eea',purchasedAt:now,nextAt:cooldownMinutes?now+timing.shopDuration(u,cooldownMinutes):0};
-   tx.update(userRef,update);tx.set(item,{name:p.name,itemType:'pack',packId:body.packId,packColor:receipt.packColor,price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-shop'});tx.set(receiptRef,receipt);return receipt;
+   const proof=require('./card-upgrades').markPack(tx,db,item,id,body.packId,p);
+   tx.update(userRef,update);tx.set(item,{name:p.name,itemType:'pack',packId:body.packId,packColor:receipt.packColor,price:0,sellerId:id,buyerId:id,sold:true,listedForSale:false,purchasedAt:new Date(),createdAt:new Date(),source:'pack-shop',...proof});tx.set(receiptRef,receipt);return receipt;
   });
  });
 };

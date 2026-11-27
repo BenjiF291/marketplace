@@ -21,3 +21,17 @@ test('ingredient jobs assign the required distinct villagers and reject insuffic
   const short={...user(),farmLevel:3,vaultJob:{started:1000,workers:all.slice(0,7-count)}},before=structuredClone(short);assert.throws(()=>apply(short,{action:'farm-start',resource}),new RegExp(count+' available villagers'));assert.deepEqual(short,before);
  }
 });
+
+
+test('station feeding consumes meals and raises happiness without changing creature levels or nutrition',()=>{
+ for(const food of ['food','food:trail','food:feast']){
+  const u={...user(),creatureGrowth:{'fox:0':{level:7,hunger:44},'rill-species:0':{level:3,hunger:12}}};
+  apply(u,{action:'station-send',pet:'pet:fox'});
+  const before=structuredClone(u.creatureGrowth),owned=u.rubyItems[food];
+  apply(u,{action:'pet-feed',pet:'pet:fox',food});
+  assert.deepEqual(u.creatureGrowth,before);assert.equal(u.rubyItems[food],owned-1);
+  assert.equal(care.happiness(u,'pet:fox'),care.MEALS[food].gain);
+  assert.equal(u.petCareCooldowns['pet:fox'].feed,7201000);
+ }
+ const fresh=user();apply(fresh,{action:'station-send',pet:'pet:fox'});apply(fresh,{action:'pet-feed',pet:'pet:fox',food:'food'});assert.equal(fresh.creatureGrowth,undefined);
+});

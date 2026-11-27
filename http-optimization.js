@@ -1,6 +1,10 @@
 const express = require('express');
 module.exports = function configureHttp(app, publicDirectory) {
 app.use(require('compression')({ threshold: 1024 }));
+// A 500-entry pool of long filenames can exceed the default JSON body limit.
+const parsePackConfig = express.json({ limit: '512kb' });
+app.post('/packs', parsePackConfig);
+app.put('/packs/:packId', parsePackConfig);
 app.use(express.json());
 app.use(express.static(publicDirectory, {
   etag: true,

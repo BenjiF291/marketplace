@@ -31,7 +31,8 @@ function action(u,b,now=Date.now()){u=require('./gem-wallet').user(u);
   const petCareCooldowns={...(u.petCareCooldowns||{}),[b.pet]:{...(u.petCareCooldowns?.[b.pet]||{}),[key]:now+(key==='play'?3600000:7200000)}};
   if(b.action==='pet-play')return {petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+1)}};
   const meal=Object.hasOwn(MEALS,b.food)?MEALS[b.food]:null;if(!meal||!(u.rubyItems?.[b.food]>0))throw Error('Choose a meal you own.');
-  const growth=require('./creature-growth'),progress=growth.profile(u,b.pet.slice(4),0),fed=progress.level<growth.MAX_LEVEL?growth.feed(u,{instanceId:b.pet.slice(4)+':0',foodId:b.food}).update:{rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1}};return {...fed,petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)}};
+  // Station meals improve happiness only; creature growth uses its own feeding action.
+  return {rubyItems:{...u.rubyItems,[b.food]:u.rubyItems[b.food]-1},petCareCooldowns,petHappiness:{...(u.petHappiness||{}),[b.pet]:Math.min(10,current+meal.gain)}};
  }
  if(b.action==='farm-start'){
   const resource=Object.hasOwn(RESOURCES,b.resource)?RESOURCES[b.resource]:null;if(!state.farmUnlocked||!resource||resource.tier>state.farmLevel)throw Error('This ingredient is not unlocked.');

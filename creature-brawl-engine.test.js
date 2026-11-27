@@ -50,7 +50,18 @@ test('support does not use class advantage and speed restores after affected-act
  let s=state();s.units[0].role='Protector';s.units[1].role='Cunning';s.units[1].hp=500;s.units[0].moves[1]={id:'buff',cost:1,target:'ally',effects:[{type:'heal',ratio:.2},{type:'shield',ratio:.3}]};const p=E.preview(s,'buff','p1');assert.equal(p.targets[0].heal,200);assert.equal(p.targets[0].shieldGain,300);
  E.addStatus(s,s.units[3],'spdUp',1,.5);s=nextFor(s,'e0');s=E.act(s,{moveId:'basic',targetId:'p0'});assert.equal(s.units[3].statuses.spdUp,undefined);assert.equal(E.effective(s.units[3],'spd'),100);
 });
-test('opponent full-team power stays within ten percent across difficulties and stages',()=>{
- const team=['rill-species','veyrin','snail'].map((kind,i)=>S.unit({kind,id:'p'+i,grade:3})),average=team.reduce((n,u)=>n+S.power(u),0)/3;
- for(const d of C.config.difficulties)for(let stage=0;stage<5;stage++){const enemy=S.opponent(team,d.id,stage,1),ratio=enemy.reduce((n,u)=>n+S.power(u),0)/3/average;assert.ok(ratio>=.9&&ratio<=1.1,ratio);assert.equal(enemy.length,3);}
+test('opponents match player grade and apply only the chosen difficulty multiplier to native creature stats',()=>{
+ const team=['rill-species','veyrin','snail'].map((kind,i)=>S.unit({kind,id:'p'+i,grade:i+2}));
+ for(const difficulty of C.config.difficulties)for(let stage=0;stage<5;stage++){
+  const opponents=S.opponent(team,difficulty.id,stage,1);
+  assert.equal(opponents.length,3);
+  assert.equal(new Set(opponents.map(unit=>unit.kind)).size,3);
+  for(const unit of opponents){
+   assert.equal(unit.grade,3);
+   const native=S.unit({kind:unit.kind,id:unit.id,grade:3}).stats;
+   const expected={...native};
+   for(const key of ['hp','atk','def'])expected[key]=Math.round(native[key]*difficulty.scale);
+   assert.deepEqual(unit.stats,expected);
+  }
+ }
 });

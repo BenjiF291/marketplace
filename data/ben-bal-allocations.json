@@ -1,0 +1,4040 @@
+{
+  "schemaVersion": 1,
+  "allocations": [
+    {
+      "cardId": "00918d51c22d00a9c666eec7cf7119c0d9c2973ba9e755c87efe0fbd4d3e664e",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "016b899839506eeb709509d6a34f2e82112ffe89a788ab1631982f9195a2fb7f",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "01a6286ff099f83c0488868c23a2f90ec04f59b2f00564766cb1609d2c838b89",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "01e092ec2aaa0c6330fbcab44be7f4bd229775b04ba59dfc3c5f7c44bb8b3837",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "03a37b058a9f6c63be33d134b84b5ea954d0606e7fbc21efa176c051a46a8507",
+      "attack": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "03a496d43cacb9499ac827f2ed293121a435683a20fa06de0abdadbb2a28aa11",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "045eef113bccfcbab0faa4fa42cd53e0af551b1789e44856748a61035a34bd15",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "057ef022c2bd82d55b828fb0d544ad5cae386e377d065a0b1d25f1cb5aa45ac3",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "05a2ab54228d4bd4c26d4baccdfbe083f9f781c5ed1a5682c0c84bc77a7dd4c9",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "062a588a133ee11e5c932812bb91ea4a99d74a0109798c35ca5d8c48d92201d0",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "06e676d5ebcee546dc0999c59675d2298b9e2e0e4cd7abd4a8e0eb9b549b55bf",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "08361aa80b6d3ec0c4993986d720a2f743dce2b5d4210fb9b5293fb639914300",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "09da76d6281cdf42bbff70223e783faa59c3eff1459eaeb95cdb3928fd38ccc6",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "0c274df2e2202a1c3615f1c1bda0805b398cee000ed1041df043f6054fe26983",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "0c8fbe8173a9a8656d9df8ff552ab820b6aa6ffeb5f6ccfff6610da3caaed1d3",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "0ee4b324a256800bc539480650629255c656c907f402852bdf216cf1949c4fbd",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "0f3e67ea25fc952412e1c70a8992f9057baf53c9b520e2a708d8941c6b87fc45",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "11aec72a13020358d204596c1b0b23ba6ca6a91cee85a2415be371caa77341a3",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "13685e9ab0b7edf64a1c140d27de85e7df2ef422351b210062cdac29ca14230b",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "157d90bf3fb4a0303d628264467f840841eccd7a65773c88e24f2f097357bff1",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "15a51799a74aaf4707e510fc812f8dbcc004a45313d6cd4fef9249e999e99d8f",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "172c845362fddfaa8cf34215bae76c8082110372f874b9c00797434301a8aa61",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "180a9ac214d0e496a43056a8dd515538f5ad1099db7e077b478b019767132df7",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "19b1d057be061c2ad282862c74eb9566814f864e23d4956fe1cc6c0cbb99f06a",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "1ea7c6dbbe9536797ef4618b71f51cb0fa1c576f06be893019aa2bd31c66e15d",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "218004d47e83084ff477643fa574521c35993259c50c789300cf6d93cc75ab68",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "22dc55b4d7bc027a50b046d3abbe5fb7f58731f5b475e944f31dcf5c6ed6a0c0",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "24890efa86db1ddd2e6e365e6497e021280e4a78c90ced8d661428cd1f24c2d8",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "29fcb1daba8d80fd39547558ec357342ae83a95c81058f9ae67d92b9eedfc3b9",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "2acfbf258fb9b74846ae2f187a73b9bdbdfe3009375f3a6cb3196e39f76ae5c5",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "2bad63c54f092bf9c16f2d3b12e46574458c5321137a2901d3b5fbc31a9dd716",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "2db5bbe72936d65bfc800581aee4810331ef1bdd69b508ab9fe3635aae40a8ce",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "2e59b7f543bcd178ecf3173960fd49ea2370535ee7dced5f96f9d1272aa1f850",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "2eeafed20122e473592ef1bed259655f7e1d08d8cdb152c4d8e10c841f653ffa",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "2fb107a3432b0ddd019cf75925b344e273a6153c67b4550f8ac85e92189db332",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "30f4aca6ced719a97d72b7db4215436b798ca9dcba74531cfd5e69748b7d1219",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "31f0d4a9c7ae84baf033add8b6337ba3829787fe1e96b9049ddfde97330c1820",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "327e9261b75fbacd4c7f6f85a8d2a3e426b2bf490016c80a985d68e74930fdba",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "3295676522d9fa06c2673bfcd91b1619a1de794ff3c59b433c3b410969453d8b",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "33db1bd7513d7ab7d6f5a0246dbac521b5df04956604e37cd640a21d9b0de14c",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "3401118af3cedd3d4ea4662d038cb772530bc529e92182b2f3dd1b1316b1be8a",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "35ee2bda03bf7e5ada3d802d489edbfb39d0d687eb450268b115e5ed9ca4462a",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "36fc2e6153e7eb62b4d4bdf8ec68852a6d62d991e1ff3b39332e52a039491cb4",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "37587b5efcf3c3dd18fb6d8b1f38fbd53a8d0cdf638264e488bf8274a347af32",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "38f1d25d213132c6df0962a555167fc8a08511da4b4e034dcda44b2e4f78c234",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "3a25bbff6947601507aee2cee1bb0774b1a6c69e63caf081db395dee5e7fcdef",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "3a63875c095f059c2d7cf7c1ffe167b58233d063ea582b5003ff1bd89d26d9a4",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "3b5ddd53cdb99be4e3209134f45b853c10b360b16159b2b83ee1980f65f19dc4",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "3c0db2c50655a285b6feaad22a931bfed2a60e4eb148134787a864a93d9b2472",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "3c8a29e61950bde2fcc8ad953fc0cc6820268886fd4fd1326a241572173c4db4",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "3d9a698e78591018c18cf296045f410226b16262b3c91404aa5b412197eea9a1",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "3da58bc0233fe2ac3d2f2ee84b7c2eaba66a89ffeacd471ecc0bb529aaed25a9",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "3de90839259f7f9dd3e17c5c2f76385d70d2b015b8efd62c116fb0efdef03476",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "3edcc9eb8247f739ff08c36d6c9cd1332e34837215763c73b0ad95410945f81b",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "3f530464f01a88356a08c2d9ec5eac472aa69aa0ac595c1d88fac7ff48f80e7e",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "3f85f949509e4d3a6db119896fa1c365ee462dc5a5b333687ca80547474416c6",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "428146d247864b54bfe7fecbb86c60f52e3ed91f5c91f4f725c4cb63c78a16e3",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "435215e41dc03b187b2e7914e20556a36d69db5a49254e56960277848f35dca6",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "465ac201776d47f59b182216045711dd98f89c087e7be38941f69f889c9b9a73",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "4663dd2ba97131c9fa933e8a9919471a296fd60426a5369a84c59816e2d21297",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "46af7fedc0bfdeb5ca1ca74c51f162b5bf5976b0bb7bc5bd1227a28552db3a85",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "47adba1262a815240954af4c1862d8a1683424e50da5cceeb11a4c961c5712fe",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "481f784fb0a38988fd11be35a14b12e2b2086508e76c71951840ab47d6e3c9c4",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "4ca08d3f324b60506978501dbe68ebf7026b5ada6888d7a5b3d6ce8cda3779a5",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "4dccf93792b533847bd1e06e87cd1366713c8bf90a325f477eaa1105f541ed33",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "4ee363b3f176d47b7e6b161bc396fff0bd0240862ac1092abd581572c876c45f",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "523b7d3338a3daca2a71c1546dc60f97ece50dad779eb8b5550d3890b1e5b69b",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "54d39b87c5d9f93221fcd7760c8b1fc0ffaede80c2e38415105e984b9ffa42ce",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "57772b7bfe548db0d07a956431474c2d4af3c3c3948468d0ab689f4500702d70",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "57ca58830672920829ad1208388b72584b4323fd0dada237c91637d5a749c720",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "58b0a4653cdbd6e418ccabe29978bf9161de7b901f93d37d41be9d66c950bcfb",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "59baec6ed0993d3638fd80a80b7be174d2a922b2945f9677d3948211c9fae446",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "5cbe7ac1d5729395229e7848f3dff11a38068a88ce85206bf044d4af2a82a4ba",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "5d79b4b84f43c319d74a3d8ab4af99575e0b1d42a1ab9d63b6240c60c330d7b8",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "5fe27c381f00b3109f35299a3c7aec20cd50ddc346bc06471168e585f26d051f",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "6063bf6c08cf0c8c514348c6808317e3b6512b248eb36d35a67b71ed7a757551",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "61451607384c3bd5c6c3d331eb781a08307ec595f42df830913be9867d9d39f6",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "64aaa8e6bb91cdc920485e1b02136717dd2dcd234dd1ba9e8c3252c2d95fffb1",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "64fb8b1fdde66cf8a883d2a3fa3ce47a97a49a25859151ff1846ddcb2507bf73",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "696eb9edb5b03afbd105b2ccb3f9dd0a0f3dfe83e7cb04caeec892ada4e1616f",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "697afab46a47d8187f3c6eda8038fa0c1017029817a059c9d80431f0d8530dd0",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "69951ef1bfdc68394dc3bce76adaea59c2c7d22ac080cb442b337ca791f0d9da",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "6a4ea3592e31c777bba6c1ef85df19d7bc71a3d019487a4acd99585147205e0a",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "6cdf5d2e4c0479a0ed6d6f1cf0bbd825394e73d43bf4d3bec162f6c2d746d9ac",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "6ce5ff17ee1af79a4a35d070b4a1ce1eba09016b0c1bec689a9cca3b52266240",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "6e705df36d1286092ac3065d7f16968fba181c7a634aadc3ab61274358c3718b",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "6e801c5dc02fa71c2fda734ba6c56c5ffe742bf1cdd78495d8c3825a07840c27",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "7177e0fc780c0d2b2812d5f68fbdf410ed5359e36f7a51a8b2c1572954db4285",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "71dc25d1e97cd59b775213535cfdd92a3b9171da8118e0391c0770b13c0774ed",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "728f631b0f273cb9914743412ef6efddb9b7a7320d6602b413c09fa2ca3f0c00",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "73aeb8871ea4d3342ace56f2a350b826044c88b444c23899fb6352986c17b0ac",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "76f393e9d566104e650bc05d7cd2715d59519ebfde6bd6fea3569e5bc8fa0203",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "7b162539d4de279b57eaaa64a6018204cd5ce8e81d93bfe82c8929f7a6123a4b",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "7da811a209aac90a5a351e2b4e64f428d6380479f95d925f01af4fb5cd338cdd",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "804785ed90634414ea7774641ad268a010e8f5895a23b1b4c11a2500a2d2f887",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "80644fca55a2529153279a42c8981dd072cc646b880906e9daad1c25e5cc3fc0",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "80c80c657c2aa61929f208aca1921da53ca61f3aa0d3168a7e7210ecc650f6c3",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "82c1ba8ae38695eb582414ce83dea297597d974d75ad86670b36e703c24a2a36",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "861d454086b30c26fa00d486946f860be01307e477dfb54286bd6799ba01388a",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "895b99826438984ea055aa086fc31eb5ff7f672a98fc17ebd026cae5f5c15ef0",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "8aff52eca03b7785190226fbd1f270ed531dac6bd2aabcea7bae65d665c8a500",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "8c23b8b00dbe55fbca7dd1de9c9638619999e103aa43e3ec154dda2240ba3c9d",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "8cae485e867e191ed415c71de43cc25f56683e6686cde2a8b6b7ff8f75099f7a",
+      "attack": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "8d8383e2426b3a8b122ea1ae3ff635ce64533d8e3f1a6f8f191f5c1404430dee",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "8e299e17c4a35ee3bd74743f6c4fa45a5af28f7034431daae74b97d2dc7ba53d",
+      "attack": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "8e5ac2410c00a318d2fb7aa0af2ca70f4075c4f5416a4533c3e8ab878ccb8b8f",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "8e5c9f73553570227e064aacc3d89445c5a81e7a162c98979a0d7a06335f7919",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "927190f1aa0921eaac330876d159f25dea6a6e030284ea5026d322641f2a547f",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "932a4786e16162b01f80cc959c33a9999009ab4784bfb36ff851a01ceb494756",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "9368df85a33d2b673e4e7373c173f9500d280a1711c51ddde3ac8029c4355d55",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "936d53a37fcaf54f1be53dc0a06c0b1937e7309de79288fe0e602fd6d41f7b95",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "959a79297443c8faba8c069d109e535450d40ed2ab1fa652674a4a3016fdef2f",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "990d5f59e03b07f2fc0e0bb9078afa45aa8bd834b8516d0b412157522850a4a6",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "997aa9ccc811177e1da6edb185aff5afdabf4b4dafe5859110a3f6657407138e",
+      "attack": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "9d1b862e3a1c9f9b43a7b9e844acd7bce219ee29050bc088b7739f55cb83dc5c",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "9d39535f8375d85aced719c9ec00e7ec320cad9e162f831af30bbebb77c288de",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Bronze_emma.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Bronze_jan.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Bronze_koen.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Genious_ben.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Genious_boris.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Genious_seb.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Gold_lotte.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "Gold_patricia.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Gold_paul.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Gold_sven.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Lightning_meintje.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Lightning_naomi.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Lightning_olvia.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "Low_naomi.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Low_olivia.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "Low_thomas.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "MOTM_seb.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Mirror_ben.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Mirror_boris.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Mirror_brecht.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Mirror_klaasje.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Mirror_meintje.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Mirror_naomi.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Mirror_olivia.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Mirror_seb.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Mirror_thomas.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Mirror_truus.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Platinum_bjorn.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Platinum_brecht.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Platinum_klaasje.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Platinum_shrek.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Platinum_truus.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "Rare-bronze_jop.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Rare-bronze_liza.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Rare-bronze_pieter.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Rare-bronze_ravi.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Rare-bronze_sara.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Rare-gold_julia.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Rare-silver_karen.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Rare-silver_poppy.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Rare-silver_stijn.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "Silver_eva.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "Silver_frank.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "Silver_lizzy.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "Silver_silvia.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "Super-ben.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Ultra-seb.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "Ultra-thomas.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "Ultra_abel.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "Ultra_boris.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Ultra_frederic.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "Ultra_lotje.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "a229c253a6cc4c5fb824a471a083ed11b456a6d6fa765a7a9f6ef8d2fbac4f83",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "a24a6d567441a37ce79da9e30a23085b1725065c997317f77d7fbad606469f0c",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "a2993494b6233c696a9c0d6ed6d638f41b6e416af98a266efa78254e9685adca",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "a4ce016dc987f713890beb00bf7cfa8249b8ffa0664461574aae966465e35509",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "a7c71d11e08d48d4c9b516d06674883c369066505ba11e5725687095866683b0",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "a88c00e871885d573aa7f5f4f6335958ed5af35de7700e97fba84446282795fb",
+      "attack": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "a8cb6e7f94b05f18da81de59e0217f0ac21065b2334fabc262258fb6db9e6d7d",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "a93535a43a502454c6a7cd507fe7a0ef77bac4534d1c98a864219a4b7c95ae42",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "aa68b36d31273b44f9d32c9676fa77e641b87c4c5fa111c36791a94964f258bb",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "ab7e2c14fda7b89557399a7eade00a34b6fac5ad115b02a3aad2e007d73ecb54",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "ac0fba521df1538b120419f787d121b25545e8f2dadbb7f03c5e8494d7dc5959",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "adefa41ce67b6a6ca5dbb26e497f8ef0d6983f16ef0c68b454a64c1136b02fbc",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "aedb65b9e6749b5ddf2fcc46078676870dd00f348e543462a5aa7335481dbf2b",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "af23edb5fbedcee280c240c9247cc0159c887c78b46407c27f646a8a64a1aa92",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "afd3499b78ee4b84310f022d6ded16dbfe44ae9e1843a5b7f498610344b324d3",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "b0f1d53b5c7d27b4219e78de5d7570a880c9414030e70a02dd73bf644244b661",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "b1765faaf02276999dc9b5bb7babfccf38511ba6f00a6d96294f6c55fdd82318",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "b31b58ef4e5ef11a921f6264e6d77666b080b9c47445c763a01e2fd64bdc42cf",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "b380f3ca0625da23e8bc784a79dd32b2cbbc310c5e2ecbc8b6ad418c8ee5369a",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "b407ae71496ff7be684341d9f3f471303517c2881dfbcd108257c1d2421d56f6",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "b425c93f46a750efb34155da77a0d10232fd340f2652a46f7b6c5f196db0b50f",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "b5cf03d139f8b98fb220eb1246c21364018d98b3841c4e63d5b927ceb31d0964",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "b9601d696ef71dad88a6468bcfc9deed2e420e0f48b8239fbf5c161a0b4e2c5e",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "bb2ecb79bf686f75244f51cb9cdf620fafcdca692bab75691864f5cb73ddc559",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "bb9919658a2a8d512f904230277e974a622cd5a680969bae3d9344ea68f88b09",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "bbe36904beb95ff87d392862c568a59a58a5cddb6574a601b2b0c5397a6fb98c",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "bdcac312fffdd74b8c9dccb5c22f87c017a04f90d41dd73020f8873287fe2eb1",
+      "attack": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "be966f53e1611384f0c373bc9ca9c40745e9d204f92ae7eb84eb00e4c8f029df",
+      "attack": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "bronze_ari.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "c03909fd7d004eceeaea116ba5d703c856cd9a01e7c7b1c2eda6fe583632bc80",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "c0aee2abab33f8f74ce24b83b01c8ba8469cce2ff696802214069f1846e1116e",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "c47ce7ed236fff5e167eeab1d2590c98d9e12034e614af1100c0699a87bf05af",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "c4a76a985922dfda82c206ec455e7735dbe883e9ab423af87a2a4686c4e4abe1",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "c4c851222a4edf5cbe565e2d56ad6e14e7883f0227665107ae0e7d77eecf7fd0",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "c61e41ee74b95a3eb4db410a71c5a6f5bb310d5838500d0b9fa2f11c691153d4",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "c6686225c7c98e60b8fd8298fd8910740038c1b5e526095c81d32720246d31c3",
+      "attack": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "c815ddb5575f6eaa1666b79005f8345735c16c67b4f6d618d7822aa925441274",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "c8e1d0f4af18f1d1b056c2e796c2314a155fab58ebead69f57a03c9d33ce42d8",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "c9e197b91ca2f8e1b0945773f141b6f6cf1bf891c2f33c6f28431b00641fe97a",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "ca16dedd0d1cc47504e80943df6e1e005ae4b680477a04510f83314b9984e8f1",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "caa5646e59af13ab396d8d7c441b5844ac09cd30f8d11d67ae7466596990d98f",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "cc1b6bbbe6a44fb13aff3dc31b0b4489bde7988c4e91e161ef5f023024cde939",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "cfab396e563f3e87181034a69246cd4d342f5cb3c4b7e589bc16799193843650",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "cfdc601d1426aca955019955d9e31af2aa5e4d27e76afe04e4e591150a73881c",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "d182132db9762e180766d4f2b3b0adc7382652980e261c2cfcded2d8c4aea1a1",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "d25b73785ef958fd509ac99f8cd8cf3089cae8efa212602efae24b2832fcf8ce",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "d25b95806486bb6cd13eec645d5f5a856d5d6fbcf7f0a9ffbec8d48ab4f01b4a",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "d28af0a282d2ed6b3425e559598aa1bd7a63d0619715340f9cf957611c82813a",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "d7ce21b22b8c168e0e15389f67a17ad0fb291c206e932686ad0aec1d3079ffa3",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "db72310af0491c831406cc0db33c217162a13c083998ae131cacd0b6af2f4aa0",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "dc98bdb241bbba3725d1ff7873d130d56b53fd2671c1af023e9b6961e062ff1e",
+      "attack": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "dd8fc2f80951e490a83d5564a617938d0bff98f3103fa91634a8262ad0dd4a6c",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "dd9ba44dab62e6775a7c54b8b0cee4c2e94458ea1a7423a527351a129593a604",
+      "attack": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "dfd09b353b6afbfe8c350ffbc42ad71f9daabce2aaf2f5ce0734257e0e57e5fa",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "e037b97c1562dea2a23ac615c00e9716a8e1dce22d02d294aec7ee6a6565e7db",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "e2cd629d394d333ad1f08bb0935e9264b81543fab3e9e3cfc358cd485d97b6f4",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "e32cdb1cad493bbf146c4a15c3601dc3aaf76d1a0a70e18ca8b0b28be49bd89f",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "e3b49f86108010affc14ad97ea646af38380ee617e827832d0b214cbf92bb384",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "e3e7972bd0aed18713430c0af1cc8ef13c5bfa73f4e421dfbd67ce352ea4dacc",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "e3ed842ca1ba73af94b324985359171c3b1fe2c51f7d646bc8edcd05e553d10b",
+      "attack": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "e44579fcd69e872c35bfb3c83dbceb9c08ed4b26dee8d410027011439db93b80",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "e4e6666546e7d9df54d3afb42ecb1d32cb2e0cdc991a6009431da073f2992487",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "e68c57ff3bc0b244487a18992eb2d052f1b4a2f120939381be2f7171c27ad286",
+      "attack": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "e70ec8fe0aa7e2b6dd1992e52f5eaff4c6965ff5bc486ad804768925b7702f61",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "e79296a69877d0f64148baf8e01def21d5eb3b714ffda70248e51b558e500b5c",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "eb26b8a31d392e0934689648a41c4e6207197b6e7a85ef6b4bd9fa6cf2679bbd",
+      "attack": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "ed07ec04bbdac4894359e14b325d8e2e25276a44bb74c4b076bc38dea24a11ed",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "eeb8403c9853d10f3c7496627c07e1d6dac55eaacd6e8fd557976188f57caa02",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "ef44b849e375ce400830f77937136d549439dd940148e9389260c8f941bbaf48",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "f04fa3859908a4aec4120a7e6cc81963205f4203974627aafc564a826751e51c",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "f0c78f7b739e90692df8906f7e1adead1d4783a20448557d886c55e7357cbfd7",
+      "attack": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "f3c5f4221ba80aa276144e2e96380eb77e989a95b5576337297525f33653ac72",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "f73bc12b2905261045617ed15830eba75d53cd65e86e470cc1c5044475d6027c",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "f765b161a9cab848832c64585b93a9ff1aee125688098b9803521f92149a4681",
+      "attack": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "f9270de65a798b12418d02df89ddbbbba308aa1a853eeb5adb6a3b51d9188630",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "f92b609207d819aaaa621fe6944c269ebdbd9b4ab383dbfdbc3d6c10d976e2ca",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "f961a64a58ad681d2f01fb42b89c4e136d3a6cc600c8972e9c7b4fdfa1e16754",
+      "attack": {
+        "primary": "loy",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "f96436d00c9aac42999f701b671aaf9742c882abf6b1211f58228c33c00ee818",
+      "attack": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "fa02f3fc69788348d4ed186ad398f374098607ccd53956a345a17811b20ce8d3",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "fd8c3d481a27c1a065d4b793be242b926c644b6f39263f68a00e73d1e503c7a4",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "rang",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "fdf90d7fb44eb78911c13fcb3b5e1507221297a030ba91e3014490ad830e5632",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "zz2-Lightning_boris.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "zz2-Lightning_naomi.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz2-Lightning_thomas.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "zz2-MOTM_seb.png",
+      "attack": {
+        "primary": "pow",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "zz2-Platinum_meintje.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "zz3-Lightning_boris.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz3-Lightning_meintje.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz3-Lightning_naomi.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "ama"
+      }
+    },
+    {
+      "cardId": "zz3-Lightning_thomas.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "rang"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "zz3-Mirror_klaasje.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "acu",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "size",
+        "secondary": "pow"
+      }
+    },
+    {
+      "cardId": "zz3-Platinum_brecht.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "zz3-Ultra_seb.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz5-Bronze_Effie.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "ama",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "zz5-Bronze_Mats.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "pow",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz5-Gold_Sander.png",
+      "attack": {
+        "primary": "size",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "rang"
+      }
+    },
+    {
+      "cardId": "zz5-Gold_Willem.png",
+      "attack": {
+        "primary": "ama",
+        "secondary": "acu"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "loy"
+      }
+    },
+    {
+      "cardId": "zz5-Platinum_Donna.png",
+      "attack": {
+        "primary": "loy",
+        "secondary": "ama"
+      },
+      "dribble": {
+        "primary": "pow",
+        "secondary": "rang"
+      },
+      "defence": {
+        "primary": "acu",
+        "secondary": "size"
+      }
+    },
+    {
+      "cardId": "zz5-Rare-Gold_Rob.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "pow"
+      },
+      "dribble": {
+        "primary": "size",
+        "secondary": "ama"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz5-Rare-Silver_Ted.png",
+      "attack": {
+        "primary": "rang",
+        "secondary": "size"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "pow"
+      },
+      "defence": {
+        "primary": "loy",
+        "secondary": "acu"
+      }
+    },
+    {
+      "cardId": "zz5-Rare-bronze_Merel.png",
+      "attack": {
+        "primary": "acu",
+        "secondary": "loy"
+      },
+      "dribble": {
+        "primary": "ama",
+        "secondary": "size"
+      },
+      "defence": {
+        "primary": "rang",
+        "secondary": "pow"
+      }
+    }
+  ]
+}

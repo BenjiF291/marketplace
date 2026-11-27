@@ -120,6 +120,13 @@
     new MutationObserver(apply).observe(list,{childList:true});return apply;
   }
   const filters=[makeFilter('marketplace','items','Search cards and packs...'),makeFilter('inventory','inventoryItems','Search your collection...')];
+  const benBalButton=document.createElement('button');
+  benBalButton.type='button';
+  benBalButton.className='btn btn-primary studio-only';
+  benBalButton.textContent='BEN-BAL';
+  benBalButton.setAttribute('aria-haspopup','dialog');
+  benBalButton.onclick=()=>BenBal.open();
+  $('items').before(benBalButton);
   function renderSearch(){
     const query=$('studioSearchInput').value.toLowerCase().trim();const result=$('studioSearchResults');result.replaceChildren();
     Object.entries(routes).filter(([key,r])=>(!r.admin||currentUserIsAdmin)&&`${key} ${r.label} ${r.description} ${key==='admin'?'grant grants users packs accounts tiers':''}`.toLowerCase().includes(query)).forEach(([key,r])=>{
@@ -193,13 +200,131 @@
   const preview=document.createElement('dialog');
   preview.className='studio-card-preview';
   preview.setAttribute('aria-label','Enlarged card');
-  preview.innerHTML='<button type="button" class="btn">Close</button><img alt="">';
+  preview.innerHTML = `
+    <div class="studio-card-toolbar"><button type="button" class="btn" autofocus>Close</button></div>
+    <div class="studio-card-stage">
+    <div class="studio-card-flip" role="button" tabindex="0" aria-disabled="true">
+      <div class="studio-card-rotor">
+        <div class="studio-card-front"></div>
+        <div class="studio-card-back" aria-hidden="true"></div>
+      </div>
+    </div></div>`;
   document.body.append(preview);
-  preview.querySelector('button').onclick=()=>preview.close();
-  preview.onclick=event=>{if(event.target===preview)preview.close();};
-  const showCard=image=>{if(!enabled||document.body.classList.contains('dye-mode'))return;const large=preview.querySelector('img');large.src=image.src;large.alt=image.alt;preview.showModal();};
-  $('inventoryItems').addEventListener('click',event=>{if(event.target.matches('img.item-image'))showCard(event.target);});
-  $('inventoryItems').addEventListener('keydown',event=>{if(event.target.matches('img.item-image')&&['Enter',' '].includes(event.key)){event.preventDefault();showCard(event.target);}});
-  const prepareImages=()=>{$('inventoryItems').querySelectorAll('img.item-image').forEach(image=>{image.tabIndex=0;image.setAttribute('role','button');image.setAttribute('aria-label',`Enlarge ${image.alt}`);});};
-  new MutationObserver(prepareImages).observe($('inventoryItems'),{childList:true});prepareImages();
+  const flip = preview.querySelector('.studio-card-flip');
+  const front = preview.querySelector('.studio-card-front');
+  const back = preview.querySelector('.studio-card-back');
+  let artwork;
+  const inspectUpgrade = document.createElement('button');
+  inspectUpgrade.type = 'button';
+  inspectUpgrade.className = 'btn';
+  inspectUpgrade.textContent = 'Inspect Upgrade';
+  inspectUpgrade.hidden = true;
+  preview.querySelector('.studio-card-toolbar').prepend(inspectUpgrade);
+  const flipDuration = 700;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let pending;
+  let lockedUntil = 0;
+  flip.style.setProperty('--preview-flip-duration', `${flipDuration}ms`);
+
+  preview.querySelector('[autofocus]').onclick = () => preview.close();
+  preview.addEventListener('click', event => {
+    if (event.target === preview || event.target.classList.contains('studio-card-stage')) preview.close();
+  });
+  preview.addEventListener('close', () => {
+    if (!preview.open) pending?.abort();
+  });
+
+  function flipCard() {
+    if (flip.getAttribute('aria-disabled') === 'true' || performance.now() < lockedUntil) return;
+    if (!reducedMotion.matches) lockedUntil = performance.now() + flipDuration;
+    const reversed = flip.classList.toggle('is-flipped');
+    front.setAttribute('aria-hidden', String(reversed));
+    back.setAttribute('aria-hidden', String(!reversed));
+    flip.setAttribute('aria-label', reversed
+      ? `Show original artwork for ${artwork.alt}`
+      : `Show BEN-BAL statistics for ${artwork.alt}`);
+  }
+
+  function onActivationKey(event, activate) {
+    if (!['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    if (!event.repeat) activate();
+  }
+
+  flip.addEventListener('click', flipCard);
+  flip.addEventListener('keydown', event => onActivationKey(event, flipCard));
+
+  async function showCard(image) {
+    if (preview.open || document.body.classList.contains('dye-mode')) return;
+    pending?.abort();
+    const request = new AbortController();
+    pending = request;
+    lockedUntil = 0;
+    flip.classList.remove('is-flipped');
+    flip.setAttribute('aria-disabled', 'true');
+    flip.setAttribute('aria-label', image.alt);
+    front.setAttribute('aria-hidden', 'false');
+    back.setAttribute('aria-hidden', 'true');
+    back.replaceChildren();
+    artwork = document.createElement('img');
+    artwork.alt = image.alt;
+    const fit = () => {
+      if (request.signal.aborted || !artwork.naturalWidth) return;
+      flip.style.setProperty('--preview-ratio', artwork.naturalWidth / artwork.naturalHeight);
+    };
+    flip.style.removeProperty('--preview-ratio');
+    artwork.addEventListener('load', fit);
+    artwork.src = image.src;
+    fit();
+    front.replaceChildren(window.BenBalCard.collectibleFace(artwork, image.upgrade));
+    inspectUpgrade.hidden = !image.upgrade;
+    inspectUpgrade.onclick = () => window.UpgraderWorkshop?.inspect(image.alt, image.upgrade);
+    preview.showModal();
+
+    const identifier = window.CardData.identifierFromImage(image.src);
+    if (!identifier) return;
+    try {
+      const card = await window.CardData.getCardData(identifier, { signal: request.signal, mode: 'ben-bal' });
+      if (!preview.open || request.signal.aborted || !card) return;
+      if (image.upgrade) {
+        card.stats = image.upgrade.effectiveStats;
+        const baseOverall = image.upgrade.baseOverall ?? card.overall;
+        card.overall = image.upgrade.currentOverall ??
+          window.BenBalCard.upgradedOverall(baseOverall, image.upgrade.baseStats, card.stats);
+        card.upgrade = { ...image.upgrade, baseOverall, currentOverall: card.overall };
+        front.replaceChildren(window.BenBalCard.collectibleFace(artwork, card.upgrade, card));
+        inspectUpgrade.onclick = () => window.UpgraderWorkshop?.inspect(image.alt, card.upgrade);
+        card.name = image.alt;
+        if (card.benBal) {
+          const pairs = window.BenBalCard.orderActionStats(card.stats, card.benBal);
+          card.benBal = { ...pairs, naturalPosition: window.BenBalCard.naturalPosition(card.stats, pairs) };
+        }
+      }
+      if (!card.benBal) return;
+      back.replaceChildren(window.BenBalCard.cardFace(card));
+      flip.setAttribute('aria-disabled', 'false');
+      flip.setAttribute('aria-label', `Show BEN-BAL statistics for ${artwork.alt}`);
+    } catch {
+      // The original artwork remains available if statistics cannot be loaded.
+    }
+  }
+
+  const thumbnail = 'img.item-image';
+  for (const list of [$('inventoryItems'), $('items')]) {
+    list.addEventListener('click', event => {
+      if (event.target.matches(thumbnail)) showCard(event.target);
+    });
+    list.addEventListener('keydown', event => {
+      if (event.target.matches(thumbnail)) onActivationKey(event, () => showCard(event.target));
+    });
+    const prepareImages = () => {
+      for (const image of list.querySelectorAll(thumbnail)) {
+        image.tabIndex = 0;
+        image.setAttribute('role', 'button');
+        image.setAttribute('aria-label', `Enlarge ${image.dataset.collectibleDescription || image.alt}`);
+      }
+    };
+    new MutationObserver(prepareImages).observe(list, { childList: true });
+    prepareImages();
+  }
 })();

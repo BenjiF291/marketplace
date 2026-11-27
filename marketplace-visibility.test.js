@@ -7,7 +7,7 @@ test('GET marketplace hides reached limits before grouping and normalizes displa
  const snap=(name,id)=>({id,exists:!!records[name]?.[id],data:()=>records[name]?.[id]});
  const query=(name,filter)=>({doc:id=>({get:async()=>snap(name,id)}),where:(key,op,value)=>query(name,[key,value]),get:async()=>{const docs=Object.keys(records[name]||{}).filter(id=>!filter||records[name][id][filter[0]]===filter[1]).map(id=>snap(name,id));return {docs,forEach:fn=>docs.forEach(fn)};}});
  let handler;const source=require('node:fs').readFileSync('server.js','utf8'),start=source.indexOf("app.get('/items',"),end=source.indexOf('/* ------------------ ADMIN ITEM IMAGE',start);
- require('node:vm').runInNewContext(source.slice(start,end),{app:{get:(path,fn)=>handler=fn},db:{collection:query},require,console,...require('./marketplace-utils'),amuletEffects:()=>({}),discounted:p=>p,serializeDate:()=>null,sortCardsByTier:()=>{},getAscendTierConfig:async()=>[]});
- let result;await handler({header:()=> 'a'},{json:v=>result=v,status(){return this;},send:v=>{throw Error(v);}});assert.deepEqual(Array.from(result,i=>i.id),['open']);assert.equal(result[0].price,2);
- await handler({header:()=> 'b'},{json:v=>result=v,status(){return this;},send:v=>{throw Error(v);}});assert.equal(result.length,3);
+ require('node:vm').runInNewContext(source.slice(start,end),{app:{get:(path,fn)=>handler=fn},db:{collection:query},require,console,...require('./marketplace-utils'),roundFooty:require('./amulet-utils').round,amuletEffects:()=>({}),discounted:p=>p,serializeDate:()=>null,sortCardsByTier:()=>{},getAscendTierConfig:async()=>[]});
+ let result;await handler({authenticatedUserId:'a'},{json:v=>result=v,status(){return this;},send:v=>{throw Error(v);}});assert.deepEqual(Array.from(result,i=>i.id),['open']);assert.equal(result[0].price,2);
+ await handler({authenticatedUserId:'b'},{json:v=>result=v,status(){return this;},send:v=>{throw Error(v);}});assert.equal(result.length,3);
 });

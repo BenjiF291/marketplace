@@ -6,7 +6,7 @@ function validate(body,catalog){
  if(Array.isArray(body.cardIds)&&!body.cardIds.length&&!cards.length)throw Error('Add at least one collection card or extra reward.');
  const config=rules.validate({name:body.name,enabled:true,cooldownHours:7,appearance,cards:cards.length?cards:[{title:'Placeholder',options:[{kind:'footy',id:'',min:1,max:1,chance:100}]}]},catalog);
  // Leave room for the original guaranteed collection card and transaction metadata.
- const count=cards.reduce((n,c)=>n+Math.max(...c.options.map(o=>['card','pack'].includes(o.kind)?o.max:0)),0);
+ const count=cards.reduce((n,c)=>n+Math.max(...c.options.map(o=>['card','pack','randomCardByTier'].includes(o.kind)?o.max:0)),0);
  if(count>390)throw Error('Use at most 390 additional inventory items per opening.');
  const shop=body.shop||{enabled:false,price:10,currency:'footy'};
  const cooldownMinutes=shop.cooldownMinutes??0;

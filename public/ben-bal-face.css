@@ -1,0 +1,180 @@
+.ben-bal-face {
+  --ben-bal-ink: #fff7e4;
+  --ben-bal-muted: #fff0c5;
+  --ben-bal-veil: #08131e;
+  --ben-bal-edge: #ffe6a663;
+  --ben-bal-attack: #ff9d88;
+  --ben-bal-dribble: #ffd373;
+  --ben-bal-defence: #91f6dc;
+  --ben-bal-text-shadow: 0 1px 3px #08131ed9;
+  --ben-bal-art-size: 100% 100%;
+  --ben-bal-shape: polygon(6% 18%, 28% 9%, 50% 4%, 72% 9%, 94% 18%, 94% 82%, 88% 88%, 50% 98%, 12% 88%, 6% 82%);
+  position: relative;
+  isolation: isolate;
+  backface-visibility: hidden;
+  aspect-ratio: 5 / 7;
+  color: var(--ben-bal-ink);
+  font: 600 1rem/1.15 system-ui, sans-serif;
+  text-shadow: var(--ben-bal-text-shadow);
+  filter: drop-shadow(0 3px 4px #242b2552);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.ben-bal-light-art {
+  --ben-bal-ink: #251a18;
+  --ben-bal-muted: #3c2721;
+  --ben-bal-veil: #fff1d7;
+  --ben-bal-edge: #512d3061;
+  --ben-bal-attack: #a32936;
+  --ben-bal-dribble: #765000;
+  --ben-bal-defence: #075e54;
+  --ben-bal-text-shadow: none;
+}
+.ben-bal-face::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 31% 32%, color-mix(in srgb, var(--ben-bal-veil) 79%, transparent) 0%, transparent 36%),
+    radial-gradient(ellipse at 28% 74%, color-mix(in srgb, var(--ben-bal-veil) 84%, transparent) 0%, transparent 40%),
+    linear-gradient(90deg, transparent 44%, color-mix(in srgb, var(--ben-bal-veil) 70%, transparent) 73%, transparent 97%),
+    linear-gradient(145deg, #fff7df29, transparent 34%),
+    var(--ben-bal-art, linear-gradient(155deg, #2a5555, #18342e 60%, #735246)) center / var(--ben-bal-art-size) no-repeat;
+  clip-path: var(--ben-bal-shape);
+}
+/* Transparent templates supply the silhouette, including any original foil edging. */
+.ben-bal-face:is([data-artwork="Bronze"], [data-artwork="Rare Bronze"], [data-artwork="Silver"],
+  [data-artwork="Rare Gold"], [data-artwork="Platinum"], [data-artwork="Lightling"], [data-artwork="Ultra"])::before {
+  clip-path: none;
+  mask: var(--ben-bal-art) center / 100% 100% no-repeat;
+}
+.ben-bal-face[data-artwork="Rare Bronze"]::before { transform: scaleX(-1); }
+/* Clip the white margins baked into the opaque originals. Coordinates are relative to the artwork. */
+.ben-bal-face:is([data-artwork="Gold"], [data-artwork="Rare Silver"]) {
+  --ben-bal-shape: polygon(5% 16%, 12% 13%, 15% 9%, 15% 6%, 29% 3.5%, 50% 2%, 71% 3.5%, 85% 6%, 85% 9%, 88% 13%, 95% 16%, 95% 84%, 91% 87%, 78% 90%, 61% 94%, 50% 98%, 39% 94%, 22% 90%, 9% 87%, 5% 84%);
+}
+.ben-bal-face:is([data-artwork="Mini"], [data-artwork="Fighter"]) {
+  --ben-bal-shape: polygon(13% 21%, 28% 13%, 40% 8%, 51% 9%, 61% 8%, 74% 13%, 89% 21%, 89% 78%, 85% 81%, 66% 85%, 51% 90%, 37% 85%, 17% 81%, 13% 78%);
+}
+.ben-bal-face[data-artwork="Super"] {
+  --ben-bal-shape: polygon(10% 18%, 25% 11%, 37% 5%, 50% 6%, 63% 5%, 75% 11%, 90% 18%, 89% 80%, 83% 84%, 65% 88%, 50% 93%, 35% 88%, 17% 84%, 11% 80%);
+}
+.ben-bal-face[data-artwork="MOTM"] {
+  --ben-bal-shape: polygon(10% 18%, 23% 12%, 37% 6%, 50% 4%, 63% 6%, 77% 12%, 90% 18%, 90% 83%, 86% 86%, 67% 90%, 50% 96%, 33% 90%, 14% 86%, 10% 83%);
+}
+.ben-bal-face[data-artwork="Mirror"] {
+  --ben-bal-shape: polygon(6% 15%, 22% 9%, 39% 3%, 50% 2%, 61% 3%, 78% 9%, 94% 15%, 94% 84%, 90% 87%, 69% 92%, 50% 98%, 31% 92%, 10% 87%, 6% 84%);
+}
+.ben-bal-face[data-artwork="Genius"] {
+  --ben-bal-shape: polygon(6% 18%, 21% 12%, 36% 6%, 50% 5%, 64% 6%, 79% 12%, 93% 18%, 93% 81%, 86% 84%, 66% 88%, 50% 93%, 34% 88%, 13% 84%, 6% 81%);
+}
+.ben-bal-face[data-artwork="Low-pointers"] {
+  --ben-bal-art-size: 318% 100%;
+  --ben-bal-shape: polygon(2% 15%, 16% 9%, 31% 3%, 49% 2%, 67% 3%, 82% 9%, 95% 15%, 95% 83%, 90% 87%, 73% 91%, 49% 96%, 25% 91%, 7% 87%, 2% 83%);
+}
+.ben-bal-identity {
+  position: absolute;
+  inset: 23% 47.5% 21% 17%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ben-bal-rating, .ben-bal-signature { display: grid; justify-items: start; gap: 4px; }
+.ben-bal-overall, .ben-bal-primary strong, .ben-bal-secondary strong {
+  font-family: Bahnschrift, "Arial Narrow", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.ben-bal-overall { font-size: clamp(2rem, 22cqi, 3.75rem); line-height: .83; letter-spacing: -.09em; }
+.ben-bal-position, .ben-bal-tier {
+  color: var(--ben-bal-muted);
+  font-size: clamp(8px, 4.7cqi, 11px);
+  font-weight: 750;
+  text-transform: uppercase;
+}
+.ben-bal-position { letter-spacing: .025em; }
+.ben-bal-tier { font-size: clamp(8px, 4.1cqi, 10px); }
+.ben-bal-name {
+  font: 700 clamp(10px, 6.2cqi, 18px)/1.08 Georgia, serif;
+  letter-spacing: -.02em;
+  text-wrap: pretty;
+}
+.ben-bal-signature { border-top: 1px solid var(--ben-bal-edge); padding-top: 4px; }
+.ben-bal-penalty { color: var(--ben-bal-attack); font-size: clamp(8px, 4.6cqi, 11px); font-weight: 800; }
+
+.ben-bal-stats, .ben-bal-unavailable { position: absolute; inset: 20% 15% 20% 54%; }
+.ben-bal-stats { display: grid; grid-template-rows: repeat(3, 1fr); gap: 2px; }
+.ben-bal-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  gap: 1px;
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--ben-bal-accent) 28%, var(--ben-bal-edge));
+  padding-inline: clamp(3px, 3cqi, 8px) 0;
+}
+.ben-bal-stat[data-action="attack"] { --ben-bal-accent: var(--ben-bal-attack); --ben-bal-glow: #ff7865; }
+.ben-bal-stat[data-action="dribble"] { --ben-bal-accent: var(--ben-bal-dribble); --ben-bal-glow: #ffbd48; }
+.ben-bal-stat[data-action="defence"] { --ben-bal-accent: var(--ben-bal-defence); --ben-bal-glow: #46e7c1; }
+.ben-bal-stat.is-natural::before {
+  content: "";
+  position: absolute;
+  inset: 2px 0 2px 0;
+  border-left: 2px solid var(--ben-bal-accent);
+  background: linear-gradient(95deg, color-mix(in srgb, var(--ben-bal-glow) 27%, transparent), transparent 95%);
+  filter: drop-shadow(0 0 4px var(--ben-bal-glow));
+  pointer-events: none;
+}
+.ben-bal-stat > * { position: relative; }
+.ben-bal-stat-label {
+  color: var(--ben-bal-muted);
+  font-size: clamp(8px, 4.5cqi, 12px);
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.ben-bal-stat.is-natural .ben-bal-stat-label { color: var(--ben-bal-accent); }
+.ben-bal-primary, .ben-bal-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline;
+  column-gap: 3px;
+  width: min(100%, 4.2em);
+  font-size: clamp(11px, 7cqi, 17px);
+  line-height: 1;
+}
+.ben-bal-primary strong, .ben-bal-secondary strong { text-align: right; }
+.ben-bal-primary strong { font-size: clamp(17px, 12cqi, 33px); }
+.ben-bal-secondary { color: var(--ben-bal-muted); }
+.ben-bal-secondary strong { font-size: clamp(11px, 7.4cqi, 20px); }
+.ben-bal-primary span, .ben-bal-secondary span, .ben-bal-stat del {
+  font-size: clamp(8px, 4.35cqi, 12px);
+  font-weight: 750;
+}
+.ben-bal-primary span, .ben-bal-secondary span { min-width: 3.6ch; }
+.ben-bal-stats.has-penalty :is(.ben-bal-primary, .ben-bal-secondary) {
+  width: 100%;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+}
+.ben-bal-stat del { color: var(--ben-bal-attack); }
+.ben-bal-unavailable {
+  display: grid;
+  place-content: center;
+  font: 700 clamp(10px, 6.1cqi, 15px)/1.2 Georgia, serif;
+  border-block: 1px solid var(--ben-bal-edge);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ben-bal-face:hover {
+    transform: perspective(700px) translateY(-3px) rotateX(3deg);
+    filter: drop-shadow(0 8px 6px #242b255f);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ben-bal-face { transition: none; }
+}

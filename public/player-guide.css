@@ -1,0 +1,9 @@
+.player-guide-dialog{box-sizing:border-box;width:min(1180px,calc(100vw - 24px));height:calc(100dvh - 24px);max-width:none;max-height:none;margin:auto;padding:0;border:2px solid #b99a60;border-radius:12px;background:#102d2d;color:#f9edcf;overflow:hidden}
+.player-guide-dialog[open]{display:flex;flex-direction:column}
+.player-guide-dialog::backdrop{background:#071b18cf}
+.player-guide-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid #af925c;background:#173a38}
+.player-guide-dialog h2{margin:0;font:24px Georgia,serif;color:inherit}
+.player-guide-dialog button{cursor:pointer;font:inherit;color:#fff0cb;background:#214b47;border:1px solid #b99a60;border-radius:7px;padding:10px 14px}
+.player-guide-dialog button:focus-visible{outline:3px solid #efd07e;outline-offset:3px}
+.player-guide-dialog iframe{display:block;flex:1;min-height:0;width:100%;border:0;background:#102d2d}
+@media(max-width:650px){.player-guide-dialog{width:100%;height:100dvh;border-radius:0}.player-guide-dialog>header{padding:10px 12px}.player-guide-dialog h2{font-size:20px}}

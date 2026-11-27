@@ -6,9 +6,10 @@ test('single-account refresh reads only that account and excludes private fields
  const context={app:{get:(url,fn)=>handler=fn},db:{collection:()=>({doc:id=>{assert.equal(id,'u');return {get:async()=>{reads++;return doc;}};},get:()=>{throw Error('Directory read');}})},serializeDate:value=>value,console};
  vm.runInNewContext(source.slice(source.indexOf("app.get('/users',"),source.indexOf("app.get('/users',")+source.slice(source.indexOf("app.get('/users',")).indexOf('\n});')+4),context);
  let payload,status=200;const response={json:value=>payload=value,status:n=>{status=n;return response;},send:()=>{}};
- await handler({query:{userId:'u'}},response);
+ await handler({query:{userId:'u'},authenticatedUserId:'u'},response);
  assert.equal(reads,1);assert.equal(payload[0].balance,12);assert.equal(payload[0].password,undefined);
- await handler({query:{userId:['u']}},response);assert.equal(status,400);assert.equal(reads,1);
+ await handler({query:{userId:'u'}},response);assert.equal(payload[0].balance,undefined);
+ await handler({query:{userId:['u']}},response);assert.equal(status,400);assert.equal(reads,2);
 });
 test('match polling settles only overdue clocks',async()=>{
  let handler,settlements=0;

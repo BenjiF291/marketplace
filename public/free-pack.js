@@ -1,7 +1,7 @@
 (() => {
  const el=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls||'';if(text!==undefined)n.textContent=text;return n;};
  const pendingKey=()=>`free-pack-pending:${currentUserId}`;
- let dialog,state,receipt;
+ let dialog,state,receipt,opening=false;
  async function request(url,method='GET',body){const response=await fetch(API_URL+url,{method,headers:resourceHeaders(),...(body?{body:JSON.stringify(body)}:{})});if(!response.ok)throw Error(await response.text());return response.json();}
  function button(text,fn){const b=el('button','free-pack-button',text);b.type='button';b.onclick=fn;return b;}
  function remaining(){if(state?.canEdit)return 0;return Math.max(0,(state?.nextAt||0)-(Date.now()+(state?.offset||0)));}
@@ -9,11 +9,11 @@
  function refreshClaimedRewards(){window.dispatchEvent(new Event('free-pack-claimed'));loadUsers();loadInventory();load().catch(()=>{});}
  function reveal(result){receipt=result;dialog?.close();return window.RewardOpening.play({name:result.name,daily:true,admin:state?.canEdit===true,appearance:result.appearance,result,onClose:refreshClaimedRewards,onDetails:details,onPreview:state?.canEdit?previewCards:null});}
  function startOpening(){dialog?.close();let claimed=false;return window.RewardOpening.play({name:state.config.name,daily:true,admin:state.canEdit===true,appearance:state.config.appearance,open:async()=>{const result=await claimRewards();claimed=true;return result;},onClose:()=>{if(claimed)refreshClaimedRewards();},onDetails:details,onPreview:state.canEdit?previewCards:null});}
- async function open(){try{const data=await load();if(data.canClaim&&data.config.enabled)startOpening();else await details();}catch{await details();}}
- async function load(){const data=await request('/free-pack');state={...data,offset:data.serverNow-Date.now()};if(dialog?.open){dialog.querySelector('h2').textContent=data.config.name;dialog.querySelector('.free-pack-edit').hidden=!data.canEdit;dialog.querySelector('.free-pack-preview').hidden=!data.canEdit;dialog.querySelector('.free-pack-description').textContent=`${data.config.cards.length} reward cards, free every ${data.config.cooldownHours} hours.`;renderOdds();if(!data.config.enabled)dialog.querySelector('.free-pack-message').textContent='This pack is currently paused.';const pending=localStorage.getItem(pendingKey());if(data.lastClaim&&data.lastClaim.requestId===pending){localStorage.removeItem(pendingKey());reveal(data.lastClaim);}}
+ async function open(){if(opening||document.querySelector('.reward-opening[open]'))return;opening=true;try{const data=await load();if(data.canClaim&&data.config.enabled)startOpening();else await details();}catch{await details();}finally{opening=false;}}
+ async function load(){const data=await request('/free-pack');state={...data,offset:data.serverNow-Date.now()};if(dialog?.open){await window.CardDisplayNames?.load();if(!dialog.open)return;dialog.querySelector('h2').textContent=data.config.name;dialog.querySelector('.free-pack-edit').hidden=!data.canEdit;dialog.querySelector('.free-pack-preview').hidden=!data.canEdit;dialog.querySelector('.free-pack-description').textContent=`${data.config.cards.length} reward cards, free every ${data.config.cooldownHours} hours.`;renderOdds();if(!data.config.enabled)dialog.querySelector('.free-pack-message').textContent='This pack is currently paused.';const pending=localStorage.getItem(pendingKey());if(data.lastClaim&&data.lastClaim.requestId===pending){localStorage.removeItem(pendingKey());reveal(data.lastClaim);}}
   tick();return data;
  }
- function renderOdds(){const box=dialog.querySelector('.free-pack-odds');box.replaceChildren();box.append(el('summary','','View reward chances'));state.config.cards.forEach((card,i)=>{const section=el('section');section.append(el('h3','',`Card ${i+1}: ${card.title}`));card.options.forEach(o=>section.append(el('p','',`${CurrencyFormat.percent(o.chance)} - ${o.min===o.max?o.min:o.min+'-'+o.max} ${o.kind==='footy'?'Footy':(o.kind==='brawlToken'&&o.id.startsWith('rarity:')?o.id.slice(7)+' (random creature)':null)||(o.kind==='rubyItem'&&o.id.startsWith('rarity:clothing:')?o.id.slice(16)+' clothing (random item)':null)||(window.StableAnimals?.animals.find(a=>a.id===o.id)?.name)||({bronze:'Rubies','rare-bronze':'Garnet',skip:'Skip',leap:'Leap'})[o.id]||o.id}${o.kind==='brawlToken'?' Brawl tokens':''}`)));box.append(section);});}
+ function renderOdds(){const box=dialog.querySelector('.free-pack-odds');box.replaceChildren();box.append(el('summary','','View reward chances'));state.config.cards.forEach((card,i)=>{const section=el('section');section.append(el('h3','',`Card ${i+1}: ${card.title}`));card.options.forEach(o=>section.append(el('p','',`${CurrencyFormat.percent(o.chance)} - ${o.min===o.max?o.min:o.min+'-'+o.max} ${o.kind==='footy'?'Footy':o.kind==='card'?CardDisplayNames.name(o.id):(o.kind==='brawlToken'&&o.id.startsWith('rarity:')?o.id.slice(7)+' (random creature)':null)||(o.kind==='rubyItem'&&o.id.startsWith('rarity:clothing:')?o.id.slice(16)+' clothing (random item)':null)||(o.kind==='randomCardByTier'?state.randomCardByTier?.find(pool=>pool.id===o.id)?.name||'Random card by tier':null)||(window.StableAnimals?.animals.find(a=>a.id===o.id)?.name)||({bronze:'Rubies','rare-bronze':'Garnet',skip:'Skip',leap:'Leap'})[o.id]||o.id}${o.kind==='brawlToken'?' Brawl tokens':''}`)));box.append(section);});}
  async function claimRewards(){let requestId=localStorage.getItem(pendingKey());if(!requestId){requestId=crypto.randomUUID();localStorage.setItem(pendingKey(),requestId);}
   const result=await request('/free-pack/claim','POST',{requestId});localStorage.removeItem(pendingKey());state.nextAt=result.nextAt;receipt=result;tick();return result;
  }
@@ -23,15 +23,16 @@
   dialog.querySelector('.free-pack-rewards').replaceChildren();dialog.querySelector('.free-pack-claim').hidden=false;dialog.querySelector('.free-pack-message').textContent='Loading...';if(!dialog.open)dialog.showModal();
   try{const data=await load();dialog.querySelector('.free-pack-message').textContent=data.config.enabled?'':'This pack is currently paused.';if(data.lastClaim&&!data.canClaim&&!receipt){const area=dialog.querySelector('.free-pack-rewards');area.append(button('View your last rewards',()=>reveal(data.lastClaim)));}}catch(error){dialog.querySelector('.free-pack-message').textContent=error.message;}
  }
- async function previewCards(){try{const {catalog}=await request('/admin/free-pack');window.RewardGallery.open(catalog);}catch(error){await details();dialog.querySelector('.free-pack-message').textContent=error.message;}}
- async function editPack(){const message=dialog.querySelector('.free-pack-message');message.textContent='Loading editor...';try{const {config,catalog}=await request('/admin/free-pack');message.textContent='';editor(config,catalog);}catch(error){message.textContent=error.message;}}
+ async function previewCards(){try{const {catalog}=await request('/admin/free-pack');await window.CardDisplayNames?.load();window.RewardGallery.open(catalog);}catch(error){await details();dialog.querySelector('.free-pack-message').textContent=error.message;}}
+ async function editPack(){const message=dialog.querySelector('.free-pack-message');message.textContent='Loading editor...';try{const {config,catalog}=await request('/admin/free-pack');await window.CardDisplayNames?.load();message.textContent='';editor(config,catalog);}catch(error){message.textContent=error.message;}}
  function editor(config,catalog,onSave,collectionCard){
+  catalog ??= {};
   const box=el('dialog','free-pack-editor');box.setAttribute('aria-label',onSave?'Edit pack rewards':'Edit daily pack');const form=el('form');form.append(el('h2','',onSave?'Pack rewards':'Daily pack editor'),el('p','','Add up to 30 cards. Each card draws one reward from its options. Chances per card must total 100%. Changes apply to future claims.'));
   const input=(value,type='text')=>{const n=el('input');n.type=type;n.value=value;if(type==='number'){n.min='0';n.step='any';}return n;};
   const field=(label,control)=>{const l=el('label','',label);l.append(control);return l;};
   const name=input(config.name),cooldown=input(config.cooldownHours,'number'),enabled=input('','checkbox');enabled.checked=config.enabled;
   if(!onSave)form.append(field('Pack name',name),field('Hours between claims',cooldown),field('Pack enabled',enabled));
-  const kinds={brawlToken:'Brawl token',animal:'Animal',gem:'Gem currency',footy:'Footy',boost:'Time boost',rubyItem:'Shop item',amulet:'Amulet',pack:'Collection pack',card:'Collection card'};
+  const kinds={brawlToken:'Brawl token',animal:'Animal',gem:'Gem currency',footy:'Footy',boost:'Time boost',rubyItem:'Shop item',amulet:'Amulet',pack:'Collection pack',card:'Specific Card',randomCardByTier:'Random Card by Tier',upgradeShard:'Upgrade Shard',upgradeCore:'Upgrader Core',upgradeToken:'Upgrader Token',cardXpPotion:'Card XP Potion'};
   const readCards=[];
   let savePreset;
   if(onSave){
@@ -47,10 +48,46 @@
   function addCard(card){if(readCards.length>=30)return;const section=el('fieldset');section.append(el('legend','',`Reward card ${readCards.length+1}`));const title=input(card.title);section.append(field('Card title',title));const rows=el('div','free-pack-option-list'),total=el('p','free-pack-total');const entries=[];
    const sum=()=>{total.textContent=`Total chance: ${CurrencyFormat.percent(entries.reduce((n,r)=>n+Number(r.chance.value),0))}`;};
    function add(option={kind:'gem',id:'bronze',min:1,max:1,chance:0}){const row=el('div','free-pack-option');const kind=el('select');Object.entries(kinds).forEach(([id,label])=>kind.append(new Option(label,id)));kind.value=option.kind;const id=el('select'),min=input(option.min,'number'),max=input(option.max,'number'),chance=input(option.chance,'number');
-    function items(selected){id.replaceChildren();(catalog[kind.value]||[{id:'',name:'Footy'}]).forEach(entry=>id.append(new Option(entry.name,entry.id)));if(selected)id.value=selected;id.disabled=kind.value==='footy';}items(option.id);kind.onchange=()=>items();chance.oninput=sum;
-    const search=input('');search.placeholder='Find an item…';search.oninput=()=>{const selected=id.value,term=search.value.trim().toLowerCase();id.replaceChildren();(catalog[kind.value]||[{id:'',name:'Footy'}]).filter(item=>item.id===selected||item.name.toLowerCase().includes(term)||item.id.toLowerCase().includes(term)).forEach(item=>id.append(new Option(item.name,item.id)));id.value=selected;};
-    const changeKind=kind.onchange;kind.onchange=()=>{search.value='';changeKind();};
-    const entry={row,kind,id,min,max,chance};entries.push(entry);const remove=button('Remove',()=>{entries.splice(entries.indexOf(entry),1);row.remove();sum();});row.append(field('Reward type',kind),field('Search items',search),field('Item',id),field('Minimum',min),field('Maximum',max),field('Chance %',chance),remove);rows.append(row);sum();
+    const search=input('');search.placeholder='Find an item…';
+    const preview=el('p','random-card-pool-preview');
+    preview.setAttribute('role','status');
+    function previewPool(){
+     preview.hidden=kind.value!=='randomCardByTier';
+     if(preview.hidden)return;
+     const pool=catalog.randomCardByTier?.find(entry=>entry.id===id.value);
+     preview.textContent=!pool?'Random-card categories are unavailable.':
+      pool.count?(`${pool.count} eligible ${pool.count===1?'card':'cards'}. Every eligible card has an equal chance.`):
+       'No eligible cards currently exist in this reward category.';
+    }
+    function items(selected) {
+     const type=kind.value,term=search.value.trim().toLowerCase();
+     const choices=type==='footy'?[{id:'',name:'Footy'}]:(window.UpgraderCatalog?.rewards[type] ?? catalog[type] ?? []);
+     const shown=choices.filter(item=>item.id===selected || item.name.toLowerCase().includes(term) || item.id.toLowerCase().includes(term));
+     id.replaceChildren();
+     if(type==='randomCardByTier'){
+      for(const tier of [...new Set(shown.map(entry=>entry.tier))]){
+       const group=el('optgroup');group.label=tier;
+       shown.filter(item=>item.tier===tier).forEach(item=>group.append(new Option(item.name,item.id)));
+       id.append(group);
+      }
+     }else if(type==='upgradeToken'){
+      for(const level of ['epic','legendary']){
+       const group=el('optgroup');group.label=level==='epic'?'Epic':'Legendary';
+       shown.filter(item=>item.level===level).forEach(item=>group.append(new Option(item.name,item.id)));
+       if(group.children.length)id.append(group);
+      }
+     }else shown.forEach(item=>id.append(new Option(type==='card'?CardDisplayNames.name(item.id,item.name):item.name,item.id)));
+     if(!shown.length)id.add(new Option('No items available',''));
+     if(shown.some(item=>item.id===selected))id.value=selected;
+     id.disabled=type==='footy'||!shown.length;
+     previewPool();
+    }
+    items(option.id);
+    search.oninput=()=>items(id.value);
+    id.onchange=previewPool;
+    kind.onchange=()=>{search.value='';items();};
+    chance.oninput=sum;
+    const entry={row,kind,id,min,max,chance};entries.push(entry);const remove=button('Remove',()=>{entries.splice(entries.indexOf(entry),1);row.remove();sum();});row.append(field('Reward type',kind),field('Search items',search),field('Item',id),field('Minimum',min),field('Maximum',max),field('Chance %',chance),remove,preview);rows.append(row);sum();
    }
    const read=()=>({title:title.value,options:entries.map(r=>({kind:r.kind.value,id:r.id.value,min:Number(r.min.value),max:Number(r.max.value),chance:Number(r.chance.value)}))});
    const order=el('div','free-pack-card-order');
@@ -66,7 +103,7 @@
   const status=el('p');status.setAttribute('role','status');const save=el('button','free-pack-button',onSave?'Apply rewards to builder':'Save pack');save.type='submit';if(onSave)form.append(el('p','','Apply your changes here, then Save Pack Changes in the Pack Builder to publish them.'));form.append(status,button('Cancel',()=>box.close()),save);box.append(form);document.body.append(box);box.addEventListener('close',()=>box.remove(),{once:true});box.showModal();
   form.onsubmit=async event=>{event.preventDefault();save.disabled=true;status.textContent='Saving…';try{if(onSave){await onSave(readCards.map(read=>read()));box.close();return;}await request('/admin/free-pack','PUT',{name:name.value,cooldownHours:Number(cooldown.value),enabled:enabled.checked,cards:readCards.map(read=>read())});box.close();await load();}catch(error){status.textContent=error.message;}finally{save.disabled=false;}};
  }
- window.FreePack={open,details,editRewards:async(cards,onSave,collectionIds=[])=>{const {catalog}=await request('/admin/free-pack');editor({name:'Pack rewards',cards:cards.length?cards:[{title:'Extra reward',options:[{kind:'gem',id:'bronze',min:1,max:5,chance:100}]}]},catalog,onSave,collectionIds.length?{title:'Collection card',options:collectionIds.map(id=>({kind:'card',id,min:1,max:1,chance:100/collectionIds.length}))}:null);}};window.addEventListener('island-ready',()=>load().catch(()=>{}));window.addEventListener('focus',()=>load().catch(()=>{}));window.addEventListener('pack-timers-changed',()=>load().catch(()=>{}));
+ window.FreePack={open,details,editRewards:async(cards,onSave,collectionIds=[])=>{const {catalog}=await request('/admin/free-pack');await window.CardDisplayNames?.load();editor({name:'Pack rewards',cards:cards.length?cards:[{title:'Extra reward',options:[{kind:'gem',id:'bronze',min:1,max:5,chance:100}]}]},catalog,onSave,collectionIds.length?{title:'Collection card',options:collectionIds.map(id=>({kind:'card',id,min:1,max:1,chance:100/collectionIds.length}))}:null);}};window.addEventListener('island-ready',()=>load().catch(()=>{}));window.addEventListener('focus',()=>load().catch(()=>{}));window.addEventListener('pack-timers-changed',()=>load().catch(()=>{}));
  setInterval(()=>{if(!document.hidden)tick();},1000);
  setInterval(()=>{if(!document.hidden)load().catch(()=>{});},300000);
 })();

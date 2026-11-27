@@ -32,6 +32,19 @@
   const pending = new Map();
   let generation = 0;
   window.fetch = (input, options = {}) => {
+    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.href);
+    const apiOrigin = typeof API_URL === 'undefined' ? location.origin : new URL(API_URL, location.href).origin;
+    if (url.origin === apiOrigin) {
+      const headers = new Headers(options.headers ?? input?.headers);
+      const user = headers.get('X-User-Id');
+      if (user && !headers.has('Authorization') && user === window.localStorage?.getItem('userId')) {
+        const token = window.localStorage.getItem('sessionToken');
+        if (token) {
+          headers.set('Authorization', 'Bearer ' + token);
+          options = { ...options, headers };
+        }
+      }
+    }
     const method = String(options.method || input?.method || 'GET').toUpperCase();
     if (!['GET', 'HEAD'].includes(method)) { generation++; return gameFetch(input, options); }
     if (options.signal || (typeof input !== 'string' && !(input instanceof URL))) return gameFetch(input, options);

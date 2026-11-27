@@ -606,7 +606,7 @@ async function loadBattleOpponents() {
   const select = document.getElementById('battleOpponentSelect');
   if (!select) return;
   try {
-    const response = await fetch(`${API_URL}/users`);
+    const response = await fetch(`${API_URL}/users`, { headers: { 'X-User-Id': currentUserId } });
     if (!response.ok) throw new Error('Could not load players');
     const users = await response.json();
     select.innerHTML = '<option value="">Choose a player</option>';
@@ -1112,6 +1112,7 @@ async function loadHistory() {
     });
     if (!res.ok) throw new Error('Could not load history');
     const history = await res.json();
+    await CardDisplayNames.load();
 
     transferList.innerHTML = '';
     if (history.transfers.length === 0) {
@@ -1129,8 +1130,8 @@ async function loadHistory() {
     } else {
       history.itemTrades.forEach(trade => {
         const description = trade.direction === 'bought'
-          ? `Bought ${trade.itemName} from ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`
-          : `Sold ${trade.itemName} to ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`;
+          ? `Bought ${CardDisplayNames.item({ ...trade, name: trade.itemName })} from ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`
+          : `Sold ${CardDisplayNames.item({ ...trade, name: trade.itemName })} to ${trade.counterparty} for ${formatCurrency(trade.amount,trade.currencyName||'footy')} ${trade.currencyName || 'Footy'}`;
         addHistoryEntry(itemList, description, trade.occurredAt);
       });
     }
@@ -1175,7 +1176,7 @@ async function loadSpinInfo() {
   resultEl.textContent = '';
 
   try {
-    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`, { headers: { 'X-User-Id': currentUserId } });
     if (!res.ok) throw new Error('Failed to retrieve user info');
 
     const users = await res.json();
@@ -1260,7 +1261,7 @@ async function spinWheel() {
   try {
     const res = await fetch(`${API_URL}/spin-wheel`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: resourceHeaders(),
       body: JSON.stringify({ userId: currentUserId })
     });
 
@@ -1336,7 +1337,7 @@ async function loadVipInfo() {
   countdownEl.textContent = '';
 
   try {
-    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`, { headers: { 'X-User-Id': currentUserId } });
     if (!res.ok) throw new Error('Failed to retrieve user info');
     const users = await res.json();
     const user = users.find(u => u.id === currentUserId);
@@ -1512,7 +1513,7 @@ async function loadUsers() {
   document.getElementById('currentUsername').textContent = `👤 ${username}`;
 
   try {
-    const res = await fetch(`${API_URL}/users`);
+    const res = await fetch(`${API_URL}/users`, { headers: { 'X-User-Id': currentUserId } });
     if (!res.ok) throw new Error('Server offline');
     const users = await res.json();
     const user = users.find(u => u.id === currentUserId);
@@ -1562,7 +1563,7 @@ async function updateBalance() {
   if (!isServerOnline) return;
   
   try {
-    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`);
+    const res = await fetch(`${API_URL}/users?userId=${encodeURIComponent(currentUserId)}`, { headers: { 'X-User-Id': currentUserId } });
     if (!res.ok) throw new Error('Server offline');
     const users = await res.json();
 
@@ -1674,7 +1675,7 @@ async function viewAdminAccount() {
   inventoryList.textContent = 'Loading inventory...';
 
   try {
-    const usersResponse = await fetch(`${API_URL}/users?userId=${encodeURIComponent(selectedUserId)}`);
+    const usersResponse = await fetch(`${API_URL}/users?userId=${encodeURIComponent(selectedUserId)}`, { headers: { 'X-User-Id': currentUserId } });
     if (!usersResponse.ok) throw new Error('Could not load account');
     const users = await usersResponse.json();
     const account = users.find(user => user.id === selectedUserId);
@@ -1691,6 +1692,7 @@ async function viewAdminAccount() {
     });
     if (!inventoryResponse.ok) throw new Error('Could not load inventory');
     const inventory = await inventoryResponse.json();
+    await CardDisplayNames.load();
 
     inventoryList.innerHTML = '';
     if (inventory.length === 0) {
@@ -1700,7 +1702,7 @@ async function viewAdminAccount() {
 
     inventory.forEach(item => {
       const itemElement = document.createElement('li');
-      itemElement.textContent = item.name || 'Unnamed item';
+      itemElement.textContent = CardDisplayNames.item(item) || 'Unnamed item';
       inventoryList.appendChild(itemElement);
     });
   } catch (error) {
@@ -1714,6 +1716,7 @@ async function loadCardOptions() {
     const res = await fetch(`${API_URL}/card-images`);
     if (!res.ok) throw new Error('Could not load card list');
     availableCardImages = await res.json();
+    await CardDisplayNames.load();
 
     const cardSelect = document.getElementById('grantCardSelect');
     if (cardSelect) {
@@ -1721,14 +1724,13 @@ async function loadCardOptions() {
       availableCardImages.forEach(filename => {
         const option = document.createElement('option');
         option.value = filename;
-        option.textContent = filename;
+        option.textContent = CardDisplayNames.name(filename);
         cardSelect.appendChild(option);
       });
     }
 
     populateBattleLinkedCardSelect();
 
-    renderPackCardPicker();
     populateDirectListingProducts();
     updateGrantCardPreview();
     updateBattleCardPreview();
@@ -1747,31 +1749,284 @@ function populateBattleLinkedCardSelect() {
     if (linkedBattleCardImages.has(filename)) return;
     const option = document.createElement('option');
     option.value = filename;
-    option.textContent = filename;
+    option.textContent = CardDisplayNames.name(filename);
     battleLinkedCardSelect.appendChild(option);
   });
 }
 
-function renderPackCardPicker() {
-  const picker = document.getElementById('packCardPicker');
-  if (!picker) return;
-  picker.innerHTML = '';
+function createAdminCardOption(filename) {
+  const name = CardDisplayNames.name(filename);
+  const label = document.createElement('label');
+  label.className = 'pack-card-option';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.value = filename;
+  checkbox.setAttribute('aria-label', `Include ${name}`);
+  const image = document.createElement('img');
+  image.src = `/images/${encodeURIComponent(filename)}`;
+  image.alt = name;
+  image.draggable = false;
+  const caption = document.createElement('span');
+  caption.textContent = name;
+  label.append(checkbox, image, caption);
+  return { label, checkbox, image, name };
+}
 
-  availableCardImages.forEach(filename => {
-    const label = document.createElement('label');
-    label.className = 'pack-card-option';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = filename;
-    checkbox.setAttribute('aria-label', `Include ${filename}`);
-    const image = document.createElement('img');
-    image.src = `/images/${filename}`;
-    image.alt = filename;
-    const caption = document.createElement('span');
-    caption.textContent = filename;
-    label.append(checkbox, image, caption);
-    picker.appendChild(label);
+async function assignTierCards(tierId, values) {
+  const headers = { 'Content-Type': 'application/json', 'X-User-Id': currentUserId };
+  const post = body => fetch(`${API_URL}/ascend-tier-assignment`, {
+    method: 'POST', headers, body: JSON.stringify({ tierId, type: 'card', action: 'add', ...body })
   });
+  const describeError = (status, message) => {
+    if (status === 401 || status === 403) return 'You no longer have permission to edit this tier.';
+    if (status === 404) return 'This tier is no longer available.';
+    if (status === 400 && message === 'Invalid value') return 'The server rejected the selected card identifier.';
+    if (status === 400 && message.startsWith('Invalid ')) return message + '.';
+    return 'The server could not confirm the assignment. Refresh the tier before retrying.';
+  };
+  const response = await post({ values });
+  if (response.ok) {
+    const { added, alreadyAssigned, unavailable } = await response.json();
+    if (![added, alreadyAssigned, unavailable].every(Array.isArray)) {
+      throw new Error('The server returned an unexpected assignment result. Refresh the tier before retrying.');
+    }
+    const confirmed = new Set([...added, ...alreadyAssigned]);
+    return {
+      added, alreadyAssigned,
+      failed: values.filter(id => !confirmed.has(id)).map(id => ({
+        id, reason: unavailable.includes(id) ? 'Card is no longer in the catalogue.' : 'Assignment was not confirmed.'
+      }))
+    };
+  }
+  const message = (await response.text()).trim();
+  // The single-value handler rejects a missing value before writing anything.
+  if (response.status !== 400 || message !== 'Invalid value') {
+    throw new Error(describeError(response.status, message));
+  }
+
+  const tiers = await fetch(`${API_URL}/ascend-tier-config`, { headers });
+  if (!tiers.ok) throw new Error('Could not check the current tier membership. Try again.');
+  const tier = (await tiers.json()).find(entry => entry.id === tierId);
+  if (!tier) throw new Error('This tier is no longer available.');
+  const members = new Set(tier.cards || []);
+  const added = [], alreadyAssigned = [], failed = [];
+  let blocked;
+  // The older route replaces the membership array, so writes from this batch must run in order.
+  for (const id of values) {
+    if (members.has(id)) {
+      alreadyAssigned.push(id);
+      continue;
+    }
+    if (blocked) {
+      failed.push({ id, reason: blocked });
+      continue;
+    }
+    try {
+      const result = await post({ value: id });
+      if (!result.ok) {
+        const reason = describeError(result.status, (await result.text()).trim());
+        if ([401, 403, 404].includes(result.status)) blocked = reason;
+        failed.push({ id, reason });
+        continue;
+      }
+      const saved = await result.json();
+      if (!saved.success || !saved.cards?.includes(id)) throw new Error('Assignment was not confirmed');
+      added.push(id);
+    } catch {
+      failed.push({ id, reason: 'The server did not confirm this assignment.' });
+    }
+  }
+  return { added, alreadyAssigned, failed };
+}
+
+async function openTierCardPicker(tier) {
+  return openAdminCardPicker({
+    title: `Add cards to ${tier.name}`,
+    destination: 'Tier',
+    members: new Set(tier.cards || []),
+    savingMessage: 'Saving assignments…',
+    async onConfirm(values, markAssigned) {
+      const { added, alreadyAssigned, failed } = await assignTierCards(tier.id, values);
+      const names = ids => ids.map(id => CardDisplayNames.name(id)).join(', ');
+      const result = [`${added.length} ${added.length === 1 ? 'card' : 'cards'} added to ${tier.name}.`];
+      if (alreadyAssigned.length) result.push(`Already in this tier: ${names(alreadyAssigned)}.`);
+      if (failed.length) {
+        if (added.length) result.push(`Added: ${names(added)}.`);
+        result.push(...failed.map(({ id, reason }) => `${CardDisplayNames.name(id)}: ${reason}`));
+        const assigned = new Set([...added, ...alreadyAssigned]);
+        markAssigned(assigned);
+        if (assigned.size && !await loadAscendTierConfig()) result.push('Refresh the page to reload the tier.');
+        return { message: result.join(' ') };
+      }
+      if (!await loadAscendTierConfig()) result.push('Refresh the page to reload the tier.');
+      return { afterClose() {
+        const buttons = document.querySelectorAll('#ascendTierConfig [data-tier-add-cards]');
+        const trigger = [...buttons].find(button => button.dataset.tierAddCards === tier.id);
+        const notification = trigger?.closest('.ascend-tier-card').querySelector('[data-tier-card-status]') ||
+          document.getElementById('tierCardAssignmentStatus');
+        notification.textContent = result.join(' ');
+        trigger?.focus();
+      } };
+    }
+  });
+}
+
+async function openAdminCardPicker({
+  title, destination, onConfirm, initial = [], members = new Set(), allowEmpty = false, savingMessage = ''
+}) {
+  const dialog = document.getElementById('adminCardPicker');
+  if (dialog.open) return;
+  const search = dialog.querySelector('input[type="search"]');
+  const rarity = dialog.querySelector('select');
+  const grid = dialog.querySelector('.pack-card-picker');
+  const counter = dialog.querySelector('output');
+  const status = dialog.querySelector('[role="status"]');
+  const selectAll = dialog.querySelector('[data-select-visible]');
+  const clear = dialog.querySelector('[data-clear-selection]');
+  const cancel = dialog.querySelector('[data-cancel]');
+  const save = dialog.querySelector('[data-save]');
+  const selected = new Set(initial);
+  const session = new AbortController();
+  let entries = [];
+  let visible = [];
+  let saving = false;
+  let loaded = false;
+
+  function markAssigned(assigned) {
+    for (const entry of entries) {
+      if (!assigned.has(entry.checkbox.value)) continue;
+      selected.delete(entry.checkbox.value);
+      entry.checkbox.checked = false;
+      markTierMember(entry);
+    }
+  }
+
+  function updateSelection() {
+    const count = selected.size;
+    counter.textContent = `${count} ${count === 1 ? 'card' : 'cards'} selected`;
+    save.textContent = `Add ${count} ${count === 1 ? 'Card' : 'Cards'} to ${destination}`;
+    save.disabled = saving || !loaded || (!allowEmpty && !count);
+    clear.disabled = saving || !loaded || !count;
+    selectAll.disabled = saving || !visible.some(entry => !entry.checkbox.disabled && !entry.checkbox.checked);
+  }
+
+  function filterCards() {
+    cancelAreaSelection();
+    const query = search.value.trim().toLocaleLowerCase();
+    visible = entries.filter(entry => {
+      const matches = entry.name.toLocaleLowerCase().includes(query) && (!rarity.value || entry.rarity === rarity.value);
+      entry.label.hidden = !matches;
+      return matches;
+    });
+    grid.scrollTop = 0;
+    updateSelection();
+  }
+
+  dialog.querySelector('h2').textContent = title;
+  search.value = '';
+  rarity.replaceChildren(new Option('All rarities', ''));
+  rarity.disabled = true;
+  grid.replaceChildren();
+  const cancelAreaSelection = window.bindCardAreaSelection(grid, () => visible, selected, updateSelection, session.signal);
+  status.textContent = 'Loading card catalogue…';
+  updateSelection();
+  search.oninput = filterCards;
+  rarity.onchange = filterCards;
+  selectAll.onclick = () => {
+    cancelAreaSelection();
+    for (const { checkbox } of visible) {
+      if (checkbox.disabled) continue;
+      checkbox.checked = true;
+      selected.add(checkbox.value);
+    }
+    updateSelection();
+  };
+  clear.onclick = () => {
+    cancelAreaSelection();
+    selected.clear();
+    for (const { checkbox } of entries) checkbox.checked = false;
+    updateSelection();
+  };
+  function closePicker() {
+    session.abort();
+    dialog.close();
+  }
+  cancel.onclick = closePicker;
+  dialog.oncancel = event => {
+    if (saving) event.preventDefault();
+    else session.abort();
+  };
+  dialog.onclose = () => { if (!dialog.open) session.abort(); };
+  save.onclick = async () => {
+    cancelAreaSelection();
+    if (save.disabled) return;
+    saving = true;
+    cancel.disabled = grid.inert = true;
+    updateSelection();
+    status.textContent = savingMessage;
+    try {
+      const result = await onConfirm([...selected], markAssigned);
+      if (result?.message) {
+        status.textContent = result.message;
+        return;
+      }
+      closePicker();
+      result?.afterClose?.();
+    } catch (error) {
+      status.textContent = error instanceof TypeError
+        ? 'Could not confirm assignments with the server. Refresh the tier before retrying.'
+        : error.message || 'Could not save assignments. Try again.';
+    } finally {
+      saving = false;
+      cancel.disabled = grid.inert = false;
+      updateSelection();
+    }
+  };
+  dialog.showModal();
+  try {
+    const [response] = await Promise.all([
+      fetch(`${API_URL}/card-images`, { signal: session.signal }), CardDisplayNames.load()
+    ]);
+    if (!response.ok) throw new Error('Could not load the card catalogue.');
+    const files = await response.json();
+    if (session.signal.aborted || !dialog.open) return;
+    const catalogue = new Set(files);
+    entries = [...new Set([...catalogue, ...initial])].map(filename => {
+      const entry = createAdminCardOption(filename);
+      entry.rarity = CardDisplayNames.rarity(filename);
+      entry.image.loading = 'lazy';
+      entry.checkbox.checked = selected.has(filename);
+      if (!catalogue.has(filename)) {
+        entry.image.remove();
+        const note = document.createElement('span');
+        note.textContent = 'Unavailable in catalogue';
+        entry.label.append(note);
+      }
+      if (members.has(filename)) markTierMember(entry);
+      entry.checkbox.onchange = () => {
+        if (entry.checkbox.checked) selected.add(filename);
+        else selected.delete(filename);
+        updateSelection();
+      };
+      return entry;
+    });
+    const rarities = [...new Set(entries.map(entry => entry.rarity).filter(Boolean))].sort();
+    rarity.append(...rarities.map(name => new Option(name, name)));
+    rarity.disabled = !rarities.length;
+    grid.replaceChildren(...entries.map(entry => entry.label));
+    loaded = true;
+    status.textContent = entries.length ? '' : 'No cards are available.';
+    filterCards();
+  } catch {
+    if (!session.signal.aborted && dialog.open) status.textContent = 'Could not load the card catalogue. Reopen to try again.';
+  }
+}
+
+function markTierMember({ label, checkbox }) {
+  checkbox.disabled = true;
+  const note = document.createElement('span');
+  note.textContent = 'Already in this tier';
+  label.append(note);
 }
 
 async function loadPacks() {
@@ -1826,7 +2081,7 @@ function populateDirectListingProducts() {
   const type = typeSelect.value;
   productSelect.innerHTML = '';
   const products = type === 'card'
-    ? availableCardImages.map(filename => ({ id: filename, label: filename }))
+    ? availableCardImages.map(filename => ({ id: filename, label: CardDisplayNames.name(filename) }))
     : savedPacks.map(pack => ({ id: pack.id, label: `${pack.name} (${pack.cardIds.length} cards)` }));
   if (products.length === 0) {
     const option = document.createElement('option');
@@ -1865,7 +2120,7 @@ async function createDirectMarketplaceListing() {
   try {
     const res = await fetch(`${API_URL}/admin/market-listings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      headers: resourceHeaders(),
       body: JSON.stringify({ itemType, productId, price, vipDiscountPercent, currency: document.getElementById('marketListingCurrency').value, quantity, perUserLimit, scheduledAt: scheduledAt || null, expiresAt: expiresAt || null })
     });
     if (!res.ok) return alert(await res.text());
@@ -1886,8 +2141,29 @@ async function createDirectMarketplaceListing() {
 }
 
 let builderRewardCards=[];
+let builderCardIds = [];
+function setBuilderCardIds(ids) {
+  builderCardIds = [...new Set(ids)];
+  const count = builderCardIds.length;
+  document.getElementById('packCardSelectionCount').textContent = `${count} ${count === 1 ? 'card' : 'cards'} selected`;
+}
+
+function openPackCardPicker() {
+  return openAdminCardPicker({
+    title: 'Select cards for this pack',
+    destination: 'Pack',
+    initial: builderCardIds,
+    allowEmpty: true,
+    onConfirm(ids) {
+      if (ids.length > PackLimits.MAX_PACK_CARDS) {
+        return { message: `Choose up to ${PackLimits.MAX_PACK_CARDS} cards for a pack.` };
+      }
+      setBuilderCardIds(ids);
+    }
+  });
+}
 function updatePackBuilderPreview(){const box=document.getElementById('packBuilderPreview');if(box&&window.RewardOpening)box.replaceChildren(window.RewardOpening.cover(document.getElementById('packName').value,{base:document.getElementById('packColor').value,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value}));const status=document.getElementById('packRewardSummary');if(status)status.textContent=builderRewardCards.length+' extra reward cards per opening';}
-async function editBuilderRewards(){try{await window.FreePack.editRewards(builderRewardCards,cards=>{builderRewardCards=cards;updatePackBuilderPreview();},[...document.querySelectorAll('#packCardPicker input:checked')].map(input=>input.value));}catch(error){alert(error.message);}}
+async function editBuilderRewards(){try{await window.FreePack.editRewards(builderRewardCards,cards=>{builderRewardCards=cards;updatePackBuilderPreview();},builderCardIds);}catch(error){alert(error.message);}}
 function clearBuilderRewards(){builderRewardCards=[];updatePackBuilderPreview();}
 function loadPackForEditing() {
   const packId = document.getElementById('packEditorSelect').value;
@@ -1896,9 +2172,7 @@ function loadPackForEditing() {
   const saveButton = document.getElementById('savePackButton');
   const pack = savedPacks.find(candidate => candidate.id === packId);
 
-  document.querySelectorAll('#packCardPicker input').forEach(input => {
-    input.checked = !!pack && pack.cardIds.includes(input.value);
-  });
+  setBuilderCardIds(pack?.cardIds || []);
   nameInput.value = pack ? pack.name : '';
   colorInput.value = pack ? (pack.color || '#667eea') : '#667eea';
   document.getElementById('packAccent').value=pack?.appearance?.accent||colorInput.value;
@@ -1915,10 +2189,11 @@ function loadPackForEditing() {
 async function savePack() {
   const nameInput = document.getElementById('packName');
   const color = document.getElementById('packColor').value;
-  const cardIds = [...document.querySelectorAll('#packCardPicker input:checked')].map(input => input.value);
+  const cardIds = builderCardIds;
   const packId = document.getElementById('packEditorSelect').value;
   const name = nameInput && nameInput.value.trim();
   if (!name) return alert('Enter a pack name');
+  if (cardIds.length > PackLimits.MAX_PACK_CARDS) return alert(`Choose up to ${PackLimits.MAX_PACK_CARDS} cards for a pack.`);
   if (!cardIds.length&&!builderRewardCards.length) return alert('Add at least one collection card or extra reward.');
   const cooldownHours=Number(document.getElementById('packShopCooldownHours').value),cooldownMinutes=Number(document.getElementById('packShopCooldownMinutes').value);
   if(!Number.isSafeInteger(cooldownHours)||cooldownHours<0||!Number.isSafeInteger(cooldownMinutes)||cooldownMinutes<0||cooldownMinutes>59||cooldownHours*60+cooldownMinutes>525600)return alert('Enter whole cooldown hours and 0-59 additional minutes, up to 365 days.');
@@ -1926,7 +2201,7 @@ async function savePack() {
   try {
     const res = await fetch(packId ? `${API_URL}/packs/${encodeURIComponent(packId)}` : `${API_URL}/packs`, {
       method: packId ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      headers: resourceHeaders(),
       body: JSON.stringify({ name, cardIds, color, appearance:{base:color,accent:document.getElementById('packAccent').value,trim:document.getElementById('packTrim').value},rewardCards:builderRewardCards,shop:{enabled:document.getElementById('packShopEnabled').checked,price:Number(document.getElementById('packShopPrice').value),currency:document.getElementById('packShopCurrency').value,cooldownMinutes:cooldownHours*60+cooldownMinutes} })
     });
     if (!res.ok) return alert(await res.text());
@@ -1946,13 +2221,14 @@ async function loadAscendTierConfig() {
     const res = await fetch(`${API_URL}/ascend-tier-config`, { headers: { 'X-User-Id': currentUserId } });
     if (!res.ok) throw new Error(await res.text());
     const tiers = await res.json();
+    await CardDisplayNames.load();
     const container = document.getElementById('ascendTierConfig');
     if (!container) return;
     container.innerHTML = '';
 
     if (!Array.isArray(tiers) || tiers.length === 0) {
       container.innerHTML = '<p class="pack-help">No ascend tiers created yet.</p>';
-      return;
+      return true;
     }
 
     tiers.sort((a, b) => Number(a.order) - Number(b.order));
@@ -1985,13 +2261,15 @@ async function loadAscendTierConfig() {
       layout.className = 'ascend-tier-layout';
 
       const cardColumn = document.createElement('div');
-      cardColumn.innerHTML = '<strong>Cards</strong>';
+      const cardCount = document.createElement('strong');
+      cardCount.textContent = `Cards (${new Set(tier.cards || []).size})`;
+      cardColumn.append(cardCount);
       const cardList = document.createElement('ul');
       cardList.className = 'ascend-tier-list';
       (tier.cards || []).forEach(fileName => {
         const item = document.createElement('li');
         const label = document.createElement('span');
-        label.textContent = fileName;
+        label.textContent = CardDisplayNames.name(fileName);
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.textContent = 'Remove';
@@ -2114,27 +2392,12 @@ async function loadAscendTierConfig() {
 
       const actions = document.createElement('div');
       actions.className = 'ascend-tier-actions';
-      const cardSelect = document.createElement('select');
-      cardSelect.innerHTML = '<option value="">Add card…</option>';
-      availableCardImages.forEach(filename => {
-        const option = document.createElement('option');
-        option.value = filename;
-        option.textContent = filename;
-        cardSelect.appendChild(option);
-      });
       const addCardBtn = document.createElement('button');
+      addCardBtn.type = 'button';
       addCardBtn.className = 'btn btn-primary';
-      addCardBtn.textContent = 'Add card';
-      addCardBtn.onclick = async () => {
-        if (!cardSelect.value) return alert('Choose a card');
-        const res = await fetch(`${API_URL}/ascend-tier-assignment`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
-          body: JSON.stringify({ tierId: tier.id, type: 'card', value: cardSelect.value, action: 'add' })
-        });
-        if (!res.ok) return alert(await res.text());
-        loadAscendTierConfig();
-      };
+      addCardBtn.textContent = 'Add Card';
+      addCardBtn.dataset.tierAddCards = tier.id;
+      addCardBtn.onclick = () => openTierCardPicker(tier);
 
       const packSelect = document.createElement('select');
       packSelect.innerHTML = '<option value="">Add pack…</option>';
@@ -2158,11 +2421,15 @@ async function loadAscendTierConfig() {
         loadAscendTierConfig();
       };
 
-      actions.append(cardSelect, addCardBtn, packSelect, addPackBtn);
-      card.append(header, priceRow, colorRow, layout, actions);
+      actions.append(addCardBtn, packSelect, addPackBtn);
+      const cardStatus = document.createElement('p');
+      cardStatus.dataset.tierCardStatus = '';
+      cardStatus.setAttribute('role', 'status');
+      card.append(header, priceRow, colorRow, layout, actions, cardStatus);
       layout.append(cardColumn, packColumn);
       container.appendChild(card);
     });
+    return true;
   } catch (error) {
     console.error('Error loading ascend tier config:', error);
     const container = document.getElementById('ascendTierConfig');
@@ -2201,7 +2468,7 @@ async function grantPackToUser() {
   try {
     const res = await fetch(`${API_URL}/grant-pack`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+      headers: resourceHeaders(),
       body: JSON.stringify({ packId, username, quantity })
     });
     if (!res.ok) return alert(await res.text());
@@ -2235,7 +2502,7 @@ async function openPackQueue(ids,compass=null,pack=null){
  }finally{packOpeningBusy=false;await Promise.all([loadInventory(),updateBalance()]);window.refreshRubyItems?.();updatePackOpenAll();}
 }
 
-function showPackOpeningAnimation(result) {
+async function showPackOpeningAnimation(result) {
   if(window.playSpecialPackOpening?.(result,document.body.dataset.rubyOpening))return;
   const overlay = document.getElementById('packOpeningOverlay');
   const pack = document.getElementById('openingPack');
@@ -2248,8 +2515,10 @@ function showPackOpeningAnimation(result) {
   card.className = 'opened-card-image';
   name.className = 'opened-card-name';
   card.src = result.imageUrl;
-  card.alt = result.cardId;
-  name.textContent = `${result.packBonus ? `+${result.packBonus} Footy / ` : ''}${result.rubyBonus ? `+${result.rubyBonus} Ruby / ` : ""}${result.cardId} — click to continue`;
+  await CardDisplayNames.load();
+  const displayName = CardDisplayNames.name(result.imageUrl || result.cardId);
+  card.alt = displayName;
+  name.textContent = `${result.packBonus ? `+${result.packBonus} Footy / ` : ''}${result.rubyBonus ? `+${result.rubyBonus} Ruby / ` : ""}${displayName} — click to continue`;
   pack.style.setProperty('--pack-color', result.packColor || '#667eea');
 
   requestAnimationFrame(() => {
@@ -2354,9 +2623,8 @@ async function transfer() {
   try {
     const res = await fetch(`${API_URL}/transfer`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: resourceHeaders(),
       body: JSON.stringify({
-        fromId: currentUserId,
         toUsername: toUsername,
         amount: amount
       })
@@ -2410,6 +2678,7 @@ async function loadItems() {
     const res = await fetch(`${API_URL}/items`, {headers:{'X-User-Id':currentUserId}});
     if (!res.ok) throw new Error('Server offline');
     const items = await res.json();
+    await CardDisplayNames.load();
 
     const list = document.getElementById('items');
     list.innerHTML = "";
@@ -2440,13 +2709,15 @@ async function loadItems() {
         const image = document.createElement('img');
         image.className = 'item-image';
         image.src = item.imageUrl;
-        image.alt = item.name;
-        li.appendChild(image);
+        image.alt = CardDisplayNames.item(item);
+        decorateUpgrade(image, item);
+        li.appendChild(window.BenBalCard?.collectibleFace(image, item.upgrade) ?? image);
       }
 
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';
-      itemInfo.textContent = item.limitOnePerUser ? `${item.name} (one per user)` : item.name;
+      const displayName = upgradeCardName(item);
+      itemInfo.textContent = item.limitOnePerUser ? `${displayName} (one per user)` : displayName;
 
       const itemPrice = document.createElement('span');
       itemPrice.className = 'item-price';
@@ -2506,7 +2777,7 @@ async function loadItems() {
           try {
             const res = await fetch(`${API_URL}/buy`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+              headers: resourceHeaders(),
               body: JSON.stringify({
                 itemId: item.id,
                 buyerId: currentUserId,
@@ -2683,6 +2954,7 @@ async function openListingModal() {
     if (!res.ok) throw new Error('Server offline');
 
     const inventoryItems = await res.json();
+    await CardDisplayNames.load();
     const list = document.getElementById('inventoryForListing');
     list.innerHTML = '';
 
@@ -2700,13 +2972,14 @@ async function openListingModal() {
         const image = document.createElement('img');
         image.className = 'item-image';
         image.src = item.imageUrl;
-        image.alt = item.name;
-        li.appendChild(image);
+        image.alt = CardDisplayNames.item(item);
+        decorateUpgrade(image, item);
+        li.appendChild(window.BenBalCard?.collectibleFace(image, item.upgrade) ?? image);
       }
 
       const itemInfo = document.createElement('span');
       itemInfo.className = 'item-info';
-      itemInfo.textContent = item.name;
+      itemInfo.textContent = CardDisplayNames.item(item);
 
       const details = document.createElement('span');
       details.className = 'item-price';
@@ -2739,7 +3012,7 @@ function selectItemForListing(item, liElement) {
   const display = document.getElementById('selectedItemDisplay');
   const nameElement = document.getElementById('selectedItemName');
   display.style.display = 'block';
-  nameElement.textContent = item.name;
+  nameElement.textContent = CardDisplayNames.item(item);
 
   // Close the modal
   closeListingModal();
@@ -2771,9 +3044,7 @@ async function listSelectedItem() {
   try {
     const res = await fetch(`${API_URL}/items`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'X-User-Id': currentUserId
-      },
+      headers: resourceHeaders(),
       body: JSON.stringify({
         currency: document.getElementById('itemCurrency').value,
         name: selectedItemForListing.name,
@@ -2811,6 +3082,7 @@ try { inventoryHideDuplicates = localStorage.getItem(`inventory-hide-duplicates:
 try { if (localStorage.getItem(`inventory-count-mode:${currentUserId}`) === 'collection') inventoryCountMode = 'collection'; } catch {}
 function inventoryCardIdentity(item) {
   if (item.itemType && item.itemType !== 'card') return '';
+  if (item.upgrade?.variantId) return item.upgrade.variantId;
   let filename = '';
   try { filename = item.imageUrl ? decodeURIComponent(new URL(item.imageUrl, location.href).pathname.split('/').pop()) : ''; } catch {}
   return filename || String(item.cardId || item.name || '').trim();
@@ -2819,7 +3091,8 @@ function renderInventoryCardCount() {
   const output = document.getElementById('inventoryCardCount'), select = document.getElementById('inventoryCountMode');
   if (!output) return;
   if (select) select.value = inventoryCountMode;
-  const cards = inventoryCounterItems?.map(inventoryCardIdentity).filter(Boolean);
+  const identity = inventoryCountMode === 'collection' ? CardIdentity.ownedBaseId : inventoryCardIdentity;
+  const cards = inventoryCounterItems?.map(identity).filter(Boolean);
   output.textContent = !cards ? '\u2014' : inventoryCountMode === 'total' ? String(cards.length) : `${new Set(cards).size} / ${inventoryCardCatalog ? inventoryCardCatalog.size : '\u2014'}`;
   output.title = inventoryCountMode === 'total' ? 'Owned cards, including duplicates. Packs are excluded.' : 'Unique owned cards / all collectible cards. Search and Hide duplicates do not change this count.';
 }
@@ -2831,7 +3104,7 @@ async function refreshInventoryCardCount() {
       if (!response.ok) throw Error('Could not load collectible card catalog.');
       const files = await response.json();
       if (!Array.isArray(files)) throw Error('Invalid card catalog.');
-      inventoryCardCatalog = new Set(files.map(file => inventoryCardIdentity({ imageUrl: file })).filter(Boolean));
+      inventoryCardCatalog = new Set(files.map(file => CardIdentity.ownedBaseId({ imageUrl: file })).filter(Boolean));
       inventoryCatalogAt = Date.now();
     }).finally(() => { inventoryCatalogPending = null; });
     await inventoryCatalogPending;
@@ -2893,8 +3166,10 @@ async function loadInventory() {
     if (!tiersRes.ok) throw new Error('Could not load tier prices');
 
     const inventoryItems = await inventoryRes.json();
+    await CardDisplayNames.load();
     const tiers = await tiersRes.json();
     inventoryCounterItems = inventoryItems;
+    window.UpgraderWorkshop?.refresh();
     refreshInventoryCardCount();
     inventoryPacks=inventoryItems.filter(item=>item.itemType==='pack'&&!item.listedForSale);updatePackOpenAll();
     const sellPriceByCard = {};
@@ -2937,13 +3212,13 @@ async function loadInventory() {
         list.appendChild(li);
         return;
       }
-      // Only show thumbnail in inventory view (no name, price, or purchase date)
       if (item.imageUrl) {
         const image = document.createElement('img');
         image.className = 'item-image';
         image.src = item.imageUrl;
-        image.alt = item.name || 'Inventory item';
-        li.appendChild(image);
+        image.alt = CardDisplayNames.item(item) || 'Inventory item';
+        decorateUpgrade(image, item);
+        li.appendChild(window.BenBalCard?.collectibleFace(image, item.upgrade) ?? image);
       } else {
         // Fallback: small placeholder box to keep layout consistent
         const placeholder = document.createElement('div');
@@ -2966,7 +3241,7 @@ async function loadInventory() {
           try {
             const res = await fetch(`${API_URL}/sell-tier-card`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUserId },
+              headers: resourceHeaders(),
               body: JSON.stringify({ itemId: item.id })
             });
             if (!res.ok) return alert(await res.text());
@@ -2997,6 +3272,18 @@ async function loadInventory() {
     `;
     updateInventorySellModeButton();
   }
+}
+
+function upgradeCardName(item) {
+  const name = CardDisplayNames.item(item) || 'Collection card';
+  return item.upgrade ? name + (item.upgrade.level === 'epic' ? ' — Epic' : ' — Legendary') : name;
+}
+
+function decorateUpgrade(image, item) {
+  if (!item.upgrade) return;
+  image.alt = upgradeCardName(item);
+  image.dataset.upgrade = item.upgrade.level;
+  image.upgrade = item.upgrade;
 }
 
 function getCardKeyFromItem(item) {
@@ -3030,11 +3317,12 @@ async function openAscendMenu() {
     if (!tiersRes.ok) throw new Error('Could not load tier config');
 
     const inventory = await inventoryRes.json();
+    await CardDisplayNames.load();
     const tiers = await tiersRes.json();
     const grouped = new Map();
 
     inventory.forEach(item => {
-      if (item.itemType === 'pack' || !item.imageUrl) return;
+      if (item.itemType === 'pack' || item.upgrade || !item.imageUrl) return;
       const cardFile = item.imageUrl.split('/').pop();
       const tier = Array.isArray(tiers) ? tiers.find(entry => (entry.cards || []).includes(cardFile)) : null;
       if (!tier) return;
@@ -3055,7 +3343,7 @@ async function openAscendMenu() {
 
         return {
           key,
-          label: key,
+          label: CardDisplayNames.name(key, CardDisplayNames.item(items[0])),
           count: items.length,
           imageUrl: items[0].imageUrl || `/images/${key}`,
           nextTierName: nextTier.name,
@@ -3082,11 +3370,14 @@ async function openAscendMenu() {
       const option = document.createElement('button');
       option.type = 'button';
       option.className = 'ascend-option';
-      option.innerHTML = `
-        <img src="${entry.imageUrl}" alt="${entry.label}">
-        <h4>${entry.label}</h4>
-        <p>${entry.count} copies · to ${entry.nextTierName}</p>
-      `;
+      const image = document.createElement('img');
+      image.src = entry.imageUrl;
+      image.alt = entry.label;
+      const title = document.createElement('h4');
+      title.textContent = entry.label;
+      const description = document.createElement('p');
+      description.textContent = `${entry.count} copies · to ${entry.nextTierName}`;
+      option.append(image, title, description);
       option.addEventListener('click', () => confirmAscend(entry));
       list.appendChild(option);
     });
@@ -3231,6 +3522,7 @@ async function loadGemConverter() {
     ]);
     for (const response of responses) if (!response.ok) throw new Error(await response.text());
     [gemConverterData, gemInventory] = await Promise.all(responses.map(response => response.json()));
+    gemInventory = gemInventory.filter(item => !item.upgrade);
     const select = document.getElementById('gemRecipe');
     const previous = select.value;
     select.replaceChildren();
@@ -3314,11 +3606,11 @@ function renderGemCards() {
     if (item.imageUrl) {
       const img = document.createElement('img');
       img.src = item.imageUrl;
-      img.alt = item.name || 'Card';
+      img.alt = CardDisplayNames.item(item) || 'Card';
       label.appendChild(img);
     }
     const name = document.createElement('span');
-    name.textContent = item.name || 'Card';
+    name.textContent = CardDisplayNames.item(item) || 'Card';
     label.appendChild(name);
     container.appendChild(label);
   }
@@ -3340,7 +3632,7 @@ function renderGemCards() {
     if (item?.imageUrl) {
       const img = document.createElement('img');
       img.src = item.imageUrl;
-      img.alt = item.name || 'Loaded card';
+      img.alt = CardDisplayNames.item(item) || 'Loaded card';
       slot.appendChild(img);
     } else slot.textContent = item ? 'Card' : '+';
     slots.appendChild(slot);

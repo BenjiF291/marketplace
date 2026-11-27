@@ -6,13 +6,17 @@
   <title>Game Marketplace</title>
   <link rel="preload" as="image" media="(orientation: landscape)" href="assets/village/loading-creatures-v5.jpg" fetchpriority="high">
   <link rel="preload" as="image" media="(orientation: portrait)" href="assets/village/loading-creatures-mobile-v6.jpg" fetchpriority="high">
-  <link rel="stylesheet" href="style.css?v=wheel-prize1">
-  <link rel="stylesheet" href="studio.css">
+  <link rel="stylesheet" href="style.css?v=card-area294">
+<link rel="stylesheet" href="upgrader.css?v=favourites42">
+  <link rel="stylesheet" href="ben-bal-face.css?v=shared1">
+  <link rel="stylesheet" href="ben-bal.css?v=leagues31">
+  <link rel="stylesheet" href="ben-bal-match.css?v=results30">
+  <link rel="stylesheet" href="studio.css?v=upgraded38">
 <link rel="stylesheet" href="card-brawl-lobby.css?v=1">
   <link rel="stylesheet" href="ruby-shop.css?v=item-art3">
   <link rel="stylesheet" href="creature-book.css?v=12-owned-sort">
 <link rel="stylesheet" href="pack-cinema.css">
-<link rel="stylesheet" href="reward-opening.css?v=actual-heads2">
+<link rel="stylesheet" href="reward-opening.css?v=opening-only1">
 <link rel="stylesheet" href="pack-shop.css?v=1">
 <link rel="stylesheet" href="reward-gallery.css?v=2">
 <link rel="stylesheet" href="village.css?v=water-edge2">
@@ -29,7 +33,8 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/pwa/kael-v2-512.png">
   <script src="pwa.js?v=kael-icons2" defer></script>
 <link rel="stylesheet" href="player-profile.css?v=new-seals1">
-<link rel="stylesheet" href="free-pack.css?v=card-order1">
+<link rel="stylesheet" href="free-pack.css?v=random-cards35">
+<link rel="stylesheet" href="player-guide.css?v=1">
 <link rel="stylesheet" href="stable.css?v=stable-stage3">
 <link rel="stylesheet" href="creature-feeding.css?v=brawl-only-upgrades2">
 <link rel="preload" as="image" href="assets/village/creature-brawl-loading-v2.jpg">
@@ -48,7 +53,6 @@
 <div class="island-load-error-panel"><h1>We couldn't reach your island</h1><p>Try again in a moment.</p><button id="islandRetry" class="btn">Retry</button> <button id="islandLogin" class="btn">Log out</button></div>
 </section>
 <script src="island-loading.js"></script>
-<script src="ascend-utils.js"></script>
 <script src="gem-colors.js?v=rich-dye1"></script>
 
 <div class="container">
@@ -74,6 +78,7 @@
     <button id="spinTab" class="tab-button" onclick="showSection('spin')">Spin Wheel</button>
     <button id="vipTab" class="tab-button" onclick="showSection('vip')">VIP</button>
     <button id="battleTab" class="tab-button" onclick="showSection('battle')">Battle</button>
+    <button id="benBalTab" class="tab-button" type="button" onclick="BenBal.open()" aria-haspopup="dialog">BEN-BAL</button>
     <button id="battleManagerTab" class="tab-button" onclick="showSection('battle-manager')" style="display: none;">BCM</button>
   </div>
 
@@ -144,10 +149,21 @@
           <p class="pack-help">Grant a pack to yourself, then use “Select from Inventory” to place it on the marketplace.</p>
         </div>
         <div class="form-group admin-panel-body">
-          <h3>Footy, gems &amp; amulets</h3>
+          <h3>Footy, gems, food &amp; amulets</h3>
           <label for="grantResourceUser">Player</label><select id="grantResourceUser" class="input-field"></select>
           <label for="grantFootyQuantity">Footy amount</label><input id="grantFootyQuantity" type="number" min="1" step="1" value="50" class="input-field">
           <button class="btn btn-primary" onclick="grantResource('footy', this)">Grant Footy</button>
+          <div class="form-group">
+            <label for="grantFoodSelect">Creature food</label>
+            <select id="grantFoodSelect" class="input-field">
+              <option value="food">Regular meal — 10 nutrition</option>
+              <option value="food:trail">Explorer Trail Mix — 25 nutrition</option>
+              <option value="food:feast">Starlight Feast — 60 nutrition</option>
+            </select>
+            <label for="grantFoodQuantity">Food quantity</label>
+            <input id="grantFoodQuantity" type="number" min="1" step="1" value="10" class="input-field">
+            <button class="btn btn-primary" onclick="grantResource('food', this)">Grant Food</button>
+          </div>
           <div class="form-group">
             <label class="input-label" for="adminGrantGem">Gem type</label>
             <select id="adminGrantGem" class="input-field"></select>
@@ -198,7 +214,8 @@
           <select id="packShopCurrency" class="input-field"><option value="footy">Footy</option><option value="bronze">Ruby</option><option value="rare-bronze">Garnet</option><option value="silver">Moonstone</option><option value="rare-silver">Opal</option><option value="gold">Citrine</option><option value="rare-gold">Emerald</option><option value="platinum">Sapphire</option><option value="lightning">Amethyst</option><option value="ultra">Diamond</option></select>
           <label class="input-label">Cards in this pack</label>
           <p class="pack-help">Optional collection-card pool. Select cards for a final random card, or leave this empty and add extra rewards below.</p>
-          <div id="packCardPicker" class="pack-card-picker"></div>
+          <button type="button" class="btn btn-secondary" onclick="openPackCardPicker()">Select Cards</button>
+          <output id="packCardSelectionCount" aria-live="polite">0 cards selected</output>
           <p class="pack-help">Add extra reward cards for gems, Footy, boosts, animals, shop items, amulets, collection cards or packs. Each extra card draws from its own weighted options.</p>
           <p id="packRewardSummary">0 extra reward cards per opening</p>
           <button type="button" class="btn btn-secondary" onclick="editBuilderRewards()">Edit extra rewards</button>
@@ -219,7 +236,23 @@
           <input id="newAscendTierSellPrice" class="input-field" type="number" min="0" step="1" value="0" placeholder="0 = not sellable">
           <button onclick="createAscendTier()" class="btn btn-primary">Create Tier</button>
         </div>
+        <p id="tierCardAssignmentStatus" role="status"></p>
         <div id="ascendTierConfig" class="ascend-tier-config"></div>
+      </details>
+
+      <details id="benBalAdmin" class="admin-foldable">
+        <summary>Ben-Bal League Rewards</summary>
+        <form class="admin-panel-body">
+          <p>Leave both Overall limits blank to disable Special cards in that league.</p>
+          <div class="ben-bal-admin-fields"></div>
+          <button type="submit" class="btn btn-primary" disabled>Save League Settings</button>
+          <p role="status"></p>
+        </form>
+      </details>
+      <details id="upgraderAdmin" class="admin-foldable">
+        <summary>Upgrade Materials and Tokens</summary>
+        <p>Set drop quantities and chances in Pack Builder under Edit extra rewards.</p>
+        <div class="upgrader-holdings"></div>
       </details>
 
       <details class="admin-foldable">
@@ -467,6 +500,7 @@
         <h2>🎒 Inventory</h2>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="inventoryOpenAll" onclick="openAllPacks()" class="btn btn-success" disabled>Open all packs</button>
+          <button type="button" onclick="UpgraderWorkshop.openFavourites()" class="btn">Favourite Cards</button>
           <button onclick="openRubyItemInventory()" class="btn">Items &amp; consumables</button>
           <button id="inventoryDuplicatesToggle" type="button" onclick="toggleInventoryDuplicates()" class="btn" aria-pressed="false">Hide duplicates</button>
           <button id="inventorySellModeToggle" onclick="toggleInventorySellMode()" class="btn btn-warning">Sell Mode: Off</button>
@@ -511,6 +545,7 @@
         <p>Use the Dye button beside Logout to preview colors anywhere on the site. Each changed area costs one dye when you confirm.</p>
         <p id="gemWorkshopStatus" role="status"></p>
       </details>
+      <section id="upgraderInventory" aria-label="Upgrader inventory"></section>
       <ul id="inventoryItems" class="items-list"></ul>
     </section>
 
@@ -607,15 +642,206 @@
 
 <script src="card-mask-files.js?v=4"></script>
 <script src="card-cutouts.js?v=3"></script>
-<script src="reward-card-art.js?v=bonus-before-final1"></script>
-<script src="pack-effects.js?v=1"></script>
-<script src="reward-opening.js?v=actual-heads2"></script>
+<script src="card-display-names.js?v=tier-picker29"></script>
+<script src="upgrader-catalog.js?v=36-transparent"></script>
+<script src="reward-card-art.js?v=upgraders36"></script>
+<script src="pack-effects.js?v=opening-only1"></script>
+<script src="reward-opening.js?v=display-names1"></script>
 <script src="reward-gallery.js?v=1"></script>
 <script src="pack-cinema.js?v=effects-upgrade1"></script>
-<script src="session-network.js?v=network-opt1"></script>
+<script src="session-network.js?v=authenticated44"></script>
 <script src="currency-format.js?v=1"></script>
-<script src="app.js?v=wheel-prize1"></script>
-<script src="amulets.js?v=admin-tokens1-amulet-timers1"></script>
+<dialog id="benBal" class="ben-bal" aria-labelledby="benBalTitle">
+  <header class="ben-bal-header">
+    <div><h1 id="benBalTitle">BEN-BAL</h1><p>Build your starting XI and play against the robot.</p></div>
+    <form method="dialog"><button id="benBalClose" class="btn" autofocus>Close</button></form>
+  </header>
+  <button id="benBalChooseLeague" class="btn" type="button" hidden>Choose League</button>
+  <p id="benBalStatus" role="status"></p>
+  <div id="benBalLeagues" class="ben-bal-leagues" aria-label="Ben-Bal leagues"></div>
+  <button id="benBalReload" class="btn" type="button" hidden>Reload team</button>
+  <div id="benBalContent" class="ben-bal-content" hidden>
+    <section aria-labelledby="benBalBuilderTitle">
+      <div class="ben-bal-section-heading"><h2 id="benBalBuilderTitle">Team Builder</h2><span id="benBalCount"></span></div>
+      <p id="benBalEligibleTiers"></p>
+      <p id="benBalSpecialRule"></p>
+      <div class="ben-bal-pitch-scroll" role="region" aria-label="Football pitch" tabindex="0">
+        <div class="ben-bal-pitch">
+          <svg class="ben-bal-field-lines" viewBox="0 0 620 740" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="24" y="32" width="572" height="676" rx="2"/>
+              <path d="M24 370H596 M199 32v108h222V32 M199 708V600h222v108
+                M252 32v43h116V32 M252 708v-43h116v43 M273 32V19h74v13 M273 708v13h74v-13
+                M267 140a54 54 0 0 0 86 0 M267 600a54 54 0 0 1 86 0
+                M24 46a14 14 0 0 0 14-14 M582 32a14 14 0 0 0 14 14
+                M24 694a14 14 0 0 1 14 14 M582 708a14 14 0 0 1 14-14"/>
+              <circle cx="310" cy="370" r="52"/>
+            </g>
+            <g fill="currentColor">
+              <circle cx="310" cy="370" r="2.7"/><circle cx="310" cy="109" r="2.7"/><circle cx="310" cy="631" r="2.7"/>
+            </g>
+          </svg>
+          <div id="benBalPitch" class="ben-bal-formation" aria-label="4–3–3 formation"></div>
+        </div>
+      </div>
+      <p id="benBalSelection"></p>
+      <div class="ben-bal-actions">
+        <button id="benBalRemove" class="btn" type="button">Clear slot</button>
+        <button id="benBalSave" class="btn btn-primary" type="button">Save team</button>
+        <button id="benBalPlay" class="btn ben-bal-play" type="button">Play Against Robot</button>
+      </div>
+      <p id="benBalPlayStatus" class="ben-bal-play-status" role="status"></p>
+      <div id="benBalPreview"></div>
+    </section>
+    <section aria-labelledby="benBalCollectionTitle">
+      <div class="ben-bal-section-heading"><h2 id="benBalCollectionTitle">Card Collection</h2><span id="benBalResults" aria-live="polite"></span></div>
+      <div id="benBalFilters" class="ben-bal-filters">
+        <label>Tier<select id="benBalTier"><option value="">All tiers</option></select></label>
+        <label>Natural position<select id="benBalPosition">
+          <option value="">All positions</option><option value="attack">Attacker</option>
+          <option value="dribble">Midfielder</option><option value="defence">Defender</option>
+          <option value="unavailable">Unavailable</option>
+        </select></label>
+        <label>Sort by<select id="benBalSort">
+          <option value="overall">Overall</option><option value="attack">Attack primary</option>
+          <option value="dribble">Dribble primary</option><option value="defence">Defence primary</option>
+          <option value="name">Name</option>
+        </select></label>
+        <label>Min. overall<input id="benBalOverall" type="number" min="0" step="1" inputmode="numeric"></label>
+        <label>Min. attack primary<input id="benBalAttack" type="number" min="0" step="1" inputmode="numeric"></label>
+        <label>Min. dribble primary<input id="benBalDribble" type="number" min="0" step="1" inputmode="numeric"></label>
+        <label>Min. defence primary<input id="benBalDefence" type="number" min="0" step="1" inputmode="numeric"></label>
+      </div>
+      <p id="benBalCollectionHint">Select a formation slot, then choose a card.</p>
+      <div id="benBalCards" class="ben-bal-cards"></div>
+    </section>
+  </div>
+</dialog>
+
+<dialog id="benBalMatch" class="ben-match" aria-labelledby="benMatchTitle">
+  <h1 id="benMatchTitle" class="ben-match-screen-title">BEN-BAL vs Robot</h1>
+  <section id="benMatchLeave" class="ben-match-leave" aria-label="Leave match" hidden>
+    <p>Leave this match? Your match progress will be lost.</p>
+    <button id="benMatchStay" type="button">Keep Playing</button>
+    <button id="benMatchDiscard" type="button">Leave Match</button>
+  </section>
+  <div id="benMatchGame" class="ben-match-game">
+    <div class="ben-match-scoreboard" aria-label="Match score">
+      <div><span>Player</span><strong id="benMatchPlayerScore">0</strong></div>
+      <ol id="benMatchTracker" class="ben-match-tracker" aria-label="Eleven-round tracker"></ol>
+      <div><strong id="benMatchRobotScore">0</strong><span>Robot</span></div>
+    </div>
+    <section class="ben-match-pitches" aria-label="Match formations">
+      <div class="ben-match-pitch-nav" role="group" aria-label="Choose a pitch">
+        <button id="benMatchYourPitch" type="button" aria-controls="benMatchPlayerField" aria-pressed="true" autofocus>Your Pitch</button>
+        <button id="benMatchTheirPitch" type="button" aria-controls="benMatchRobotField" aria-pressed="false">Robot Pitch</button>
+      </div>
+      <div class="ben-match-ground">
+      <div id="benMatchPitchViewport" class="ben-match-pitch-viewport">
+        <div id="benMatchPitchTrack" class="ben-match-pitch-track">
+          <div id="benMatchPlayerField" class="ben-match-field" role="region" aria-label="Player 4–3–3"></div>
+          <div id="benMatchRobotField" class="ben-match-field" role="region" aria-label="Robot 4–3–3" inert></div>
+        </div>
+      </div>
+      </div>
+    </section>
+  </div>
+      <div id="benMatchPitchDock" class="ben-match-pitch-dock" hidden>
+        <div id="benMatchSelection" class="ben-match-pitch-selection" hidden>
+          <div id="benMatchPreviewCard" class="ben-match-stage-card ben-match-pitch-preview"></div>
+          <div id="benMatchActions" role="group" aria-label="Choose an action">
+            <button type="button" data-action="attack">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 17 11-11M9 6h9v9M4 13l7 7"/></svg>Attack
+            </button>
+            <button type="button" data-action="dribble">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19c0-4 7-2 7-7S5 9 5 5m8 9c2 0 5-2 5-5"/><circle cx="18" cy="6" r="2"/></svg>Dribble
+            </button>
+            <button type="button" data-action="defence">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 3v5c0 4-3 7-7 10-4-3-7-6-7-10V6z"/></svg>Defend
+            </button>
+          </div>
+        </div>
+        <div id="benMatchRobotSignal" class="ben-match-stage-card ben-match-signal" role="img" hidden></div>
+      </div>
+  <p id="benMatchRoundError" class="ben-match-round-error" role="status" hidden></p>
+  <button id="benMatchBackResults" class="ben-match-back" type="button" hidden>Back to Results</button>
+  <section id="benMatchSummary" class="ben-match-summary" aria-labelledby="benMatchOutcome" hidden>
+    <h2 id="benMatchOutcome" tabindex="-1"></h2>
+    <div id="benMatchFinalScore" class="ben-match-final-score">
+      <div><span>Player</span><strong id="benMatchFinalPlayer"></strong></div>
+      <span aria-hidden="true">&mdash;</span>
+      <div><span>Robot</span><strong id="benMatchFinalRobot"></strong></div>
+    </div>
+    <p id="benMatchLeague" hidden></p>
+    <section class="ben-match-daily" aria-label="Daily rewards">
+      <div id="benMatchEarned" class="ben-match-earned" hidden><span aria-hidden="true">&#10022;</span><img id="benMatchPackImage" alt="" hidden><strong id="benMatchPackName">Daily Pack earned!</strong></div>
+      <ol id="benMatchPacks" aria-label="Daily Pack progress"></ol>
+      <p id="benMatchProgress"></p>
+    </section>
+    <p id="benMatchReplayError" role="status" hidden></p>
+    <div class="ben-match-summary-actions">
+      <button id="benMatchReplay" type="button" class="ben-match-primary">Play Again</button>
+      <button id="benMatchViewPitch" type="button">View Pitch</button>
+      <button id="benMatchChooseLeague" type="button" hidden>Choose League</button>
+    </div>
+  </section>
+</dialog>
+
+<dialog id="benMatchInspect" class="ben-match ben-match-inspect" aria-labelledby="benMatchInspectName">
+  <h2 id="benMatchInspectName"></h2>
+  <div id="benMatchInspectCard"></div>
+  <button id="benMatchInspectClose" type="button" autofocus>Close card</button>
+</dialog>
+
+<dialog id="benMatchOverlay" class="ben-match ben-match-overlay" aria-labelledby="benMatchDuelTitle">
+  <div class="ben-match-overlay-content">
+    <h2 id="benMatchDuelTitle"></h2>
+    <div id="benMatchArena" class="ben-match-arena">
+      <div class="ben-match-side"><h3 id="benMatchPlayerAction">Player</h3><div id="benMatchPlayerCard" class="ben-match-stage-card"></div></div>
+      <div class="ben-match-vs" aria-hidden="true">VS</div>
+      <div class="ben-match-side"><h3 id="benMatchRobotAction">Robot</h3><div id="benMatchRobotCard" class="ben-match-stage-card"></div></div>
+    </div>
+    <div id="benMatchComparisons" class="ben-match-comparison"></div>
+    <p id="benMatchResult" aria-live="polite"></p>
+    <div class="ben-match-overlay-actions">
+      <button id="benMatchSkip" type="button" hidden>Skip Animation</button>
+      <button id="benMatchNext" class="ben-match-primary" type="button" hidden>Continue</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="adminCardPicker" aria-labelledby="adminCardPickerTitle">
+  <div class="admin-card-picker-layout">
+    <h2 id="adminCardPickerTitle">Add cards to tier</h2>
+    <div class="admin-card-picker-controls">
+      <input class="input-field" type="search" aria-label="Search by card name" placeholder="Search by card name" autofocus>
+      <select aria-label="Rarity"></select>
+      <button type="button" class="btn" data-select-visible>Select All Visible</button>
+      <button type="button" class="btn" data-clear-selection>Clear Selection</button>
+    </div>
+    <div class="pack-card-picker" aria-label="Available cards"></div>
+    <p role="status"></p>
+    <footer class="admin-card-picker-controls">
+      <output aria-live="polite">0 cards selected</output>
+      <button type="button" class="btn" data-cancel>Cancel</button>
+      <button type="button" class="btn btn-primary" data-save disabled>Add 0 Cards to Tier</button>
+    </footer>
+  </div>
+</dialog>
+<script src="card-data-client.js"></script>
+<script src="pack-limits.js?v=1"></script>
+<script src="card-area-selection.js?v=1"></script>
+<script src="card-identity.js?v=41"></script>
+<script src="app.js?v=authenticated44"></script>
+<script src="ben-bal-card.js?v=upgraded38"></script>
+<script src="collectible-layouts.js?v=38"></script>
+<script src="collectible-renderer.js?v=38"></script>
+<script src="ben-bal-match-engine.js?v=pitches25"></script>
+<script src="ben-bal-robot.js?v=leagues31"></script>
+<script src="ben-bal-match.js?v=leagues31"></script>
+<script src="ben-bal.js?v=upgraders33"></script>
+<script src="amulets.js?v=admin-food1"></script>
+<script src="ben-bal-admin.js?v=leagues31"></script>
 <script src="gem-workshop.js?v=rich-dye1"></script>
 <div id="dyeTray" hidden aria-label="Dye palette">
   <strong>Dye mode</strong><p>Select a dye, then click an interface area. Tabs still switch pages. Only final changes cost dye.</p>
@@ -630,7 +856,7 @@
 <script src="brawl-turns.js?v=20261012-fox3d"></script>
 <script src="battle-effects.js"></script>
 <script src="practice-battle.js?v=last-used-deck1"></script>
-<script src="studio.js?v=inventory-duplicates1"></script>
+<script src="studio.js?v=upgraded38"></script>
 <script src="card-brawl-lobby.js?v=1"></script>
 <script src="companions.js?v=stable-stage3"></script>
 <script src="companion-explorer.js"></script>
@@ -640,11 +866,11 @@
 <script src="hall-world.js"></script>
 <script src="wardrobe.js?v=clothing-rarities1"></script>
 <script src="hall-art.js"></script>
-<script src="hall-character-art.js?v=2-collectible-clip"></script>
-<script src="shop-item-art.js?v=1"></script>
-<script src="ruby-shop.js?v=item-art3"></script>
+<script src="hall-character-art.js?v=tailored-wardrobe3"></script>
+<script src="shop-item-art.js?v=tailored-items2"></script>
+<script src="ruby-shop.js?v=upgraders34"></script>
 <script src="town-hall.js"></script>
-<script src="village-interiors.js?v=arena-back2"></script>
+<script src="village-interiors.js?v=favourites37"></script>
 <script src="village-grid.js"></script>
 <script src="village-layout.js?v=stable-unlock1"></script>
 <script src="village-walking.js"></script>
@@ -652,11 +878,11 @@
 <script src="village-plots.js?v=mine-costs2"></script>
 <script src="pet-care-room.js?v=pet-heading1"></script>
 <script src="village-care.js?v=toolbar-lock1"></script>
-<script src="market-street.js?v=clothing-rarities1"></script>
+<script src="market-street.js?v=wardrobe-fit2"></script>
 <script src="island-minigames.js"></script>
 <script src="achievement-notifications.js?v=1"></script>
 <script src="player-profile.js?v=new-seals1"></script>
-<script src="stable-animals.js?v=velkris1"></script>
+<script src="stable-animals.js?v=companions1"></script>
 <script src="creature-brawl-catalog.js?v=kael-shadow4"></script>
 <script src="creature-brawl-engine.js?v=balance2"></script>
 <script src="creature-brawl-event-queue.js?v=1"></script>
@@ -666,9 +892,11 @@
 <script src="creature-brawl.js?v=battle-profile1"></script>
 <script src="stable.js?v=stable-clean4"></script>
 <script src="village.js?v=continuous-sea1"></script>
-<script src="free-pack.js?v=clothing-rarities1"></script>
-<script src="pack-shop.js?v=token-heads1"></script>
-<script src="island-tools.js?v=parchment-tools3"></script>
+<script src="free-pack.js?v=random-cards35"></script>
+<script src="upgrader-workshop.js?v=favourites42"></script>
+<script src="pack-shop.js?v=display-names1"></script>
+<script src="player-guide.js?v=1"></script>
+<script src="island-tools.js?v=ben-bal1"></script>
 <script src="creature-order.js?v=2"></script><script src="creature-book.js?v=stable-stage3"></script>
 </body>
 </html>

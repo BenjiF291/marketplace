@@ -1,5 +1,7 @@
 /* Shared presentation for every reward accepted by the pack editor. */
 (function(root){
+ const cardNames=typeof module!=='undefined'?require('./card-display-names'):root.CardDisplayNames;
+ const upgraderCatalog=typeof module!=='undefined'?require('./upgrader-catalog'):root.UpgraderCatalog;
  const gems={bronze:['Ruby','#cf504d'],'rare-bronze':['Garnet','#a44465'],silver:['Moonstone','#8cbcb9'],'rare-silver':['Opal','#b9aed0'],gold:['Citrine','#e5b34f'],'rare-gold':['Emerald','#53ad83'],platinum:['Sapphire','#658ac1'],lightning:['Amethyst','#a178c0'],ultra:['Diamond','#a9d9e5']};
  // Visible alpha bounds, padded below so fine fur and wing tips stay inside the frame.
  const creatureBounds={velkris:[109,208,584,547],trusk:[176,178,607,490],kanji:[198,176,659,499],rill:[190,90,486,580],brugar:[184,163,638,630],'brugar-species':[223,172,586,526],'defender-rill':[179,58,506,550],'defender-talren':[139,139,520,574],'fenra-species':[187,58,538,519],veyrin:[177,160,664,538],'krynn-species':[179,173,668,543],'northern-talren':[123,139,517,573],'rill-species':[183,58,511,546],fenra:[198,89,559,533],talren:[174,140,528,579],tharos:[184,158,643,538],krynn:[170,162,679,533],dragon:[120,87,512,395],fox:[93,52,472,417],snail:[40,49,493,420]};
@@ -20,11 +22,18 @@
  }
 
  function describe(reward){
+  const upgrade=upgraderCatalog?.get(reward.id);
+  if(upgrade?.kind===reward.kind){
+   const color=upgrade.level==='epic'?'#c85ee8':upgrade.level==='legendary'?'#ffd464':'#7bbdac';
+   return {name:upgrade.name,group:upgrade.kind==='upgradeToken'?'UPGRADER TOKEN':'UPGRADE MATERIAL',image:upgraderCatalog.artwork(upgrade.id),
+    art:svg(gem(color,120,118,1.35)+`<text x="120" y="128" text-anchor="middle" font-size="36" fill="#fff">${upgrade.icon}</text>`),amount:reward.amount||1};
+  }
   const animal=root.StableAnimals?.animals.find(a=>a.id===(reward.kind==='rubyItem'?reward.id?.replace(/^pet:/,''):reward.id));
   const gemInfo=gems[reward.id];
-  const names={footy:'Footy',boost:reward.id==='leap'?'Time Leap':'Time Skip',animal:animal?.name,brawlToken:animal?.name,gem:gemInfo?.[0],card:reward.id?.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ')};
-  const name=reward.label?.replace(/^\d+(?:\.\d+)?\s+/,'')||names[reward.kind]||reward.id||'Reward';
-  const group={gem:'CRYSTALS',footy:'ISLAND CURRENCY',boost:'TIME BOOST',animal:'CREATURE',brawlToken:'BRAWL TOKENS',rubyItem:'ISLAND ITEM',amulet:'AMULET',pack:'COLLECTION PACK',card:'COLLECTION CARD'}[reward.kind]||'ISLAND REWARD';
+  const names={footy:'Footy',boost:reward.id==='leap'?'Time Leap':'Time Skip',animal:animal?.name,brawlToken:animal?.name,gem:gemInfo?.[0]};
+  const label=reward.label?.replace(/^\d+(?:\.\d+)?\s+/,'');
+  const name=reward.kind==='card'?cardNames.name(reward.imageUrl||reward.id,label):label||names[reward.kind]||reward.id||'Reward';
+  const group={gem:'CRYSTALS',footy:'ISLAND CURRENCY',boost:'TIME BOOST',animal:'CREATURE',brawlToken:'BRAWL TOKENS',rubyItem:'ISLAND ITEM',amulet:'AMULET',pack:'COLLECTION PACK',card:'COLLECTION CARD',randomCardByTier:'RANDOM COLLECTION CARD'}[reward.kind]||'ISLAND REWARD';
   let image=reward.kind==='card'?reward.imageUrl||'images/'+encodeURIComponent(reward.id):animal&&(reward.kind==='animal'||reward.kind==='brawlToken'||reward.kind==='rubyItem')?animal.poster:null;
   let body;
   if(reward.kind==='gem')body=gem(gemInfo?.[1]||'#93c9c1',61,166,.65)+gem(gemInfo?.[1]||'#93c9c1',171,162,.72)+gem(gemInfo?.[1]||'#93c9c1',119,112,1.3);
@@ -45,7 +54,7 @@
  function samples(catalog){
   const groups=[['gem','Gem currencies'],['footy','Footy'],['boost','Time boosts'],['animal','Animals'],['brawlToken','Brawl tokens'],['rubyItem','Shop items'],['amulet','Amulets'],['card','Collection cards'],['pack','Collection packs']];
   return groups.map(([kind,title])=>{const entries=kind==='footy'?[{id:'',name:'Footy'}]:catalog[kind]||[];
-   const rewards=[...new Map(entries.map(entry=>[entry.id,entry])).values()].map(entry=>{const name=kind==='card'?entry.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' '):entry.name;return {kind,id:entry.id,amount:1,label:'1 '+name,...(entry.rarity?{rarity:entry.rarity}:{}),...(entry.members?{members:entry.members}:{}),...(entry.gemKey?{gemKey:entry.gemKey}:{}),...(kind==='pack'?{appearance:entry.appearance||null,packColor:entry.color||null}:{})};});
+   const rewards=[...new Map(entries.map(entry=>[entry.id,entry])).values()].map(entry=>{const name=kind==='card'?cardNames.name(entry.id,entry.name):entry.name;return {kind,id:entry.id,amount:1,label:'1 '+name,...(entry.rarity?{rarity:entry.rarity}:{}),...(entry.members?{members:entry.members}:{}),...(entry.gemKey?{gemKey:entry.gemKey}:{}),...(kind==='pack'?{appearance:entry.appearance||null,packColor:entry.color||null}:{})};});
    rewards.sort((a,b)=>a.label.slice(2).localeCompare(b.label.slice(2),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));return {kind,title,rewards};
   }).filter(group=>group.rewards.length);
  }

@@ -30,6 +30,31 @@ await page.locator('#studioFilter-inventoryItems').fill('Boris');assert.equal(aw
 await page.getByRole('button',{name:'Show duplicates',exact:true}).click();assert.equal(await count(),2);await page.locator('#studioFilter-inventoryItems').fill('');assert.equal(await count(),5);
 await page.setViewportSize({width:390,height:844});assert.equal(await page.getByRole('button',{name:'Hide duplicates',exact:true}).isVisible(),true);
 await page.selectOption('#inventoryCountMode','total');assert.equal(await page.locator('#inventoryCardCount').textContent(),'3');assert.equal(await page.evaluate(()=>localStorage.getItem('inventory-count-mode:u')),'total');await page.evaluate(()=>loadInventory());assert.equal(await page.locator('#inventoryCardCount').textContent(),'3');
+const migrated = require('../data/card-statistics.json').cards.find(card => card.id !== card.filename);
+const catalogue = await require('../card-data').imageFilenames(path.resolve('.'));
+const expected = new Set(catalogue.map(require('../card-data').cardId)).size;
+await context.route('**/card-images', route => route.fulfill({json: catalogue}));
+await context.route('**/card-display-names', route => route.fulfill({json: [{ filename: migrated.filename, id: migrated.id, tier: migrated.tier }]}));
+const base = { id: 'migrated-owned', itemType: 'card', name: 'Same name', imageUrl: migrated.imageUrl };
+const variants = ['epic', 'legendary'].map(level => ({ ...base, id: level, upgrade: {
+  level, variantId: migrated.id + '~' + level, baseCardId: migrated.id
+} }));
+const otherCards = [
+  { id: 'rare', itemType: 'card', name: base.name, imageUrl: '/images/Rare-bronze_jop.png' },
+  { id: 'special', itemType: 'card', name: base.name, imageUrl: '/images/Fighter_seb.png' }
+];
+let upgradedInventory = [base, ...variants, ...otherCards];
+await context.route('**/inventory', route => route.fulfill({json: upgradedInventory}));
+await page.reload();
+await page.locator('#villageMap[open]').waitFor();
+await page.evaluate(()=>Island.enter('archive'));
+await page.selectOption('#inventoryCountMode','collection');
+await page.waitForFunction(total => document.getElementById('inventoryCardCount').textContent === '3 / ' + total, expected);
+for (const state of [base, ...variants]) {
+  upgradedInventory = [state, ...otherCards];
+  await page.evaluate(()=>loadInventory());
+  assert.equal(await page.locator('#inventoryCardCount').textContent(), '3 / ' + expected);
+}
 assert.deepEqual(errors,[]);console.log('Inventory duplicate toggle: unique cards, packs preserved, no extra request, reload persistence, search counts and mobile passed.');
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

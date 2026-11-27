@@ -332,8 +332,42 @@ body.studio-ui[data-dye-background] { background:color-mix(in srgb,var(--dye-bac
 .studio-ui[data-dye-amulets] #amuletSection { background:color-mix(in srgb,var(--dye-amulets),white 94%); }
 @media(max-width:800px) { .studio-ui .studio-mobile-search { display:flex;align-items:center;gap:12px;width:100%;border:1px solid #dbe3d1;border-radius:8px;background:#f0f4e8;padding:10px 12px;margin:0 0 20px;color:#71865d;font-size:12px; } }
 
-.studio-card-preview { border:0;border-radius:18px;padding:18px;background:#f6f7f0;max-width:92vw;max-height:92dvh; }
+.studio-card-preview {
+  box-sizing:border-box;border:0;padding:clamp(6px,2vw,18px);background:#132c24;
+  width:min(680px, 100%);height:100dvh;max-width:100%;max-height:100dvh;margin:auto;
+}
+.studio-card-preview[open] { display:grid;grid-template-rows:auto minmax(0,1fr);gap:6px; }
 .studio-card-preview::backdrop { background:#102b23cc; }
-.studio-card-preview img { display:block;max-width:80vw;max-height:75dvh;object-fit:contain;margin:12px auto; }
-.studio-card-preview button { float:right; }
+.studio-card-toolbar { display:flex;justify-content:center;gap:8px; }
+.studio-card-toolbar .btn { width:auto; }
+.studio-card-stage { display:grid;place-items:center;container-type:size; }
+.studio-card-flip {
+  --preview-ratio:.714285714;
+  width:min(440px, 93cqw, calc(93cqh * var(--preview-ratio)));
+  aspect-ratio:var(--preview-ratio);
+  perspective:2400px;
+  container-type:inline-size;
+}
+.studio-card-flip[aria-disabled="false"],
+#items img.item-image[role="button"], #inventoryItems img.item-image[role="button"] { cursor:pointer; }
+.studio-card-rotor {
+  position:relative;
+  width:100%;
+  height:100%;
+  transform-style:preserve-3d;
+  transition:transform var(--preview-flip-duration) ease-in-out;
+}
+.studio-card-flip.is-flipped .studio-card-rotor { transform:rotateY(180deg); }
+.studio-card-front, .studio-card-back {
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+}
+.studio-card-front img { display:block;width:100%;height:100%;object-fit:contain; }
+.studio-card-front .collectible-upgrade { width:100%;height:100%; }
+.studio-card-back { display:grid;place-items:center;transform:rotateY(180deg); }
+.studio-card-back .ben-bal-face { width:100%;max-width:calc(100% * 5 / 7 / var(--preview-ratio));container-type:inline-size;pointer-events:none; }
+@media (prefers-reduced-motion: reduce) {
+  .studio-card-rotor { transition:none; }
+}
 .studio-ui #inventoryItems .item-image { cursor:zoom-in; }

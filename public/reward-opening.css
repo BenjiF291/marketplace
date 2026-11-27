@@ -89,3 +89,136 @@
 .reward-token-heads>svg:nth-child(2){transform:translateY(-24%);z-index:2}.reward-token-heads>svg:only-child{width:70%;margin:0;transform:none}
 
 .reward-pack-card[data-kind=brawlToken] .reward-token-heads>svg:only-child{width:70%;margin:0;transform:none}
+
+
+/* Approved gilt frame with faint miniature swirls. Token cards retain their portrait layout. */
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample){border:4px solid #8c6a38;border-radius:18px;background:radial-gradient(ellipse at 48% 33%,#fff4ce 0%,transparent 63%),repeating-linear-gradient(21deg,#977a3b07 0px,#977a3b07 1px,transparent 1px,transparent 5px),linear-gradient(135deg,#e3c790,#f6e7bc 45%,#d4b276);box-shadow:inset 0 0 0 2px #f9e4a8,inset 0 0 0 7px #c09b58,inset 0 0 0 8px #8c6a3877,inset 0 0 36px #86552144,0 10px 18px #0005;padding:16% 9% 10%}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::before{inset:13px;border:1px solid #a47d4070;border-radius:10px;border-image:none;background:radial-gradient(ellipse at center,transparent 58%,#a0793820);opacity:.8}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::after{left:20%;right:20%;bottom:22%;height:1px;background:linear-gradient(90deg,transparent,#a47d4070,transparent)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-ornament{inset:9px;background:linear-gradient(45deg,transparent 44%,#e9cc8955 45% 55%,transparent 56%) top left/17px 17px no-repeat,linear-gradient(-45deg,transparent 44%,#e9cc8955 45% 55%,transparent 56%) top right/17px 17px no-repeat,linear-gradient(-45deg,transparent 44%,#e9cc8955 45% 55%,transparent 56%) bottom left/17px 17px no-repeat,linear-gradient(45deg,transparent 44%,#e9cc8955 45% 55%,transparent 56%) bottom right/17px 17px no-repeat}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-amount{color:#765029;text-shadow:0 1px #fff4d1}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-name{color:#51412c;text-shadow:0 1px #fff3d0}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)[data-kind=amulet]{background:radial-gradient(ellipse at 48% 33%,#fff2dd 0%,transparent 65%),repeating-linear-gradient(21deg,#76528807 0 1px,transparent 1px 5px),linear-gradient(135deg,#c8b6c2,#ede0d0 45%,#bba2b7)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample){border:8px solid #9c6b2d;border-radius:24px 24px 18px 18px;padding:16% 9% 11%;background:radial-gradient(ellipse at 50% 40%,#fff9dd 0%,#f0d391 48%,#b58c4c 100%);box-shadow:inset 0 0 0 2px #fff0b9,inset 0 0 0 5px #c49a4b,inset 0 0 0 7px #775126,inset 0 0 34px #80551c55,0 0 0 2px #422b1c,0 0 0 4px #d1a24e,0 12px 22px #0007}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::before{inset:9px;border:1px solid #be8b42;border-radius:15px;background:repeating-conic-gradient(from 0deg at 50% 48%,#a87b2510 0deg 1deg,transparent 1deg 12deg),radial-gradient(ellipse at 50% 48%,transparent 25%,#80551c18 90%);opacity:1}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::after{left:12%;right:12%;bottom:22%;height:12px;background:linear-gradient(90deg,transparent,#ad803c 32%,#fce6a3 50%,#ad803c 68%,transparent);clip-path:polygon(0 48%,40% 38%,46% 38%,50% 0,54% 38%,60% 38%,100% 48%,60% 60%,54% 60%,50% 100%,46% 60%,40% 60%)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-ornament{inset:0;z-index:3;background:none;overflow:visible}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-ornament svg{width:100%;height:100%;overflow:visible}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-amount{color:#67401f;text-shadow:0 1px #fff7da,0 2px #e6c77c;position:relative;z-index:4;background:linear-gradient(90deg,transparent,#f6e0a2bb,transparent);min-width:58%;padding:2px 8px}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-name{color:#4c321f;text-shadow:0 1px #ffefbd;z-index:4}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-picture{z-index:2;padding:6px}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-picture>svg{filter:drop-shadow(0 4px 2px #6c451a40) drop-shadow(0 0 9px #fff8db88)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)[data-kind=amulet]{background:radial-gradient(ellipse at 50% 40%,#fff0df,#d7bed4 50%,#907193 100%)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample){border:7px solid #b28a40;border-radius:22px;background:radial-gradient(ellipse at 43% 33%,#fffbed,#f5e7c8 52%,#d5bb86);box-shadow:inset 0 0 0 1px #fff8d8,inset 0 0 0 3px #946621,inset 0 0 0 5px #f5d47b,inset 0 0 30px #bb975633,0 0 0 1px #6e4c19,0 0 0 3px #f0ce7f,0 10px 18px #0006}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::before{inset:8px;border:1px solid #c7a65e;border-radius:14px;background:radial-gradient(ellipse at 25% 10%,#ffffff66,transparent 60%)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)[data-kind=amulet]{background:radial-gradient(ellipse at 43% 33%,#fff7f2,#e9dae7 55%,#b9a1bd)}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-amount{background:none;color:#735020;text-shadow:0 1px #fff9e8}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-name{color:#5b431f;text-shadow:0 1px #fff9e8}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample)::after{opacity:.55}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-ornament{z-index:1}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-picture{z-index:2}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-ornament{inset:0;z-index:1;background:url("assets/rewards/gilded-card-ornament.svg") center/100% 100% no-repeat}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-name,.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-amount{position:relative;z-index:4}
+
+/* Keep quantities centered even when a reward has only one digit. */
+.reward-pack-card .reward-card-amount{justify-self:stretch;width:100%;min-width:0;box-sizing:border-box;text-align:center}
+.reward-pack-card:not([data-kind="brawlToken"]):not(.reward-cover-sample) .reward-card-amount{min-width:0;text-align:center}
+
+/* Daily cover approved separately: sun seal and pack name only. */
+.reward-opening-pack-daily .reward-wrapper-face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7%;padding:14% 10%;border:6px solid #ae853f;border-radius:12px;background:radial-gradient(ellipse at 30% 20%,#426f5d,#153d36 75%);box-shadow:inset 0 0 0 2px #ffe0a1,inset 0 0 0 9px #244f43,inset 0 0 0 10px #ba9956,0 12px 24px #0005;color:#f7dfaa}
+.reward-opening-pack-daily .reward-wrapper-face::before{content:'';position:absolute;inset:0;top:0;bottom:0;left:0;right:0;height:auto;background:url('assets/rewards/gilded-card-ornament.svg') center/100% 100% no-repeat;opacity:.6;z-index:-1;pointer-events:none}
+.reward-opening-pack-daily .reward-wrapper-face::after{display:none}
+.reward-opening-pack-daily .reward-daily-seal{display:block;width:58%;height:auto;aspect-ratio:1;filter:drop-shadow(0 4px 4px #0006)}
+.reward-opening-pack-daily .reward-wrapper-name{position:static;inset:auto;padding:0;max-width:100%;background:none;font:bold clamp(18px,9cqw,36px)/1.15 Georgia,serif;color:#f7dfaa;text-align:center;overflow-wrap:anywhere;text-shadow:0 2px 3px #0005}
+.reward-opening-pack-daily .reward-wrapper-seam{display:none}
+
+/* Keep the crimped straps physically joined to the wrapper body. */
+.reward-opening-pack-designed .reward-wrapper-face{inset:5% 0;border-radius:0;overflow:hidden}
+.reward-opening-pack-designed .reward-wrapper-face::before,.reward-opening-pack-designed .reward-wrapper-face::after{display:none}
+.reward-opening-pack-designed .pack-design-preview{border-radius:0;box-shadow:inset 0 0 0 5px var(--wrapper-base),inset 0 0 0 6px var(--wrapper-trim),inset 0 -40px 60px #0006}
+.reward-opening-pack-designed .reward-wrapper-seam{display:block;box-sizing:border-box;left:0;right:0;width:100%;height:7%;margin:0;z-index:3}
+/* The face overlaps each strap by 2%; all three stay on the same animated parent. */
+.reward-opening[data-phase=opening] .reward-opening-pack-designed .seam-top{animation:none;transform:rotate(180deg)}
+
+/* One shared sealed silhouette in shop tiles, reward previews and openings. */
+.pack-design-preview,.reward-opening-pack-daily{clip-path:polygon(0% 1%,2% 0%,4% 1%,6% 0%,8% 1%,10% 0%,12% 1%,14% 0%,16% 1%,18% 0%,20% 1%,22% 0%,24% 1%,26% 0%,28% 1%,30% 0%,32% 1%,34% 0%,36% 1%,38% 0%,40% 1%,42% 0%,44% 1%,46% 0%,48% 1%,50% 0%,52% 1%,54% 0%,56% 1%,58% 0%,60% 1%,62% 0%,64% 1%,66% 0%,68% 1%,70% 0%,72% 1%,74% 0%,76% 1%,78% 0%,80% 1%,82% 0%,84% 1%,86% 0%,88% 1%,90% 0%,92% 1%,94% 0%,96% 1%,98% 0%,100% 1%,100% 99%,98% 100%,96% 99%,94% 100%,92% 99%,90% 100%,88% 99%,86% 100%,84% 99%,82% 100%,80% 99%,78% 100%,76% 99%,74% 100%,72% 99%,70% 100%,68% 99%,66% 100%,64% 99%,62% 100%,60% 99%,58% 100%,56% 99%,54% 100%,52% 99%,50% 100%,48% 99%,46% 100%,44% 99%,42% 100%,40% 99%,38% 100%,36% 99%,34% 100%,32% 99%,30% 100%,28% 99%,26% 100%,24% 99%,22% 100%,20% 99%,18% 100%,16% 99%,14% 100%,12% 99%,10% 100%,8% 99%,6% 100%,4% 99%,2% 100%,0% 99%);border-radius:0}
+.pack-design-preview{padding-top:18%;padding-bottom:18%}
+.pack-cover-seal{position:absolute;left:0;right:0;height:7%;z-index:4;box-sizing:border-box;pointer-events:none;background:repeating-linear-gradient(90deg,#fff4 0 1px,#0002 1px 2px,transparent 2px 4px),linear-gradient(var(--wrapper-accent,#547e65),var(--wrapper-base,#204c3f));border:1px solid var(--wrapper-trim,#d4b270)}
+.pack-cover-top{top:0;border-top:0}
+.pack-cover-bottom{bottom:0;border-bottom:0}
+.reward-opening-pack-designed .reward-wrapper-face{inset:0;overflow:visible}
+.reward-opening-pack-designed>.reward-wrapper-seam{display:none}
+.reward-opening-pack-daily .reward-wrapper-face{inset:5% 0;border-radius:0}
+.reward-opening-pack-daily .pack-cover-seal{--wrapper-accent:#426f5d;--wrapper-base:#153d36;--wrapper-trim:#d4b270}
+
+/* Light branches through the wrapper, then its two torn pieces burst apart. */
+.reward-pack-cracks{position:absolute;inset:0;width:100%;height:100%;z-index:8;pointer-events:none;opacity:0;fill:none;stroke:#fff6cd;stroke-width:.65;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 3px #ffd678) drop-shadow(0 0 7px #ffb934)}
+.reward-pack-cracks path{stroke-dasharray:1;stroke-dashoffset:1}
+.reward-opening[data-phase=opening] .reward-opening-pack{animation:reward-pack-pressure .9s ease-in both}
+.reward-opening[data-phase=opening] .reward-pack-cracks{opacity:1}
+.reward-opening[data-phase=opening] .reward-pack-cracks path{animation:reward-crack-grow .6s ease-out both}
+.reward-opening[data-phase=opening] .reward-pack-cracks path:nth-child(2){animation-delay:.18s}
+.reward-opening[data-phase=opening] .reward-pack-cracks path:nth-child(3){animation-delay:.34s}
+.reward-pack-burst-flash{position:absolute;inset:-18%;z-index:35;pointer-events:none;opacity:0;border-radius:50%;background:radial-gradient(ellipse,#fff6d5e6, #ffe7a26b 28%,transparent 66%)}
+.reward-opening[data-burst=true] .reward-pack-burst-flash{animation:reward-pack-flash .45s ease-out both}
+.reward-opening[data-phase=opening] .reward-pack-shard{pointer-events:none;transform-origin:50% 55%;animation-duration:.45s;animation-timing-function:cubic-bezier(.15,.65,.4,1);animation-fill-mode:both;z-index:25}
+.reward-opening[data-phase=opening] .reward-pack-shard-left{clip-path:polygon(0 0,52% 0,48% 14%,54% 26%,47% 37%,51% 49%,56% 63%,48% 76%,54% 87%,49% 100%,0 100%);animation-name:reward-shard-left}
+.reward-opening[data-phase=opening] .reward-pack-shard-right{clip-path:polygon(52% 0,100% 0,100% 100%,49% 100%,54% 87%,48% 76%,56% 63%,51% 49%,47% 37%,54% 26%,48% 14%);animation-name:reward-shard-right}
+@keyframes reward-crack-grow{0%{stroke-dashoffset:1;opacity:0}15%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
+@keyframes reward-pack-pressure{0%{transform:scale(1)}55%{transform:scale(1.018) rotate(-.4deg)}72%{transform:scale(1.025) rotate(.5deg)}86%{transform:scale(1.035) rotate(-.6deg)}100%{transform:scale(1.045);filter:drop-shadow(0 0 20px #ffe09a)}}
+@keyframes reward-shard-left{0%{transform:scale(1.045);opacity:1}100%{transform:translate(-45%,-8%) rotate(-18deg) scale(1.12);opacity:0}}
+@keyframes reward-shard-right{0%{transform:scale(1.045);opacity:1}100%{transform:translate(45%,-8%) rotate(18deg) scale(1.12);opacity:0}}
+@keyframes reward-pack-flash{0%{opacity:0;transform:scale(.5)}22%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
+@media(prefers-reduced-motion:reduce){.reward-pack-cracks,.reward-pack-burst-flash,.reward-pack-shard{display:none!important}}
+
+/* A widening tear leaks white-hot light from inside, with warm spill beyond the sleeve. */
+.reward-pack-light-split{position:absolute;inset:-1% 20%;z-index:9;pointer-events:none;opacity:0;background:#fffef0;transform-origin:50% 50%;clip-path:polygon(52% 0,56% 17%,49% 26%,62% 39%,56% 48%,70% 64%,59% 76%,67% 88%,53% 100%,46% 87%,49% 75%,36% 61%,42% 49%,32% 37%,44% 24%,47% 13%);filter:drop-shadow(0 0 8px #fff5a8)}
+.reward-pack-light-bloom{position:absolute;inset:-12% -38%;z-index:20;pointer-events:none;opacity:0;mix-blend-mode:screen;background:radial-gradient(ellipse at 50% 48%,#ffffe8f5 0%,#fff9c3b8 13%,#ffdc636e 30%,#ffd34222 48%,transparent 68%);transform:scale(.5)}
+.reward-opening[data-phase=opening] .reward-pack-light-split{animation:reward-light-tear 1.1s ease-in both}
+.reward-opening[data-phase=opening] .reward-pack-light-bloom{animation:reward-light-spill 1.1s ease-in both}
+.reward-opening[data-phase=opening] .reward-opening-pack{animation-duration:1.1s}
+.reward-pack-cracks{stroke:#ffffef;stroke-width:1.2;filter:drop-shadow(0 0 4px #fffac0) drop-shadow(0 0 12px #ffcf48)}
+.reward-opening[data-phase=opening] .reward-pack-cracks path{animation:reward-crack-flood .95s ease-in both}
+.reward-opening[data-phase=opening] .reward-pack-cracks path:nth-child(2){animation-delay:.12s}
+.reward-opening[data-phase=opening] .reward-pack-shard .reward-pack-light-split,.reward-opening[data-phase=opening] .reward-pack-shard .reward-pack-cracks{display:none}
+.reward-opening[data-burst=true] .reward-pack-light-bloom{animation:reward-light-release .45s ease-out both}
+.reward-pack-burst-flash{background:radial-gradient(ellipse,#fffff1 0%,#fffbd7e6 14%,#ffe28b99 34%,transparent 70%)}
+@keyframes reward-light-tear{0%,12%{opacity:0;transform:scale(.08,.25)}32%{opacity:.85;transform:scale(.18,.75)}65%{opacity:1;transform:scale(.6,.98)}100%{opacity:1;transform:scale(1.3,1.05)}}
+@keyframes reward-light-spill{0%,20%{opacity:0;transform:scale(.45)}58%{opacity:.35;transform:scale(.8)}82%{opacity:.8}100%{opacity:1;transform:scale(1.16)}}
+@keyframes reward-crack-flood{0%{stroke-dashoffset:1;stroke-width:.3;opacity:0}20%{opacity:1}60%{stroke-dashoffset:0;stroke-width:1.4}100%{stroke-dashoffset:0;stroke-width:4;opacity:1}}
+@keyframes reward-light-release{from{opacity:1;transform:scale(1.16)}to{opacity:0;transform:scale(1.65)}}
+@media(prefers-reduced-motion:reduce){.reward-pack-light-split,.reward-pack-light-bloom{display:none!important}}
+
+/* Light is projected outside the wrapper, rather than drawn as an opaque tear. */
+.reward-pack-light-split{display:none}
+.reward-pack-light-rays{position:absolute;inset:-35% -85%;z-index:21;pointer-events:none;opacity:0;mix-blend-mode:screen;filter:blur(5px);mask-image:radial-gradient(ellipse,#000 8%,#000b 32%,transparent 68%);-webkit-mask-image:radial-gradient(ellipse,#000 8%,#000b 32%,transparent 68%)}
+.reward-pack-light-rays::before,.reward-pack-light-rays::after{content:'';position:absolute;inset:0;background:conic-gradient(from 8deg at 50% 45%,transparent 0deg,#fff9ca88 7deg,transparent 16deg,transparent 42deg,#ffde7166 49deg,transparent 60deg,transparent 80deg,#fffde6bb 87deg,transparent 97deg,transparent 125deg,#ffe99199 132deg,transparent 144deg,transparent 175deg,#fffde9aa 182deg,transparent 193deg,transparent 226deg,#ffdf6e66 233deg,transparent 244deg,transparent 266deg,#ffffdfcc 274deg,transparent 286deg,transparent 317deg,#ffe49388 324deg,transparent 336deg);transform:rotate(-9deg)}
+.reward-pack-light-rays::after{transform:rotate(14deg) scale(.9);background:conic-gradient(from 18deg at 52% 57%,transparent 0deg,#fffef1bb 5deg,transparent 15deg,transparent 65deg,#ffe79377 74deg,transparent 84deg,transparent 135deg,#fffef0aa 143deg,transparent 154deg,transparent 210deg,#ffec9d88 220deg,transparent 231deg,transparent 283deg,#fffdf0aa 292deg,transparent 304deg)}
+.reward-opening[data-phase=opening] .reward-pack-light-rays{animation:reward-rays-pour 1.1s ease-in both}
+.reward-opening[data-burst=true] .reward-pack-light-rays{animation:reward-rays-release .45s ease-out both}
+.reward-pack-light-bloom{inset:-30% -65%;filter:blur(10px);background:radial-gradient(ellipse at 49% 31%,#fffef0ee 0%,#fff4b08c 7%,transparent 27%),radial-gradient(ellipse at 53% 58%,#ffffeafa 0%,#ffed9a99 12%,transparent 36%),radial-gradient(ellipse at 50% 81%,#fffde2c9 0%,#ffe89766 9%,transparent 29%)}
+.reward-opening[data-phase=opening] .reward-pack-cracks path{animation-name:reward-crack-glimmer}
+.reward-pack-cracks{filter:blur(.4px) drop-shadow(0 0 5px #fffad9) drop-shadow(0 0 15px #ffd264);mix-blend-mode:screen}
+@keyframes reward-crack-glimmer{0%{stroke-dashoffset:1;stroke-width:.15;opacity:0}28%{opacity:.8}65%{stroke-dashoffset:0;stroke-width:.55}100%{stroke-dashoffset:0;stroke-width:1.1;opacity:1}}
+@keyframes reward-rays-pour{0%,15%{opacity:0;transform:scale(.5) rotate(-5deg)}40%{opacity:.3}70%{opacity:.72}100%{opacity:1;transform:scale(1.15) rotate(3deg)}}
+@keyframes reward-rays-release{from{opacity:1;transform:scale(1.15) rotate(3deg)}to{opacity:0;transform:scale(1.5) rotate(5deg)}}
+@media(prefers-reduced-motion:reduce){.reward-pack-light-rays{display:none!important}}
+
+/* A thousand tiny wrapper flecks on one bounded canvas, rather than DOM clones. */
+.reward-pack-fragments{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:26;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.reward-pack-fragments{display:none!important}}
+
+/* Approved branching pattern builds to a luminous fracture, without radial star beams. */
+.reward-pack-light-rays{display:none}
+.reward-opening[data-phase=opening] .reward-pack-cracks{animation:reward-fracture-glow 1.1s ease-in both;mix-blend-mode:screen}
+.reward-opening[data-phase=opening] .reward-pack-cracks path{animation:reward-fracture-trace .9s ease-out both}
+.reward-opening[data-phase=opening] .reward-pack-cracks path:nth-child(2){animation-delay:.1s}
+.reward-opening[data-phase=opening] .reward-pack-cracks path:nth-child(3){animation-delay:.2s}
+.reward-pack-light-bloom{inset:-12% -24%;filter:blur(14px);background:radial-gradient(ellipse,#fff4c64d 5%,#ffdc6126 32%,transparent 68%)}
+@keyframes reward-fracture-trace{0%{stroke-dashoffset:1;opacity:0;stroke-width:.2}25%{opacity:.7}65%{stroke-dashoffset:0;stroke-width:.45}100%{stroke-dashoffset:0;stroke-width:.9;opacity:1}}
+@keyframes reward-fracture-glow{0%{opacity:.15;filter:drop-shadow(0 0 1px #edb44b)}45%{opacity:.75;filter:drop-shadow(0 0 3px #ffe6a0) drop-shadow(0 0 6px #ffc94f)}75%{opacity:1;filter:drop-shadow(0 0 5px #fff7cc) drop-shadow(0 0 12px #ffd560)}100%{opacity:1;filter:drop-shadow(0 0 7px #fffbe5) drop-shadow(0 0 20px #ffdf7e) brightness(1.8)}}
+
+/* Theme motion belongs to the wrapper opening, never the reward cards. */
+.reward-opening:not([data-phase=opening]) .reward-opening-halo::before,.reward-opening:not([data-phase=opening]) .reward-opening-halo::after{display:none;animation:none}
+.reward-opening[data-phase=cards] .reward-opening-halo{display:none}
+.reward-opening:not([data-theme=standard])[data-phase=cards] .reward-opening-stack{filter:none}
