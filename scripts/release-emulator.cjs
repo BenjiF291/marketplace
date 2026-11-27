@@ -104,6 +104,75 @@ async function main() {
     assert.equal(directory[0].isAdmin, undefined);
     assert.equal((await post('/grant-item', grant, authenticated(operator))).status, 200);
     assert.equal((await db.collection('items').where('buyerId', '==', account.id).get()).size, 2);
+    const eventPack = db.collection('packs').doc();
+    await eventPack.set({ name: 'Emulator Victory Pack', cardIds: ['Bronze_emma.png'], color: '#ad8535' });
+    await db.collection('benBalSettings').doc('leagues').set({ Bronze: { packId: eventPack.id, range: null } });
+    const definition = (type, rewards, filters = {}) => ({
+      operation: 'activate', name: 'Emulator ' + type, objectives: [{ type, mode: 'repeat', target: 1, rewards, filters }]
+    });
+    const win = definition('WIN_BEN_BAL_MATCH', [{ kind: 'pack', id: eventPack.id, amount: 1 }]);
+    assert.equal((await post('/admin/events', win, headers)).status, 403);
+    const firstEvent = await post('/admin/events', win, authenticated(operator));
+    assert.equal(firstEvent.status, 200, await firstEvent.clone().text());
+    const secondEvent = await post('/admin/events', definition('WIN_BEN_BAL_MATCH', [{ kind: 'footy', amount: 7 }]),
+      authenticated(operator));
+    assert.equal(secondEvent.status, 200, await secondEvent.clone().text());
+    const openingEvent = await post('/admin/events', definition('OPEN_PACK',
+      [{ kind: 'upgradeShard', id: 'shard:bronze', amount: 2 }], { pack: eventPack.id }), authenticated(operator));
+    assert.equal(openingEvent.status, 200, await openingEvent.clone().text());
+    const { applyMove } = require('../ben-bal-rewards');
+    const { prepareCard, slots } = require('../public/ben-bal-match-engine');
+    const pairs = { attack: { primary: 'pow', secondary: 'ama' }, dribble: { primary: 'size', secondary: 'rang' },
+      defence: { primary: 'loy', secondary: 'acu' }, naturalPosition: 'attack' };
+    const team = (prefix, value) => slots.map(({ slot, role }) => prepareCard({
+      id: prefix + slot, overall: value, benBal: pairs,
+      stats: Object.fromEntries(['pow', 'ama', 'size', 'rang', 'loy', 'acu'].map(key => [key, value]))
+    }, slot, role));
+    const state = { userId: account.id, league: 'Bronze', player: team('p', 95), robot: team('r', 20),
+      startedAt: Date.now(), moves: [], seed: 'emulator-event' };
+    for (let round = 1; round <= 10; round++) state.moves.push(applyMove(state, {
+      round, cardId: state.player[round - 1].card.id, action: round % 2 ? 'attack' : null
+    }).move);
+    const match = db.collection('benBalMatches').doc();
+    await match.set(state);
+    const last = { round: 11, cardId: state.player[10].card.id, action: 'attack' };
+    const settled = await post('/ben-bal/matches/' + match.id + '/round', last, headers);
+    assert.equal(settled.status, 200, await settled.clone().text());
+    assert.equal((await settled.json()).reward.awarded, true);
+    assert.equal((await post('/ben-bal/matches/' + match.id + '/round', last, headers)).status, 200);
+    const eventInventory = () => db.collection('items').where('buyerId', '==', account.id).where('source', '==', 'event').get();
+    async function waitFor(check) {
+      for (let i = 0; i < 80; i++) {
+        const result = await check();
+        if (result) return result;
+        await delay(350);
+      }
+      throw Error('Event reward worker did not finish.');
+    }
+    const bonus = await waitFor(async () => (await eventInventory()).docs[0]);
+    await waitFor(async () => (await db.collection('users').doc(account.id).get()).data().balance === 27);
+    assert.equal((await eventInventory()).size, 1);
+    await eventPack.delete();
+    const opened = await post('/open-pack', { itemId: bonus.id }, headers);
+    assert.equal(opened.status, 200, await opened.clone().text());
+    assert.equal((await opened.json()).cardId, 'Bronze_emma.png');
+    await waitFor(async () => (await db.collection('upgradeWallets').doc(account.id).get()).data()?.counts['shard:bronze'] === 2);
+    const notifications = await (await fetch(origin + '/events/receipts', { headers })).json();
+    assert.equal(notifications.receipts.length, 3);
+    const capped = await post('/admin/events', { ...definition('SELL_ITEM', [{ kind: 'footy', amount: 3 }]),
+      limits: { global: 1 } }, authenticated(operator));
+    assert.equal(capped.status, 200);
+    const { id: cappedId } = await capped.json();
+    const { createEngine } = require('../event-manager');
+    const engine = createEngine(db, process.cwd());
+    await Promise.all([account, recipient].map(actor => db.runTransaction(async tx =>
+      engine.record(tx, actor.id, 'emulator-cap-' + actor.id, ['SELL_ITEM']))));
+    const counts = await waitFor(async () => {
+      const snapshot = await db.collection('fishyEventStats').doc(cappedId).get();
+      return snapshot.data()?.actions === 2 && snapshot.data();
+    });
+    assert.equal(counts.rewarded, 1);
+    console.log('Event emulator passed simultaneous verified match rewards, retry safety, ordinary daily rewards, pack snapshots, notifications, and concurrent global caps.');
     console.log('Emulator passed startup, login, transfers, admin grants, inventory, Favourite Cards, and direct-access denial.');
   } finally {
     server.kill();

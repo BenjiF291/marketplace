@@ -32,6 +32,7 @@
   updatePackReady=()=>{const total=Number(packReady)+achievementCount;packSeal.hidden=!packReady;profileSeal.hidden=!achievementCount;profileSeal.textContent=String(achievementCount);collapsedSeal.textContent=String(total);collapsedSeal.hidden=!total||!actions.hidden;pack.dataset.ready=String(packReady);pack.setAttribute('aria-label',packReady?'Pack shop: free daily pack ready':'Pack shop');profile.setAttribute('aria-label',achievementCount?`Profile: ${achievementCount} unseen achievements`:'Profile');toggle.setAttribute('aria-label',(actions.hidden?'Expand island tools':'Retract island tools')+(total?` - ${total} notifications`:''));};updatePackReady();
   action('help','Building help',()=>islandAction('villageHelpButton'));
   const guide=action('help','Player guide',()=>window.PlayerGuide.open());guide.id='playerGuideLauncher';guide.setAttribute('aria-haspopup','dialog');
+  if(window.FishyEvents)action('pack','Events',()=>window.FishyEvents.player()).setAttribute('aria-haspopup','dialog');
   finder=el('label','island-tool-action island-building-finder');finder.hidden=true;const finderArt=el('span','island-tool-art');finderArt.innerHTML=icon('finder');finder.append(finderArt,el('span','island-tool-label','Find a building'));actions.append(finder);attachBuildingFinder(document.getElementById('villageBuildingFinder'));
   window.addEventListener('island-ready',()=>attachBuildingFinder(document.getElementById('villageBuildingFinder')));
   bar.append(toggle,actions);return bar;

@@ -245,6 +245,8 @@ function registerBenBal(app, db, authenticate, project) {
         if (next.phase === 'complete') {
           const progress = await upgrades.favouriteProgress(tx, db, userId, state.favourites, next.winner);
           reward = await rewards.settle(tx, db, userId, ref, next.winner, now, state.league);
+          const types = next.winner === 'player' ? ['COMPLETE_BEN_BAL_MATCH', 'WIN_BEN_BAL_MATCH'] : ['COMPLETE_BEN_BAL_MATCH'];
+          app.locals?.events?.record(tx, userId, 'ben-bal:' + ref.id, types, { league: state.league }, now.getTime());
           for (const { ref: preparation, value } of progress) tx.set(preparation, { ownerId: userId, value });
         }
         tx.update(ref, { moves: [...state.moves, move], ...(reward ? { reward } : {}) });

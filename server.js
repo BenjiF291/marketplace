@@ -52,6 +52,7 @@ app.use((req, res, next) => {
 });
 
 require('./http-optimization')(app, path.join(__dirname, 'public'));
+app.locals.events = require('./event-routes')(app, db, brawlAuth.authenticate, __dirname);
 
 async function requireSession(req, res, next) {
   try { req.authenticatedUserId = await brawlAuth.authenticate(req); }
@@ -1574,7 +1575,8 @@ app.post('/ascend-tier-assignment', async (req, res) => {
 app.get('/pack-design/:packId', async (req, res) => {
   try {
     const daily = req.params.packId === dailyPack.packId;
-    const doc = await db.collection('packs').doc(daily ? dailyPack.definitionId() : req.params.packId).get();
+    const id = daily ? dailyPack.definitionId() : req.params.packId;
+    const doc = await (app.locals?.events?.packRef(id) ?? db.collection('packs').doc(id)).get();
     if (!doc.exists) {
       if (daily) return res.json({ name: 'Daily Pack', color: '#93722a', appearance: null });
       return res.status(404).send('Pack not found');
@@ -1778,7 +1780,7 @@ app.post('/open-pack', async (req, res) => {
         catch { throw Error('Please log in again to open a Daily Pack.'); }
       }
       const definitionId = earnedDailyPack ? dailyPack.definitionId() : packItem.packId;
-      const packDoc = await transaction.get(db.collection('packs').doc(definitionId));
+      const packDoc = await transaction.get(app.locals?.events?.packRef(definitionId) ?? db.collection('packs').doc(definitionId));
       if (!packDoc.exists || !require('./pack-builder').hasRewards(packDoc.data())) {
         if (earnedDailyPack) throw Error(dailyPack.unconfigured);
         throw new Error('Pack has no available cards');
@@ -1842,6 +1844,8 @@ app.post('/open-pack', async (req, res) => {
         openedFromPackId: packItem.packId
       });
       transaction.delete(packItemRef);
+      app.locals?.events?.record(transaction, requesterId, 'pack:' + packItemRef.id, ['OPEN_PACK'],
+        { pack: pack.eventOriginalPackId ?? definitionId });
       if (proof) transaction.delete(proofRef);
       const packName = packItem.name || (pack.name ? (/\bpack$/i.test(pack.name) ? pack.name : `${pack.name} Pack`) : 'Pack');
       return { cardId, packBonus, rubyBonus, packName, extraRewards, appearance:pack.appearance, packColor: packItem.packColor || pack.color || '#667eea' };
@@ -2440,6 +2444,8 @@ app.post('/buy', async (req, res) => {
         if (originalProof.id !== newProof.id) transaction.delete(originalProof);
       }
 
+      app.locals?.events?.record(transaction, buyerId, 'purchase:' + itemRef.id, ['PURCHASE_ITEM']);
+      app.locals?.events?.record(transaction, item.sellerId, 'sale:' + itemRef.id, ['SELL_ITEM']);
       return { purchasePrice, hasHostDiscount, listedPrice: basePrice, currencyName: item.currencyName || 'Footy' };
     });
     res.json({

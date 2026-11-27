@@ -158,6 +158,7 @@ module.exports = function (app, db, authenticate, project) {
     return transaction(owner, body, JSON.stringify(['craft', output, ...inputs.slice().sort()]), (tx, counts) => {
       inputs.forEach(id => upgrades.moveQuantity(counts, id, -1));
       upgrades.moveQuantity(counts, output, 1);
+      app.locals?.events?.record(tx, owner, 'craft:' + body.requestId, ['CRAFT_UPGRADER'], { level: body.level, tier: body.tier });
       return { token: output, counts };
     });
   });
@@ -226,6 +227,8 @@ module.exports = function (app, db, authenticate, project) {
       tx.set(variantRef, { ...upgrade, ownerId: owner });
       tx.set(preparationRef, { ownerId: owner, value: 0 });
       tx.update(itemRef, { upgrade });
+      app.locals?.events?.record(tx, owner, 'upgrade:' + body.requestId, ['UPGRADE_CARD_TO_' + token.level.toUpperCase()],
+        { tier: token.tier });
       return { upgrade, card: { name: card.name, imageUrl: card.imageUrl, overall: upgrade.currentOverall }, counts };
     });
   });

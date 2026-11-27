@@ -51,6 +51,7 @@ module.exports=(app,db,authenticate)=>{
    }
    const receipt={requestId:body.requestId,name:config.name,appearance:config.appearance,rewards,claimedAt:now,nextAt:user.isAdmin===true?now:now+require('./pack-timing').dailyDuration(user,config)};
    tx.set(claimRef,receipt);
+   app.locals?.events?.record(tx, id, 'free-pack:' + body.requestId, ['OPEN_PACK'], { pack: 'daily' }, now);
    tx.update(userRef,{...rules.apply(user,rewards),...require('./town-hall-progress').gameplay(user,'pack'),freePackLastClaimAt:now,freePackReceipt:receipt});
    return receipt;
   });
